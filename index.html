@@ -19,7 +19,7 @@
   content: "";
   position: fixed;
   inset: 0;
-  background: url("readymarklogonobackground2.PNG") center/160px repeat;
+  background: url("readymarklogonobackground2.PNG") center/100px repeat;
   opacity: 0.08;
   pointer-events: none;
 }.card {
@@ -88,7 +88,24 @@
       font-size: 13px;
       color: #9ca3af;
     }
-  </style>
+    .section {
+margin-top:60px;
+text-align:center;
+max-width:700px;
+}
+
+.video-box {
+margin-top:20px;
+border:2px solid #d4af57;
+padding:30px;
+border-radius:12px;
+}
+
+.video-placeholder {
+margin-top:10px;
+opacity:.7;
+font-style:italic;
+}  </style>
 </head>
 <body>
   <div class="card">
@@ -112,7 +129,31 @@
       <div class="label">Inspection Date</div>
       <div class="value">Today</div>
     </div>
+    <div class="section">
+  <h2>How This Room Was Verified</h2>
 
+  <div class="video-box">
+    <p>Inspection Process Video</p>
+
+    <!-- Video will go here later -->
+    <div class="video-placeholder">
+      Verification process video coming soon
+    </div>
+
+  </div>
+</div>
+
+
+<div class="section">
+  <h2>The Ready Mark Standard</h2>
+
+  <p>
+  This room has been inspected under the Ready Mark Cleanliness Standard.
+  High-touch surfaces, linens, bathrooms, and guest areas were reviewed
+  according to the Ready Mark inspection protocol.
+  </p>
+
+</div>
     <div class="score">Score: 95 / 100</div>
 
     <div class="status">VERIFIED CLEAN</div>
