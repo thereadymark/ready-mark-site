@@ -6,16 +6,23 @@
   <title>Ready Mark Verified</title>
   <style>
     body {
-      margin: 0;
-      font-family: Georgia, serif;
-      background: #0f172a;
-      color: #f8f5ee;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-    }
-    .card {
+  margin: 0;
+  font-family: Georgia, serif;
+  background: #0f172a;
+  color: #f8f5ee;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  position: relative;
+}body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: url("readymarklogonobackground2.PNG") center/600px repeat;
+  opacity: 0.04;
+  pointer-events: none;
+}.card {
       background: #111827;
       border: 2px solid #c9a34a;
       border-radius: 18px;
