@@ -16,13 +16,23 @@
   min-height: 100vh;
   position: relative;
 }body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  background: url("readymarklogonobackground2.PNG") center/100px repeat;
-  opacity: 0.08;
-  pointer-events: none;
-}.card {
+content: "";
+position: fixed;
+inset: 0;
+
+background-image:
+url("readymarklogonobackground2.PNG"),
+url("readymarklogonobackground2.PNG");
+
+background-size: 160px 160px;
+background-position: 0 0, 80px 80px;
+
+background-repeat: repeat;
+
+opacity: 0.08;
+pointer-events: none;
+}
+card {
       background: #111827;
       border: 2px solid #c9a34a;
       border-radius: 18px;
