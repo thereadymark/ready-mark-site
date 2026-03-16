@@ -21,19 +21,16 @@ export default async function handler(req, res) {
 
     const data = await response.json();
 
-    if (!data.records || data.records.length === 0) {
-  return res.status(404).json({
-    error: "Room not found",
-    slugReceived: slug,
-    formulaUsed: formula,
-    tableName: tableName
-  });
-}    const fields = data.records[0].fields;
+if (!data.records || data.records.length === 0) {
+  return res.status(404).json({ error: "Room not found" });
+}
 
-    return res.status(200).json({
-      property: fields["Property"] || "",
-      roomNumber: fields["Room Number"] || "",
-      inspector: Array.isArray(fields["Latest Inspector"]) ? fields["Latest Inspector"][0] : fields["Latest Inspector"] || "",
+const fields = data.records[0].fields;
+
+return res.status(200).json({
+  property: fields["Property"] || "",
+  roomNumber: fields["Room Number"] || "",
+  inspector: Array.isArray(fields["Latest Inspector"]) ? fields["Latest Inspector"][0] : fields["Latest Inspector"] || "",
       inspectionDate: Array.isArray(fields["Latest Inspection Date"]) ? fields["Latest Inspection Date"][0] : fields["Latest Inspection Date"] || "",
       certificationTier: Array.isArray(fields["Latest Certification Tier"]) ? fields["Latest Certification Tier"][0] : fields["Latest Certification Tier"] || "",
       verificationRecordId: Array.isArray(fields["Latest Verification Record ID"]) ? fields["Latest Verification Record ID"][0] : fields["Latest Verification Record ID"] || "",
