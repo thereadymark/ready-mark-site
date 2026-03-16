@@ -195,5 +195,16 @@ font-style:italic;
       This room has been inspected under the Ready Mark Cleanliness Standard.
     </div>
   </div>
+  <script>
+
+const params = window.location.pathname.split("/").pop();
+
+const recordElement = document.querySelector(".record-id");
+
+if(params && params !== "index.html"){
+    recordElement.textContent = params;
+}
+
+</script>
 </body>
 </html>
