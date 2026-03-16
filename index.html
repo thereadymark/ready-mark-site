@@ -37,7 +37,9 @@ pointer-events: none;
   inset: 0;
   background: radial-gradient(circle, transparent 60%, rgba(0,0,0,0.45));
   pointer-events: none;
-}.card {
+}
+    .card {
+      position: relative;
   background: #111827;
   border: 2px solid #c9a34a;
   border-radius: 18px;
@@ -48,8 +50,26 @@ pointer-events: none;
     0 10px 35px rgba(0,0,0,0.35),
     0 0 15px rgba(201,163,74,0.15);
   backdrop-filter: blur(4px);
-    }
-    .seal {
+    } .card::before {
+  content: "";
+  position: absolute;
+  top: 52%;
+  left: 50%;
+  width: 320px;
+  height: 320px;
+  transform: translate(-50%, -50%);
+  background-image: url("readymarkseal(best)no background.PNG");
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  opacity: 0.035;
+  pointer-events: none;
+    } 
+    .card > * {
+  position: relative;
+  z-index: 1;
+}  
+   .seal {
       text-align: center;
       font-size: 14px;
       letter-spacing: 2px;
