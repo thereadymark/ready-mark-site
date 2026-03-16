@@ -22,10 +22,13 @@ export default async function handler(req, res) {
     const data = await response.json();
 
     if (!data.records || data.records.length === 0) {
-      return res.status(404).json({ error: "Room not found" });
-    }
-
-    const fields = data.records[0].fields;
+  return res.status(404).json({
+    error: "Room not found",
+    slugReceived: slug,
+    formulaUsed: formula,
+    tableName: tableName
+  });
+}    const fields = data.records[0].fields;
 
     return res.status(200).json({
       property: fields["Property"] || "",
