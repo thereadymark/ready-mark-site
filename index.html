@@ -276,13 +276,11 @@ font-style:italic;
         return;
       }
 
-      const { data: inspection, error: inspectionError } = await supabase
-        .from("Inspections")
-        .select("*")
-        .eq("room_id", room.id)
-        .eq("is_current", true)
-        .single();
-
+       const { data: inspection, error: inspectionError } = await supabase
+  .from("Inspections")
+  .select("*")
+  .eq("room_id", room.id)
+  .single();
       if (inspectionError || !inspection) {
         console.error("Inspection lookup failed:", inspectionError);
       }
