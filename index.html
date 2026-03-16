@@ -248,7 +248,7 @@ font-style:italic;
 
   async function loadVerification() {
     try {
-      const slug = window.location.pathname.split("/").pop();
+      const slug = new URLSearchParams(window.location.search).get("slug");
 
       if (!slug || slug === "index.html") {
         console.error("No room slug found in URL");
