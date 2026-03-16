@@ -282,9 +282,18 @@ font-style:italic;
   .eq("room_id", room.id)
   .single();
       if (inspectionError || !inspection) {
-        console.error("Inspection lookup failed:", inspectionError);
-      }
-
+  document.getElementById("inspector-id").textContent =
+    inspectionError?.message || "No inspection found";
+  document.getElementById("inspection-date").textContent =
+    inspectionError?.code || "No date";
+  document.getElementById("certification-tier").textContent =
+    "Inspection error";
+  document.getElementById("verification-id").textContent =
+    JSON.stringify(inspectionError || {});
+  const scoreEl = document.getElementById("score");
+  if (scoreEl) scoreEl.textContent = "Score: Inspection error";
+  return;
+}
       document.getElementById("property").textContent = room.property_name ?? "";
       document.getElementById("room-number").textContent = room.room_number ?? "";
       document.getElementById("inspector-id").textContent = inspection?.inspector_id ?? "";
