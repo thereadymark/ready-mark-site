@@ -192,25 +192,34 @@ font-style:italic;
 </div>
 
 <div class="row">
+  <div class="label">Property</div>
+  <div class="value" id="property">Loading...</div>
+</div>
+
+<div class="row">
+  <div class="label">Room</div>
+  <div class="value" id="room-number">Loading...</div>
+</div>
+
+<div class="row">
   <div class="label">Inspector ID</div>
-  <div class="value" id="inspector">4603</div>
+  <div class="value" id="inspector-id">Loading...</div>
 </div>
 
 <div class="row">
   <div class="label">Inspection Date</div>
-  <div class="value" id="inspection-date">Today</div>
+  <div class="value" id="inspection-date">Loading...</div>
 </div>
 
 <div class="row">
   <div class="label">Certification Level</div>
-  <div class="value" id="cert-tier">Verified Clean</div>
+  <div class="value" id="certification-tier">Loading...</div>
 </div>
 
 <div class="row">
   <div class="label">Verification Record ID</div>
-  <div class="value record-id" id="record-id">RM-TH-101-4603-031526</div>
+  <div class="value record-id" id="verification-id">Loading...</div>
 </div>
-
 <h2>How This Room Was Verified</h2>
 
 <div class="video-box">
@@ -231,13 +240,89 @@ font-style:italic;
   </p>
 
 </div>
-<div class="score" id="score">Score: 95 / 100</div>  
-    <div class="status" id="status">VERIFIED CLEAN</div>
+<div class="score" id="score">Score: Loading...</div>  
+    <div class="status" id="status">LOADING</div>
     
     <div class="footer">
       This room has been inspected under the Ready Mark Cleanliness Standard.
     </div>
   </div>
   <script src="script.js"></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const SUPABASE_URL = "https://zbecvxcefxxhqijakxxj.supabase.co";
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpiZWN2eGNlZnh4aHFpamFreHhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM2ODU3MzMsImV4cCI6MjA4OTI2MTczM30.o1yZpO87ffeNCUNe-6wrimMw5D7esTzAivna9lVBv2k";
+
+  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  async function loadVerification() {
+    try {
+      const slug = window.location.pathname.split("/").pop();
+
+      if (!slug || slug === "index.html") {
+        console.error("No room slug found in URL");
+        return;
+      }
+
+      const { data: room, error: roomError } = await supabase
+        .from("Rooms")
+        .select("*")
+        .eq("qr_slug", slug)
+        .single();
+
+      if (roomError || !room) {
+        console.error("Room lookup failed:", roomError);
+        document.getElementById("property").textContent = "Not found";
+        document.getElementById("room-number").textContent = slug;
+        document.getElementById("inspector-id").textContent = "Not found";
+        document.getElementById("inspection-date").textContent = "Not found";
+        document.getElementById("certification-tier").textContent = "Not found";
+        document.getElementById("verification-id").textContent = "Not found";
+        const scoreEl = document.getElementById("score");
+        const statusEl = document.getElementById("status");
+        if (scoreEl) scoreEl.textContent = "Score: Not found";
+        if (statusEl) statusEl.textContent = "NOT VERIFIED";
+        return;
+      }
+
+      const { data: inspection, error: inspectionError } = await supabase
+        .from("Inspections")
+        .select("*")
+        .eq("room_id", room.id)
+        .eq("is_current", true)
+        .single();
+
+      if (inspectionError || !inspection) {
+        console.error("Inspection lookup failed:", inspectionError);
+      }
+
+      document.getElementById("property").textContent = room.property_name ?? "";
+      document.getElementById("room-number").textContent = room.room_number ?? "";
+      document.getElementById("inspector-id").textContent = inspection?.inspector_id ?? "";
+      document.getElementById("inspection-date").textContent = inspection?.created_at
+        ? new Date(inspection.created_at).toLocaleDateString()
+        : "";
+      document.getElementById("certification-tier").textContent = inspection?.certification_tier ?? "";
+      document.getElementById("verification-id").textContent = inspection?.verification_id ?? "";
+
+      const scoreEl = document.getElementById("score");
+      if (scoreEl) {
+        scoreEl.textContent = inspection?.score != null
+          ? `Score: ${inspection.score} / 100`
+          : "Score: N/A";
+      }
+
+      const statusEl = document.getElementById("status");
+      if (statusEl) {
+        statusEl.textContent = (inspection?.certification_tier ?? "NOT VERIFIED").toUpperCase();
+      }
+    } catch (err) {
+      console.error("Unexpected error:", err);
+    }
+  }
+
+  loadVerification();
+</script>  
 </body>
 </html>
