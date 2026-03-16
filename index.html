@@ -239,13 +239,13 @@ font-style:italic;
   </div>
  
 <script>
-  const SUPABASE_URL = "https://zbecvxcefxxhqijakxxj.supabase.co";
-  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpiZWN2eGNlZnh4aHFpamFreHhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM2ODU3MzMsImV4cCI6MjA4OTI2MTczM30.o1yZpO87ffeNCUNe-6wrimMw5D7esTzAivna9lVBv2k";
+  document.addEventListener("DOMContentLoaded", function () {
 
-  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-  document.getElementById("property").textContent = "SCRIPT STARTED";
-  async function loadVerification() {
-    const propertyEl = document.getElementById("property");
+    const SUPABASE_URL = "https://zbecvxcefxxhqijakxxj.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpiZWN2eGNlZnh4aHFpamFreHhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM2ODU3MzMsImV4cCI6MjA4OTI2MTczM30.o1yZpO87ffeNCUNe-6wrimMw5D7esTzAivna9lVBv2k";
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+async function loadVerification() {    const propertyEl = document.getElementById("property");
     const roomEl = document.getElementById("room-number");
     const inspectorEl = document.getElementById("inspector-id");
     const dateEl = document.getElementById("inspection-date");
@@ -331,6 +331,7 @@ font-style:italic;
   }
 
   loadVerification();
+  });
 </script>   
 </body>
 </html>
