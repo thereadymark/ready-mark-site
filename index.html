@@ -53,19 +53,21 @@ pointer-events: none;
     } .card::before {
   content: "";
   position: absolute;
-  top: 32%;
+  top: 33%;
   left: 50%;
   width: 300px;
   height: 300px;
   transform: translate(-50%, -50%);
-  background-image: url("readymarkseal(best)nobackground.PNG");
+  background-image: url("readymarkseal(best)no background.PNG");
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
-  opacity: 0.075;
+  opacity: 0.06;
   pointer-events: none;
-    } 
-    .card > * {
+  z-index: 0;
+  filter: grayscale(100%) brightness(1.2) contrast(0.85) blur(0.15px);
+  mix-blend-mode: soft-light;
+}    .card > * {
   position: relative;
   z-index: 1;
 }  
