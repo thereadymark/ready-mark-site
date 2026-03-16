@@ -9,7 +9,7 @@ export default async function handler(req, res) {
   const token = process.env.AIRTABLE_TOKEN;
   const tableName = "Rooms";
 
-  const formula = `{QR Slug}='${slug}'`;
+  const formula = `{QR Slug}='room-101'`;
   const url = `https://api.airtable.com/v0/${baseId}/${encodeURIComponent(tableName)}?filterByFormula=${encodeURIComponent(formula)}`;
 
   try {
