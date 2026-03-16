@@ -182,44 +182,45 @@ font-style:italic;
     <div class="subtitle">CLEANLINESS STANDARD</div>
 
     <div class="row">
-      <div class="label">Property</div>
-      <div class="value">Test Hotel</div>
-    </div>
-    <div class="row">
-      <div class="label">Room</div>
-      <div class="value">101</div>
-    </div>
-    <div class="row">
-      <div class="label">Inspector ID</div>
-      <div class="value">4603</div>
-    </div>
-    <div class="row">
-      <div class="label">Inspection Date</div>
-      <div class="value">Today</div>
-    </div>
-    <div class="row">
+  <div class="label">Property</div>
+  <div class="value" id="property">Test Hotel</div>
+</div>
+
+<div class="row">
+  <div class="label">Room</div>
+  <div class="value" id="room-number">101</div>
+</div>
+
+<div class="row">
+  <div class="label">Inspector ID</div>
+  <div class="value" id="inspector">4603</div>
+</div>
+
+<div class="row">
+  <div class="label">Inspection Date</div>
+  <div class="value" id="inspection-date">Today</div>
+</div>
+
+<div class="row">
   <div class="label">Certification Level</div>
-  <div class="value">Verified Clean</div>
+  <div class="value" id="cert-tier">Verified Clean</div>
 </div>
 
 <div class="row">
   <div class="label">Verification Record ID</div>
-  <div class="value record-id">RM-TH-101-4603-031526</div>
-</div> <div class="section">
-  <h2>How This Room Was Verified</h2>
-
-  <div class="video-box">
-    <p>Inspection Process Video</p>
-
-    <!-- Video will go here later -->
-    <div class="video-placeholder">
-      Verification process video coming soon
-    </div>
-
-  </div>
+  <div class="value record-id" id="record-id">RM-TH-101-4603-031526</div>
 </div>
 
+<h2>How This Room Was Verified</h2>
 
+<div class="video-box">
+  <p>Inspection Process Video</p>
+
+  <!-- Video will go here later -->
+  <div class="video-placeholder">
+    Verification process video coming soon
+  </div>
+</div>
 <div class="section">
   <h2>The Ready Mark Standard</h2>
 
@@ -230,24 +231,13 @@ font-style:italic;
   </p>
 
 </div>
-    <div class="score">Score: 95 / 100</div>
-
-    <div class="status">VERIFIED CLEAN</div>
-
+<div class="score" id="score">Score: 95 / 100</div>  
+    <div class="status" id="status">VERIFIED CLEAN</div>
+    
     <div class="footer">
       This room has been inspected under the Ready Mark Cleanliness Standard.
     </div>
   </div>
-  <script>
-
-const params = window.location.pathname.split("/").pop();
-
-const recordElement = document.querySelector(".record-id");
-
-if(params && params !== "index.html"){
-    recordElement.textContent = params;
-}
-
-</script>
+  <script src="script.js"></script>
 </body>
 </html>
