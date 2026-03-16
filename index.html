@@ -88,6 +88,25 @@ pointer-events: none;
       margin-bottom: 30px;
       font-size: 16px;
       letter-spacing: 1px;
+      position: relative;
+      padding-top: 14px
+      padding-bottom: 14px
+    }
+    .subtitle::before,
+    .subtitle::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+        transformation: translateX(-50%);
+      widt: 140px;
+      height: 1px
+        background: rgba(212,175,87,0.5);
+    }
+    .subtitle::before {
+      top: 0;
+    }
+    .subtitle::after {
+      bottom: 0;
     }
     .row {
       display: flex;
