@@ -445,71 +445,34 @@ if (scoreEl) {
       : "Score: N/A";
 
   if (score != null) {
-    if (tier.toLowerCase() === "verified clean") {
-  statusEl.style.color = "#3ddc84";
-  statusEl.style.border = "1px solid rgba(61,220,132,0.45)";
-    } else if (tier.toLowerCase() === "needs attention") {
-  statusEl.style.color = "#ffb347";
-  statusEl.style.border = "1px solid rgba(255,179,71,0.45)";
-    } else if (tier.toLowerCase() === "not clean") {
-  statusEl.style.color = "#ff6b6b";
-  statusEl.style.border = "1px solid rgba(255,107,107,0.45)";
-    } else if (score >= 90) {
-      scoreEl.style.color = "#3ddc84";
-    } else if (score >= 75) {
-      scoreEl.style.color = "#ffb347";
-    } else {
-      scoreEl.style.color = "#ff6b6b";
-    }
+    
+if (tierEl) {
+  tierEl.textContent = tier;
+
+  if (tier.toLowerCase() === "verified clean") {
+    tierEl.style.color = "#3ddc84";
+  } else if (tier.toLowerCase() === "needs attention") {
+    tierEl.style.color = "#ffb347";
+  } else if (tier.toLowerCase() === "not clean") {
+    tierEl.style.color = "#ff6b6b";
   } else {
-    scoreEl.style.color = "#d4af37";
+    tierEl.style.color = "#d4af37";
   }
 }
-
-if (statusEl) {
+    if (statusEl) {
   statusEl.textContent = tier;
 
   if (tier.toLowerCase() === "verified clean") {
     statusEl.style.color = "#3ddc84";
+    statusEl.style.border = "1px solid rgba(61,220,132,0.45)";
   } else if (tier.toLowerCase() === "needs attention") {
     statusEl.style.color = "#ffb347";
+    statusEl.style.border = "1px solid rgba(255,179,71,0.45)";
   } else if (tier.toLowerCase() === "not clean") {
     statusEl.style.color = "#ff6b6b";
-  } else {
-    statusEl.style.color = "#d4af37";
+    statusEl.style.border = "1px solid rgba(255,107,107,0.45)";
   }
 }
-  if (tier.toLowerCase() === "verified clean") {
-    statusEl.style.color = "#3ddc84";
-  } else if (tier.toLowerCase() === "needs attention") {
-    statusEl.style.color = "#ffb347";
-  } else if (tier.toLowerCase() === "not clean") {
-    statusEl.style.color = "#ff6b6b";
-  } else {
-    statusEl.style.color = "#d4af37";
-  }
-}    
-      catch (err) {
-      if (inspectorEl) inspectorEl.textContent = err.message || "Unexpected error";
-      if (dateEl) dateEl.textContent = "JS_ERROR";
-      if (tierEl) tierEl.textContent = "Script error";
-      if (verificationEl) verificationEl.textContent = String(err);
-      if (scoreEl) {
-          scoreEl.textContent = inspection.score != null
-        ? `Score: ${inspection.score} / 100`
-        : "Score: N/A";
-
-      if (inspection.score >= 90) {
-        scoreEl.style.color = "#3ddc84";
-     } else if (inspection.score >= 75) {
-    scoreEl.style.color = "#ffb347";
-  } else {
-    scoreEl.style.color = "#ff6b6b";
-  }
-}      if (statusEl) statusEl.textContent = "ERROR";
-    }
-  }
-
   loadVerification();
 });
 </script>
