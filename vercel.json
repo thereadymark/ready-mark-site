@@ -1,7 +1,7 @@
 {
   "rewrites": [
     {
-      "source": "/verify/:slug",
+      "source": "/(.*)",
       "destination": "/index.html"
     }
   ]
