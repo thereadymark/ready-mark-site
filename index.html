@@ -299,39 +299,53 @@ document.addEventListener("DOMContentLoaded", function () {
   ">
 
     <!-- VERIFIED CLEAN -->
-    <div style="
-      background: rgba(255,255,255,0.03);
-      border:1px solid rgba(212,175,55,0.3);
-      border-radius:12px;
-      padding:20px;
-      backdrop-filter: blur(6px);
-    ">
-      <h3 style="color:#d4af37; margin-bottom:8px;">Verified Clean</h3>
+    <div
+  onmouseover="this.style.transform='translateY(-4px)'; this.style.border='1px solid rgba(212,175,55,0.6)'; this.style.boxShadow='0 0 20px rgba(212,175,55,0.15)'"
+  onmouseout="this.style.transform='translateY(0px)'; this.style.border='1px solid rgba(212,175,55,0.3)'; this.style.boxShadow='none'"
+  style="
+    background: rgba(255,255,255,0.03);
+    border:1px solid rgba(212,175,55,0.3);
+    border-radius:12px;
+    padding:20px;
+    backdrop-filter: blur(6px);
+    transition: all 0.25s ease;
+  "
+>      <h3 style="color:#d4af37; margin-bottom:8px;">Verified Clean</h3>
       <p style="color:#ccc;">
         This space met Ready Mark inspection standards at the time of review.
       </p>
     </div>
 
     <!-- NEEDS ATTENTION -->
-    <div style="
-      background: rgba(255,255,255,0.02);
-      border:1px solid rgba(212,175,55,0.15);
-      border-radius:12px;
-      padding:20px;
-    ">
-      <h3 style="color:#e6c96b; margin-bottom:8px;">Needs Attention</h3>
+    <div
+  onmouseover="this.style.transform='translateY(-4px)'; this.style.border='1px solid rgba(212,175,55,0.4)'; this.style.boxShadow='0 0 15px rgba(212,175,55,0.1)'"
+  onmouseout="this.style.transform='translateY(0px)'; this.style.border='1px solid rgba(212,175,55,0.15)'; this.style.boxShadow='none'"
+  style="
+    background: rgba(255,255,255,0.02);
+    border:1px solid rgba(212,175,55,0.15);
+    border-radius:12px;
+    padding:20px;
+    transition: all 0.25s ease;
+  "
+>      
+       <h3 style="color:#e6c96b; margin-bottom:8px;">Needs Attention</h3>
       <p style="color:#bbb;">
         This space requires corrective action before it can be considered fully verified.
       </p>
     </div>
 
     <!-- NOT CLEAN -->
-    <div style="
-      background: rgba(255,255,255,0.015);
-      border:1px solid rgba(255,255,255,0.08);
-      border-radius:12px;
-      padding:20px;
-    ">
+   <div
+  onmouseover="this.style.transform='translateY(-4px)'; this.style.border='1px solid rgba(212,175,55,0.3)'; this.style.boxShadow='0 0 10px rgba(212,175,55,0.08)'"
+  onmouseout="this.style.transform='translateY(0px)'; this.style.border='1px solid rgba(255,255,255,0.05)'; this.style.boxShadow='none'"
+  style="
+    background: rgba(255,255,255,0.01);
+    border:1px solid rgba(255,255,255,0.05);
+    border-radius:12px;
+    padding:20px;
+    transition: all 0.25s ease;
+  "
+>    
      <div style="
      background: rgba(255,255,255,0.02);
      border:1px solid rgba(212,175,55,0.12);
