@@ -239,7 +239,7 @@ font-style:italic;
   </div>
  <script>
 document.addEventListener("DOMContentLoaded", function () {
-  async function loadVerification() {
+  async function loadVerification() { 
     const propertyEl = document.getElementById("property");
     const roomEl = document.getElementById("room-number");
     const inspectorEl = document.getElementById("inspector-id");
@@ -335,27 +335,23 @@ document.addEventListener("DOMContentLoaded", function () {
     </div>
 
     <!-- NOT CLEAN -->
-   <div
-  onmouseover="this.style.transform='translateY(-4px)'; this.style.border='1px solid rgba(212,175,55,0.3)'; this.style.boxShadow='0 0 10px rgba(212,175,55,0.08)'"
-  onmouseout="this.style.transform='translateY(0px)'; this.style.border='1px solid rgba(255,255,255,0.05)'; this.style.boxShadow='none'"
+     <div
+  onmouseover="this.style.transform='translateY(-4px)'; this.style.border='1px solid rgba(220,53,69,0.55)'; this.style.boxShadow='0 0 14px rgba(220,53,69,0.08)'"
+  onmouseout="this.style.transform='translateY(0px)'; this.style.border='1px solid rgba(220,53,69,0.22)'; this.style.boxShadow='none'"
   style="
-    background: rgba(255,255,255,0.01);
-    border:1px solid rgba(255,255,255,0.05);
+    background: rgba(220,53,69,0.04);
+    border:1px solid rgba(220,53,69,0.22);
     border-radius:12px;
     padding:20px;
     transition: all 0.25s ease;
+    box-shadow:none;
   "
->    
-     <div style="
-     background: rgba(255,255,255,0.02);
-     border:1px solid rgba(212,175,55,0.12);
-     border-radius:12px;
-     padding:20px;">
-  <h3 style="color:#c8a94a; margin-bottom:8px;">Not Clean</h3>
-  <p style="color:#aaa;">
+>
+  <h3 style="color:#ff6b6b; margin-bottom:8px;">Not Clean</h3>
+  <p style="color:#f0b8bd;">
     This space did not meet Ready Mark minimum cleanliness standards at the time of inspection.
   </p>
-</div>  
+</div>
 </div>
     <div style="
   margin-top:60px;
@@ -428,15 +424,37 @@ document.addEventListener("DOMContentLoaded", function () {
             : "Score: N/A";
       }
       if (statusEl) {
-        statusEl.textContent = (data.certificationTier ?? "NOT VERIFIED").toUpperCase();
-      }
-    } catch (err) {
+  const tier = inspection.certification_tier ?? "Not Verified";
+  statusEl.textContent = tier;
+
+  if (tier.toLowerCase() === "verified clean") {
+    statusEl.style.color = "#ffffff";
+  } else if (tier.toLowerCase() === "needs attention") {
+    statusEl.style.color = "#ffb347";
+  } else if (tier.toLowerCase() === "not clean") {
+    statusEl.style.color = "#ff6b6b";
+  } else {
+    statusEl.style.color = "#d4af37";
+  }
+}    
+      catch (err) {
       if (inspectorEl) inspectorEl.textContent = err.message || "Unexpected error";
       if (dateEl) dateEl.textContent = "JS_ERROR";
       if (tierEl) tierEl.textContent = "Script error";
       if (verificationEl) verificationEl.textContent = String(err);
-      if (scoreEl) scoreEl.textContent = "Score: Script error";
-      if (statusEl) statusEl.textContent = "ERROR";
+      if (scoreEl) {
+          scoreEl.textContent = inspection.score != null
+        ? `Score: ${inspection.score} / 100`
+        : "Score: N/A";
+
+      if (inspection.score >= 90) {
+        scoreEl.style.color = "#ffffff";
+     } else if (inspection.score >= 75) {
+    scoreEl.style.color = "#ffb347";
+  } else {
+    scoreEl.style.color = "#ff6b6b";
+  }
+}      if (statusEl) statusEl.textContent = "ERROR";
     }
   }
 
