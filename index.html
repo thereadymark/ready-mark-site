@@ -408,25 +408,75 @@ document.addEventListener("DOMContentLoaded", function () {
       }
 
       if (propertyEl) propertyEl.textContent = data.property ?? "";
-      if (roomEl) roomEl.textContent = data.room ?? "";
-      if (inspectorEl) inspectorEl.textContent = data.inspectorId ?? "";
-      if (dateEl) {
-        dateEl.textContent = data.inspectionDate
-          ? new Date(data.inspectionDate).toLocaleDateString()
-          : "";
-      }
-      if (tierEl) tierEl.textContent = data.certificationTier ?? "";
-      if (verificationEl) verificationEl.textContent = data.verificationId ?? "";
-      if (scoreEl) {
-        scoreEl.textContent =
-          data.score !== "" && data.score != null
-            ? `Score: ${data.score} / 100`
-            : "Score: N/A";
-      }
-      if (statusEl) {
-  const tier = inspection.certification_tier ?? "Not Verified";
+if (roomEl) roomEl.textContent = data.room ?? "";
+if (inspectorEl) inspectorEl.textContent = data.inspectorId ?? "";
+
+if (dateEl) {
+  dateEl.textContent = data.inspectionDate
+    ? new Date(data.inspectionDate).toLocaleDateString()
+    : "";
+}
+
+const tier = data.certificationTier ?? "Not Verified";
+
+if (tierEl) {
+  tierEl.textContent = tier;
+
+  if (tier.toLowerCase() === "verified clean") {
+    tierEl.style.color = "#ffffff";
+  } else if (tier.toLowerCase() === "needs attention") {
+    tierEl.style.color = "#ffb347";
+  } else if (tier.toLowerCase() === "not clean") {
+    tierEl.style.color = "#ff6b6b";
+  } else {
+    tierEl.style.color = "#d4af37";
+  }
+}
+
+if (verificationEl) {
+  verificationEl.textContent = data.verificationId ?? "";
+}
+
+if (scoreEl) {
+  const score = data.score;
+
+  scoreEl.textContent =
+    score !== "" && score != null
+      ? `Score: ${score} / 100`
+      : "Score: N/A";
+
+  if (score != null) {
+    if (tier.toLowerCase() === "verified clean") {
+      scoreEl.style.color = "#ffffff";
+    } else if (tier.toLowerCase() === "needs attention") {
+      scoreEl.style.color = "#ffb347";
+    } else if (tier.toLowerCase() === "not clean") {
+      scoreEl.style.color = "#ff6b6b";
+    } else if (score >= 90) {
+      scoreEl.style.color = "#ffffff";
+    } else if (score >= 75) {
+      scoreEl.style.color = "#ffb347";
+    } else {
+      scoreEl.style.color = "#ff6b6b";
+    }
+  } else {
+    scoreEl.style.color = "#d4af37";
+  }
+}
+
+if (statusEl) {
   statusEl.textContent = tier;
 
+  if (tier.toLowerCase() === "verified clean") {
+    statusEl.style.color = "#ffffff";
+  } else if (tier.toLowerCase() === "needs attention") {
+    statusEl.style.color = "#ffb347";
+  } else if (tier.toLowerCase() === "not clean") {
+    statusEl.style.color = "#ff6b6b";
+  } else {
+    statusEl.style.color = "#d4af37";
+  }
+}
   if (tier.toLowerCase() === "verified clean") {
     statusEl.style.color = "#ffffff";
   } else if (tier.toLowerCase() === "needs attention") {
