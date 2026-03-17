@@ -344,10 +344,25 @@ document.addEventListener("DOMContentLoaded", function () {
 `;
 
   window.goVerify = function () {
-    const val = document.getElementById("searchInput").value;
-    if (val) window.location.href = "/" + val;
-  };
+  let val = document.getElementById("searchInput").value.trim().toLowerCase();
 
+  if (!val) return;
+
+  // remove spaces
+  val = val.replace(/\s+/g, "");
+
+  // if user entered just numbers like 101
+  if (/^\d+$/.test(val)) {
+    val = "room-" + val;
+  }
+
+  // if user entered room101
+  if (/^room\d+$/.test(val)) {
+    val = val.replace("room", "room-");
+  }
+
+  window.location.href = "/" + val;
+};
   window.goCert = function () {
     const val = document.getElementById("certInput").value;
     if (val) window.location.href = "/check?record=" + val;
