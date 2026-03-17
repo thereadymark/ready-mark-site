@@ -195,6 +195,60 @@
       opacity: 0.7;
       font-style: italic;
     }
+
+    .cert-page-shell {
+      min-height: 100vh;
+      position: relative;
+      background:
+        radial-gradient(circle at center, rgba(255,255,255,0.03), transparent 70%),
+        #0b1c2c;
+      color: white;
+      font-family: serif;
+      padding: 40px;
+      text-align: center;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .cert-watermark {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      opacity: 0.04;
+      pointer-events: none;
+    }
+
+    .cert-panel {
+      position: relative;
+      z-index: 1;
+      max-width: 760px;
+      margin: 0 auto;
+    }
+
+    .cert-input {
+      padding: 12px;
+      width: 300px;
+      border: none;
+      border-radius: 6px;
+    }
+
+    .cert-button {
+      padding: 12px 24px;
+      background: #d4af37;
+      border: none;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .info-card {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(212,175,55,0.22);
+      border-radius: 12px;
+      padding: 20px;
+      transition: all 0.25s ease;
+    }
   </style>
 </head>
 <body>
@@ -275,128 +329,114 @@
           const pathParts = window.location.pathname.split("/").filter(Boolean);
           const slug = pathParts[0] || null;
 
+          // LANDING PAGE
           if (!slug) {
             document.body.innerHTML = `
-              <div style="
-                min-height:100vh;
-                position:relative;
-                background:
-                  radial-gradient(circle at center, rgba(255,255,255,0.03), transparent 70%),
-                  #0b1c2c;
-                color:white;
-                font-family:serif;
-                padding:40px;
-                text-align:center;
-              ">
-                <div style="
-                  position:absolute;
-                  top:50%;
-                  left:50%;
-                  transform:translate(-50%, -50%);
-                  opacity:0.04;
-                  pointer-events:none;
-                ">
+              <div class="cert-page-shell">
+                <div class="cert-watermark">
                   <img src="/readymarkseal(best)nobackground.PNG" style="width:400px;" />
                 </div>
 
-                <h1 style="letter-spacing:2px;">THE READY MARK</h1>
-                <h2 style="margin-top:10px; color:#d4af37;">Cleanliness Verification System</h2>
+                <div class="cert-panel">
+                  <h1 style="letter-spacing:2px;">THE READY MARK</h1>
+                  <h2 style="margin-top:10px; color:#d4af37;">Cleanliness Verification System</h2>
 
-                <p style="margin-top:20px; max-width:500px; margin-left:auto; margin-right:auto;">
-                  Scan a Ready Mark QR code or enter a room number to view a verified inspection report.
-                </p>
+                  <p style="margin-top:20px; max-width:500px; margin-left:auto; margin-right:auto;">
+                    Scan a Ready Mark QR code or enter a room number to view a verified inspection report.
+                  </p>
 
-                <div style="margin-top:30px;">
-                  <input
-                    id="searchInput"
-                    placeholder="Enter Room Number (e.g. 101)"
-                    style="padding:12px; width:260px; border:none; border-radius:6px;"
-                  />
-                  <br><br>
-                  <button
-                    onclick="goVerify()"
-                    style="padding:12px 24px; background:#d4af37; border:none; border-radius:6px; font-weight:bold;"
-                  >
-                    Verify Room
-                  </button>
-                </div>
-
-                <div style="margin-top:80px;">
-                  <h2 style="color:#d4af37; margin-bottom:30px;">
-                    Understanding Ready Mark Tiers
-                  </h2>
-
-                  <div style="
-                    display:flex;
-                    flex-direction:column;
-                    gap:20px;
-                    max-width:700px;
-                    margin:auto;
-                  ">
-
-                    <div
-                      onmouseover="this.style.transform='translateY(-4px)'; this.style.border='1px solid rgba(61,220,132,0.55)'"
-                      onmouseout="this.style.transform='translateY(0px)'; this.style.border='1px solid rgba(61,220,132,0.22)'"
-                      style="
-                        background: rgba(61,220,132,0.04);
-                        border:1px solid rgba(61,220,132,0.22);
-                        border-radius:12px;
-                        padding:20px;
-                        backdrop-filter: blur(6px);
-                        transition: all 0.25s ease;
-                      "
-                    >
-                      <h3 style="color:#3ddc84; margin-bottom:8px;">Verified Clean</h3>
-                      <p style="color:#d8f5e3;">
-                        This space met Ready Mark inspection standards at the time of review.
-                      </p>
-                    </div>
-
-                    <div
-                      onmouseover="this.style.transform='translateY(-4px)'; this.style.border='1px solid rgba(255,165,0,0.55)'"
-                      onmouseout="this.style.transform='translateY(0px)'; this.style.border='1px solid rgba(255,165,0,0.22)'"
-                      style="
-                        background: rgba(255,165,0,0.04);
-                        border:1px solid rgba(255,165,0,0.22);
-                        border-radius:12px;
-                        padding:20px;
-                        transition: all 0.25s ease;
-                      "
-                    >
-                      <h3 style="color:#ffb347; margin-bottom:8px;">Needs Attention</h3>
-                      <p style="color:#e7d2b0;">
-                        This space requires corrective action before it can be considered fully verified.
-                      </p>
-                    </div>
-
-                    <div
-                      onmouseover="this.style.transform='translateY(-4px)'; this.style.border='1px solid rgba(220,53,69,0.55)'; this.style.boxShadow='0 0 14px rgba(220,53,69,0.08)'"
-                      onmouseout="this.style.transform='translateY(0px)'; this.style.border='1px solid rgba(220,53,69,0.22)'; this.style.boxShadow='none'"
-                      style="
-                        background: rgba(220,53,69,0.04);
-                        border:1px solid rgba(220,53,69,0.22);
-                        border-radius:12px;
-                        padding:20px;
-                        transition: all 0.25s ease;
-                        box-shadow:none;
-                      "
-                    >
-                      <h3 style="color:#ff6b6b; margin-bottom:8px;">Not Clean</h3>
-                      <p style="color:#f0b8bd;">
-                        This space did not meet Ready Mark minimum cleanliness standards at the time of inspection.
-                      </p>
-                    </div>
+                  <div style="margin-top:30px;">
+                    <input
+                      id="searchInput"
+                      placeholder="Enter Room Number (e.g. 101)"
+                      class="cert-input"
+                    />
+                    <br><br>
+                    <button onclick="goVerify()" class="cert-button">Verify Room</button>
                   </div>
 
-                  <div style="
-                    margin-top:60px;
-                    font-size:14px;
-                    color:#888;
-                    max-width:600px;
-                    margin-left:auto;
-                    margin-right:auto;
-                  ">
-                    Each Ready Mark verification is time-stamped, room-specific, and conducted under a standardized inspection protocol.
+                  <div style="margin-top:20px;">
+                    <input
+                      id="certInput"
+                      placeholder="Enter Record ID (e.g. RM-2026-0001)"
+                      class="cert-input"
+                    />
+                    <br><br>
+                    <button onclick="goCert()" class="cert-button" style="background:#444;color:white;">
+                      Verify Certificate
+                    </button>
+                  </div>
+
+                  <div style="margin-top:80px;">
+                    <h2 style="color:#d4af37; margin-bottom:30px;">
+                      Understanding Ready Mark Tiers
+                    </h2>
+
+                    <div style="
+                      display:flex;
+                      flex-direction:column;
+                      gap:20px;
+                      max-width:700px;
+                      margin:auto;
+                    ">
+                      <div
+                        onmouseover="this.style.transform='translateY(-4px)'; this.style.border='1px solid rgba(61,220,132,0.55)'"
+                        onmouseout="this.style.transform='translateY(0px)'; this.style.border='1px solid rgba(61,220,132,0.22)'"
+                        class="info-card"
+                        style="
+                          background: rgba(61,220,132,0.04);
+                          border:1px solid rgba(61,220,132,0.22);
+                          backdrop-filter: blur(6px);
+                        "
+                      >
+                        <h3 style="color:#3ddc84; margin-bottom:8px;">Verified Clean</h3>
+                        <p style="color:#d8f5e3;">
+                          This space met Ready Mark inspection standards at the time of review.
+                        </p>
+                      </div>
+
+                      <div
+                        onmouseover="this.style.transform='translateY(-4px)'; this.style.border='1px solid rgba(255,165,0,0.55)'"
+                        onmouseout="this.style.transform='translateY(0px)'; this.style.border='1px solid rgba(255,165,0,0.22)'"
+                        class="info-card"
+                        style="
+                          background: rgba(255,165,0,0.04);
+                          border:1px solid rgba(255,165,0,0.22);
+                        "
+                      >
+                        <h3 style="color:#ffb347; margin-bottom:8px;">Needs Attention</h3>
+                        <p style="color:#e7d2b0;">
+                          This space requires corrective action before it can be considered fully verified.
+                        </p>
+                      </div>
+
+                      <div
+                        onmouseover="this.style.transform='translateY(-4px)'; this.style.border='1px solid rgba(220,53,69,0.55)'; this.style.boxShadow='0 0 14px rgba(220,53,69,0.08)'"
+                        onmouseout="this.style.transform='translateY(0px)'; this.style.border='1px solid rgba(220,53,69,0.22)'; this.style.boxShadow='none'"
+                        class="info-card"
+                        style="
+                          background: rgba(220,53,69,0.04);
+                          border:1px solid rgba(220,53,69,0.22);
+                          box-shadow:none;
+                        "
+                      >
+                        <h3 style="color:#ff6b6b; margin-bottom:8px;">Not Clean</h3>
+                        <p style="color:#f0b8bd;">
+                          This space did not meet Ready Mark minimum cleanliness standards at the time of inspection.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div style="
+                      margin-top:60px;
+                      font-size:14px;
+                      color:#888;
+                      max-width:600px;
+                      margin-left:auto;
+                      margin-right:auto;
+                    ">
+                      Each Ready Mark verification is time-stamped, room-specific, and conducted under a standardized inspection protocol.
+                    </div>
                   </div>
                 </div>
               </div>
@@ -404,7 +444,6 @@
 
             window.goVerify = function () {
               let val = document.getElementById("searchInput").value.trim().toLowerCase();
-
               if (!val) return;
 
               val = val.replace(/\s+/g, "");
@@ -428,9 +467,180 @@
               alert("Please enter a valid room number, like 101.");
             };
 
+            window.goCert = function () {
+              let val = document.getElementById("certInput").value.trim().toUpperCase();
+              if (!val) return;
+              window.location.href = "/check?record=" + encodeURIComponent(val);
+            };
+
             return;
           }
 
+          // CERTIFICATE PAGE
+          if (slug === "check") {
+            const record = new URLSearchParams(window.location.search).get("record") || "";
+
+            document.body.innerHTML = `
+              <div class="cert-page-shell">
+                <div class="cert-watermark">
+                  <img src="/readymarkseal(best)nobackground.PNG" style="width:360px;" />
+                </div>
+
+                <div class="cert-panel">
+                  <h1 style="letter-spacing:2px;">THE READY MARK</h1>
+                  <h2 style="margin-top:10px; color:#d4af37;">Certificate Verification</h2>
+
+                  <p style="margin-top:20px; max-width:540px; margin-left:auto; margin-right:auto; color:#d8d8d8;">
+                    Confirm the authenticity of a Ready Mark certification record by entering its verification ID.
+                  </p>
+
+                  <div style="margin-top:30px;">
+                    <input
+                      id="certSearchInput"
+                      placeholder="Enter Record ID (e.g. RM-2026-0001)"
+                      class="cert-input"
+                      value="${record}"
+                    />
+                    <br><br>
+                    <button onclick="runCertSearch()" class="cert-button">Verify Certificate</button>
+                  </div>
+
+                  <div id="certResult" style="margin-top:40px;"></div>
+
+                  <div style="
+                    margin-top:50px;
+                    font-size:14px;
+                    color:#888;
+                    max-width:620px;
+                    margin-left:auto;
+                    margin-right:auto;
+                  ">
+                    Each Ready Mark certificate record is linked to a room-specific inspection and can be independently verified against our system of record.
+                  </div>
+                </div>
+              </div>
+            `;
+
+            window.runCertSearch = async function () {
+              const input = document.getElementById("certSearchInput");
+              const result = document.getElementById("certResult");
+              const val = input.value.trim().toUpperCase();
+
+              if (!val) return;
+
+              result.innerHTML = `<p style="color:#bbb;">Checking record...</p>`;
+
+              try {
+                const res = await fetch(`/api/verify?record=${encodeURIComponent(val)}`);
+                const data = await res.json();
+
+                if (!res.ok) {
+                  result.innerHTML = `
+                    <div class="info-card" style="max-width:620px;margin:auto;background:rgba(220,53,69,0.04);border:1px solid rgba(220,53,69,0.22);">
+                      <h3 style="color:#ff6b6b; margin-top:0;">Record Not Found</h3>
+                      <p style="color:#f0b8bd; margin-bottom:0;">
+                        We could not locate a Ready Mark record matching <strong>${val}</strong>.
+                      </p>
+                    </div>
+                  `;
+                  return;
+                }
+
+                const tier = data.certificationTier ?? "Not Verified";
+                let tierColor = "#d4af37";
+                let borderColor = "rgba(212,175,55,0.22)";
+                let statusColor = "#d4af37";
+
+                if (tier.toLowerCase() === "verified clean") {
+                  tierColor = "#3ddc84";
+                  borderColor = "rgba(61,220,132,0.22)";
+                  statusColor = "#3ddc84";
+                } else if (tier.toLowerCase() === "needs attention") {
+                  tierColor = "#ffb347";
+                  borderColor = "rgba(255,165,0,0.22)";
+                  statusColor = "#ffb347";
+                } else if (tier.toLowerCase() === "not clean") {
+                  tierColor = "#ff6b6b";
+                  borderColor = "rgba(220,53,69,0.22)";
+                  statusColor = "#ff6b6b";
+                }
+
+                result.innerHTML = `
+                  <div class="info-card" style="max-width:620px;margin:auto;background:rgba(255,255,255,0.03);border:1px solid ${borderColor};text-align:left;">
+                    <div style="text-align:center; margin-bottom:24px;">
+                      <div style="color:#d4af37; letter-spacing:2px; font-size:13px;">READY MARK RECORD</div>
+                      <h3 style="margin:10px 0 0 0; color:#f8f5ee; font-size:28px;">Certificate Verified</h3>
+                    </div>
+
+                    <div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.08);">
+                      <div style="color:#d1d5db;">Verification Record ID</div>
+                      <div style="color:#ffffff;font-weight:600;letter-spacing:2px;font-family:'Courier New',monospace;">${data.verificationId || ""}</div>
+                    </div>
+
+                    <div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.08);">
+                      <div style="color:#d1d5db;">Property</div>
+                      <div style="color:#ffffff;font-weight:600;">${data.property || ""}</div>
+                    </div>
+
+                    <div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.08);">
+                      <div style="color:#d1d5db;">Room</div>
+                      <div style="color:#ffffff;font-weight:600;">${data.room || ""}</div>
+                    </div>
+
+                    <div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.08);">
+                      <div style="color:#d1d5db;">Inspector ID</div>
+                      <div style="color:#ffffff;font-weight:600;">${data.inspectorId || ""}</div>
+                    </div>
+
+                    <div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.08);">
+                      <div style="color:#d1d5db;">Inspection Date</div>
+                      <div style="color:#ffffff;font-weight:600;">
+                        ${data.inspectionDate ? new Date(data.inspectionDate).toLocaleDateString() : ""}
+                      </div>
+                    </div>
+
+                    <div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.08);">
+                      <div style="color:#d1d5db;">Certification Level</div>
+                      <div style="font-weight:600;color:${tierColor};">${tier}</div>
+                    </div>
+
+                    <div style="text-align:center;margin-top:28px;font-size:24px;font-weight:bold;color:${tierColor};">
+                      Score: ${data.score ?? "N/A"}${data.score != null ? " / 100" : ""}
+                    </div>
+
+                    <div style="
+                      margin-top:24px;
+                      text-align:center;
+                      background:#1f2937;
+                      border:1px solid ${borderColor};
+                      color:${statusColor};
+                      padding:14px;
+                      border-radius:999px;
+                      font-weight:bold;
+                      letter-spacing:1px;
+                    ">
+                      ${data.status || "Verified Record"}
+                    </div>
+                  </div>
+                `;
+              } catch (err) {
+                result.innerHTML = `
+                  <div class="info-card" style="max-width:620px;margin:auto;background:rgba(220,53,69,0.04);border:1px solid rgba(220,53,69,0.22);">
+                    <h3 style="color:#ff6b6b; margin-top:0;">System Error</h3>
+                    <p style="color:#f0b8bd; margin-bottom:0;">${String(err)}</p>
+                  </div>
+                `;
+              }
+            };
+
+            if (record) {
+              window.runCertSearch();
+            }
+
+            return;
+          }
+
+          // ROOM PAGE
           const res = await fetch(`/api/verify?slug=${encodeURIComponent(slug)}`);
           const data = await res.json();
 
