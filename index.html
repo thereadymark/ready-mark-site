@@ -237,15 +237,10 @@ font-style:italic;
       This room has been inspected under the Ready Mark Cleanliness Standard.
     </div>
   </div>
- 
-<script>
-  document.addEventListener("DOMContentLoaded", function () {
-
-    const SUPABASE_URL = "https://zbecvxcefxxhqijakxxj.supabase.co";
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpiZWN2eGNlZnh4aHFpamFreHhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM2ODU3MzMsImV4cCI6MjA4OTI2MTczM30.o1yZpO87ffeNCUNe-6wrimMw5D7esTzAivna9lVBv2k";
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-async function loadVerification() {    const propertyEl = document.getElementById("property");
+ <script>
+document.addEventListener("DOMContentLoaded", function () {
+  async function loadVerification() {
+    const propertyEl = document.getElementById("property");
     const roomEl = document.getElementById("room-number");
     const inspectorEl = document.getElementById("inspector-id");
     const dateEl = document.getElementById("inspection-date");
@@ -267,58 +262,39 @@ async function loadVerification() {    const propertyEl = document.getElementByI
         return;
       }
 
-      const { data: room, error: roomError } = await supabase
-        .from("Rooms")
-        .select("*")
-        .eq("qr_slug", slug)
-        .single();
+      const res = await fetch(`/api/verify?slug=${encodeURIComponent(slug)}`);
+      const data = await res.json();
 
-      if (roomError || !room) {
-        if (propertyEl) propertyEl.textContent = "Not found";
-        if (roomEl) roomEl.textContent = slug;
-        if (inspectorEl) inspectorEl.textContent = roomError?.message || "Room not found";
-        if (dateEl) dateEl.textContent = roomError?.code || "ROOM_ERROR";
-        if (tierEl) tierEl.textContent = "Room lookup error";
-        if (verificationEl) verificationEl.textContent = JSON.stringify(roomError || {});
-        if (scoreEl) scoreEl.textContent = "Score: Room error";
+      if (!res.ok) {
+        if (propertyEl) propertyEl.textContent = data.property || "Not found";
+        if (roomEl) roomEl.textContent = data.room || slug;
+        if (inspectorEl) inspectorEl.textContent = data.error || "Lookup failed";
+        if (dateEl) dateEl.textContent = data.details ? "API_ERROR" : "";
+        if (tierEl) tierEl.textContent = "Not verified";
+        if (verificationEl) verificationEl.textContent = data.details ? JSON.stringify(data.details) : "";
+        if (scoreEl) scoreEl.textContent = "Score: Not available";
         if (statusEl) statusEl.textContent = "NOT VERIFIED";
         return;
       }
 
-      if (propertyEl) propertyEl.textContent = room.property_name ?? "";
-      if (roomEl) roomEl.textContent = room.room_number ?? "";
-
-      const { data: inspection, error: inspectionError } = await supabase
-        .from("Inspections")
-        .select("*")
-        .eq("room_id", room.id)
-        .single();
-
-      if (inspectionError || !inspection) {
-        if (inspectorEl) inspectorEl.textContent = inspectionError?.message || "No inspection found";
-        if (dateEl) dateEl.textContent = inspectionError?.code || "NO_DATE";
-        if (tierEl) tierEl.textContent = "Inspection error";
-        if (verificationEl) verificationEl.textContent = JSON.stringify(inspectionError || {});
-        if (scoreEl) scoreEl.textContent = "Score: Inspection error";
-        if (statusEl) statusEl.textContent = "NOT VERIFIED";
-        return;
-      }
-
-      if (inspectorEl) inspectorEl.textContent = inspection.inspector_id ?? "";
+      if (propertyEl) propertyEl.textContent = data.property ?? "";
+      if (roomEl) roomEl.textContent = data.room ?? "";
+      if (inspectorEl) inspectorEl.textContent = data.inspectorId ?? "";
       if (dateEl) {
-        dateEl.textContent = inspection.created_at
-          ? new Date(inspection.created_at).toLocaleDateString()
+        dateEl.textContent = data.inspectionDate
+          ? new Date(data.inspectionDate).toLocaleDateString()
           : "";
       }
-      if (tierEl) tierEl.textContent = inspection.certification_tier ?? "";
-      if (verificationEl) verificationEl.textContent = inspection.verification_id ?? "";
+      if (tierEl) tierEl.textContent = data.certificationTier ?? "";
+      if (verificationEl) verificationEl.textContent = data.verificationId ?? "";
       if (scoreEl) {
-        scoreEl.textContent = inspection.score != null
-          ? `Score: ${inspection.score} / 100`
-          : "Score: N/A";
+        scoreEl.textContent =
+          data.score !== "" && data.score != null
+            ? `Score: ${data.score} / 100`
+            : "Score: N/A";
       }
       if (statusEl) {
-        statusEl.textContent = (inspection.certification_tier ?? "NOT VERIFIED").toUpperCase();
+        statusEl.textContent = (data.certificationTier ?? "NOT VERIFIED").toUpperCase();
       }
     } catch (err) {
       if (inspectorEl) inspectorEl.textContent = err.message || "Unexpected error";
@@ -331,7 +307,7 @@ async function loadVerification() {    const propertyEl = document.getElementByI
   }
 
   loadVerification();
-  });
-</script>   
+});
+</script>
 </body>
 </html>
