@@ -273,40 +273,61 @@ document.addEventListener("DOMContentLoaded", function () {
         </button>
       </div>
 
-      <div style="margin-top:20px;">
-        <input id="certInput" placeholder="Enter Record ID (e.g. RM-2026-0001)" 
-          style="padding:12px; width:260px; border:none; border-radius:6px;" />
-        <br><br>
-        <button onclick="goCert()" 
-          style="padding:12px 24px; background:#444; color:white; border:none; border-radius:6px;">
-          Verify Certificate
-        </button>
-      </div>
+      <div style="margin-top:80px;">
+  <h2 style="color:#d4af37; margin-bottom:30px;">
+    Understanding Ready Mark Tiers
+  </h2>
 
-      <div style="margin-top:60px;">
-        <h2 style="color:#d4af37;">Understanding Ready Mark Tiers</h2>
+  <div style="
+    display:flex;
+    flex-direction:column;
+    gap:20px;
+    max-width:700px;
+    margin:auto;
+  ">
 
-        <div style="margin-top:30px; max-width:600px; margin-left:auto; margin-right:auto; text-align:left;">
-
-          <div style="margin-bottom:25px;">
-            <h3>Verified Clean</h3>
-            <p>This space met Ready Mark inspection standards at the time of review.</p>
-          </div>
-
-          <div style="margin-bottom:25px;">
-            <h3>Needs Attention</h3>
-            <p>This space requires corrective action before it can be considered fully verified.</p>
-          </div>
-
-          <div>
-            <h3>Not Clean</h3>
-            <p>This space did not meet Ready Mark minimum cleanliness standards at the time of inspection.</p>
-          </div>
-
-        </div>
-      </div>
-
+    <!-- VERIFIED CLEAN -->
+    <div style="
+      background: rgba(255,255,255,0.03);
+      border:1px solid rgba(212,175,55,0.3);
+      border-radius:12px;
+      padding:20px;
+      backdrop-filter: blur(6px);
+    ">
+      <h3 style="color:#d4af37; margin-bottom:8px;">Verified Clean</h3>
+      <p style="color:#ccc;">
+        This space met Ready Mark inspection standards at the time of review.
+      </p>
     </div>
+
+    <!-- NEEDS ATTENTION -->
+    <div style="
+      background: rgba(255,255,255,0.02);
+      border:1px solid rgba(212,175,55,0.15);
+      border-radius:12px;
+      padding:20px;
+    ">
+      <h3 style="color:#e6c96b; margin-bottom:8px;">Needs Attention</h3>
+      <p style="color:#bbb;">
+        This space requires corrective action before it can be considered fully verified.
+      </p>
+    </div>
+
+    <!-- NOT CLEAN -->
+    <div style="
+      background: rgba(255,255,255,0.015);
+      border:1px solid rgba(255,255,255,0.08);
+      border-radius:12px;
+      padding:20px;
+    ">
+      <h3 style="color:#aaa; margin-bottom:8px;">Not Clean</h3>
+      <p style="color:#999;">
+        This space did not meet Ready Mark minimum cleanliness standards at the time of inspection.
+      </p>
+    </div>
+
+  </div>
+</div>
   `;
 
   window.goVerify = function () {
