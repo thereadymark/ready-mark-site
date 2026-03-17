@@ -250,8 +250,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const statusEl = document.getElementById("status");
 
     try {
-      const slug = new URLSearchParams(window.location.search).get("slug");
-
+      const slug = window.location.pathname.split("/").pop();
       if (!slug) {
         if (inspectorEl) inspectorEl.textContent = "No slug";
         if (dateEl) dateEl.textContent = "NO_SLUG";
