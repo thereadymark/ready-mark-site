@@ -250,8 +250,9 @@ document.addEventListener("DOMContentLoaded", function () {
     const statusEl = document.getElementById("status");
 
     try {
-      const slug = window.location.pathname.split("/").pop();
-      if (!slug) {
+      const pathParts = window.location.pathname.split("/").filter(Boolean);
+      const slug = pathParts[0] === "verify" && pathParts.length > 1 ? pathParts[1] : null;        
+        if (!slug) {
         if (inspectorEl) inspectorEl.textContent = "No slug";
         if (dateEl) dateEl.textContent = "NO_SLUG";
         if (tierEl) tierEl.textContent = "Error";
