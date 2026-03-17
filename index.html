@@ -422,7 +422,7 @@ if (tierEl) {
   tierEl.textContent = tier;
 
   if (tier.toLowerCase() === "verified clean") {
-    tierEl.style.color = "#ffffff";
+  statusEl.style.color = "#3ddc84";
   } else if (tier.toLowerCase() === "needs attention") {
     tierEl.style.color = "#ffb347";
   } else if (tier.toLowerCase() === "not clean") {
@@ -452,7 +452,7 @@ if (scoreEl) {
     } else if (tier.toLowerCase() === "not clean") {
       scoreEl.style.color = "#ff6b6b";
     } else if (score >= 90) {
-      scoreEl.style.color = "#ffffff";
+      scoreEl.style.color = "#3ddc84";
     } else if (score >= 75) {
       scoreEl.style.color = "#ffb347";
     } else {
