@@ -254,8 +254,20 @@ document.addEventListener("DOMContentLoaded", function () {
     const slug = pathParts[0] || null;
         if (!slug) {
   document.body.innerHTML = `
-    <div style="min-height:100vh; background:#0b1c2c; color:white; font-family:serif; padding:40px; text-align:center;">
-
+    <div style="min-height:100vh;position:relative;background:
+  radial-gradient(circle at center, rgba(255,255,255,0.03), transparent 70%),
+  #0b1c2c;color:white; font-family:serif; padding:40px; text-align:center;
+  ">
+   <div style="
+    position:absolute;
+    top:50%;
+    left:50%;
+    transform:translate(-50%, -50%);
+    opacity:0.04;
+    pointer-events:none;
+  ">
+    <img src="readymarlseal(best)nobackground2.PNG" style="width:400px;" />
+  </div>
       <h1 style="letter-spacing:2px;">THE READY MARK</h1>
       <h2 style="margin-top:10px; color:#d4af37;">Cleanliness Verification System</h2>
 
