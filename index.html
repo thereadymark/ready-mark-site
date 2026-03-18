@@ -746,9 +746,17 @@
           if (statusEl) statusEl.textContent = "ERROR";
         }
       }
+          const params = new URLSearchParams(window.location.search);
+          const source = params.get("src") || "unknown";
 
-      loadVerification();
-    });
+          if (typeof gtag === "function") {
+          gtag('event', 'qr_scan', {
+          source: source
+            });
+     }      loadVerification();
+     
+     });
+     }
   </script>
 </body>
 </html>
