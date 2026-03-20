@@ -19,12 +19,19 @@
 
     .card {
       width: 100%;
-      max-width: 560px;
+      max-width: 900px;
       background: linear-gradient(145deg, #1c2740, #141c2f);
       border: 2px solid #c9a34a;
       border-radius: 18px;
       padding: 32px;
-      box-shadow: 0 10px 35px rgba(0,0,0,0.35);
+      box-shadow: 0 10px 35px rgba(0, 0, 0, 0.35);
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1.4fr 0.9fr;
+      gap: 24px;
+      align-items: start;
     }
 
     h1 {
@@ -46,7 +53,9 @@
       font-weight: bold;
     }
 
-    select, input, button {
+    select,
+    input,
+    button {
       width: 100%;
       box-sizing: border-box;
       padding: 14px;
@@ -56,7 +65,8 @@
       font-size: 16px;
     }
 
-    select, input {
+    select,
+    input {
       background: #f8f5ee;
       color: #111827;
     }
@@ -72,9 +82,65 @@
       margin-top: 20px;
       padding: 16px;
       border-radius: 10px;
-      background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(212,175,87,0.25);
-      white-space: pre-wrap;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(212, 175, 87, 0.25);
+      white-space: normal;
+      line-height: 1.6;
+    }
+
+    .action-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 14px;
+    }
+
+    .action-btn,
+    .action-link {
+      background: #d4af57;
+      color: #111827;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+      width: auto;
+      margin-bottom: 0;
+    }
+
+    .qr-panel {
+      text-align: center;
+      padding: 18px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(212, 175, 87, 0.25);
+      min-height: 200px;
+    }
+
+    .status-message {
+      margin-top: 12px;
+      font-weight: bold;
+    }
+
+    .status-success {
+      color: #3ddc84;
+    }
+
+    .status-error {
+      color: #ff6b6b;
+    }
+
+    a.inline-link {
+      color: #93c5fd;
+      word-break: break-all;
+    }
+
+    @media (max-width: 800px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
 </head>
@@ -83,35 +149,45 @@
     <h1>Add Room</h1>
     <p>Create a room and auto-generate its QR slug and verification URL.</p>
 
-    <label for="propertySelect">Property</label>
-    <select id="propertySelect">
-      <option value="">Loading properties...</option>
-    </select>
+    <div class="layout">
+      <div>
+        <label for="propertySelect">Property</label>
+        <select id="propertySelect">
+          <option value="">Loading properties...</option>
+        </select>
 
-    <label for="roomNumber">Room Number</label>
-    <input id="roomNumber" type="text" placeholder="e.g. 814" />
+        <label for="roomNumber">Room Number</label>
+        <input id="roomNumber" type="text" placeholder="e.g. 814" />
 
-    <button id="createRoomBtn">Create Room</button>
+        <button id="createRoomBtn" type="button">Create Room</button>
 
-    <div class="result" id="resultBox">Ready.</div>
+        <div class="result" id="resultBox">Ready.</div>
+      </div>
+
+      <div class="qr-panel" id="qrContainer">
+        <p style="margin: 0; color: #d1d5db;">QR code will appear here.</p>
+      </div>
+    </div>
   </div>
-  <div id="qrContainer" style="margin-top:20px; text-align:center;"></div>  
-  
+
   <script>
     const ADMIN_PASSWORD = "readymark2026";
 
-let entered = sessionStorage.getItem("admin_auth");
+    let entered = sessionStorage.getItem("admin_auth");
 
-if (entered !== ADMIN_PASSWORD) {
-  entered = prompt("Enter admin password:");
+    if (entered !== ADMIN_PASSWORD) {
+      entered = prompt("Enter admin password:");
 
-  if (entered !== ADMIN_PASSWORD) {
-    document.body.innerHTML = "<h1 style='color:white;text-align:center;margin-top:100px;'>Access Denied</h1>";
-    throw new Error("Unauthorized");
-  }
+      if (entered !== ADMIN_PASSWORD) {
+        document.body.innerHTML =
+          "<h1 style='color:white;text-align:center;margin-top:100px;'>Access Denied</h1>";
+        throw new Error("Unauthorized");
+      }
 
-  sessionStorage.setItem("admin_auth", entered);
-}    async function loadProperties() {
+      sessionStorage.setItem("admin_auth", entered);
+    }
+
+    async function loadProperties() {
       const select = document.getElementById("propertySelect");
       const resultBox = document.getElementById("resultBox");
 
@@ -143,6 +219,7 @@ if (entered !== ADMIN_PASSWORD) {
       const propertyId = document.getElementById("propertySelect").value;
       const roomNumber = document.getElementById("roomNumber").value.trim();
       const resultBox = document.getElementById("resultBox");
+      const qrContainer = document.getElementById("qrContainer");
 
       if (!propertyId || !roomNumber) {
         resultBox.textContent = "Please choose a property and enter a room number.";
@@ -150,6 +227,7 @@ if (entered !== ADMIN_PASSWORD) {
       }
 
       resultBox.textContent = "Creating room...";
+      qrContainer.innerHTML = `<p style="margin:0; color:#d1d5db;">Generating QR...</p>`;
 
       try {
         const res = await fetch("/api/create-room", {
@@ -166,56 +244,61 @@ if (entered !== ADMIN_PASSWORD) {
           throw new Error(data.error || "Failed to create room");
         }
 
-       
-        resultBox.innerHTML =
-    `<strong>Room created successfully.</strong><br><br>
-    Room Number: ${data.room.room_number}<br>
-    QR Slug: ${data.room.qr_slug}<br>
-    QR URL: <a href="${data.room.qr_url}" target="_blank">${data.room.qr_url}</a><br><br>
+        resultBox.innerHTML = `
+          <strong>Room created successfully.</strong><br><br>
+          Room Number: ${data.room.room_number}<br>
+          QR Slug: ${data.room.qr_slug}<br>
+          QR URL: <a class="inline-link" href="${data.room.qr_url}" target="_blank">${data.room.qr_url}</a>
 
-   <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:10px;">
- <button id="copyUrlBtn" type="button" style="background:#d4af57;color:#111827;border:none;padding:10px 16px;border-radius:8px;font-weight:bold;cursor:pointer;">
-    Copy URL
-  </button>
+          <div class="action-row">
+            <button id="copyUrlBtn" type="button" class="action-btn">Copy URL</button>
+            <button id="openVerifyBtn" type="button" class="action-btn">Open Verification Page</button>
+            <a
+              id="downloadQrBtn"
+              class="action-link"
+              href="https://api.qrserver.com/v1/create-qr-code/?size=600x600&data=${encodeURIComponent(data.room.qr_url)}"
+              download="qr-${data.room.qr_slug}.png"
+              target="_blank"
+            >
+              Download QR Code
+            </a>
+          </div>
 
-  <button id="openVerifyBtn" type="button" style="background:#d4af57;color:#111827;border:none;padding:10px 16px;border-radius:8px;font-weight:bold;cursor:pointer;">
-    Open Verification Page
-  </button>
+          <div id="copyStatus" class="status-message"></div>
+        `;
 
-  <a
-    id="downloadQrBtn"
-    href="https://api.qrserver.com/v1/create-qr-code/?size=600x600&data=${encodeURIComponent(data.room.qr_url)}"
-    download="qr-${data.room.qr_slug}.png"
-    target="_blank"
-    style="background:#d4af57;color:#111827;padding:10px 16px;border-radius:8px;font-weight:bold;text-decoration:none;display:inline-block;"
-  >
-    Download QR Code
-  </a>
-  </div>`;       
-        const qrContainer = document.getElementById("qrContainer");
-   qrContainer.innerHTML = `
-  <p style="margin-bottom:10px;">QR Code:</p>
-  <img
-    id="generatedQrImage"
-    src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(data.room.qr_url)}"
-    style="display:block; margin:0 auto 12px auto;"
-  />
-`;        
+        qrContainer.innerHTML = `
+          <p style="margin-bottom:10px;">QR Code:</p>
+          <img
+            id="generatedQrImage"
+            src="https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(data.room.qr_url)}"
+            alt="Generated QR code"
+            style="display:block; margin:0 auto 12px auto;"
+          />
+        `;
+
         document.getElementById("copyUrlBtn").addEventListener("click", async () => {
-     try {
-    await navigator.clipboard.writeText(data.room.qr_url);
-    resultBox.innerHTML += `<div style="margin-top:12px;color:#3ddc84;font-weight:bold;">URL copied.</div>`;
-  } 
-     catch (err) {
-    resultBox.innerHTML += `<div style="margin-top:12px;color:#ff6b6b;font-weight:bold;">Could not copy URL.</div>`;
-  }
-});
-document.getElementById("openVerifyBtn").addEventListener("click", () => {
-  window.open(data.room.qr_url, "_blank");
-});      } catch (err) {
+          const copyStatus = document.getElementById("copyStatus");
+
+          try {
+            await navigator.clipboard.writeText(data.room.qr_url);
+            copyStatus.textContent = "URL copied.";
+            copyStatus.className = "status-message status-success";
+          } catch (err) {
+            copyStatus.textContent = "Could not copy URL.";
+            copyStatus.className = "status-message status-error";
+          }
+        });
+
+        document.getElementById("openVerifyBtn").addEventListener("click", () => {
+          window.open(data.room.qr_url, "_blank");
+        });
+      } catch (err) {
         resultBox.textContent = `Error: ${err.message}`;
+        qrContainer.innerHTML = `<p style="margin:0; color:#ff6b6b;">QR generation failed.</p>`;
       }
     }
+
     document.getElementById("createRoomBtn").addEventListener("click", createRoom);
     loadProperties();
   </script>
