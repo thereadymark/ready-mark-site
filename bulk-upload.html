@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bulk Room Upload | The Ready Mark</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Georgia, serif;
+      background: #0f172a;
+      color: #f8f5ee;
+      min-height: 100vh;
+      padding: 20px;
+      box-sizing: border-box;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+    }
+
+    .shell {
+      width: 100%;
+      max-width: 900px;
+      background: linear-gradient(145deg, #1c2740, #141c2f);
+      border: 2px solid #c9a34a;
+      border-radius: 18px;
+      padding: 28px;
+      box-shadow: 0 10px 35px rgba(0, 0, 0, 0.35);
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      text-align: center;
+      font-size: 42px;
+    }
+
+    p {
+      text-align: center;
+      color: #cbd5e1;
+      margin-bottom: 24px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      color: #d4af57;
+      font-weight: bold;
+    }
+
+    select, textarea, button {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 14px;
+      border-radius: 8px;
+      border: none;
+      font-size: 16px;
+      font-family: inherit;
+      margin-bottom: 18px;
+    }
+
+    select, textarea {
+      background: #f8f5ee;
+      color: #111827;
+    }
+
+    textarea {
+      min-height: 240px;
+      resize: vertical;
+    }
+
+    button {
+      background: #d4af57;
+      color: #111827;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .result {
+      margin-top: 14px;
+      padding: 16px;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(212,175,87,0.25);
+      line-height: 1.7;
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <h1>Bulk Room Upload</h1>
+    <p>Paste one room number per line and create them all at once.</p>
+
+    <label for="propertySelect">Property</label>
+    <select id="propertySelect">
+      <option value="">Loading properties...</option>
+    </select>
+
+    <label for="roomList">Room Numbers</label>
+    <textarea id="roomList" placeholder="101
+102
+103
+104"></textarea>
+
+    <button id="bulkCreateBtn" type="button">Create Rooms in Bulk</button>
+
+    <div class="result" id="resultBox">Ready.</div>
+  </div>
+
+  <script>
+    const ADMIN_PASSWORD = "readymark2026";
+
+    let entered = sessionStorage.getItem("admin_auth");
+
+    if (entered !== ADMIN_PASSWORD) {
+      entered = prompt("Enter admin password:");
+
+      if (entered !== ADMIN_PASSWORD) {
+        document.body.innerHTML =
+          "<h1 style='color:white;text-align:center;margin-top:100px;'>Access Denied</h1>";
+        throw new Error("Unauthorized");
+      }
+
+      sessionStorage.setItem("admin_auth", entered);
+    }
+
+    async function loadProperties() {
+      const select = document.getElementById("propertySelect");
+      const resultBox = document.getElementById("resultBox");
+
+      try {
+        const res = await fetch("/api/list-properties");
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.error || "Failed to load properties");
+        }
+
+        select.innerHTML = '<option value="">Select a property</option>';
+
+        data.properties.forEach((property) => {
+          const option = document.createElement("option");
+          option.value = property.id;
+          option.textContent = `${property.property_name} (${property.property_slug})`;
+          select.appendChild(option);
+        });
+
+        resultBox.textContent = "Properties loaded.";
+      } catch (err) {
+        select.innerHTML = '<option value="">Could not load properties</option>';
+        resultBox.textContent = `Error loading properties: ${err.message}`;
+      }
+    }
+
+    async function bulkCreateRooms() {
+      const propertyId = document.getElementById("propertySelect").value;
+      const roomListText = document.getElementById("roomList").value;
+      const resultBox = document.getElementById("resultBox");
+
+      if (!propertyId || !roomListText.trim()) {
+        resultBox.textContent = "Please choose a property and enter room numbers.";
+        return;
+      }
+
+      const roomNumbers = roomListText
+        .split(/\r?\n/)
+        .map((line) => line.trim())
+        .filter(Boolean);
+
+      resultBox.textContent = "Creating rooms...";
+
+      try {
+        const res = await fetch("/api/bulk-create-rooms", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ propertyId, roomNumbers }),
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.error || "Bulk room creation failed");
+        }
+
+        const createdCount = data.created?.length || 0;
+        const skippedCount = data.skipped?.length || 0;
+
+        resultBox.innerHTML = `
+<strong>Bulk room upload complete.</strong>
+
+Created: ${createdCount}
+Skipped (already existed): ${skippedCount}
+
+${createdCount ? `Created Rooms:
+${data.created.map((room) => `- Room ${room.room_number} → ${room.qr_slug}`).join("\n")}` : ""}
+
+${skippedCount ? `Skipped Rooms:
+${data.skipped.map((room) => `- ${room}`).join("\n")}` : ""}
+        `;
+
+        document.getElementById("roomList").value = "";
+      } catch (err) {
+        resultBox.textContent = `Error: ${err.message}`;
+      }
+    }
+
+    document.getElementById("bulkCreateBtn").addEventListener("click", bulkCreateRooms);
+
+    loadProperties();
+  </script>
+</body>
+</html>
