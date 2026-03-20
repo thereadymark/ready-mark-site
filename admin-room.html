@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Add Room | The Ready Mark</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Georgia, serif;
+      background: #0f172a;
+      color: #f8f5ee;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .card {
+      width: 100%;
+      max-width: 560px;
+      background: linear-gradient(145deg, #1c2740, #141c2f);
+      border: 2px solid #c9a34a;
+      border-radius: 18px;
+      padding: 32px;
+      box-shadow: 0 10px 35px rgba(0,0,0,0.35);
+    }
+
+    h1 {
+      margin-top: 0;
+      text-align: center;
+      color: #f8f5ee;
+    }
+
+    p {
+      text-align: center;
+      color: #d1d5db;
+      margin-bottom: 28px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      color: #d4af57;
+      font-weight: bold;
+    }
+
+    select, input, button {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 14px;
+      border-radius: 8px;
+      border: none;
+      margin-bottom: 18px;
+      font-size: 16px;
+    }
+
+    select, input {
+      background: #f8f5ee;
+      color: #111827;
+    }
+
+    button {
+      background: #d4af57;
+      color: #111827;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .result {
+      margin-top: 20px;
+      padding: 16px;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(212,175,87,0.25);
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Add Room</h1>
+    <p>Create a room and auto-generate its QR slug and verification URL.</p>
+
+    <label for="propertySelect">Property</label>
+    <select id="propertySelect">
+      <option value="">Loading properties...</option>
+    </select>
+
+    <label for="roomNumber">Room Number</label>
+    <input id="roomNumber" type="text" placeholder="e.g. 814" />
+
+    <button id="createRoomBtn">Create Room</button>
+
+    <div class="result" id="resultBox">Ready.</div>
+  </div>
+
+  <script>
+    async function loadProperties() {
+      const select = document.getElementById("propertySelect");
+      const resultBox = document.getElementById("resultBox");
+
+      try {
+        const res = await fetch("/api/list-properties");
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.error || "Failed to load properties");
+        }
+
+        select.innerHTML = '<option value="">Select a property</option>';
+
+        data.properties.forEach((property) => {
+          const option = document.createElement("option");
+          option.value = property.id;
+          option.textContent = `${property.property_name} (${property.property_slug})`;
+          select.appendChild(option);
+        });
+
+        resultBox.textContent = "Properties loaded.";
+      } catch (err) {
+        select.innerHTML = '<option value="">Could not load properties</option>';
+        resultBox.textContent = `Error loading properties: ${err.message}`;
+      }
+    }
+
+    async function createRoom() {
+      const propertyId = document.getElementById("propertySelect").value;
+      const roomNumber = document.getElementById("roomNumber").value.trim();
+      const resultBox = document.getElementById("resultBox");
+
+      if (!propertyId || !roomNumber) {
+        resultBox.textContent = "Please choose a property and enter a room number.";
+        return;
+      }
+
+      resultBox.textContent = "Creating room...";
+
+      try {
+        const res = await fetch("/api/create-room", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ propertyId, roomNumber }),
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.error || "Failed to create room");
+        }
+
+        resultBox.textContent =
+`Room created successfully.
+
+Room Number: ${data.room.room_number}
+QR Slug: ${data.room.qr_slug}
+QR URL: ${data.room.qr_url}`;
+      } catch (err) {
+        resultBox.textContent = `Error: ${err.message}`;
+      }
+    }
+
+    document.getElementById("createRoomBtn").addEventListener("click", createRoom);
+    loadProperties();
+  </script>
+</body>
+</html>
