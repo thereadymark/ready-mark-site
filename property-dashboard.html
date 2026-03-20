@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Property Dashboard | The Ready Mark</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Georgia, serif;
+      background: #0f172a;
+      color: #f8f5ee;
+      min-height: 100vh;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+
+    .shell {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: linear-gradient(145deg, #1c2740, #141c2f);
+      border: 2px solid #c9a34a;
+      border-radius: 18px;
+      padding: 28px;
+      box-shadow: 0 10px 35px rgba(0, 0, 0, 0.35);
+    }
+
+    .topbar {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+
+    .topbar h1 {
+      margin: 0 0 8px;
+      font-size: 44px;
+      color: #f8f5ee;
+    }
+
+    .topbar p {
+      margin: 0;
+      color: #cbd5e1;
+      font-size: 17px;
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 14px;
+      align-items: end;
+      margin-bottom: 24px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      color: #d4af57;
+      font-weight: bold;
+    }
+
+    select, button {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 14px;
+      border-radius: 8px;
+      border: none;
+      font-size: 16px;
+      font-family: inherit;
+    }
+
+    select {
+      background: #f8f5ee;
+      color: #111827;
+    }
+
+    button {
+      background: #d4af57;
+      color: #111827;
+      font-weight: bold;
+      cursor: pointer;
+      min-width: 220px;
+    }
+
+    .property-header {
+      margin: 10px 0 24px;
+      padding: 18px;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(212,175,87,0.22);
+    }
+
+    .property-header h2 {
+      margin: 0 0 8px;
+      font-size: 30px;
+    }
+
+    .property-meta {
+      color: #cbd5e1;
+      line-height: 1.7;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      border-radius: 12px;
+      padding: 18px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(212,175,87,0.18);
+    }
+
+    .stat-label {
+      color: #d4af57;
+      font-size: 14px;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }
+
+    .stat-value {
+      font-size: 30px;
+      font-weight: bold;
+      color: #f8f5ee;
+    }
+
+    .split {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 20px;
+      margin-bottom: 22px;
+    }
+
+    .panel {
+      border-radius: 12px;
+      padding: 18px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(212,175,87,0.18);
+    }
+
+    .panel h3 {
+      margin-top: 0;
+      margin-bottom: 16px;
+      font-size: 24px;
+      color: #f8f5ee;
+    }
+
+    .recent-item {
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      line-height: 1.6;
+    }
+
+    .recent-item:last-child {
+      border-bottom: none;
+    }
+
+    .status-pill {
+      display: inline-block;
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: bold;
+      letter-spacing: 0.4px;
+    }
+
+    .status-premier {
+      color: #111827;
+      background: #f4d06f;
+    }
+
+    .status-verified {
+      color: #0b3d20;
+      background: #86efac;
+    }
+
+    .status-attention {
+      color: #4a2f00;
+      background: #fdba74;
+    }
+
+    .status-notclean {
+      color: #5f0f18;
+      background: #fca5a5;
+    }
+
+    .status-none {
+      color: #cbd5e1;
+      background: rgba(255,255,255,0.1);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 15px;
+    }
+
+    th, td {
+      text-align: left;
+      padding: 12px 10px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      vertical-align: top;
+    }
+
+    th {
+      color: #d4af57;
+      font-weight: bold;
+    }
+
+    .muted {
+      color: #cbd5e1;
+    }
+
+    .empty {
+      color: #cbd5e1;
+      font-style: italic;
+    }
+
+    .loading-box {
+      margin-top: 18px;
+      padding: 16px;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(212,175,87,0.18);
+      color: #cbd5e1;
+    }
+
+    @media (max-width: 980px) {
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .split {
+        grid-template-columns: 1fr;
+      }
+
+      .controls {
+        grid-template-columns: 1fr;
+      }
+
+      button {
+        min-width: 0;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .topbar h1 {
+        font-size: 34px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <div class="topbar">
+      <h1>Property Dashboard</h1>
+      <p>View verification health, room status, and recent inspection activity.</p>
+    </div>
+
+    <div class="controls">
+      <div>
+        <label for="propertySelect">Select Property</label>
+        <select id="propertySelect">
+          <option value="">Loading properties...</option>
+        </select>
+      </div>
+
+      <button id="loadDashboardBtn" type="button">Load Dashboard</button>
+    </div>
+
+    <div id="dashboardContent">
+      <div class="loading-box">Choose a property to load dashboard data.</div>
+    </div>
+  </div>
+
+  <script>
+    const ADMIN_PASSWORD = "readymark2026";
+
+    let entered = sessionStorage.getItem("admin_auth");
+
+    if (entered !== ADMIN_PASSWORD) {
+      entered = prompt("Enter admin password:");
+
+      if (entered !== ADMIN_PASSWORD) {
+        document.body.innerHTML =
+          "<h1 style='color:white;text-align:center;margin-top:100px;'>Access Denied</h1>";
+        throw new Error("Unauthorized");
+      }
+
+      sessionStorage.setItem("admin_auth", entered);
+    }
+
+    function formatDate(dateString) {
+      if (!dateString) return "—";
+      return new Date(dateString).toLocaleDateString();
+    }
+
+    function getStatusClass(status) {
+      const s = (status || "").toLowerCase();
+
+      if (s === "ready mark premier") return "status-pill status-premier";
+      if (s === "verified clean") return "status-pill status-verified";
+      if (s === "needs attention") return "status-pill status-attention";
+      if (s === "not clean") return "status-pill status-notclean";
+      return "status-pill status-none";
+    }
+
+    async function loadProperties() {
+      const select = document.getElementById("propertySelect");
+
+      try {
+        const res = await fetch("/api/list-properties");
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.error || "Failed to load properties");
+        }
+
+        select.innerHTML = '<option value="">Select a property</option>';
+
+        data.properties.forEach((property) => {
+          const option = document.createElement("option");
+          option.value = property.id;
+          option.textContent = `${property.property_name} (${property.property_slug})`;
+          select.appendChild(option);
+        });
+      } catch (err) {
+        select.innerHTML = '<option value="">Could not load properties</option>';
+        document.getElementById("dashboardContent").innerHTML =
+          `<div class="loading-box">Error loading properties: ${err.message}</div>`;
+      }
+    }
+
+    async function loadDashboard() {
+      const propertyId = document.getElementById("propertySelect").value;
+      const container = document.getElementById("dashboardContent");
+
+      if (!propertyId) {
+        container.innerHTML = `<div class="loading-box">Please select a property.</div>`;
+        return;
+      }
+
+      container.innerHTML = `<div class="loading-box">Loading dashboard...</div>`;
+
+      try {
+        const res = await fetch(`/api/property-dashboard?propertyId=${encodeURIComponent(propertyId)}`);
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.error || "Failed to load dashboard");
+        }
+
+        const property = data.property;
+        const summary = data.summary;
+        const recentActivity = data.recentActivity || [];
+        const rooms = data.rooms || [];
+
+        container.innerHTML = `
+          <div class="property-header">
+            <h2>${property.property_name}</h2>
+            <div class="property-meta">
+              Type: ${property.property_type || "—"}<br>
+              Location: ${property.city || "—"}${property.state ? ", " + property.state : ""}<br>
+              Status: ${property.status || "—"}<br>
+              Latest Inspection: ${formatDate(summary.latestInspectionDate)}
+            </div>
+          </div>
+
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-label">Total Rooms</div>
+              <div class="stat-value">${summary.totalRooms}</div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-label">Verification Rate</div>
+              <div class="stat-value">${summary.verificationRate}%</div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-label">Verified Clean</div>
+              <div class="stat-value">${summary.verifiedClean}</div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-label">Ready Mark Premier</div>
+              <div class="stat-value">${summary.premier}</div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-label">Needs Attention</div>
+              <div class="stat-value">${summary.needsAttention}</div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-label">Not Clean</div>
+              <div class="stat-value">${summary.notClean}</div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-label">No Inspection</div>
+              <div class="stat-value">${summary.noInspection}</div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-label">Inspected Rooms</div>
+              <div class="stat-value">${summary.inspectedCount}</div>
+            </div>
+          </div>
+
+          <div class="split">
+            <div class="panel">
+              <h3>Recent Activity</h3>
+              ${
+                recentActivity.length
+                  ? recentActivity.map((item) => `
+                    <div class="recent-item">
+                      <strong>Room ${item.room_number}</strong><br>
+                      <span class="${getStatusClass(item.status)}">${item.status}</span><br>
+                      <span class="muted">Score: ${item.score ?? "—"} | Verified: ${formatDate(item.inspection_date)}</span><br>
+                      <span class="muted">Verification ID: ${item.verification_id || "—"}</span>
+                    </div>
+                  `).join("")
+                  : `<div class="empty">No recent inspection activity yet.</div>`
+              }
+            </div>
+
+            <div class="panel">
+              <h3>Flagged Rooms</h3>
+              ${
+                rooms.filter(r =>
+                  ["needs attention", "not clean", "no inspection"].includes((r.status || "").toLowerCase())
+                ).length
+                  ? rooms
+                      .filter(r =>
+                        ["needs attention", "not clean", "no inspection"].includes((r.status || "").toLowerCase())
+                      )
+                      .map((room) => `
+                        <div class="recent-item">
+                          <strong>Room ${room.room_number}</strong><br>
+                          <span class="${getStatusClass(room.status)}">${room.status}</span><br>
+                          <span class="muted">Score: ${room.score ?? "—"}</span><br>
+                          <span class="muted">Verification ID: ${room.verification_id || "—"}</span>
+                        </div>
+                      `).join("")
+                  : `<div class="empty">No flagged rooms. Nice.</div>`
+              }
+            </div>
+          </div>
+
+          <div class="panel">
+            <h3>Room Status Table</h3>
+            ${
+              rooms.length
+                ? `
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Room</th>
+                        <th>Status</th>
+                        <th>Score</th>
+                        <th>Last Inspection</th>
+                        <th>Verification ID</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      ${rooms.map((room) => `
+                        <tr>
+                          <td>${room.room_number}</td>
+                          <td><span class="${getStatusClass(room.status)}">${room.status}</span></td>
+                          <td>${room.score ?? "—"}</td>
+                          <td>${formatDate(room.inspection_date)}</td>
+                          <td>${room.verification_id || "—"}</td>
+                        </tr>
+                      `).join("")}
+                    </tbody>
+                  </table>
+                `
+                : `<div class="empty">No rooms found for this property yet.</div>`
+            }
+          </div>
+        `;
+      } catch (err) {
+        container.innerHTML = `<div class="loading-box">Error loading dashboard: ${err.message}</div>`;
+      }
+    }
+
+    document.getElementById("loadDashboardBtn").addEventListener("click", loadDashboard);
+
+    loadProperties();
+  </script>
+</body>
+</html>
