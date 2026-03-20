@@ -97,7 +97,20 @@
   </div>
 
   <script>
-    async function loadProperties() {
+    const ADMIN_PASSWORD = "readymark2026";
+
+let entered = sessionStorage.getItem("admin_auth");
+
+if (entered !== ADMIN_PASSWORD) {
+  entered = prompt("Enter admin password:");
+
+  if (entered !== ADMIN_PASSWORD) {
+    document.body.innerHTML = "<h1 style='color:white;text-align:center;margin-top:100px;'>Access Denied</h1>";
+    throw new Error("Unauthorized");
+  }
+
+  sessionStorage.setItem("admin_auth", entered);
+}    async function loadProperties() {
       const select = document.getElementById("propertySelect");
       const resultBox = document.getElementById("resultBox");
 
