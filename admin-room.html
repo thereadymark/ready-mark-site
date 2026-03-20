@@ -166,21 +166,56 @@ if (entered !== ADMIN_PASSWORD) {
           throw new Error(data.error || "Failed to create room");
         }
 
-       resultBox.innerHTML =
-      `<strong>Room created successfully.</strong><br><br>
-       Room Number: ${data.room.room_number}<br>
-      QR Slug: ${data.room.qr_slug}<br>
-      QR URL: <a href="${data.room.qr_url}" target="_blank">${data.room.qr_url}</a>`;   
-        const qrContainer = document.getElementById("qrContainer");
+       
+        resultBox.innerHTML =
+    `<strong>Room created successfully.</strong><br><br>
+    Room Number: ${data.room.room_number}<br>
+    QR Slug: ${data.room.qr_slug}<br>
+    QR URL: <a href="${data.room.qr_url}" target="_blank">${data.room.qr_url}</a><br><br>
 
-      qrContainer.innerHTML = `
-      <p style="margin-bottom:10px;">QR Code:</p>
-     <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(data.room.qr_url)}" />`;      
-      } catch (err) {
+   <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:10px;">
+ <button id="copyUrlBtn" type="button" style="background:#d4af57;color:#111827;border:none;padding:10px 16px;border-radius:8px;font-weight:bold;cursor:pointer;">
+    Copy URL
+  </button>
+
+  <button id="openVerifyBtn" type="button" style="background:#d4af57;color:#111827;border:none;padding:10px 16px;border-radius:8px;font-weight:bold;cursor:pointer;">
+    Open Verification Page
+  </button>
+
+  <a
+    id="downloadQrBtn"
+    href="https://api.qrserver.com/v1/create-qr-code/?size=600x600&data=${encodeURIComponent(data.room.qr_url)}"
+    download="qr-${data.room.qr_slug}.png"
+    target="_blank"
+    style="background:#d4af57;color:#111827;padding:10px 16px;border-radius:8px;font-weight:bold;text-decoration:none;display:inline-block;"
+  >
+    Download QR Code
+  </a>
+  </div>`;       
+        const qrContainer = document.getElementById("qrContainer");
+   qrContainer.innerHTML = `
+  <p style="margin-bottom:10px;">QR Code:</p>
+  <img
+    id="generatedQrImage"
+    src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(data.room.qr_url)}"
+    style="display:block; margin:0 auto 12px auto;"
+  />
+`;        
+        document.getElementById("copyUrlBtn").addEventListener("click", async () => {
+     try {
+    await navigator.clipboard.writeText(data.room.qr_url);
+    resultBox.innerHTML += `<div style="margin-top:12px;color:#3ddc84;font-weight:bold;">URL copied.</div>`;
+  } 
+     catch (err) {
+    resultBox.innerHTML += `<div style="margin-top:12px;color:#ff6b6b;font-weight:bold;">Could not copy URL.</div>`;
+  }
+});
+document.getElementById("openVerifyBtn").addEventListener("click", () => {
+  window.open(data.room.qr_url, "_blank");
+});      } catch (err) {
         resultBox.textContent = `Error: ${err.message}`;
       }
     }
-
     document.getElementById("createRoomBtn").addEventListener("click", createRoom);
     loadProperties();
   </script>
