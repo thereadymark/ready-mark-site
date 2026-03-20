@@ -18,7 +18,7 @@ export default async function handler(req, res) {
       Authorization: `Bearer ${serviceRoleKey}`,
     };
 
-    // 1. Property
+    // 1) Get property
     const propertyRes = await fetch(
       `${supabaseUrl}/rest/v1/properties?id=eq.${encodeURIComponent(propertyId)}&select=*`,
       { headers }
@@ -26,7 +26,10 @@ export default async function handler(req, res) {
     const propertyData = await propertyRes.json();
 
     if (!propertyRes.ok) {
-      return res.status(500).json({ error: "Property lookup failed", details: propertyData });
+      return res.status(500).json({
+        error: "Property lookup failed",
+        details: propertyData,
+      });
     }
 
     if (!propertyData.length) {
@@ -35,20 +38,24 @@ export default async function handler(req, res) {
 
     const property = propertyData[0];
 
-    // 2. Rooms for property
+    // 2) Get all rooms for property
     const roomsRes = await fetch(
-      `${supabaseUrl}/rest/v1/Rooms?property_id=eq.${encodeURIComponent(propertyId)}&select=*`,
+      `${supabaseUrl}/rest/v1/Rooms?property_id=eq.${encodeURIComponent(propertyId)}&select=*&order=room_number.asc`,
       { headers }
     );
     const roomsData = await roomsRes.json();
 
     if (!roomsRes.ok) {
-      return res.status(500).json({ error: "Room lookup failed", details: roomsData });
+      return res.status(500).json({
+        error: "Room lookup failed",
+        details: roomsData,
+      });
     }
 
     const rooms = roomsData || [];
     const totalRooms = rooms.length;
 
+    // Early return if no rooms
     if (!totalRooms) {
       return res.status(200).json({
         property: {
@@ -68,85 +75,111 @@ export default async function handler(req, res) {
           notClean: 0,
           pending: 0,
           verificationRate: 0,
-          lastInspectionDate: null,
+          latestInspectionDate: null,
         },
         flaggedRooms: [],
         recentActivity: [],
+        rooms: [],
       });
     }
 
+    // Build room lookup
     const roomMap = {};
     const roomIds = rooms.map((room) => {
       roomMap[room.id] = room;
       return room.id;
     });
 
-    const inList = roomIds.map((id) => `"${id}"`).join(",");
-
-    // 3. Current inspections for those rooms
+    // 3) Get current inspections for these rooms
+    const quotedRoomIds = roomIds.map((id) => `"${id}"`).join(",");
     const inspectionsRes = await fetch(
-      `${supabaseUrl}/rest/v1/Inspections?room_id=in.(${encodeURIComponent(inList)})&is_current=eq.true&select=*&order=created_at.desc`,
+      `${supabaseUrl}/rest/v1/Inspections?room_id=in.(${encodeURIComponent(
+        quotedRoomIds
+      )})&is_current=eq.true&select=*&order=created_at.desc`,
       { headers }
     );
     const inspectionsData = await inspectionsRes.json();
 
     if (!inspectionsRes.ok) {
-      return res.status(500).json({ error: "Inspection lookup failed", details: inspectionsData });
+      return res.status(500).json({
+        error: "Inspection lookup failed",
+        details: inspectionsData,
+      });
     }
 
     const inspections = inspectionsData || [];
 
-    let premier = 0;
-    let verifiedClean = 0;
-    let needsAttention = 0;
-    let notClean = 0;
-
+    // Current inspection by room_id
+    const inspectionMap = {};
     inspections.forEach((inspection) => {
-      const tier = (inspection.certification_tier || "").toLowerCase();
-
-      if (tier === "ready mark premier") premier += 1;
-      else if (tier === "verified clean") verifiedClean += 1;
-      else if (tier === "needs attention") needsAttention += 1;
-      else if (tier === "not clean") notClean += 1;
+      inspectionMap[inspection.room_id] = inspection;
     });
 
-    const currentInspectionRoomIds = new Set(inspections.map((i) => i.room_id));
-    const pending = totalRooms - currentInspectionRoomIds.size;
-    const verificationRate = totalRooms
-      ? Math.round(((premier + verifiedClean) / totalRooms) * 100)
-      : 0;
+    // 4) Build room summary rows
+    const roomSummaries = rooms.map((room) => {
+      const inspection = inspectionMap[room.id] || null;
 
-    const lastInspectionDate = inspections.length ? inspections[0].created_at : null;
+      return {
+        room_id: room.id,
+        room_number: room.room_number,
+        qr_slug: room.qr_slug,
+        qr_url: room.qr_url,
+        status: inspection?.certification_tier || "No Inspection",
+        score: inspection?.score ?? null,
+        verification_id: inspection?.verification_id || "",
+        inspector_id: inspection?.inspector_id || "",
+        inspection_date: inspection?.created_at || null,
+        notes: inspection?.notes || "",
+      };
+    });
 
-    const flaggedRooms = inspections
-      .filter((inspection) => {
-        const tier = (inspection.certification_tier || "").toLowerCase();
-        return tier === "needs attention" || tier === "not clean";
-      })
-      .map((inspection) => ({
-        room_id: inspection.room_id,
-        room_number: roomMap[inspection.room_id]?.room_number || "",
-        certification_tier: inspection.certification_tier || "",
-        score: inspection.score,
-        verification_id: inspection.verification_id || "",
-        notes: inspection.notes || "",
-        created_at: inspection.created_at || "",
-      }))
+    // 5) Summary counts
+    const premier = roomSummaries.filter(
+      (room) => (room.status || "").toLowerCase() === "ready mark premier"
+    ).length;
+
+    const verifiedClean = roomSummaries.filter(
+      (room) => (room.status || "").toLowerCase() === "verified clean"
+    ).length;
+
+    const needsAttention = roomSummaries.filter(
+      (room) => (room.status || "").toLowerCase() === "needs attention"
+    ).length;
+
+    const notClean = roomSummaries.filter(
+      (room) => (room.status || "").toLowerCase() === "not clean"
+    ).length;
+
+    const pending = roomSummaries.filter(
+      (room) => (room.status || "").toLowerCase() === "no inspection"
+    ).length;
+
+    const verificationRate =
+      totalRooms > 0 ? Math.round(((premier + verifiedClean) / totalRooms) * 100) : 0;
+
+    const latestInspectionDate = roomSummaries
+      .filter((room) => room.inspection_date)
+      .sort((a, b) => new Date(b.inspection_date) - new Date(a.inspection_date))[0]
+      ?.inspection_date || null;
+
+    // 6) Flagged rooms
+    const flaggedRooms = roomSummaries
+      .filter((room) =>
+        ["needs attention", "not clean", "no inspection"].includes(
+          (room.status || "").toLowerCase()
+        )
+      )
       .sort((a, b) => {
-        const aScore = a.score ?? 999;
-        const bScore = b.score ?? 999;
-        return aScore - bScore;
+        const aRoom = String(a.room_number || "");
+        const bRoom = String(b.room_number || "");
+        return aRoom.localeCompare(bRoom, undefined, { numeric: true, sensitivity: "base" });
       });
 
-    const recentActivity = inspections.slice(0, 10).map((inspection) => ({
-      room_id: inspection.room_id,
-      room_number: roomMap[inspection.room_id]?.room_number || "",
-      certification_tier: inspection.certification_tier || "",
-      score: inspection.score,
-      verification_id: inspection.verification_id || "",
-      inspector_id: inspection.inspector_id || "",
-      created_at: inspection.created_at || "",
-    }));
+    // 7) Recent activity
+    const recentActivity = roomSummaries
+      .filter((room) => room.inspection_date)
+      .sort((a, b) => new Date(b.inspection_date) - new Date(a.inspection_date))
+      .slice(0, 10);
 
     return res.status(200).json({
       property: {
@@ -166,10 +199,11 @@ export default async function handler(req, res) {
         notClean,
         pending,
         verificationRate,
-        lastInspectionDate,
+        latestInspectionDate,
       },
       flaggedRooms,
       recentActivity,
+      rooms: roomSummaries,
     });
   } catch (error) {
     return res.status(500).json({
