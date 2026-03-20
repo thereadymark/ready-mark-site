@@ -33,8 +33,21 @@ export default async function handler(req, res) {
 
       const room = roomData[0];
 
+      const propertyRes = await fetch(
+        `${supabaseUrl}/rest/v1/properties?id=eq.${room.property_id}&select=*`,
+        { headers }
+      );
+
+      const propertyData = await propertyRes.json();
+
+      if (!propertyRes.ok) {
+        return res.status(500).json({ error: "Property lookup failed", details: propertyData });
+      }
+
+      const property = propertyData[0] || {};
+
       const inspectionRes = await fetch(
-        `${supabaseUrl}/rest/v1/Inspections?room_id=eq.${room.id}&select=*`,
+        `${supabaseUrl}/rest/v1/Inspections?room_id=eq.${room.id}&is_current=eq.true&select=*`,
         { headers }
       );
 
@@ -46,8 +59,8 @@ export default async function handler(req, res) {
 
       if (!inspectionData.length) {
         return res.status(404).json({
-          property: room.property_name,
-          room: room.room_number,
+          property: property.property_name ?? "",
+          room: room.room_number ?? "",
           error: "Inspection not found",
         });
       }
@@ -55,13 +68,15 @@ export default async function handler(req, res) {
       const inspection = inspectionData[0];
 
       return res.status(200).json({
-        property: room.property_name ?? "",
+        property: property.property_name ?? "",
         room: room.room_number ?? "",
         inspectorId: inspection.inspector_id ?? "",
         inspectionDate: inspection.created_at ?? "",
         certificationTier: inspection.certification_tier ?? "",
         verificationId: inspection.verification_id ?? "",
         score: inspection.score ?? "",
+        status: inspection.certification_tier ?? "Verified Record",
+        notes: inspection.notes ?? "",
       });
     }
 
@@ -97,8 +112,21 @@ export default async function handler(req, res) {
 
       const room = roomData[0] || {};
 
+      const propertyRes = await fetch(
+        `${supabaseUrl}/rest/v1/properties?id=eq.${room.property_id}&select=*`,
+        { headers }
+      );
+
+      const propertyData = await propertyRes.json();
+
+      if (!propertyRes.ok) {
+        return res.status(500).json({ error: "Associated property lookup failed", details: propertyData });
+      }
+
+      const property = propertyData[0] || {};
+
       return res.status(200).json({
-        property: room.property_name ?? "",
+        property: property.property_name ?? "",
         room: room.room_number ?? "",
         inspectorId: inspection.inspector_id ?? "",
         inspectionDate: inspection.created_at ?? "",
@@ -106,6 +134,7 @@ export default async function handler(req, res) {
         verificationId: inspection.verification_id ?? "",
         score: inspection.score ?? "",
         status: "Verified Record",
+        notes: inspection.notes ?? "",
       });
     }
 
