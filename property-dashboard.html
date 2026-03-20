@@ -226,6 +226,17 @@
       color: #cbd5e1;
     }
 
+    .room-link {
+      color: #93c5fd;
+      text-decoration: underline;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .room-link:hover {
+      color: #bfdbfe;
+    }
+
     @media (max-width: 980px) {
       .stats-grid {
         grid-template-columns: repeat(2, 1fr);
@@ -308,6 +319,11 @@
       if (s === "needs attention") return "status-pill status-attention";
       if (s === "not clean") return "status-pill status-notclean";
       return "status-pill status-none";
+    }
+
+    function openRoomVerification(qrUrl) {
+      if (!qrUrl) return;
+      window.open(qrUrl, "_blank");
     }
 
     async function loadProperties() {
@@ -407,19 +423,20 @@
               <div class="stat-value">${summary.pending ?? 0}</div>
             </div>
 
-           <div class="stat-card">
-             <div class="stat-label">Inspected Rooms</div>
-             <div class="stat-value">${(summary.totalRooms ?? 0) - (summary.pending ?? 0)}</div>
-   </div>          
-   </div>
-            <div class="split">
+            <div class="stat-card">
+              <div class="stat-label">Inspected Rooms</div>
+              <div class="stat-value">${(summary.totalRooms ?? 0) - (summary.pending ?? 0)}</div>
+            </div>
+          </div>
+
+          <div class="split">
             <div class="panel">
               <h3>Recent Activity</h3>
               ${
                 recentActivity.length
                   ? recentActivity.map((item) => `
                     <div class="recent-item">
-                      <strong>Room ${item.room_number}</strong><br>
+                      <span class="room-link" data-qr-url="${item.qr_url || ""}">Room ${item.room_number}</span><br>
                       <span class="${getStatusClass(item.status)}">${item.status}</span><br>
                       <span class="muted">Score: ${item.score ?? "—"} | Verified: ${formatDate(item.inspection_date)}</span><br>
                       <span class="muted">Verification ID: ${item.verification_id || "—"}</span>
@@ -441,7 +458,7 @@
                       )
                       .map((room) => `
                         <div class="recent-item">
-                          <strong>Room ${room.room_number}</strong><br>
+                          <span class="room-link" data-qr-url="${room.qr_url || ""}">Room ${room.room_number}</span><br>
                           <span class="${getStatusClass(room.status)}">${room.status}</span><br>
                           <span class="muted">Score: ${room.score ?? "—"}</span><br>
                           <span class="muted">Verification ID: ${room.verification_id || "—"}</span>
@@ -470,7 +487,7 @@
                     <tbody>
                       ${rooms.map((room) => `
                         <tr>
-                          <td>${room.room_number}</td>
+                          <td><span class="room-link" data-qr-url="${room.qr_url || ""}">Room ${room.room_number}</span></td>
                           <td><span class="${getStatusClass(room.status)}">${room.status}</span></td>
                           <td>${room.score ?? "—"}</td>
                           <td>${formatDate(room.inspection_date)}</td>
@@ -484,6 +501,12 @@
             }
           </div>
         `;
+
+        document.querySelectorAll(".room-link").forEach((el) => {
+          el.addEventListener("click", () => {
+            openRoomVerification(el.dataset.qrUrl);
+          });
+        });
       } catch (err) {
         container.innerHTML = `<div class="loading-box">Error loading dashboard: ${err.message}</div>`;
       }
