@@ -404,16 +404,15 @@
 
             <div class="stat-card">
               <div class="stat-label">No Inspection</div>
-              <div class="stat-value">${summary.noInspection}</div>
+              <div class="stat-value">${summary.pending ?? 0}</div>
             </div>
 
-            <div class="stat-card">
-              <div class="stat-label">Inspected Rooms</div>
-              <div class="stat-value">${summary.inspectedCount}</div>
-            </div>
-          </div>
-
-          <div class="split">
+           <div class="stat-card">
+             <div class="stat-label">Inspected Rooms</div>
+             <div class="stat-value">${(summary.totalRooms ?? 0) - (summary.pending ?? 0)}</div>
+   </div>          
+   </div>
+            <div class="split">
             <div class="panel">
               <h3>Recent Activity</h3>
               ${
