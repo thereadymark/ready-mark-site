@@ -95,7 +95,8 @@
 
     <div class="result" id="resultBox">Ready.</div>
   </div>
-
+  <div id="qrContainer" style="margin-top:20px; text-align:center;"></div>  
+  
   <script>
     const ADMIN_PASSWORD = "readymark2026";
 
@@ -165,12 +166,16 @@ if (entered !== ADMIN_PASSWORD) {
           throw new Error(data.error || "Failed to create room");
         }
 
-        resultBox.textContent =
-`Room created successfully.
+       resultBox.innerHTML =
+      `<strong>Room created successfully.</strong><br><br>
+       Room Number: ${data.room.room_number}<br>
+      QR Slug: ${data.room.qr_slug}<br>
+      QR URL: <a href="${data.room.qr_url}" target="_blank">${data.room.qr_url}</a>`;   
+        const qrContainer = document.getElementById("qrContainer");
 
-Room Number: ${data.room.room_number}
-QR Slug: ${data.room.qr_slug}
-QR URL: ${data.room.qr_url}`;
+      qrContainer.innerHTML = `
+      <p style="margin-bottom:10px;">QR Code:</p>
+     <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(data.room.qr_url)}" />`;      
       } catch (err) {
         resultBox.textContent = `Error: ${err.message}`;
       }
