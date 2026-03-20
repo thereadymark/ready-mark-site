@@ -12,14 +12,14 @@
       color: #f8f5ee;
       display: flex;
       justify-content: center;
-      align-items: center;
+      align-items: flex-start;
       min-height: 100vh;
       padding: 20px;
     }
 
     .card {
       width: 100%;
-      max-width: 900px;
+      max-width: 1100px;
       background: linear-gradient(145deg, #1c2740, #141c2f);
       border: 2px solid #c9a34a;
       border-radius: 18px;
@@ -27,23 +27,49 @@
       box-shadow: 0 10px 35px rgba(0, 0, 0, 0.35);
     }
 
+    .top-title {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+
+    .top-title h1 {
+      margin: 0 0 10px 0;
+      color: #f8f5ee;
+      font-size: 48px;
+    }
+
+    .top-title p {
+      margin: 0;
+      color: #d1d5db;
+      font-size: 18px;
+    }
+
     .layout {
       display: grid;
-      grid-template-columns: 1.4fr 0.9fr;
+      grid-template-columns: 1fr 1fr;
       gap: 24px;
       align-items: start;
     }
 
-    h1 {
-      margin-top: 0;
-      text-align: center;
-      color: #f8f5ee;
+    .panel {
+      border: 1px solid rgba(212, 175, 87, 0.25);
+      border-radius: 14px;
+      padding: 22px;
+      background: rgba(255, 255, 255, 0.04);
     }
 
-    p {
+    .panel h2 {
+      margin-top: 0;
+      color: #f8f5ee;
+      font-size: 30px;
+      text-align: center;
+    }
+
+    .panel p.helper {
       text-align: center;
       color: #d1d5db;
-      margin-bottom: 28px;
+      margin-top: -4px;
+      margin-bottom: 22px;
     }
 
     label {
@@ -55,6 +81,7 @@
 
     select,
     input,
+    textarea,
     button {
       width: 100%;
       box-sizing: border-box;
@@ -63,12 +90,19 @@
       border: none;
       margin-bottom: 18px;
       font-size: 16px;
+      font-family: inherit;
     }
 
     select,
-    input {
+    input,
+    textarea {
       background: #f8f5ee;
       color: #111827;
+    }
+
+    textarea {
+      min-height: 110px;
+      resize: vertical;
     }
 
     button {
@@ -79,12 +113,11 @@
     }
 
     .result {
-      margin-top: 20px;
+      margin-top: 14px;
       padding: 16px;
       border-radius: 10px;
       background: rgba(255, 255, 255, 0.05);
       border: 1px solid rgba(212, 175, 87, 0.25);
-      white-space: normal;
       line-height: 1.6;
     }
 
@@ -116,7 +149,8 @@
       border-radius: 10px;
       background: rgba(255, 255, 255, 0.05);
       border: 1px solid rgba(212, 175, 87, 0.25);
-      min-height: 200px;
+      min-height: 220px;
+      margin-top: 18px;
     }
 
     .status-message {
@@ -137,20 +171,43 @@
       word-break: break-all;
     }
 
-    @media (max-width: 800px) {
+    .divider {
+      height: 1px;
+      background: rgba(212, 175, 87, 0.18);
+      margin: 18px 0 10px;
+    }
+
+    .small-note {
+      font-size: 14px;
+      color: #cbd5e1;
+      margin-top: -8px;
+      margin-bottom: 14px;
+    }
+
+    @media (max-width: 900px) {
       .layout {
         grid-template-columns: 1fr;
+      }
+
+      .top-title h1 {
+        font-size: 40px;
       }
     }
   </style>
 </head>
 <body>
   <div class="card">
-    <h1>Add Room</h1>
-    <p>Create a room and auto-generate its QR slug and verification URL.</p>
+    <div class="top-title">
+      <h1>The Ready Mark Admin</h1>
+      <p>Create rooms, generate QR codes, and log inspections.</p>
+    </div>
 
     <div class="layout">
-      <div>
+      <!-- ROOM PANEL -->
+      <div class="panel">
+        <h2>Add Room</h2>
+        <p class="helper">Create a room and auto-generate its QR slug and verification URL.</p>
+
         <label for="propertySelect">Property</label>
         <select id="propertySelect">
           <option value="">Loading properties...</option>
@@ -162,10 +219,47 @@
         <button id="createRoomBtn" type="button">Create Room</button>
 
         <div class="result" id="resultBox">Ready.</div>
+
+        <div class="qr-panel" id="qrContainer">
+          <p style="margin:0; color:#d1d5db;">QR code will appear here.</p>
+        </div>
       </div>
 
-      <div class="qr-panel" id="qrContainer">
-        <p style="margin: 0; color: #d1d5db;">QR code will appear here.</p>
+      <!-- INSPECTION PANEL -->
+      <div class="panel">
+        <h2>Create Inspection</h2>
+        <p class="helper">Log a room inspection without touching Supabase directly.</p>
+
+        <label for="inspectionRoomSelect">Room</label>
+        <select id="inspectionRoomSelect">
+          <option value="">Loading rooms...</option>
+        </select>
+
+        <div class="small-note" id="inspectionRoomPreview">
+          Select a room to attach this inspection.
+        </div>
+
+        <label for="inspectorId">Inspector ID</label>
+        <input id="inspectorId" type="text" placeholder="e.g. 4603" />
+
+        <label for="inspectionScore">Score</label>
+        <input id="inspectionScore" type="number" min="0" max="100" placeholder="e.g. 94" />
+
+        <label for="inspectionTier">Certification Tier</label>
+        <select id="inspectionTier">
+          <option value="">Select certification tier</option>
+          <option value="Ready Mark Premier">Ready Mark Premier</option>
+          <option value="Verified Clean">Verified Clean</option>
+          <option value="Needs Attention">Needs Attention</option>
+          <option value="Not Clean">Not Clean</option>
+        </select>
+
+        <label for="inspectionNotes">Notes</label>
+        <textarea id="inspectionNotes" placeholder="Add inspection notes here..."></textarea>
+
+        <button id="createInspectionBtn" type="button">Create Inspection</button>
+
+        <div class="result" id="inspectionResultBox">Ready.</div>
       </div>
     </div>
   </div>
@@ -215,11 +309,60 @@
       }
     }
 
+    async function loadRooms() {
+      const select = document.getElementById("inspectionRoomSelect");
+      const preview = document.getElementById("inspectionRoomPreview");
+      const resultBox = document.getElementById("inspectionResultBox");
+
+      try {
+        const res = await fetch("/api/list-rooms");
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.error || "Failed to load rooms");
+        }
+
+        select.innerHTML = '<option value="">Select a room</option>';
+
+        data.rooms.forEach((room) => {
+          const option = document.createElement("option");
+          option.value = room.id;
+          option.textContent = `${room.property_name} — Room ${room.room_number}`;
+          option.dataset.propertyName = room.property_name || "";
+          option.dataset.roomNumber = room.room_number || "";
+          option.dataset.qrSlug = room.qr_slug || "";
+          option.dataset.qrUrl = room.qr_url || "";
+          select.appendChild(option);
+        });
+
+        preview.textContent = "Rooms loaded.";
+        resultBox.textContent = "Ready.";
+      } catch (err) {
+        select.innerHTML = '<option value="">Could not load rooms</option>';
+        preview.textContent = "Room list unavailable.";
+        resultBox.textContent = `Error loading rooms: ${err.message}`;
+      }
+    }
+
+    function updateInspectionRoomPreview() {
+      const select = document.getElementById("inspectionRoomSelect");
+      const preview = document.getElementById("inspectionRoomPreview");
+      const selected = select.options[select.selectedIndex];
+
+      if (!selected || !selected.value) {
+        preview.textContent = "Select a room to attach this inspection.";
+        return;
+      }
+
+      preview.textContent = `${selected.dataset.propertyName} — Room ${selected.dataset.roomNumber} (${selected.dataset.qrSlug})`;
+    }
+
     async function createRoom() {
       const propertyId = document.getElementById("propertySelect").value;
       const roomNumber = document.getElementById("roomNumber").value.trim();
       const resultBox = document.getElementById("resultBox");
       const qrContainer = document.getElementById("qrContainer");
+      const inspectionRoomSelect = document.getElementById("inspectionRoomSelect");
 
       if (!propertyId || !roomNumber) {
         resultBox.textContent = "Please choose a property and enter a room number.";
@@ -264,7 +407,7 @@
             </a>
           </div>
 
-          <div id="copyStatus" class="status-message"></div>
+          <div class="status-message" id="copyStatus"></div>
         `;
 
         qrContainer.innerHTML = `
@@ -293,14 +436,88 @@
         document.getElementById("openVerifyBtn").addEventListener("click", () => {
           window.open(data.room.qr_url, "_blank");
         });
+
+        await loadRooms();
+
+        // auto-select newly created room in inspection panel
+        for (let i = 0; i < inspectionRoomSelect.options.length; i++) {
+          if (inspectionRoomSelect.options[i].value === data.room.id) {
+            inspectionRoomSelect.selectedIndex = i;
+            break;
+          }
+        }
+
+        updateInspectionRoomPreview();
+
+        document.getElementById("roomNumber").value = "";
       } catch (err) {
         resultBox.textContent = `Error: ${err.message}`;
         qrContainer.innerHTML = `<p style="margin:0; color:#ff6b6b;">QR generation failed.</p>`;
       }
     }
 
+    async function createInspection() {
+      const roomId = document.getElementById("inspectionRoomSelect").value;
+      const inspectorId = document.getElementById("inspectorId").value.trim();
+      const score = document.getElementById("inspectionScore").value.trim();
+      const certificationTier = document.getElementById("inspectionTier").value;
+      const notes = document.getElementById("inspectionNotes").value.trim();
+      const resultBox = document.getElementById("inspectionResultBox");
+
+      if (!roomId || !inspectorId || !score || !certificationTier) {
+        resultBox.textContent = "Please select a room and complete inspector ID, score, and certification tier.";
+        return;
+      }
+
+      resultBox.textContent = "Creating inspection...";
+
+      try {
+        const res = await fetch("/api/create-inspection", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            roomId,
+            inspectorId,
+            score,
+            certificationTier,
+            notes
+          }),
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.error || "Failed to create inspection");
+        }
+
+        resultBox.innerHTML = `
+          <strong>Inspection created successfully.</strong><br><br>
+          Verification ID: ${data.inspection.verification_id}<br>
+          Room ID: ${data.inspection.room_id}<br>
+          Inspector ID: ${data.inspection.inspector_id}<br>
+          Score: ${data.inspection.score}<br>
+          Tier: ${data.inspection.certification_tier}<br>
+          Notes: ${data.inspection.notes || "None"}<br>
+          Created At: ${data.inspection.created_at || ""}
+        `;
+
+        document.getElementById("inspectorId").value = "";
+        document.getElementById("inspectionScore").value = "";
+        document.getElementById("inspectionTier").value = "";
+        document.getElementById("inspectionNotes").value = "";
+      } catch (err) {
+        resultBox.textContent = `Error: ${err.message}`;
+      }
+    }
+
     document.getElementById("createRoomBtn").addEventListener("click", createRoom);
+    document.getElementById("createInspectionBtn").addEventListener("click", createInspection);
+    document.getElementById("inspectionRoomSelect").addEventListener("change", updateInspectionRoomPreview);
+
     loadProperties();
+    loadRooms();
   </script>
 </body>
 </html>
