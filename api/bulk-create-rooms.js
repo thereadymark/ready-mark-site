@@ -24,7 +24,6 @@ export default async function handler(req, res) {
       Prefer: "return=representation",
     };
 
-    // Get property
     const propertyRes = await fetch(
       `${supabaseUrl}/rest/v1/properties?id=eq.${encodeURIComponent(propertyId)}&select=*`,
       { headers }
@@ -42,7 +41,6 @@ export default async function handler(req, res) {
 
     const property = propertyData[0];
 
-    // Clean room numbers
     const cleanedRooms = roomNumbers
       .map((room) => String(room).trim())
       .filter(Boolean);
@@ -51,7 +49,6 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "No valid room numbers provided" });
     }
 
-    // Existing rooms for this property
     const existingRes = await fetch(
       `${supabaseUrl}/rest/v1/Rooms?property_id=eq.${encodeURIComponent(propertyId)}&select=room_number`,
       { headers }
