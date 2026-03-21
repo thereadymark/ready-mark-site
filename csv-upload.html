@@ -278,7 +278,7 @@
           return;
         }
 
-        previewBox.value = parsedRoomNumbers.join("\\n");
+        previewBox.value = parsedRoomNumbers.join("<br>");
         resultBox.textContent = `Parsed ${parsedRoomNumbers.length} room numbers successfully.`;
       } catch (err) {
         resultBox.textContent = `Error parsing CSV: ${err.message}`;
