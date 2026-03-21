@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Print QR Sheets | The Ready Mark</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Georgia, serif;
+      background: #0f172a;
+      color: #f8f5ee;
+      min-height: 100vh;
+      padding: 20px;
+      box-sizing: border-box;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+    }
+
+    .shell {
+      width: 100%;
+      max-width: 1200px;
+      background: linear-gradient(145deg, #1c2740, #141c2f);
+      border: 2px solid #c9a34a;
+      border-radius: 18px;
+      padding: 28px;
+      box-shadow: 0 10px 35px rgba(0, 0, 0, 0.35);
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      text-align: center;
+      font-size: 42px;
+      color: #f8f5ee;
+    }
+
+    p {
+      text-align: center;
+      color: #cbd5e1;
+      margin-bottom: 24px;
+      line-height: 1.6;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      color: #d4af57;
+      font-weight: bold;
+    }
+
+    select, button {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 14px;
+      border-radius: 8px;
+      border: none;
+      font-size: 16px;
+      font-family: inherit;
+      margin-bottom: 18px;
+    }
+
+    select {
+      background: #f8f5ee;
+      color: #111827;
+    }
+
+    button {
+      background: #d4af57;
+      color: #111827;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .status-line {
+      margin-top: 10px;
+      color: #cbd5e1;
+      font-size: 14px;
+      min-height: 20px;
+    }
+
+    .result {
+      margin-top: 14px;
+      padding: 16px;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(212,175,87,0.25);
+      line-height: 1.7;
+      white-space: pre-wrap;
+    }
+
+    .sheet {
+      margin-top: 24px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+    }
+
+    .qr-card {
+      background: #ffffff;
+      color: #111827;
+      border-radius: 12px;
+      padding: 16px;
+      border: 2px solid #d4af57;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      min-height: 320px;
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    .qr-brand {
+      font-size: 14px;
+      letter-spacing: 1.5px;
+      font-weight: bold;
+      color: #8a6a17;
+      margin-bottom: 8px;
+    }
+
+    .qr-room {
+      font-size: 28px;
+      font-weight: bold;
+      margin-bottom: 12px;
+      color: #0f172a;
+    }
+
+    .qr-property {
+      font-size: 14px;
+      color: #374151;
+      margin-bottom: 12px;
+    }
+
+    .qr-image {
+      width: 180px;
+      height: 180px;
+      object-fit: contain;
+      margin-bottom: 12px;
+      border: 1px solid #e5e7eb;
+      padding: 6px;
+      background: #fff;
+    }
+
+    .qr-note {
+      font-size: 13px;
+      color: #374151;
+      line-height: 1.5;
+    }
+
+    .empty-box {
+      margin-top: 20px;
+      padding: 16px;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(212,175,87,0.18);
+      color: #d1d5db;
+    }
+
+    @media (max-width: 900px) {
+      .sheet {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .controls {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .sheet {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media print {
+      body {
+        background: #fff;
+        color: #000;
+        padding: 0;
+      }
+
+      .shell {
+        max-width: 100%;
+        width: 100%;
+        background: #fff;
+        border: none;
+        border-radius: 0;
+        padding: 0;
+        box-shadow: none;
+      }
+
+      .no-print {
+        display: none !important;
+      }
+
+      .sheet {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+        margin-top: 0;
+        padding: 12px;
+      }
+
+      .qr-card {
+        min-height: 300px;
+        border: 1.5px solid #c9a34a;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <div class="no-print">
+      <h1>Admin Print QR Sheets</h1>
+      <p>Load a property and generate a print-ready sheet of room QR codes for setup and reprints.</p>
+
+      <label for="propertySelect">Property</label>
+      <select id="propertySelect">
+        <option value="">Loading properties...</option>
+      </select>
+
+      <div class="controls">
+        <button id="loadRoomsBtn" type="button">Load Property Rooms</button>
+        <button id="printBtn" type="button" disabled>Print Sheet</button>
+      </div>
+
+      <div class="status-line" id="statusLine"></div>
+      <div class="result" id="resultBox">Ready.</div>
+    </div>
+
+    <div id="sheetContainer" class="sheet"></div>
+    <div id="emptyBox" class="empty-box">Load a property to generate printable QR sheets.</div>
+  </div>
+
+  <script>
+    const ADMIN_PASSWORD = "readymark2026";
+
+    let entered = sessionStorage.getItem("admin_auth");
+
+    if (entered !== ADMIN_PASSWORD) {
+      entered = prompt("Enter admin password:");
+
+      if (entered !== ADMIN_PASSWORD) {
+        document.body.innerHTML =
+          "<h1 style='color:white;text-align:center;margin-top:100px;'>Access Denied</h1>";
+        throw new Error("Unauthorized");
+      }
+
+      sessionStorage.setItem("admin_auth", entered);
+    }
+
+    let loadedProperty = null;
+    let loadedRooms = [];
+
+    async function loadProperties() {
+      const select = document.getElementById("propertySelect");
+      const resultBox = document.getElementById("resultBox");
+
+      try {
+        const res = await fetch("/api/list-properties");
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.error || "Failed to load properties");
+        }
+
+        select.innerHTML = '<option value="">Select a property</option>';
+
+        data.properties.forEach((property) => {
+          const option = document.createElement("option");
+          option.value = property.id;
+          option.textContent = `${property.property_name} (${property.property_slug})`;
+          select.appendChild(option);
+        });
+
+        resultBox.textContent = "Properties loaded.";
+      } catch (err) {
+        select.innerHTML = '<option value="">Could not load properties</option>';
+        resultBox.textContent = `Error loading properties: ${err.message}`;
+      }
+    }
+
+    async function loadPropertyRooms() {
+      const propertyId = document.getElementById("propertySelect").value;
+      const resultBox = document.getElementById("resultBox");
+      const statusLine = document.getElementById("statusLine");
+      const printBtn = document.getElementById("printBtn");
+      const sheetContainer = document.getElementById("sheetContainer");
+      const emptyBox = document.getElementById("emptyBox");
+
+      if (!propertyId) {
+        resultBox.textContent = "Please choose a property.";
+        return;
+      }
+
+      resultBox.textContent = "Loading property rooms...";
+      statusLine.textContent = "";
+      printBtn.disabled = true;
+      sheetContainer.innerHTML = "";
+      emptyBox.style.display = "block";
+      loadedProperty = null;
+      loadedRooms = [];
+
+      try {
+        const res = await fetch(`/api/property-rooms?propertyId=${encodeURIComponent(propertyId)}`);
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.error || "Failed to load property rooms");
+        }
+
+        loadedProperty = data.property;
+        loadedRooms = data.rooms || [];
+
+        resultBox.innerHTML = `
+<strong>Property loaded successfully.</strong>
+
+Property: ${loadedProperty.property_name}
+Printable QR codes: ${loadedRooms.length}
+        `;
+
+        if (!loadedRooms.length) {
+          statusLine.textContent = "No rooms with QR codes were found for this property.";
+          return;
+        }
+
+        emptyBox.style.display = "none";
+        printBtn.disabled = false;
+        statusLine.textContent = `${loadedRooms.length} printable QR cards ready.`;
+
+        sheetContainer.innerHTML = loadedRooms.map((room) => `
+          <div class="qr-card">
+            <div class="qr-brand">THE READY MARK</div>
+            <div class="qr-room">Room ${room.room_number}</div>
+            <div class="qr-property">${loadedProperty.property_name}</div>
+            <img
+              class="qr-image"
+              src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(room.qr_url)}"
+              alt="QR for Room ${room.room_number}"
+            />
+            <div class="qr-note">
+              Scan to verify this room’s Ready Mark record.
+            </div>
+          </div>
+        `).join("");
+      } catch (err) {
+        resultBox.textContent = `Error: ${err.message}`;
+      }
+    }
+
+    function printSheet() {
+      if (!loadedRooms.length) return;
+      window.print();
+    }
+
+    document.getElementById("loadRoomsBtn").addEventListener("click", loadPropertyRooms);
+    document.getElementById("printBtn").addEventListener("click", printSheet);
+
+    loadProperties();
+  </script>
+</body>
+</html>
