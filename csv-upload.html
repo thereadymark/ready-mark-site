@@ -77,6 +77,11 @@
       cursor: pointer;
     }
 
+    button:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
     textarea {
       min-height: 180px;
       resize: vertical;
@@ -106,7 +111,25 @@
       color: #86efac;
       font-weight: bold;
     }
+
+    .action-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .action-row button {
+      flex: 1 1 260px;
+      margin-bottom: 0;
+    }
+
+    .small-status {
+      margin-top: 10px;
+      color: #cbd5e1;
+      font-size: 14px;
+    }
   </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 </head>
 <body>
   <div class="shell">
@@ -146,8 +169,13 @@
     <label for="previewBox">Preview Parsed Room Numbers</label>
     <textarea id="previewBox" readonly placeholder="Parsed room numbers will appear here..."></textarea>
 
-    <button id="parseCsvBtn" type="button">Parse CSV</button>
-    <button id="uploadCsvBtn" type="button">Create Rooms from CSV</button>
+    <div class="action-row">
+      <button id="parseCsvBtn" type="button">Parse CSV</button>
+      <button id="uploadCsvBtn" type="button">Create Rooms from CSV</button>
+      <button id="downloadZipBtn" type="button" disabled>Download All QR Codes ZIP</button>
+    </div>
+
+    <div class="small-status" id="zipStatus"></div>
 
     <div class="result" id="resultBox">Ready.</div>
   </div>
@@ -170,6 +198,7 @@
     }
 
     let parsedRoomNumbers = [];
+    let latestCreatedRooms = [];
 
     async function loadProperties() {
       const select = document.getElementById("propertySelect");
@@ -208,7 +237,6 @@
       if (!lines.length) return [];
 
       const firstLine = lines[0].toLowerCase().replace(/"/g, "").trim();
-
       let dataLines = lines;
 
       if (
@@ -259,6 +287,8 @@
     async function uploadParsedRooms() {
       const propertyId = document.getElementById("propertySelect").value;
       const resultBox = document.getElementById("resultBox");
+      const downloadZipBtn = document.getElementById("downloadZipBtn");
+      const zipStatus = document.getElementById("zipStatus");
 
       if (!propertyId) {
         resultBox.textContent = "Please choose a property.";
@@ -271,6 +301,9 @@
       }
 
       resultBox.textContent = "Creating rooms from CSV...";
+      zipStatus.textContent = "";
+      downloadZipBtn.disabled = true;
+      latestCreatedRooms = [];
 
       try {
         const res = await fetch("/api/bulk-create-rooms", {
@@ -290,7 +323,9 @@
           throw new Error(data.error || "CSV room creation failed");
         }
 
-        const createdCount = data.created?.length || 0;
+        latestCreatedRooms = data.created || data.createdRooms || [];
+
+        const createdCount = latestCreatedRooms.length;
         const skippedCount = data.skipped?.length || 0;
 
         resultBox.innerHTML = `
@@ -300,18 +335,73 @@ Created: ${createdCount}
 Skipped (already existed): ${skippedCount}
 
 ${createdCount ? `Created Rooms:
-${data.created.map((room) => `- Room ${room.room_number} → ${room.qr_slug}`).join("\n")}` : ""}
+${latestCreatedRooms.map((room) => `- Room ${room.room_number} → ${room.qr_slug}`).join("\n")}` : ""}
 
 ${skippedCount ? `Skipped Rooms:
 ${data.skipped.map((room) => `- ${room}`).join("\n")}` : ""}
         `;
+
+        if (createdCount > 0) {
+          downloadZipBtn.disabled = false;
+          zipStatus.textContent = `${createdCount} QR codes are ready to zip.`;
+        } else {
+          zipStatus.textContent = "No new rooms were created, so there are no new QR codes to zip.";
+        }
       } catch (err) {
         resultBox.textContent = `Error: ${err.message}`;
       }
     }
 
+    async function downloadQrZip() {
+      const downloadZipBtn = document.getElementById("downloadZipBtn");
+      const zipStatus = document.getElementById("zipStatus");
+
+      if (!latestCreatedRooms.length) {
+        zipStatus.textContent = "No newly created rooms available for ZIP download.";
+        return;
+      }
+
+      downloadZipBtn.disabled = true;
+      zipStatus.textContent = "Building ZIP file...";
+
+      try {
+        const zip = new JSZip();
+
+        for (const room of latestCreatedRooms) {
+          const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=600x600&data=${encodeURIComponent(room.qr_url)}`;
+          const response = await fetch(qrApiUrl);
+
+          if (!response.ok) {
+            throw new Error(`Failed to fetch QR for room ${room.room_number}`);
+          }
+
+          const blob = await response.blob();
+          zip.file(`qr-${room.qr_slug}.png`, blob);
+        }
+
+        const zipBlob = await zip.generateAsync({ type: "blob" });
+        const downloadUrl = URL.createObjectURL(zipBlob);
+
+        const link = document.createElement("a");
+        link.href = downloadUrl;
+        link.download = "ready-mark-qr-codes.zip";
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+
+        setTimeout(() => URL.revokeObjectURL(downloadUrl), 1000);
+
+        zipStatus.textContent = "ZIP downloaded successfully.";
+      } catch (err) {
+        zipStatus.textContent = `ZIP error: ${err.message}`;
+      } finally {
+        downloadZipBtn.disabled = false;
+      }
+    }
+
     document.getElementById("parseCsvBtn").addEventListener("click", parseCsvFile);
     document.getElementById("uploadCsvBtn").addEventListener("click", uploadParsedRooms);
+    document.getElementById("downloadZipBtn").addEventListener("click", downloadQrZip);
 
     loadProperties();
   </script>
