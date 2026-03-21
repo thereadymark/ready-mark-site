@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CSV Room Upload | The Ready Mark</title>
+  <title>Bulk Room Upload | The Ready Mark</title>
   <style>
     body {
       margin: 0;
@@ -20,7 +20,7 @@
 
     .shell {
       width: 100%;
-      max-width: 920px;
+      max-width: 900px;
       background: linear-gradient(145deg, #1c2740, #141c2f);
       border: 2px solid #c9a34a;
       border-radius: 18px;
@@ -49,10 +49,7 @@
       font-weight: bold;
     }
 
-    select,
-    input[type="file"],
-    button,
-    textarea {
+    select, textarea, button {
       width: 100%;
       box-sizing: border-box;
       padding: 14px;
@@ -63,11 +60,14 @@
       margin-bottom: 18px;
     }
 
-    select,
-    input[type="file"],
-    textarea {
+    select, textarea {
       background: #f8f5ee;
       color: #111827;
+    }
+
+    textarea {
+      min-height: 240px;
+      resize: vertical;
     }
 
     button {
@@ -75,16 +75,6 @@
       color: #111827;
       font-weight: bold;
       cursor: pointer;
-    }
-
-    button:disabled {
-      opacity: 0.55;
-      cursor: not-allowed;
-    }
-
-    textarea {
-      min-height: 180px;
-      resize: vertical;
     }
 
     .result {
@@ -111,50 +101,25 @@
       color: #86efac;
       font-weight: bold;
     }
-
-    .action-row {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-
-    .action-row button {
-      flex: 1 1 260px;
-      margin-bottom: 0;
-    }
-
-    .small-status {
-      margin-top: 10px;
-      color: #cbd5e1;
-      font-size: 14px;
-    }
   </style>
 </head>
 <body>
   <div class="shell">
-    <h1>CSV Room Upload</h1>
-    <p>Upload a CSV file with room numbers and create them all at once.</p>
+    <h1>Bulk Room Upload</h1>
+    <p>Paste one room number per line and create them all at once.</p>
 
     <div class="note-box">
-      Accepted formats:
+      Example:
       <br><br>
-      <span class="good">Option 1:</span>
-      <br>
-      room_number
+      <span class="good">One room per line</span>
       <br>
       101
       <br>
       102
       <br>
       103
-      <br><br>
-      <span class="good">Option 2:</span>
       <br>
-      101
-      <br>
-      102
-      <br>
-      103
+      104
     </div>
 
     <label for="propertySelect">Property</label>
@@ -162,24 +127,17 @@
       <option value="">Loading properties...</option>
     </select>
 
-    <label for="csvFile">Upload CSV File</label>
-    <input id="csvFile" type="file" accept=".csv,text/csv" />
+    <label for="roomList">Room Numbers</label>
+    <textarea id="roomList" placeholder="101
+102
+103
+104"></textarea>
 
-    <label for="previewBox">Preview Parsed Room Numbers</label>
-    <textarea id="previewBox" readonly placeholder="Parsed room numbers will appear here..."></textarea>
-
-    <div class="action-row">
-      <button id="parseCsvBtn" type="button">Parse CSV</button>
-      <button id="uploadCsvBtn" type="button">Create Rooms from CSV</button>
-      <button id="downloadZipBtn" type="button" disabled>Download All QR Codes ZIP</button>
-    </div>
-
-    <div class="small-status" id="zipStatus"></div>
+    <button id="bulkCreateBtn" type="button">Create Rooms in Bulk</button>
 
     <div class="result" id="resultBox">Ready.</div>
   </div>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <script>
     const ADMIN_PASSWORD = "readymark2026";
 
@@ -196,9 +154,6 @@
 
       sessionStorage.setItem("admin_auth", entered);
     }
-
-    let parsedRoomNumbers = [];
-    let latestCreatedRooms = [];
 
     async function loadProperties() {
       const select = document.getElementById("propertySelect");
@@ -228,82 +183,22 @@
       }
     }
 
-    function parseCsvText(text) {
-      const lines = text
+    async function bulkCreateRooms() {
+      const propertyId = document.getElementById("propertySelect").value;
+      const roomListText = document.getElementById("roomList").value;
+      const resultBox = document.getElementById("resultBox");
+
+      if (!propertyId || !roomListText.trim()) {
+        resultBox.textContent = "Please choose a property and enter room numbers.";
+        return;
+      }
+
+      const roomNumbers = roomListText
         .split(/\r?\n/)
         .map((line) => line.trim())
         .filter(Boolean);
 
-      if (!lines.length) return [];
-
-      const firstLine = lines[0].toLowerCase().replace(/"/g, "").trim();
-      let dataLines = lines;
-
-      if (
-        firstLine === "room_number" ||
-        firstLine === "room number" ||
-        firstLine === "room"
-      ) {
-        dataLines = lines.slice(1);
-      }
-
-      return dataLines
-        .map((line) => {
-          const firstCell = line.split(",")[0].replace(/"/g, "").trim();
-          return firstCell;
-        })
-        .filter(Boolean);
-    }
-
-    async function parseCsvFile() {
-      const fileInput = document.getElementById("csvFile");
-      const previewBox = document.getElementById("previewBox");
-      const resultBox = document.getElementById("resultBox");
-
-      const file = fileInput.files[0];
-
-      if (!file) {
-        resultBox.textContent = "Please choose a CSV file first.";
-        return;
-      }
-
-      try {
-        const text = await file.text();
-        parsedRoomNumbers = parseCsvText(text);
-
-        if (!parsedRoomNumbers.length) {
-          previewBox.value = "";
-          resultBox.textContent = "No valid room numbers found in the CSV.";
-          return;
-        }
-
-        previewBox.value = parsedRoomNumbers.join("\n");
-        resultBox.textContent = `Parsed ${parsedRoomNumbers.length} room numbers successfully.`;
-      } catch (err) {
-        resultBox.textContent = `Error parsing CSV: ${err.message}`;
-      }
-    }
-
-    async function uploadParsedRooms() {
-      const propertyId = document.getElementById("propertySelect").value;
-      const resultBox = document.getElementById("resultBox");
-      const downloadZipBtn = document.getElementById("downloadZipBtn");
-      const zipStatus = document.getElementById("zipStatus");
-
-      if (!propertyId) {
-        resultBox.textContent = "Please choose a property.";
-        return;
-      }
-
-      if (!parsedRoomNumbers.length) {
-        resultBox.textContent = "Please parse a CSV file first.";
-        return;
-      }
-
-      resultBox.textContent = "Creating rooms from CSV...";
-      zipStatus.textContent = "";
-      downloadZipBtn.disabled = true;
-      latestCreatedRooms = [];
+      resultBox.textContent = "Creating rooms...";
 
       try {
         const res = await fetch("/api/bulk-create-rooms", {
@@ -311,97 +206,38 @@
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({
-            propertyId,
-            roomNumbers: parsedRoomNumbers,
-          }),
+          body: JSON.stringify({ propertyId, roomNumbers }),
         });
 
         const data = await res.json();
 
         if (!res.ok) {
-          throw new Error(data.error || "CSV room creation failed");
+          throw new Error(data.error || "Bulk room creation failed");
         }
 
-        latestCreatedRooms = data.created || data.createdRooms || [];
-
-        const createdCount = latestCreatedRooms.length;
+        const createdCount = data.created?.length || 0;
         const skippedCount = data.skipped?.length || 0;
 
         resultBox.innerHTML = `
-<strong>CSV upload complete.</strong>
+<strong>Bulk room upload complete.</strong>
 
 Created: ${createdCount}
 Skipped (already existed): ${skippedCount}
 
 ${createdCount ? `Created Rooms:
-${latestCreatedRooms.map((room) => `- Room ${room.room_number} → ${room.qr_slug}`).join("\n")}` : ""}
+${data.created.map((room) => `- Room ${room.room_number} → ${room.qr_slug}`).join("\n")}` : ""}
 
 ${skippedCount ? `Skipped Rooms:
 ${data.skipped.map((room) => `- ${room}`).join("\n")}` : ""}
         `;
 
-        if (createdCount > 0) {
-          downloadZipBtn.disabled = false;
-          zipStatus.textContent = `${createdCount} QR codes are ready to zip.`;
-        } else {
-          zipStatus.textContent = "No new rooms were created, so there are no new QR codes to zip.";
-        }
+        document.getElementById("roomList").value = "";
       } catch (err) {
         resultBox.textContent = `Error: ${err.message}`;
       }
     }
 
-    async function downloadQrZip() {
-      const downloadZipBtn = document.getElementById("downloadZipBtn");
-      const zipStatus = document.getElementById("zipStatus");
-
-      if (!latestCreatedRooms.length) {
-        zipStatus.textContent = "No newly created rooms available for ZIP download.";
-        return;
-      }
-
-      downloadZipBtn.disabled = true;
-      zipStatus.textContent = "Building ZIP file...";
-
-      try {
-        const zip = new JSZip();
-
-        for (const room of latestCreatedRooms) {
-          const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=600x600&data=${encodeURIComponent(room.qr_url)}`;
-          const response = await fetch(qrApiUrl);
-
-          if (!response.ok) {
-            throw new Error(`Failed to fetch QR for room ${room.room_number}`);
-          }
-
-          const blob = await response.blob();
-          zip.file(`qr-${room.qr_slug}.png`, blob);
-        }
-
-        const zipBlob = await zip.generateAsync({ type: "blob" });
-        const downloadUrl = URL.createObjectURL(zipBlob);
-
-        const link = document.createElement("a");
-        link.href = downloadUrl;
-        link.download = "ready-mark-qr-codes.zip";
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
-
-        setTimeout(() => URL.revokeObjectURL(downloadUrl), 1000);
-
-        zipStatus.textContent = "ZIP downloaded successfully.";
-      } catch (err) {
-        zipStatus.textContent = `ZIP error: ${err.message}`;
-      } finally {
-        downloadZipBtn.disabled = false;
-      }
-    }
-
-    document.getElementById("parseCsvBtn").addEventListener("click", parseCsvFile);
-    document.getElementById("uploadCsvBtn").addEventListener("click", uploadParsedRooms);
-    document.getElementById("downloadZipBtn").addEventListener("click", downloadQrZip);
+    document.getElementById("bulkCreateBtn").addEventListener("click", bulkCreateRooms);
 
     loadProperties();
   </script>
