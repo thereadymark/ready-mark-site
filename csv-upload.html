@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CSV Room Upload | The Ready Mark</title>
+  <title>CSV Room Upload V2 | The Ready Mark</title>
   <style>
     body {
       margin: 0;
@@ -127,14 +127,15 @@
       margin-top: 10px;
       color: #cbd5e1;
       font-size: 14px;
+      min-height: 20px;
     }
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 </head>
 <body>
   <div class="shell">
-    <h1>CSV Room Upload</h1>
-    <p>Upload a CSV file with room numbers and create them all at once.</p>
+    <h1>CSV Room Upload V2</h1>
+    <p>Upload a CSV file with room numbers, create them in bulk, and download QR codes as a ZIP.</p>
 
     <div class="note-box">
       Accepted formats:
@@ -277,7 +278,7 @@
           return;
         }
 
-        previewBox.value = parsedRoomNumbers.join("\n");
+        previewBox.value = parsedRoomNumbers.join("\\n");
         resultBox.textContent = `Parsed ${parsedRoomNumbers.length} room numbers successfully.`;
       } catch (err) {
         resultBox.textContent = `Error parsing CSV: ${err.message}`;
@@ -335,10 +336,10 @@ Created: ${createdCount}
 Skipped (already existed): ${skippedCount}
 
 ${createdCount ? `Created Rooms:
-${latestCreatedRooms.map((room) => `- Room ${room.room_number} → ${room.qr_slug}`).join("\n")}` : ""}
+${latestCreatedRooms.map((room) => `- Room ${room.room_number} → ${room.qr_slug}`).join("\\n")}` : ""}
 
 ${skippedCount ? `Skipped Rooms:
-${data.skipped.map((room) => `- ${room}`).join("\n")}` : ""}
+${data.skipped.map((room) => `- ${room}`).join("\\n")}` : ""}
         `;
 
         if (createdCount > 0) {
