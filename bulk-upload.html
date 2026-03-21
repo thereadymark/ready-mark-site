@@ -389,6 +389,7 @@ ${data.skipped.map((room) => `- ${room}`).join("\n")}` : ""}
         zipStatus.textContent = `ZIP error: ${err.message}`;
       } finally {
         downloadZipBtn.disabled = false;
+        console.log("ZIP READY:", latestCreatedRooms);     
       }
     }
 
