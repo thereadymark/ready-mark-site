@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Property QR Download | The Ready Mark</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Georgia, serif;
+      background: #0f172a;
+      color: #f8f5ee;
+      min-height: 100vh;
+      padding: 20px;
+      box-sizing: border-box;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+    }
+
+    .shell {
+      width: 100%;
+      max-width: 980px;
+      background: linear-gradient(145deg, #1c2740, #141c2f);
+      border: 2px solid #c9a34a;
+      border-radius: 18px;
+      padding: 28px;
+      box-shadow: 0 10px 35px rgba(0, 0, 0, 0.35);
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      text-align: center;
+      font-size: 42px;
+      color: #f8f5ee;
+    }
+
+    p {
+      text-align: center;
+      color: #cbd5e1;
+      margin-bottom: 24px;
+      line-height: 1.6;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      color: #d4af57;
+      font-weight: bold;
+    }
+
+    select, button {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 14px;
+      border-radius: 8px;
+      border: none;
+      font-size: 16px;
+      font-family: inherit;
+      margin-bottom: 18px;
+    }
+
+    select {
+      background: #f8f5ee;
+      color: #111827;
+    }
+
+    button {
+      background: #d4af57;
+      color: #111827;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    .result {
+      margin-top: 14px;
+      padding: 16px;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(212,175,87,0.25);
+      line-height: 1.7;
+      white-space: pre-wrap;
+    }
+
+    .status-line {
+      margin-top: 12px;
+      color: #cbd5e1;
+      font-size: 14px;
+      min-height: 20px;
+    }
+
+    .list-box {
+      margin-top: 20px;
+      padding: 16px;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(212,175,87,0.18);
+      max-height: 350px;
+      overflow: auto;
+    }
+
+    .list-box h3 {
+      margin-top: 0;
+      color: #f8f5ee;
+    }
+
+    .room-line {
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      color: #d1d5db;
+    }
+
+    .room-line:last-child {
+      border-bottom: none;
+    }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+</head>
+<body>
+  <div class="shell">
+    <h1>Property QR Download</h1>
+    <p>Choose a property and download every QR code for all rooms currently in the system.</p>
+
+    <label for="propertySelect">Property</label>
+    <select id="propertySelect">
+      <option value="">Loading properties...</option>
+    </select>
+
+    <button id="loadRoomsBtn" type="button">Load Property Rooms</button>
+    <button id="downloadZipBtn" type="button" disabled>Download All Property QR Codes ZIP</button>
+
+    <div class="status-line" id="statusLine"></div>
+    <div class="result" id="resultBox">Ready.</div>
+
+    <div class="list-box" id="roomListBox" style="display:none;">
+      <h3>Property Room List</h3>
+      <div id="roomListContent"></div>
+    </div>
+  </div>
+
+  <script>
+    const ADMIN_PASSWORD = "readymark2026";
+
+    let entered = sessionStorage.getItem("admin_auth");
+
+    if (entered !== ADMIN_PASSWORD) {
+      entered = prompt("Enter admin password:");
+
+      if (entered !== ADMIN_PASSWORD) {
+        document.body.innerHTML =
+          "<h1 style='color:white;text-align:center;margin-top:100px;'>Access Denied</h1>";
+        throw new Error("Unauthorized");
+      }
+
+      sessionStorage.setItem("admin_auth", entered);
+    }
+
+    let loadedProperty = null;
+    let loadedRooms = [];
+
+    async function loadProperties() {
+      const select = document.getElementById("propertySelect");
+      const resultBox = document.getElementById("resultBox");
+
+      try {
+        const res = await fetch("/api/list-properties");
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.error || "Failed to load properties");
+        }
+
+        select.innerHTML = '<option value="">Select a property</option>';
+
+        data.properties.forEach((property) => {
+          const option = document.createElement("option");
+          option.value = property.id;
+          option.textContent = `${property.property_name} (${property.property_slug})`;
+          select.appendChild(option);
+        });
+
+        resultBox.textContent = "Properties loaded.";
+      } catch (err) {
+        select.innerHTML = '<option value="">Could not load properties</option>';
+        resultBox.textContent = `Error loading properties: ${err.message}`;
+      }
+    }
+
+    async function loadPropertyRooms() {
+      const propertyId = document.getElementById("propertySelect").value;
+      const resultBox = document.getElementById("resultBox");
+      const statusLine = document.getElementById("statusLine");
+      const downloadZipBtn = document.getElementById("downloadZipBtn");
+      const roomListBox = document.getElementById("roomListBox");
+      const roomListContent = document.getElementById("roomListContent");
+
+      if (!propertyId) {
+        resultBox.textContent = "Please choose a property.";
+        return;
+      }
+
+      resultBox.textContent = "Loading property rooms...";
+      statusLine.textContent = "";
+      downloadZipBtn.disabled = true;
+      roomListBox.style.display = "none";
+      roomListContent.innerHTML = "";
+      loadedRooms = [];
+      loadedProperty = null;
+
+      try {
+        const res = await fetch(`/api/property-rooms?propertyId=${encodeURIComponent(propertyId)}`);
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.error || "Failed to load property rooms");
+        }
+
+        loadedProperty = data.property;
+        loadedRooms = data.rooms || [];
+
+        resultBox.innerHTML = `
+<strong>Property loaded successfully.</strong>
+
+Property: ${loadedProperty.property_name}
+Rooms with QR codes: ${loadedRooms.length}
+        `;
+
+        if (loadedRooms.length > 0) {
+          downloadZipBtn.disabled = false;
+          statusLine.textContent = `${loadedRooms.length} QR codes are ready to download.`;
+
+          roomListContent.innerHTML = loadedRooms
+            .map((room) => `<div class="room-line">Room ${room.room_number} → ${room.qr_slug}</div>`)
+            .join("");
+
+          roomListBox.style.display = "block";
+        } else {
+          statusLine.textContent = "No rooms with QR codes were found for this property.";
+        }
+      } catch (err) {
+        resultBox.textContent = `Error: ${err.message}`;
+      }
+    }
+
+    async function downloadPropertyZip() {
+      const statusLine = document.getElementById("statusLine");
+      const downloadZipBtn = document.getElementById("downloadZipBtn");
+
+      if (!loadedRooms.length || !loadedProperty) {
+        statusLine.textContent = "No property rooms are loaded yet.";
+        return;
+      }
+
+      downloadZipBtn.disabled = true;
+      statusLine.textContent = "Building ZIP file...";
+
+      try {
+        const zip = new JSZip();
+
+        for (const room of loadedRooms) {
+          const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=600x600&data=${encodeURIComponent(room.qr_url)}`;
+          const response = await fetch(qrApiUrl);
+
+          if (!response.ok) {
+            throw new Error(`Failed to fetch QR for room ${room.room_number}`);
+          }
+
+          const blob = await response.blob();
+          zip.file(`qr-${room.qr_slug}.png`, blob);
+        }
+
+        const zipBlob = await zip.generateAsync({ type: "blob" });
+        const downloadUrl = URL.createObjectURL(zipBlob);
+
+        const link = document.createElement("a");
+        link.href = downloadUrl;
+        link.download = `${loadedProperty.property_slug}-all-qr-codes.zip`;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+
+        setTimeout(() => URL.revokeObjectURL(downloadUrl), 1000);
+
+        statusLine.textContent = "ZIP downloaded successfully.";
+      } catch (err) {
+        statusLine.textContent = `ZIP error: ${err.message}`;
+      } finally {
+        downloadZipBtn.disabled = false;
+      }
+    }
+
+    document.getElementById("loadRoomsBtn").addEventListener("click", loadPropertyRooms);
+    document.getElementById("downloadZipBtn").addEventListener("click", downloadPropertyZip);
+
+    loadProperties();
+  </script>
+</body>
+</html>
