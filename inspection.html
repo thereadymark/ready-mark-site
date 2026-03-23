@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Log Inspection | Ready Mark</title>
+<style>
+body {
+  font-family: Georgia, serif;
+  background:#0f172a;
+  color:#fff;
+  padding:20px;
+}
+
+.card {
+  max-width:600px;
+  margin:auto;
+  background:#1c2740;
+  padding:24px;
+  border-radius:12px;
+  border:2px solid #c9a34a;
+}
+
+input, select, textarea, button {
+  width:100%;
+  padding:12px;
+  margin-bottom:12px;
+  border-radius:6px;
+  border:none;
+}
+
+button {
+  background:#d4af57;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+.result {
+  margin-top:15px;
+}
+</style>
+</head>
+<body>
+
+<div class="card">
+<h2>Log Inspection</h2>
+
+<select id="propertySelect"></select>
+<select id="roomSelect"></select>
+
+<input id="score" placeholder="Score (0-100)" />
+
+<select id="status">
+<option value="">Select Status</option>
+<option>Ready Mark Premier</option>
+<option>Verified Clean</option>
+<option>Needs Attention</option>
+<option>Not Clean</option>
+</select>
+
+<input id="inspector" placeholder="Inspector Name" />
+<textarea id="notes" placeholder="Notes"></textarea>
+
+<button onclick="submitInspection()">Submit Inspection</button>
+
+<div class="result" id="result"></div>
+</div>
+
+<script>
+const ADMIN_PASSWORD = "readymark2026";
+
+let entered = sessionStorage.getItem("admin_auth");
+if (entered !== ADMIN_PASSWORD) {
+  entered = prompt("Enter admin password:");
+  if (entered !== ADMIN_PASSWORD) {
+    document.body.innerHTML = "Access Denied";
+    throw new Error("Unauthorized");
+  }
+  sessionStorage.setItem("admin_auth", entered);
+}
+
+async function loadProperties() {
+  const res = await fetch("/api/list-properties");
+  const data = await res.json();
+
+  const select = document.getElementById("propertySelect");
+  select.innerHTML = "<option>Select Property</option>";
+
+  data.properties.forEach(p => {
+    const opt = document.createElement("option");
+    opt.value = p.id;
+    opt.textContent = p.property_name;
+    select.appendChild(opt);
+  });
+}
+
+async function loadRooms(propertyId) {
+  const res = await fetch(`/api/property-rooms?propertyId=${propertyId}`);
+  const data = await res.json();
+
+  const select = document.getElementById("roomSelect");
+  select.innerHTML = "<option>Select Room</option>";
+
+  data.rooms.forEach(r => {
+    const opt = document.createElement("option");
+    opt.value = r.id;
+    opt.textContent = r.room_number;
+    select.appendChild(opt);
+  });
+}
+
+document.getElementById("propertySelect").addEventListener("change", (e) => {
+  loadRooms(e.target.value);
+});
+
+async function submitInspection() {
+  const roomId = document.getElementById("roomSelect").value;
+  const score = document.getElementById("score").value;
+  const status = document.getElementById("status").value;
+  const inspector = document.getElementById("inspector").value;
+  const notes = document.getElementById("notes").value;
+
+  const res = await fetch("/api/create-inspection", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ roomId, score, status, inspector, notes })
+  });
+
+  const data = await res.json();
+
+  document.getElementById("result").innerHTML =
+    res.ok ? "Inspection Logged ✅" : data.error;
+}
+
+loadProperties();
+</script>
+
+</body>
+</html>
