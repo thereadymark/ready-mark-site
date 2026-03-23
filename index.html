@@ -542,10 +542,19 @@
               result.innerHTML = `<p style="color:#bbb;">Checking record...</p>`;
 
               try {
-                const res = await fetch("https://thereadymarkgroup.com/api/verify?record=" + encodeURIComponent(val));
-                const data = await res.json();
-
-                if (!res.ok) {
+                const { data, error } = await supabase
+                .from("rooms")
+                .select(`
+                room_number,
+                property:properties(property_name),
+                inspection:inspections(*)
+               `)
+                .eq("slug", slug)
+                 .single();  
+                if (error || !data) {
+  document.body.innerHTML = "<h2>Verification not found</h2>";
+  return;
+}                if (!res.ok) {
                   result.innerHTML = `
                     <div class="info-card" style="max-width:620px;margin:auto;background:rgba(220,53,69,0.04);border:1px solid rgba(220,53,69,0.22);">
                       <h3 style="color:#ff6b6b; margin-top:0;">Record Not Found</h3>
