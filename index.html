@@ -1,17 +1,19 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-63GYLY26HQ"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-63GYLY26HQ"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-63GYLY26HQ');
+  </script>
 
-  gtag('config', 'G-63GYLY26HQ');
-</script>  <meta charset="UTF-8" />
+  <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Ready Mark Verified</title>
+
   <style>
     body {
       margin: 0;
@@ -239,6 +241,7 @@
       width: 300px;
       border: none;
       border-radius: 6px;
+      box-sizing: border-box;
     }
 
     .cert-button {
@@ -260,7 +263,7 @@
   </style>
 </head>
 <body>
-  <div class="card">
+  <div class="card" id="roomCard">
     <div class="seal">THE READY MARK</div>
     <h1>Verified</h1>
     <div class="subtitle">CLEANLINESS STANDARD</div>
@@ -335,9 +338,9 @@
 
         try {
           const pathParts = window.location.pathname.split("/").filter(Boolean);
-          const slug = pathParts[0] || null;
+          const slug = pathParts[pathParts.length - 1] || null;
 
-          // LANDING PAGE
+          // ROOT LANDING PAGE
           if (!slug) {
             document.body.innerHTML = `
               <div class="cert-page-shell">
@@ -484,7 +487,7 @@
             return;
           }
 
-          // CERTIFICATE PAGE
+          // CERTIFICATE LOOKUP PAGE
           if (slug === "check") {
             const record = new URLSearchParams(window.location.search).get("record") || "";
 
@@ -539,7 +542,7 @@
               result.innerHTML = `<p style="color:#bbb;">Checking record...</p>`;
 
               try {
-                const res = await fetch(`/api/verify?record=${encodeURIComponent(val)}`);
+                const res = await fetch("https://thereadymarkgroup.com/api/verify?record=" + encodeURIComponent(val));
                 const data = await res.json();
 
                 if (!res.ok) {
@@ -627,7 +630,7 @@
                       font-weight:bold;
                       letter-spacing:1px;
                     ">
-                      ${data.status || "Verified Record"}
+                      ${data.status || data.certificationTier || "Verified Record"}
                     </div>
                   </div>
                 `;
@@ -648,96 +651,86 @@
             return;
           }
 
-          // ROOM PAGE
-          const res = await fetch(`/api/verify?slug=${encodeURIComponent(slug)}`);
+          // ROOM VERIFICATION PAGE
+          const res = await fetch("https://thereadymarkgroup.com/api/verify?slug=" + encodeURIComponent(slug));
           const data = await res.json();
 
-          if (!res.ok) {
-            if (propertyEl) propertyEl.textContent = data.property || "Not found";
-            if (roomEl) roomEl.textContent = data.room || slug;
-            if (inspectorEl) inspectorEl.textContent = data.error || "Lookup failed";
-            if (dateEl) dateEl.textContent = data.details ? "API_ERROR" : "";
-            if (tierEl) tierEl.textContent = "Not verified";
-            if (verificationEl) verificationEl.textContent = data.details ? JSON.stringify(data.details) : "";
-            if (scoreEl) scoreEl.textContent = "Score: Not available";
-            if (statusEl) statusEl.textContent = "NOT VERIFIED";
+          if (!res.ok || !data.room) {
+            propertyEl.textContent = data.property || "Not found";
+            roomEl.textContent = data.room || slug;
+            inspectorEl.textContent = data.error || "Lookup failed";
+            dateEl.textContent = "—";
+            tierEl.textContent = "Not verified";
+            verificationEl.textContent = "—";
+            scoreEl.textContent = "Score: Not available";
+            statusEl.textContent = "NOT VERIFIED";
             return;
           }
 
-          if (propertyEl) propertyEl.textContent = data.property ?? "";
-          if (roomEl) roomEl.textContent = data.room ?? "";
-          if (inspectorEl) inspectorEl.textContent = data.inspectorId ?? "";
+          propertyEl.textContent = data.property || "—";
+          roomEl.textContent = data.room || "—";
+          inspectorEl.textContent = data.inspectorId || "—";
 
-          if (dateEl) {
-            dateEl.textContent = data.inspectionDate
-              ? new Date(data.inspectionDate).toLocaleDateString()
-              : "";
-          }
+          dateEl.textContent = data.inspectionDate
+            ? new Date(data.inspectionDate).toLocaleDateString()
+            : "—";
 
-          const tier = data.certificationTier ?? "Not Verified";
+          const tier = data.certificationTier || "Not verified";
           const score = data.score;
 
-          if (tierEl) {
-            tierEl.textContent = tier;
+          tierEl.textContent = tier;
 
-            if (tier.toLowerCase() === "verified clean") {
-              tierEl.style.color = "#3ddc84";
-            } else if (tier.toLowerCase() === "needs attention") {
-              tierEl.style.color = "#ffb347";
-            } else if (tier.toLowerCase() === "not clean") {
-              tierEl.style.color = "#ff6b6b";
-            } else {
-              tierEl.style.color = "#d4af37";
-            }
+          if (tier.toLowerCase() === "verified clean") {
+            tierEl.style.color = "#3ddc84";
+          } else if (tier.toLowerCase() === "needs attention") {
+            tierEl.style.color = "#ffb347";
+          } else if (tier.toLowerCase() === "not clean") {
+            tierEl.style.color = "#ff6b6b";
+          } else if (tier.toLowerCase() === "ready mark premier") {
+            tierEl.style.color = "#f4d06f";
+          } else {
+            tierEl.style.color = "#d4af37";
           }
 
-          if (verificationEl) {
-            verificationEl.textContent = data.verificationId ?? "";
+          verificationEl.textContent = data.verificationId || "—";
+
+          if (score !== "" && score != null) {
+            scoreEl.textContent = `Score: ${score} / 100`;
+          } else {
+            scoreEl.textContent = "Score: N/A";
           }
 
-          if (scoreEl) {
-            scoreEl.textContent =
-              score !== "" && score != null
-                ? `Score: ${score} / 100`
-                : "Score: N/A";
-
-            if (score != null) {
-              if (tier.toLowerCase() === "verified clean") {
-                scoreEl.style.color = "#3ddc84";
-              } else if (tier.toLowerCase() === "needs attention") {
-                scoreEl.style.color = "#ffb347";
-              } else if (tier.toLowerCase() === "not clean") {
-                scoreEl.style.color = "#ff6b6b";
-              } else if (score >= 90) {
-                scoreEl.style.color = "#3ddc84";
-              } else if (score >= 75) {
-                scoreEl.style.color = "#ffb347";
-              } else {
-                scoreEl.style.color = "#ff6b6b";
-              }
-            } else {
-              scoreEl.style.color = "#d4af37";
-            }
+          if (tier.toLowerCase() === "verified clean") {
+            scoreEl.style.color = "#3ddc84";
+            statusEl.style.color = "#3ddc84";
+            statusEl.style.border = "1px solid rgba(61,220,132,0.45)";
+          } else if (tier.toLowerCase() === "needs attention") {
+            scoreEl.style.color = "#ffb347";
+            statusEl.style.color = "#ffb347";
+            statusEl.style.border = "1px solid rgba(255,179,71,0.45)";
+          } else if (tier.toLowerCase() === "not clean") {
+            scoreEl.style.color = "#ff6b6b";
+            statusEl.style.color = "#ff6b6b";
+            statusEl.style.border = "1px solid rgba(255,107,107,0.45)";
+          } else if (tier.toLowerCase() === "ready mark premier") {
+            scoreEl.style.color = "#f4d06f";
+            statusEl.style.color = "#f4d06f";
+            statusEl.style.border = "1px solid rgba(244,208,111,0.45)";
+          } else {
+            scoreEl.style.color = "#d4af37";
+            statusEl.style.color = "#d4af37";
+            statusEl.style.border = "1px solid rgba(212,175,55,0.45)";
           }
 
-          if (statusEl) {
-            statusEl.textContent = tier;
-
-            if (tier.toLowerCase() === "verified clean") {
-              statusEl.style.color = "#3ddc84";
-              statusEl.style.border = "1px solid rgba(61,220,132,0.45)";
-            } else if (tier.toLowerCase() === "needs attention") {
-              statusEl.style.color = "#ffb347";
-              statusEl.style.border = "1px solid rgba(255,179,71,0.45)";
-            } else if (tier.toLowerCase() === "not clean") {
-              statusEl.style.color = "#ff6b6b";
-              statusEl.style.border = "1px solid rgba(255,107,107,0.45)";
-            } else {
-              statusEl.style.color = "#d4af37";
-              statusEl.style.border = "1px solid rgba(212,175,55,0.45)";
-            }
-          }
+          statusEl.textContent = tier;
         } catch (err) {
+          const inspectorEl = document.getElementById("inspector-id");
+          const dateEl = document.getElementById("inspection-date");
+          const tierEl = document.getElementById("certification-tier");
+          const verificationEl = document.getElementById("verification-id");
+          const scoreEl = document.getElementById("score");
+          const statusEl = document.getElementById("status");
+
           if (inspectorEl) inspectorEl.textContent = err.message || "Unexpected error";
           if (dateEl) dateEl.textContent = "JS_ERROR";
           if (tierEl) tierEl.textContent = "Script error";
@@ -746,16 +739,18 @@
           if (statusEl) statusEl.textContent = "ERROR";
         }
       }
-          const params = new URLSearchParams(window.location.search);
-          const source = params.get("src") || "unknown";
 
-          if (typeof gtag === "function") {
-          gtag('event', 'qr_scan', {
+      const params = new URLSearchParams(window.location.search);
+      const source = params.get("src") || "unknown";
+
+      if (typeof gtag === "function") {
+        gtag("event", "qr_scan", {
           source: source
-            });
-     }      loadVerification();
-     
-     });
+        });
+      }
+
+      loadVerification();
+    });
   </script>
 </body>
 </html>
