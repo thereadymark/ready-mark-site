@@ -661,7 +661,7 @@
           }
 
           // ROOM VERIFICATION PAGE
-          const res = await fetch("https://thereadymarkgroup.com/api/verify?slug=" + encodeURIComponent(slug));
+          const res = await fetch("https://www.thereadymarkgroup.com/api/get-verification?slug=" + slug);       
           const data = await res.json();
 
           if (!res.ok || !data.room) {
