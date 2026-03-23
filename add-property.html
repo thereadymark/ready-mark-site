@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Add Property | The Ready Mark</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Georgia, serif;
+      background: #0f172a;
+      color: #f8f5ee;
+      min-height: 100vh;
+      padding: 20px;
+      box-sizing: border-box;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+    }
+
+    .shell {
+      width: 100%;
+      max-width: 760px;
+      background: linear-gradient(145deg, #1c2740, #141c2f);
+      border: 2px solid #c9a34a;
+      border-radius: 18px;
+      padding: 28px;
+      box-shadow: 0 10px 35px rgba(0, 0, 0, 0.35);
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      text-align: center;
+      font-size: 42px;
+      color: #f8f5ee;
+    }
+
+    p {
+      text-align: center;
+      color: #cbd5e1;
+      margin-bottom: 24px;
+      line-height: 1.6;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      color: #d4af57;
+      font-weight: bold;
+    }
+
+    input, select, button {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 14px;
+      border-radius: 8px;
+      border: none;
+      font-size: 16px;
+      font-family: inherit;
+      margin-bottom: 18px;
+    }
+
+    input, select {
+      background: #f8f5ee;
+      color: #111827;
+    }
+
+    button {
+      background: #d4af57;
+      color: #111827;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .result {
+      margin-top: 14px;
+      padding: 16px;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(212,175,87,0.25);
+      line-height: 1.7;
+      white-space: pre-wrap;
+    }
+
+    .preview-box {
+      margin-top: -4px;
+      margin-bottom: 18px;
+      padding: 12px 14px;
+      border-radius: 8px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(212,175,87,0.18);
+      color: #d1d5db;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <h1>Add Property</h1>
+    <p>Create a new property and auto-generate its system slug.</p>
+
+    <label for="propertyName">Property Name</label>
+    <input id="propertyName" type="text" placeholder="e.g. Hilton Frontenac" />
+
+    <div class="preview-box">
+      Suggested slug: <span id="slugPreview">—</span>
+    </div>
+
+    <label for="propertyType">Property Type</label>
+    <select id="propertyType">
+      <option value="">Select property type</option>
+      <option value="Hotel">Hotel</option>
+      <option value="Apartment">Apartment</option>
+      <option value="Medical Office">Medical Office</option>
+      <option value="Dental Office">Dental Office</option>
+      <option value="Office">Office</option>
+      <option value="Retail">Retail</option>
+      <option value="Bank">Bank</option>
+      <option value="Government">Government</option>
+      <option value="Other">Other</option>
+    </select>
+
+    <label for="city">City</label>
+    <input id="city" type="text" placeholder="e.g. St. Louis" />
+
+    <label for="state">State</label>
+    <input id="state" type="text" placeholder="e.g. MO" />
+
+    <label for="status">Status</label>
+    <select id="status">
+      <option value="">Select status</option>
+      <option value="Active">Active</option>
+      <option value="Pending">Pending</option>
+      <option value="Inactive">Inactive</option>
+    </select>
+
+    <button id="createPropertyBtn" type="button">Create Property</button>
+
+    <div class="result" id="resultBox">Ready.</div>
+  </div>
+
+  <script>
+    const ADMIN_PASSWORD = "readymark2026";
+
+    let entered = sessionStorage.getItem("admin_auth");
+
+    if (entered !== ADMIN_PASSWORD) {
+      entered = prompt("Enter admin password:");
+
+      if (entered !== ADMIN_PASSWORD) {
+        document.body.innerHTML =
+          "<h1 style='color:white;text-align:center;margin-top:100px;'>Access Denied</h1>";
+        throw new Error("Unauthorized");
+      }
+
+      sessionStorage.setItem("admin_auth", entered);
+    }
+
+    function slugify(text) {
+      return String(text)
+        .toLowerCase()
+        .trim()
+        .replace(/&/g, "and")
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "")
+        .replace(/-{2,}/g, "-");
+    }
+
+    function updateSlugPreview() {
+      const propertyName = document.getElementById("propertyName").value.trim();
+      const slugPreview = document.getElementById("slugPreview");
+
+      if (!propertyName) {
+        slugPreview.textContent = "—";
+        return;
+      }
+
+      slugPreview.textContent = slugify(propertyName);
+    }
+
+    async function createProperty() {
+      const propertyName = document.getElementById("propertyName").value.trim();
+      const propertyType = document.getElementById("propertyType").value;
+      const city = document.getElementById("city").value.trim();
+      const state = document.getElementById("state").value.trim();
+      const status = document.getElementById("status").value;
+      const resultBox = document.getElementById("resultBox");
+
+      if (!propertyName || !propertyType || !city || !state || !status) {
+        resultBox.textContent = "Please complete all fields.";
+        return;
+      }
+
+      resultBox.textContent = "Creating property...";
+
+      try {
+        const res = await fetch("/api/create-property", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            propertyName,
+            propertyType,
+            city,
+            state,
+            status,
+          }),
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.error || "Failed to create property");
+        }
+
+        resultBox.innerHTML = `
+<strong>Property created successfully.</strong>
+
+Property Name: ${data.property.property_name}
+Property Slug: ${data.property.property_slug}
+Type: ${data.property.property_type}
+Location: ${data.property.city}, ${data.property.state}
+Status: ${data.property.status}
+
+This property should now appear in your room upload, dashboard, and QR tools.
+        `;
+
+        document.getElementById("propertyName").value = "";
+        document.getElementById("propertyType").value = "";
+        document.getElementById("city").value = "";
+        document.getElementById("state").value = "";
+        document.getElementById("status").value = "";
+        document.getElementById("slugPreview").textContent = "—";
+      } catch (err) {
+        resultBox.textContent = `Error: ${err.message}`;
+      }
+    }
+
+    document.getElementById("propertyName").addEventListener("input", updateSlugPreview);
+    document.getElementById("createPropertyBtn").addEventListener("click", createProperty);
+  </script>
+</body>
+</html>
