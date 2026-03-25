@@ -45,6 +45,7 @@ export default async function handler(req, res) {
 
     const ROOM_TABLE = "Rooms";
     const INSPECTION_TABLE = "Inspections";
+    const PROPERTY_TABLE = "properties";
 
     function uniq(arr) {
       return [...new Set(arr.filter(Boolean))];
@@ -79,18 +80,18 @@ export default async function handler(req, res) {
 
     const slugCandidates = buildSlugCandidates(slug);
 
-    // Try to find a room using qr_slug first, then fallback to room_number if needed.
     let room = null;
-    let roomLookupDebug = [];
+    const roomLookupDebug = [];
 
+    // Try qr_slug first
     for (const candidate of slugCandidates) {
-      const qrSlugUrl =
+      const roomUrl =
         `${supabaseUrl}/rest/v1/${ROOM_TABLE}` +
         `?qr_slug=eq.${encodeURIComponent(candidate)}` +
         `&select=*` +
         `&limit=1`;
 
-      const { response, json } = await fetchJson(qrSlugUrl);
+      const { response, json } = await fetchJson(roomUrl);
 
       roomLookupDebug.push({
         field: "qr_slug",
@@ -113,15 +114,16 @@ export default async function handler(req, res) {
       }
     }
 
+    // Fallback to room_number
     if (!room) {
       for (const candidate of slugCandidates) {
-        const roomNumberUrl =
+        const roomUrl =
           `${supabaseUrl}/rest/v1/${ROOM_TABLE}` +
           `?room_number=eq.${encodeURIComponent(candidate)}` +
           `&select=*` +
           `&limit=1`;
 
-        const { response, json } = await fetchJson(roomNumberUrl);
+        const { response, json } = await fetchJson(roomUrl);
 
         roomLookupDebug.push({
           field: "room_number",
@@ -161,7 +163,37 @@ export default async function handler(req, res) {
       });
     }
 
-    // Find latest inspection for this room
+    // Fetch property name from properties table using property_id
+    let propertyName = "";
+
+    if (room.property_id) {
+      const propertyUrl =
+        `${supabaseUrl}/rest/v1/${PROPERTY_TABLE}` +
+        `?id=eq.${encodeURIComponent(room.property_id)}` +
+        `&select=*` +
+        `&limit=1`;
+
+      const { response: propertyRes, json: propertyData } = await fetchJson(propertyUrl);
+
+      if (!propertyRes.ok) {
+        return res.status(500).json({
+          error: "Property lookup failed",
+          details: propertyData,
+          propertyId: room.property_id,
+        });
+      }
+
+      if (Array.isArray(propertyData) && propertyData.length > 0) {
+        const property = propertyData[0];
+        propertyName =
+          property.property_name ??
+          property.name ??
+          property.title ??
+          "";
+      }
+    }
+
+    // Fetch latest inspection for this room
     const inspectionUrl =
       `${supabaseUrl}/rest/v1/${INSPECTION_TABLE}` +
       `?room_id=eq.${encodeURIComponent(room.id)}` +
@@ -179,32 +211,17 @@ export default async function handler(req, res) {
       });
     }
 
-    const inspection = Array.isArray(inspectionData) && inspectionData.length > 0
-      ? inspectionData[0]
-      : null;
+    const inspection =
+      Array.isArray(inspectionData) && inspectionData.length > 0
+        ? inspectionData[0]
+        : null;
 
     return res.status(200).json({
-      property:
-        room.property_name ??
-        room.property ??
-        room.propertyTitle ??
-        "",
-      room:
-        room.room_number ??
-        room.room ??
-        room.number ??
-        "",
-      qrSlug:
-        room.qr_slug ??
-        room.slug ??
-        "",
-      qrUrl:
-        room.qr_url ??
-        "",
-      inspectorId:
-        inspection?.inspector_id ??
-        inspection?.inspectorId ??
-        "",
+      property: propertyName,
+      room: room.room_number ?? room.room ?? room.number ?? "",
+      qrSlug: room.qr_slug ?? room.slug ?? "",
+      qrUrl: room.qr_url ?? "",
+      inspectorId: inspection?.inspector_id ?? inspection?.inspectorId ?? "",
       inspectionDate:
         inspection?.created_at ??
         inspection?.inspection_date ??
@@ -218,18 +235,15 @@ export default async function handler(req, res) {
         inspection?.verification_id ??
         inspection?.verificationId ??
         "",
-      score:
-        inspection?.score ??
-        "",
+      score: inspection?.score ?? "",
       status:
         inspection?.certification_tier ??
         inspection?.certificationTier ??
         "Not verified",
-
-      // Helpful temporary debug
       debug: {
         requestedSlug: slug,
         matchedRoomId: room.id,
+        matchedPropertyId: room.property_id ?? null,
         matchedQrSlug: room.qr_slug ?? null,
         matchedRoomNumber: room.room_number ?? null,
       },
