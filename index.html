@@ -468,20 +468,19 @@
 
           const data = await res.json();
 
-          if (!res.ok || !data || !data.room) {
-            propertyEl.textContent = data?.property || "Not found";
-            roomEl.textContent = data?.room || slug;
-            inspectorEl.textContent = data?.error || "Lookup failed";
-            dateEl.textContent = "—";
-            tierEl.textContent = "Not verified";
-            verificationEl.textContent = "—";
-            scoreEl.textContent = "Score: Not available";
-            statusEl.textContent = "NOT VERIFIED";
-            statusEl.style.color = "var(--red)";
-            statusEl.style.border = "1px solid rgba(255,107,107,0.45)";
-            return;
+         if (!res.ok || data?.error) {
+           propertyEl.textContent = data?.property || "—";
+           roomEl.textContent = data?.room || slug;
+           inspectorEl.textContent = data?.error || "Lookup failed";
+           dateEl.textContent = "—";
+           tierEl.textContent = "Not verified";
+           verificationEl.textContent = "—";
+           scoreEl.textContent = "Score: Not available";
+           statusEl.textContent = "NOT VERIFIED";
+           statusEl.style.color = "var(--red)";
+           statusEl.style.border = "1px solid rgba(255,107,107,0.45)";
+         return;
           }
-
           propertyEl.textContent = data.property || "—";
           roomEl.textContent = data.room || "—";
           inspectorEl.textContent = data.inspectorId || "—";
