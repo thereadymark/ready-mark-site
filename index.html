@@ -1,6 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Ready Mark | Verification</title>
+
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-63GYLY26HQ"></script>
   <script>
@@ -10,75 +14,101 @@
     gtag('config', 'G-63GYLY26HQ');
   </script>
 
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Ready Mark Verified</title>
-
   <style>
-    body {
+    :root {
+      --bg: #080808;
+      --bg-soft: #101010;
+      --panel: rgba(12, 12, 12, 0.92);
+      --panel-2: rgba(18, 18, 18, 0.92);
+      --gold: #c9a34a;
+      --gold-soft: #d4af57;
+      --white: #f8f5ee;
+      --muted: #cfc7b6;
+      --line: rgba(255, 255, 255, 0.08);
+      --green: #3ddc84;
+      --orange: #ffb347;
+      --red: #ff6b6b;
+      --premier: #f4d06f;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
       margin: 0;
+      min-height: 100%;
+      background: var(--bg);
+      color: var(--white);
       font-family: Georgia, serif;
-      background: #0f172a;
-      color: #f8f5ee;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
+    }
+
+    body {
       position: relative;
+      min-height: 100vh;
+      overflow-x: hidden;
     }
 
     body::before {
       content: "";
       position: fixed;
       inset: 0;
-      background-image:
-        url("/readymarklogonobackground2.PNG"),
-        url("/readymarklogonobackground2.PNG");
-      background-size: 100px 100px, 100px 100px;
-      background-position: 0 0, 50px 50px;
-      background-repeat: repeat;
-      opacity: 0.05;
+      background:
+        radial-gradient(circle at center, rgba(255,255,255,0.03), transparent 60%),
+        linear-gradient(180deg, rgba(255,255,255,0.015), transparent 25%, transparent 75%, rgba(255,255,255,0.015));
       pointer-events: none;
+      z-index: 0;
     }
 
     body::after {
       content: "";
       position: fixed;
       inset: 0;
-      background: radial-gradient(circle, transparent 60%, rgba(0, 0, 0, 0.45));
+      background-image: url("/readymarklogonobackground2.PNG");
+      background-repeat: repeat;
+      background-size: 240px;
+      opacity: 0.035;
+      filter: grayscale(100%) brightness(1.1);
       pointer-events: none;
+      z-index: 0;
+    }
+
+    .page-shell {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 32px 16px;
     }
 
     .card {
       position: relative;
-      background: linear-gradient(145deg, #1c2740, #141c2f);
-      border: 2px solid #c9a34a;
-      border-radius: 18px;
-      padding: 40px;
-      max-width: 520px;
-      width: 90%;
+      width: min(100%, 760px);
+      background:
+        linear-gradient(145deg, rgba(18,18,18,0.96), rgba(10,10,10,0.96));
+      border: 2px solid var(--gold);
+      border-radius: 22px;
+      padding: 44px 28px 32px;
       box-shadow:
-        0 10px 35px rgba(0, 0, 0, 0.35),
-        0 0 15px rgba(201, 163, 74, 0.15);
-      backdrop-filter: blur(4px);
+        0 16px 50px rgba(0, 0, 0, 0.45),
+        0 0 24px rgba(201, 163, 74, 0.10);
+      overflow: hidden;
     }
 
     .card::before {
       content: "";
       position: absolute;
-      top: 36%;
-      left: 50%;
-      width: 300px;
-      height: 300px;
-      transform: translate(-50%, -50%);
+      inset: 0;
       background-image: url("/readymarkseal(best)nobackground.PNG");
-      background-size: contain;
       background-repeat: no-repeat;
-      background-position: center;
-      opacity: 0.06;
+      background-position: center 42%;
+      background-size: 360px;
+      opacity: 0.045;
+      filter: grayscale(100%) brightness(1.15);
       pointer-events: none;
-      z-index: 0;
-      filter: grayscale(100%) brightness(1.2) contrast(0.85) blur(0.15px);
     }
 
     .card > * {
@@ -86,30 +116,33 @@
       z-index: 1;
     }
 
-    .seal {
+    .brand {
       text-align: center;
-      font-size: 14px;
-      letter-spacing: 2px;
-      color: #c9a34a;
-      margin-bottom: 12px;
+      font-size: 15px;
+      letter-spacing: 3px;
+      color: var(--gold);
+      margin-bottom: 10px;
+      text-transform: uppercase;
     }
 
     h1 {
-      margin: 0 0 8px;
+      margin: 0;
       text-align: center;
-      color: #f8f5ee;
-      font-size: 34px;
+      font-size: clamp(40px, 7vw, 64px);
+      line-height: 1;
+      color: var(--white);
     }
 
     .subtitle {
       text-align: center;
-      color: #d4af57;
-      margin-bottom: 30px;
-      font-size: 16px;
+      color: var(--gold-soft);
+      font-size: clamp(18px, 3vw, 26px);
       letter-spacing: 1px;
+      margin: 20px auto 34px;
+      padding: 18px 0;
       position: relative;
-      padding-top: 16px;
-      padding-bottom: 16px;
+      width: fit-content;
+      min-width: 260px;
     }
 
     .subtitle::before,
@@ -118,215 +151,482 @@
       position: absolute;
       left: 50%;
       transform: translateX(-50%);
-      width: 180px;
+      width: min(440px, 88%);
       height: 2px;
-      background: #d4af57;
-      box-shadow: 0 0 6px rgba(212, 175, 87, 0.35);
+      background: var(--gold-soft);
+      box-shadow: 0 0 8px rgba(212, 175, 87, 0.22);
     }
 
-    .subtitle::before {
-      top: 0;
-    }
+    .subtitle::before { top: 0; }
+    .subtitle::after { bottom: 0; }
 
-    .subtitle::after {
-      bottom: 0;
+    .rows {
+      margin-top: 10px;
     }
 
     .row {
       display: flex;
       justify-content: space-between;
-      padding: 12px 0;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-      gap: 16px;
+      align-items: flex-start;
+      gap: 18px;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--line);
     }
 
     .label {
-      color: #d1d5db;
+      color: var(--muted);
+      font-size: clamp(18px, 2.7vw, 22px);
+      line-height: 1.2;
     }
 
     .value {
-      color: #ffffff;
-      font-weight: 600;
+      color: var(--white);
+      font-weight: 700;
+      font-size: clamp(18px, 2.7vw, 22px);
+      line-height: 1.2;
       text-align: right;
+      word-break: break-word;
     }
 
     .record-id {
       letter-spacing: 2px;
       font-family: "Courier New", monospace;
-      font-size: 13px;
-      color: #d1d5db;
+      font-size: clamp(12px, 2vw, 15px);
       text-transform: uppercase;
     }
 
-    .score {
-      font-size: 26px;
-      color: #d4af57;
-      font-weight: bold;
-      text-align: center;
-      margin-top: 15px;
-    }
-
-    .status {
-      margin-top: 28px;
-      text-align: center;
-      background: #1f2937;
-      border: 1px solid #d4af57;
-      color: #d4af57;
-      padding: 14px;
-      border-radius: 999px;
-      font-weight: bold;
-      letter-spacing: 1px;
-    }
-
-    .footer {
-      margin-top: 24px;
-      text-align: center;
-      font-size: 13px;
-      color: #9ca3af;
-    }
-
-    .section {
-      margin-top: 60px;
-      text-align: center;
-      max-width: 700px;
+    .section-title {
+      margin: 34px 0 18px;
+      font-size: clamp(32px, 5vw, 48px);
+      line-height: 1;
     }
 
     .video-box {
-      margin-top: 25px;
-      border: 2px solid #d4af57;
-      padding: 30px;
-      border-radius: 14px;
-      background: rgba(0, 0, 0, 0.15);
-      box-shadow: 0 0 15px rgba(212, 175, 87, 0.2);
+      border: 2px solid var(--gold);
+      border-radius: 18px;
+      padding: 28px 22px;
+      background: rgba(255,255,255,0.02);
+      box-shadow: 0 0 16px rgba(201, 163, 74, 0.10);
+    }
+
+    .video-box p {
+      margin: 0 0 10px;
+      font-size: clamp(18px, 2.8vw, 22px);
     }
 
     .video-placeholder {
-      margin-top: 10px;
-      opacity: 0.7;
+      opacity: 0.78;
       font-style: italic;
+      font-size: clamp(18px, 2.8vw, 22px);
+      color: #bcb2a0;
     }
 
-    .cert-page-shell {
-      min-height: 100vh;
-      position: relative;
-      background:
-        radial-gradient(circle at center, rgba(255,255,255,0.03), transparent 70%),
-        #0b1c2c;
-      color: white;
-      font-family: serif;
-      padding: 40px;
+    .standard-section {
+      margin-top: 34px;
+    }
+
+    .standard-section h2 {
+      margin: 0 0 12px;
+      font-size: clamp(24px, 4vw, 34px);
       text-align: center;
-      width: 100%;
-      box-sizing: border-box;
     }
 
-    .cert-watermark {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      opacity: 0.04;
-      pointer-events: none;
+    .standard-section p {
+      margin: 0 auto;
+      max-width: 720px;
+      text-align: center;
+      color: #d7d2c7;
+      font-size: clamp(17px, 2.6vw, 21px);
+      line-height: 1.6;
     }
 
-    .cert-panel {
+    .score {
+      font-size: clamp(26px, 4vw, 34px);
+      font-weight: 700;
+      text-align: center;
+      margin-top: 28px;
+      color: var(--gold-soft);
+    }
+
+    .status {
+      margin: 20px auto 0;
+      width: fit-content;
+      min-width: 240px;
+      text-align: center;
+      background: #141414;
+      border: 1px solid rgba(212,175,55,0.45);
+      color: var(--gold-soft);
+      padding: 14px 22px;
+      border-radius: 999px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      font-size: 15px;
+      text-transform: uppercase;
+    }
+
+    .footer {
+      margin-top: 22px;
+      text-align: center;
+      font-size: 14px;
+      color: #9f9888;
+      line-height: 1.6;
+    }
+
+    .landing-shell {
       position: relative;
       z-index: 1;
+      width: 100%;
+      min-height: 100vh;
+      padding: 44px 20px 70px;
+    }
+
+    .landing-watermark {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.045;
+      filter: grayscale(100%) brightness(1.1);
+    }
+
+    .landing-watermark img {
+      width: min(520px, 75vw);
+    }
+
+    .landing-panel {
+      position: relative;
+      z-index: 1;
+      max-width: 820px;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    .landing-brand {
+      color: var(--gold);
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      font-size: 15px;
+    }
+
+    .landing-panel h1 {
+      margin-top: 10px;
+      font-size: clamp(40px, 7vw, 68px);
+    }
+
+    .landing-panel h2 {
+      margin: 16px 0 0;
+      color: var(--gold-soft);
+      font-size: clamp(22px, 4vw, 32px);
+      font-weight: normal;
+    }
+
+    .landing-panel p {
+      margin: 24px auto 0;
+      max-width: 620px;
+      color: #dad3c4;
+      font-size: clamp(18px, 2.6vw, 22px);
+      line-height: 1.65;
+    }
+
+    .input-wrap {
+      margin-top: 36px;
+    }
+
+    .cert-input {
+      width: min(100%, 420px);
+      padding: 14px 16px;
+      border: 1px solid rgba(212,175,55,0.28);
+      border-radius: 10px;
+      background: rgba(255,255,255,0.03);
+      color: var(--white);
+      font-size: 16px;
+      outline: none;
+    }
+
+    .cert-input::placeholder {
+      color: #9f9888;
+    }
+
+    .cert-button {
+      margin-top: 16px;
+      padding: 13px 26px;
+      border: none;
+      border-radius: 10px;
+      background: var(--gold);
+      color: #111;
+      font-weight: 700;
+      font-size: 15px;
+      cursor: pointer;
+    }
+
+    .cert-button.alt {
+      background: #2b2b2b;
+      color: var(--white);
+      border: 1px solid rgba(255,255,255,0.10);
+    }
+
+    .tiers {
+      margin-top: 80px;
+    }
+
+    .tiers h2 {
+      margin: 0 0 28px;
+      color: var(--gold-soft);
+      font-size: clamp(28px, 4.5vw, 42px);
+    }
+
+    .tier-grid {
+      display: grid;
+      gap: 18px;
       max-width: 760px;
       margin: 0 auto;
     }
 
-    .cert-input {
-      padding: 12px;
-      width: 300px;
-      border: none;
-      border-radius: 6px;
-      box-sizing: border-box;
-    }
-
-    .cert-button {
-      padding: 12px 24px;
-      background: #d4af37;
-      border: none;
-      border-radius: 6px;
-      font-weight: bold;
-      cursor: pointer;
-    }
-
     .info-card {
       background: rgba(255,255,255,0.03);
-      border: 1px solid rgba(212,175,55,0.22);
-      border-radius: 12px;
-      padding: 20px;
-      transition: all 0.25s ease;
+      border: 1px solid rgba(212,175,55,0.18);
+      border-radius: 14px;
+      padding: 22px;
+      text-align: left;
+      transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+      backdrop-filter: blur(6px);
+    }
+
+    .info-card:hover {
+      transform: translateY(-4px);
+    }
+
+    .info-card h3 {
+      margin: 0 0 8px;
+      font-size: 24px;
+    }
+
+    .info-card p {
+      margin: 0;
+      max-width: none;
+      font-size: 17px;
+      line-height: 1.6;
+    }
+
+    .green {
+      border-color: rgba(61,220,132,0.24);
+      background: rgba(61,220,132,0.04);
+    }
+
+    .green h3 { color: var(--green); }
+    .green p { color: #d8f5e3; }
+
+    .orange {
+      border-color: rgba(255,179,71,0.22);
+      background: rgba(255,165,0,0.04);
+    }
+
+    .orange h3 { color: var(--orange); }
+    .orange p { color: #edd7b4; }
+
+    .red {
+      border-color: rgba(255,107,107,0.22);
+      background: rgba(220,53,69,0.04);
+    }
+
+    .red h3 { color: var(--red); }
+    .red p { color: #f0b8bd; }
+
+    .small-note {
+      margin: 50px auto 0;
+      max-width: 620px;
+      font-size: 14px;
+      color: #8e8777;
+      line-height: 1.7;
+    }
+
+    @media (max-width: 640px) {
+      .card {
+        padding: 34px 18px 26px;
+      }
+
+      .row {
+        align-items: flex-start;
+      }
+
+      .label, .value {
+        font-size: 16px;
+      }
+
+      .subtitle {
+        min-width: 220px;
+      }
+
+      .section-title {
+        font-size: 28px;
+      }
     }
   </style>
 </head>
 <body>
-  <div class="card" id="roomCard">
-    <div class="seal">THE READY MARK</div>
-    <h1>Verified</h1>
-    <div class="subtitle">CLEANLINESS STANDARD</div>
-
-    <div class="row">
-      <div class="label">Property</div>
-      <div class="value" id="property">Loading...</div>
-    </div>
-
-    <div class="row">
-      <div class="label">Room</div>
-      <div class="value" id="room-number">Loading...</div>
-    </div>
-
-    <div class="row">
-      <div class="label">Inspector ID</div>
-      <div class="value" id="inspector-id">Loading...</div>
-    </div>
-
-    <div class="row">
-      <div class="label">Inspection Date</div>
-      <div class="value" id="inspection-date">Loading...</div>
-    </div>
-
-    <div class="row">
-      <div class="label">Certification Level</div>
-      <div class="value" id="certification-tier">Loading...</div>
-    </div>
-
-    <div class="row">
-      <div class="label">Verification Record ID</div>
-      <div class="value record-id" id="verification-id">Loading...</div>
-    </div>
-
-    <h2>How This Room Was Verified</h2>
-
-    <div class="video-box">
-      <p>Inspection Process Video</p>
-      <div class="video-placeholder">
-        Verification process video coming soon
-      </div>
-    </div>
-
-    <div class="section">
-      <h2>The Ready Mark Standard</h2>
-      <p>
-        This room has been inspected under the Ready Mark Cleanliness Standard.
-        High-touch surfaces, linens, bathrooms, and guest areas were reviewed
-        according to the Ready Mark inspection protocol.
-      </p>
-    </div>
-
-    <div class="score" id="score">Score: Loading...</div>
-    <div class="status" id="status">LOADING</div>
-
-    <div class="footer">
-      This room has been inspected under the Ready Mark Cleanliness Standard.
-    </div>
-  </div>
+  <div id="app"></div>
 
   <script>
     document.addEventListener("DOMContentLoaded", function () {
-      async function loadVerification() {
+      const app = document.getElementById("app");
+
+      function renderLandingPage() {
+        app.innerHTML = `
+          <div class="landing-shell">
+            <div class="landing-watermark">
+              <img src="/readymarkseal(best)nobackground.PNG" alt="Ready Mark Seal" />
+            </div>
+
+            <div class="landing-panel">
+              <div class="landing-brand">THE READY MARK</div>
+              <h1>Verification System</h1>
+              <h2>Cleanliness Verification & Certification</h2>
+
+              <p>
+                Scan a Ready Mark QR code or enter a room number to view a verified inspection report.
+              </p>
+
+              <div class="input-wrap">
+                <input
+                  id="searchInput"
+                  placeholder="Enter Room Number (e.g. 101)"
+                  class="cert-input"
+                />
+                <br />
+                <button id="verifyBtn" class="cert-button">Verify Room</button>
+              </div>
+
+              <div class="tiers">
+                <h2>Understanding Ready Mark Tiers</h2>
+
+                <div class="tier-grid">
+                  <div class="info-card green">
+                    <h3>Verified Clean</h3>
+                    <p>
+                      This space met Ready Mark inspection standards at the time of review.
+                    </p>
+                  </div>
+
+                  <div class="info-card orange">
+                    <h3>Needs Attention</h3>
+                    <p>
+                      This space requires corrective action before it can be considered fully verified.
+                    </p>
+                  </div>
+
+                  <div class="info-card red">
+                    <h3>Not Clean</h3>
+                    <p>
+                      This space did not meet Ready Mark minimum cleanliness standards at the time of inspection.
+                    </p>
+                  </div>
+                </div>
+
+                <div class="small-note">
+                  Each Ready Mark verification is time-stamped, room-specific, and conducted under a standardized inspection protocol.
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+
+        document.getElementById("verifyBtn").addEventListener("click", function () {
+          let val = document.getElementById("searchInput").value.trim().toLowerCase();
+          if (!val) return;
+
+          val = val.replace(/\s+/g, "");
+
+          if (/^room-\d+$/.test(val)) {
+            window.location.href = "/" + val;
+            return;
+          }
+
+          if (/^room\d+$/.test(val)) {
+            val = val.replace(/^room/, "room-");
+            window.location.href = "/" + val;
+            return;
+          }
+
+          if (/^\d+$/.test(val)) {
+            window.location.href = "/room-" + val;
+            return;
+          }
+
+          alert("Please enter a valid room number, like 101.");
+        });
+      }
+
+      function renderRoomPage() {
+        app.innerHTML = `
+          <div class="page-shell">
+            <div class="card">
+              <div class="brand">THE READY MARK</div>
+              <h1>Verified</h1>
+              <div class="subtitle">CLEANLINESS STANDARD</div>
+
+              <div class="rows">
+                <div class="row">
+                  <div class="label">Property</div>
+                  <div class="value" id="property">Loading...</div>
+                </div>
+
+                <div class="row">
+                  <div class="label">Room</div>
+                  <div class="value" id="room-number">Loading...</div>
+                </div>
+
+                <div class="row">
+                  <div class="label">Inspector ID</div>
+                  <div class="value" id="inspector-id">Loading...</div>
+                </div>
+
+                <div class="row">
+                  <div class="label">Inspection Date</div>
+                  <div class="value" id="inspection-date">Loading...</div>
+                </div>
+
+                <div class="row">
+                  <div class="label">Certification Level</div>
+                  <div class="value" id="certification-tier">Loading...</div>
+                </div>
+
+                <div class="row">
+                  <div class="label">Verification Record ID</div>
+                  <div class="value record-id" id="verification-id">Loading...</div>
+                </div>
+              </div>
+
+              <h2 class="section-title">How This Room Was Verified</h2>
+
+              <div class="video-box">
+                <p>Inspection Process Video</p>
+                <div class="video-placeholder">Verification process video coming soon</div>
+              </div>
+
+              <div class="standard-section">
+                <h2>The Ready Mark Standard</h2>
+                <p>
+                  This room has been inspected under the Ready Mark Cleanliness Standard.
+                  High-touch surfaces, linens, bathrooms, and guest areas were reviewed
+                  according to the Ready Mark inspection protocol.
+                </p>
+              </div>
+
+              <div class="score" id="score">Score: Loading...</div>
+              <div class="status" id="status">LOADING</div>
+
+              <div class="footer">
+                This room has been inspected under the Ready Mark Cleanliness Standard.
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      async function loadRoomVerification(slug) {
         const propertyEl = document.getElementById("property");
         const roomEl = document.getElementById("room-number");
         const inspectorEl = document.getElementById("inspector-id");
@@ -337,349 +637,32 @@
         const statusEl = document.getElementById("status");
 
         try {
-          const pathParts = window.location.pathname.split("/").filter(Boolean);
-          const slug = pathParts[pathParts.length - 1] || null;
-
-          // ROOT LANDING PAGE
-          if (!slug) {
-            document.body.innerHTML = `
-              <div class="cert-page-shell">
-                <div class="cert-watermark">
-                  <img src="/readymarkseal(best)nobackground.PNG" style="width:400px;" />
-                </div>
-
-                <div class="cert-panel">
-                  <h1 style="letter-spacing:2px;">THE READY MARK</h1>
-                  <h2 style="margin-top:10px; color:#d4af37;">Cleanliness Verification System</h2>
-
-                  <p style="margin-top:20px; max-width:500px; margin-left:auto; margin-right:auto;">
-                    Scan a Ready Mark QR code or enter a room number to view a verified inspection report.
-                  </p>
-
-                  <div style="margin-top:30px;">
-                    <input
-                      id="searchInput"
-                      placeholder="Enter Room Number (e.g. 101)"
-                      class="cert-input"
-                    />
-                    <br><br>
-                    <button onclick="goVerify()" class="cert-button">Verify Room</button>
-                  </div>
-
-                  <div style="margin-top:20px;">
-                    <input
-                      id="certInput"
-                      placeholder="Enter Record ID (e.g. RM-2026-0001)"
-                      class="cert-input"
-                    />
-                    <br><br>
-                    <button onclick="goCert()" class="cert-button" style="background:#444;color:white;">
-                      Verify Certificate
-                    </button>
-                  </div>
-
-                  <div style="margin-top:80px;">
-                    <h2 style="color:#d4af37; margin-bottom:30px;">
-                      Understanding Ready Mark Tiers
-                    </h2>
-
-                    <div style="
-                      display:flex;
-                      flex-direction:column;
-                      gap:20px;
-                      max-width:700px;
-                      margin:auto;
-                    ">
-                      <div
-                        onmouseover="this.style.transform='translateY(-4px)'; this.style.border='1px solid rgba(61,220,132,0.55)'"
-                        onmouseout="this.style.transform='translateY(0px)'; this.style.border='1px solid rgba(61,220,132,0.22)'"
-                        class="info-card"
-                        style="
-                          background: rgba(61,220,132,0.04);
-                          border:1px solid rgba(61,220,132,0.22);
-                          backdrop-filter: blur(6px);
-                        "
-                      >
-                        <h3 style="color:#3ddc84; margin-bottom:8px;">Verified Clean</h3>
-                        <p style="color:#d8f5e3;">
-                          This space met Ready Mark inspection standards at the time of review.
-                        </p>
-                      </div>
-
-                      <div
-                        onmouseover="this.style.transform='translateY(-4px)'; this.style.border='1px solid rgba(255,165,0,0.55)'"
-                        onmouseout="this.style.transform='translateY(0px)'; this.style.border='1px solid rgba(255,165,0,0.22)'"
-                        class="info-card"
-                        style="
-                          background: rgba(255,165,0,0.04);
-                          border:1px solid rgba(255,165,0,0.22);
-                        "
-                      >
-                        <h3 style="color:#ffb347; margin-bottom:8px;">Needs Attention</h3>
-                        <p style="color:#e7d2b0;">
-                          This space requires corrective action before it can be considered fully verified.
-                        </p>
-                      </div>
-
-                      <div
-                        onmouseover="this.style.transform='translateY(-4px)'; this.style.border='1px solid rgba(220,53,69,0.55)'; this.style.boxShadow='0 0 14px rgba(220,53,69,0.08)'"
-                        onmouseout="this.style.transform='translateY(0px)'; this.style.border='1px solid rgba(220,53,69,0.22)'; this.style.boxShadow='none'"
-                        class="info-card"
-                        style="
-                          background: rgba(220,53,69,0.04);
-                          border:1px solid rgba(220,53,69,0.22);
-                          box-shadow:none;
-                        "
-                      >
-                        <h3 style="color:#ff6b6b; margin-bottom:8px;">Not Clean</h3>
-                        <p style="color:#f0b8bd;">
-                          This space did not meet Ready Mark minimum cleanliness standards at the time of inspection.
-                        </p>
-                      </div>
-                    </div>
-
-                    <div style="
-                      margin-top:60px;
-                      font-size:14px;
-                      color:#888;
-                      max-width:600px;
-                      margin-left:auto;
-                      margin-right:auto;
-                    ">
-                      Each Ready Mark verification is time-stamped, room-specific, and conducted under a standardized inspection protocol.
-                    </div>
-                  </div>
-                </div>
-              </div>
-            `;
-
-            window.goVerify = function () {
-              let val = document.getElementById("searchInput").value.trim().toLowerCase();
-              if (!val) return;
-
-              val = val.replace(/\s+/g, "");
-
-              if (/^room-\d+$/.test(val)) {
-                window.location.href = "/" + val;
-                return;
-              }
-
-              if (/^room\d+$/.test(val)) {
-                val = val.replace(/^room/, "room-");
-                window.location.href = "/" + val;
-                return;
-              }
-
-              if (/^\d+$/.test(val)) {
-                window.location.href = "/room-" + val;
-                return;
-              }
-
-              alert("Please enter a valid room number, like 101.");
-            };
-
-            window.goCert = function () {
-              let val = document.getElementById("certInput").value.trim().toUpperCase();
-              if (!val) return;
-              window.location.href = "/check?record=" + encodeURIComponent(val);
-            };
-
-            return;
-          }
-
-          // CERTIFICATE LOOKUP PAGE
-          if (slug === "check") {
-            const record = new URLSearchParams(window.location.search).get("record") || "";
-
-            document.body.innerHTML = `
-              <div class="cert-page-shell">
-                <div class="cert-watermark">
-                  <img src="/readymarkseal(best)nobackground.PNG" style="width:360px;" />
-                </div>
-
-                <div class="cert-panel">
-                  <h1 style="letter-spacing:2px;">THE READY MARK</h1>
-                  <h2 style="margin-top:10px; color:#d4af37;">Certificate Verification</h2>
-
-                  <p style="margin-top:20px; max-width:540px; margin-left:auto; margin-right:auto; color:#d8d8d8;">
-                    Confirm the authenticity of a Ready Mark certification record by entering its verification ID.
-                  </p>
-
-                  <div style="margin-top:30px;">
-                    <input
-                      id="certSearchInput"
-                      placeholder="Enter Record ID (e.g. RM-2026-0001)"
-                      class="cert-input"
-                      value="${record}"
-                    />
-                    <br><br>
-                    <button onclick="runCertSearch()" class="cert-button">Verify Certificate</button>
-                  </div>
-
-                  <div id="certResult" style="margin-top:40px;"></div>
-
-                  <div style="
-                    margin-top:50px;
-                    font-size:14px;
-                    color:#888;
-                    max-width:620px;
-                    margin-left:auto;
-                    margin-right:auto;
-                  ">
-                    Each Ready Mark certificate record is linked to a room-specific inspection and can be independently verified against our system of record.
-                  </div>
-                </div>
-              </div>
-            `;
-
-            window.runCertSearch = async function () {
-              const input = document.getElementById("certSearchInput");
-              const result = document.getElementById("certResult");
-              const val = input.value.trim().toUpperCase();
-
-              if (!val) return;
-
-              result.innerHTML = `<p style="color:#bbb;">Checking record...</p>`;
-
-              try {
-                const { data, error } = await supabase
-                .from("rooms")
-                .select(`
-                room_number,
-                property:properties(property_name),
-                inspection:inspections(*)
-               `)
-                .eq("slug", slug)
-                 .single();  
-                if (error || !data) {
-  document.body.innerHTML = "<h2>Verification not found</h2>";
-  return;
-}                if (!res.ok) {
-                  result.innerHTML = `
-                    <div class="info-card" style="max-width:620px;margin:auto;background:rgba(220,53,69,0.04);border:1px solid rgba(220,53,69,0.22);">
-                      <h3 style="color:#ff6b6b; margin-top:0;">Record Not Found</h3>
-                      <p style="color:#f0b8bd; margin-bottom:0;">
-                        We could not locate a Ready Mark record matching <strong>${val}</strong>.
-                      </p>
-                    </div>
-                  `;
-                  return;
-                }
-
-                const tier = data.certificationTier ?? "Not Verified";
-                let tierColor = "#d4af37";
-                let borderColor = "rgba(212,175,55,0.22)";
-                let statusColor = "#d4af37";
-
-                if (tier.toLowerCase() === "verified clean") {
-                  tierColor = "#3ddc84";
-                  borderColor = "rgba(61,220,132,0.22)";
-                  statusColor = "#3ddc84";
-                } else if (tier.toLowerCase() === "needs attention") {
-                  tierColor = "#ffb347";
-                  borderColor = "rgba(255,165,0,0.22)";
-                  statusColor = "#ffb347";
-                } else if (tier.toLowerCase() === "not clean") {
-                  tierColor = "#ff6b6b";
-                  borderColor = "rgba(220,53,69,0.22)";
-                  statusColor = "#ff6b6b";
-                }
-
-                result.innerHTML = `
-                  <div class="info-card" style="max-width:620px;margin:auto;background:rgba(255,255,255,0.03);border:1px solid ${borderColor};text-align:left;">
-                    <div style="text-align:center; margin-bottom:24px;">
-                      <div style="color:#d4af37; letter-spacing:2px; font-size:13px;">READY MARK RECORD</div>
-                      <h3 style="margin:10px 0 0 0; color:#f8f5ee; font-size:28px;">Certificate Verified</h3>
-                    </div>
-
-                    <div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.08);">
-                      <div style="color:#d1d5db;">Verification Record ID</div>
-                      <div style="color:#ffffff;font-weight:600;letter-spacing:2px;font-family:'Courier New',monospace;">${data.verificationId || ""}</div>
-                    </div>
-
-                    <div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.08);">
-                      <div style="color:#d1d5db;">Property</div>
-                      <div style="color:#ffffff;font-weight:600;">${data.property || ""}</div>
-                    </div>
-
-                    <div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.08);">
-                      <div style="color:#d1d5db;">Room</div>
-                      <div style="color:#ffffff;font-weight:600;">${data.room || ""}</div>
-                    </div>
-
-                    <div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.08);">
-                      <div style="color:#d1d5db;">Inspector ID</div>
-                      <div style="color:#ffffff;font-weight:600;">${data.inspectorId || ""}</div>
-                    </div>
-
-                    <div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.08);">
-                      <div style="color:#d1d5db;">Inspection Date</div>
-                      <div style="color:#ffffff;font-weight:600;">
-                        ${data.inspectionDate ? new Date(data.inspectionDate).toLocaleDateString() : ""}
-                      </div>
-                    </div>
-
-                    <div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.08);">
-                      <div style="color:#d1d5db;">Certification Level</div>
-                      <div style="font-weight:600;color:${tierColor};">${tier}</div>
-                    </div>
-
-                    <div style="text-align:center;margin-top:28px;font-size:24px;font-weight:bold;color:${tierColor};">
-                      Score: ${data.score ?? "N/A"}${data.score != null ? " / 100" : ""}
-                    </div>
-
-                    <div style="
-                      margin-top:24px;
-                      text-align:center;
-                      background:#1f2937;
-                      border:1px solid ${borderColor};
-                      color:${statusColor};
-                      padding:14px;
-                      border-radius:999px;
-                      font-weight:bold;
-                      letter-spacing:1px;
-                    ">
-                      ${data.status || data.certificationTier || "Verified Record"}
-                    </div>
-                  </div>
-                `;
-              } catch (err) {
-                result.innerHTML = `
-                  <div class="info-card" style="max-width:620px;margin:auto;background:rgba(220,53,69,0.04);border:1px solid rgba(220,53,69,0.22);">
-                    <h3 style="color:#ff6b6b; margin-top:0;">System Error</h3>
-                    <p style="color:#f0b8bd; margin-bottom:0;">${String(err)}</p>
-                  </div>
-                `;
-              }
-            };
-
-            if (record) {
-              window.runCertSearch();
+          const res = await fetch("/api/get-verification?slug=" + encodeURIComponent(slug), {
+            method: "GET",
+            headers: {
+              "Accept": "application/json"
             }
+          });
 
-            return;
-          }
-
-          // ROOM VERIFICATION PAGE
-          const res = await fetch("https://www.thereadymarkgroup.com/api/get-verification?slug=" + slug);       
           const data = await res.json();
 
-          if (!res.ok || !data.room) {
-            propertyEl.textContent = data.property || "Not found";
-            roomEl.textContent = data.room || slug;
-            inspectorEl.textContent = data.error || "Lookup failed";
+          if (!res.ok || !data || !data.room) {
+            propertyEl.textContent = data?.property || "Not found";
+            roomEl.textContent = data?.room || slug;
+            inspectorEl.textContent = data?.error || "Lookup failed";
             dateEl.textContent = "—";
             tierEl.textContent = "Not verified";
             verificationEl.textContent = "—";
             scoreEl.textContent = "Score: Not available";
             statusEl.textContent = "NOT VERIFIED";
+            statusEl.style.color = "var(--red)";
+            statusEl.style.border = "1px solid rgba(255,107,107,0.45)";
             return;
           }
 
           propertyEl.textContent = data.property || "—";
           roomEl.textContent = data.room || "—";
           inspectorEl.textContent = data.inspectorId || "—";
-
           dateEl.textContent = data.inspectionDate
             ? new Date(data.inspectionDate).toLocaleDateString()
             : "—";
@@ -688,19 +671,6 @@
           const score = data.score;
 
           tierEl.textContent = tier;
-
-          if (tier.toLowerCase() === "verified clean") {
-            tierEl.style.color = "#3ddc84";
-          } else if (tier.toLowerCase() === "needs attention") {
-            tierEl.style.color = "#ffb347";
-          } else if (tier.toLowerCase() === "not clean") {
-            tierEl.style.color = "#ff6b6b";
-          } else if (tier.toLowerCase() === "ready mark premier") {
-            tierEl.style.color = "#f4d06f";
-          } else {
-            tierEl.style.color = "#d4af37";
-          }
-
           verificationEl.textContent = data.verificationId || "—";
 
           if (score !== "" && score != null) {
@@ -709,56 +679,74 @@
             scoreEl.textContent = "Score: N/A";
           }
 
-          if (tier.toLowerCase() === "verified clean") {
-            scoreEl.style.color = "#3ddc84";
-            statusEl.style.color = "#3ddc84";
-            statusEl.style.border = "1px solid rgba(61,220,132,0.45)";
-          } else if (tier.toLowerCase() === "needs attention") {
-            scoreEl.style.color = "#ffb347";
-            statusEl.style.color = "#ffb347";
-            statusEl.style.border = "1px solid rgba(255,179,71,0.45)";
-          } else if (tier.toLowerCase() === "not clean") {
-            scoreEl.style.color = "#ff6b6b";
-            statusEl.style.color = "#ff6b6b";
-            statusEl.style.border = "1px solid rgba(255,107,107,0.45)";
-          } else if (tier.toLowerCase() === "ready mark premier") {
-            scoreEl.style.color = "#f4d06f";
-            statusEl.style.color = "#f4d06f";
-            statusEl.style.border = "1px solid rgba(244,208,111,0.45)";
-          } else {
-            scoreEl.style.color = "#d4af37";
-            statusEl.style.color = "#d4af37";
-            statusEl.style.border = "1px solid rgba(212,175,55,0.45)";
+          let tone = "gold";
+
+          if (tier.toLowerCase() === "verified clean") tone = "green";
+          else if (tier.toLowerCase() === "needs attention") tone = "orange";
+          else if (tier.toLowerCase() === "not clean") tone = "red";
+          else if (tier.toLowerCase() === "ready mark premier") tone = "premier";
+
+          switch (tone) {
+            case "green":
+              tierEl.style.color = "var(--green)";
+              scoreEl.style.color = "var(--green)";
+              statusEl.style.color = "var(--green)";
+              statusEl.style.border = "1px solid rgba(61,220,132,0.45)";
+              break;
+            case "orange":
+              tierEl.style.color = "var(--orange)";
+              scoreEl.style.color = "var(--orange)";
+              statusEl.style.color = "var(--orange)";
+              statusEl.style.border = "1px solid rgba(255,179,71,0.45)";
+              break;
+            case "red":
+              tierEl.style.color = "var(--red)";
+              scoreEl.style.color = "var(--red)";
+              statusEl.style.color = "var(--red)";
+              statusEl.style.border = "1px solid rgba(255,107,107,0.45)";
+              break;
+            case "premier":
+              tierEl.style.color = "var(--premier)";
+              scoreEl.style.color = "var(--premier)";
+              statusEl.style.color = "var(--premier)";
+              statusEl.style.border = "1px solid rgba(244,208,111,0.45)";
+              break;
+            default:
+              tierEl.style.color = "var(--gold-soft)";
+              scoreEl.style.color = "var(--gold-soft)";
+              statusEl.style.color = "var(--gold-soft)";
+              statusEl.style.border = "1px solid rgba(212,175,87,0.45)";
           }
 
-          statusEl.textContent = tier;
+          statusEl.textContent = tier.toUpperCase();
         } catch (err) {
-          const inspectorEl = document.getElementById("inspector-id");
-          const dateEl = document.getElementById("inspection-date");
-          const tierEl = document.getElementById("certification-tier");
-          const verificationEl = document.getElementById("verification-id");
-          const scoreEl = document.getElementById("score");
-          const statusEl = document.getElementById("status");
-
-          if (inspectorEl) inspectorEl.textContent = err.message || "Unexpected error";
-          if (dateEl) dateEl.textContent = "JS_ERROR";
-          if (tierEl) tierEl.textContent = "Script error";
-          if (verificationEl) verificationEl.textContent = String(err);
-          if (scoreEl) scoreEl.textContent = "Score: Script error";
-          if (statusEl) statusEl.textContent = "ERROR";
+          inspectorEl.textContent = err.message || "Unexpected error";
+          dateEl.textContent = "JS_ERROR";
+          tierEl.textContent = "Script error";
+          verificationEl.textContent = String(err);
+          scoreEl.textContent = "Score: Script error";
+          statusEl.textContent = "ERROR";
+          statusEl.style.color = "var(--red)";
+          statusEl.style.border = "1px solid rgba(255,107,107,0.45)";
         }
       }
+
+      const pathParts = window.location.pathname.split("/").filter(Boolean);
+      const slug = pathParts[pathParts.length - 1] || null;
 
       const params = new URLSearchParams(window.location.search);
       const source = params.get("src") || "unknown";
 
       if (typeof gtag === "function") {
-        gtag("event", "qr_scan", {
-          source: source
-        });
+        gtag("event", "qr_scan", { source });
       }
 
-      loadVerification();
+      if (!slug) {
+        renderLandingPage();
+      } else {
+        renderRoomPage();
+        loadRoomVerification(slug);
+      }
     });
   </script>
 </body>
