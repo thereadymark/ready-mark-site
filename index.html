@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>The Ready Mark Verification Portal</title>
 
-  <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-63GYLY26HQ"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
@@ -125,10 +124,11 @@
 
     .eyebrow {
       color: var(--gold);
-      font-size: 12px;
+      font-size: 20px;
       letter-spacing: 2px;
       text-transform: uppercase;
-      margin-bottom: 10px;
+      margin-bottom: 14px;
+      font-weight: 700;
     }
 
     h1 {
@@ -173,7 +173,8 @@
       text-transform: uppercase;
     }
 
-    input {
+    input,
+    select {
       width: 100%;
       background: rgba(255,255,255,0.03);
       border: 1px solid rgba(199,162,87,0.14);
@@ -182,15 +183,22 @@
       padding: 15px 16px;
       font-size: 16px;
       outline: none;
+      appearance: none;
     }
 
     input::placeholder {
       color: #8e877b;
     }
 
-    input:focus {
+    input:focus,
+    select:focus {
       border-color: rgba(199,162,87,0.40);
       box-shadow: 0 0 0 3px rgba(199,162,87,0.08);
+    }
+
+    option {
+      background: #1b1f23;
+      color: var(--text);
     }
 
     .button-row {
@@ -243,11 +251,6 @@
       color: var(--muted);
       font-size: 14px;
       line-height: 1.7;
-    }
-
-    .record-header {
-      text-align: center;
-      margin-bottom: 18px;
     }
 
     .status-pill {
@@ -372,6 +375,10 @@
       h1 {
         font-size: 32px;
       }
+
+      .eyebrow {
+        font-size: 16px;
+      }
     }
   </style>
 </head>
@@ -379,6 +386,14 @@
   <div id="app"></div>
 
   <script>
+    const PROPERTY_OPTIONS = [
+      { value: "", label: "Select a property" },
+      { value: "crown-plaza-hotel-stl", label: "Crown Plaza Hotel STL" }
+      // Add more here later:
+      // { value: "marriott-downtown-stl", label: "Marriott Downtown STL" },
+      // { value: "hilton-riverfront", label: "Hilton Riverfront" }
+    ];
+
     function getStatusClass(tier) {
       if (!tier) return "";
       const normalized = tier.toLowerCase().trim();
@@ -401,6 +416,12 @@
         .replace(/'/g, "&#039;");
     }
 
+    function renderPropertyOptions() {
+      return PROPERTY_OPTIONS.map(
+        option => `<option value="${escapeHtml(option.value)}">${escapeHtml(option.label)}</option>`
+      ).join("");
+    }
+
     function renderLandingPage() {
       const app = document.getElementById("app");
       app.innerHTML = `
@@ -417,6 +438,13 @@
 
             <div class="content">
               <div class="card">
+                <div class="form-group">
+                  <label for="property-search">Property</label>
+                  <select id="property-search">
+                    ${renderPropertyOptions()}
+                  </select>
+                </div>
+
                 <div class="form-group">
                   <label for="room-search">Room Number</label>
                   <input id="room-search" type="text" placeholder="Enter room number, e.g. 102">
@@ -445,30 +473,31 @@
 
       const verifyBtn = document.getElementById("verify-room-btn");
       const roomInput = document.getElementById("room-search");
+      const propertySelect = document.getElementById("property-search");
 
       function goToRoom() {
-        let value = roomInput.value.trim().toLowerCase();
-        if (!value) return;
+        const property = propertySelect.value;
+        let room = roomInput.value.trim().toLowerCase();
 
-        value = value.replace(/\s+/g, "");
-
-        if (/^room-\d+$/.test(value)) {
-          window.location.href = "/" + value;
+        if (!property) {
+          alert("Please select a property.");
           return;
         }
 
-        if (/^room\d+$/.test(value)) {
-          value = value.replace(/^room/, "room-");
-          window.location.href = "/" + value;
+        if (!room) {
+          alert("Please enter a room number.");
           return;
         }
 
-        if (/^\d+$/.test(value)) {
-          window.location.href = "/room-" + value;
+        room = room.replace(/\s+/g, "");
+        room = room.replace(/^room-?/i, "");
+
+        if (!/^\d+$/.test(room)) {
+          alert("Please enter a valid room number, like 102.");
           return;
         }
 
-        alert("Please enter a valid room number, like 102.");
+        window.location.href = `/${property}-room-${room}`;
       }
 
       verifyBtn.addEventListener("click", goToRoom);
@@ -600,7 +629,7 @@
               <div class="card">
                 <div class="info-grid">
                   <div class="info-item">
-                    <div class="info-label">Requested Room</div>
+                    <div class="info-label">Requested Record</div>
                     <div class="info-value">${escapeHtml(slug || "—")}</div>
                   </div>
 
@@ -628,9 +657,7 @@
       try {
         const res = await fetch("/api/get-verification?slug=" + encodeURIComponent(slug), {
           method: "GET",
-          headers: {
-            "Accept": "application/json"
-          }
+          headers: { "Accept": "application/json" }
         });
 
         const data = await res.json();
