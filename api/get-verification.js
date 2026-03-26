@@ -20,10 +20,25 @@ export default async function handler(req, res) {
   try {
     const { slug } = req.query;
 
-    if (!slug || typeof slug !== "string") {
-      return res.status(400).json({ error: "Missing slug parameter" });
-    }
+if (!slug || typeof slug !== "string") {
+  return res.status(400).json({ error: "Missing slug parameter" });
+}
 
+let propertySlug = null;
+let roomNumber = null;
+
+if (slug.includes("-room-")) {
+  const parts = slug.split("-room-");
+
+  if (parts.length !== 2 || !parts[0] || !parts[1]) {
+    return res.status(400).json({ error: "Invalid slug format" });
+  }
+
+  propertySlug = parts[0];
+  roomNumber = parts[1];
+} else {
+  roomNumber = slug.replace(/^room-/, "");
+}
     const supabaseUrl = process.env.SUPABASE_URL;
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
@@ -80,90 +95,98 @@ export default async function handler(req, res) {
 
     const slugCandidates = buildSlugCandidates(slug);
 
-    let room = null;
-    const roomLookupDebug = [];
+    // Fetch room
+let room = null;
 
-    // Try qr_slug first
-    for (const candidate of slugCandidates) {
-      const roomUrl =
-        `${supabaseUrl}/rest/v1/${ROOM_TABLE}` +
-        `?qr_slug=eq.${encodeURIComponent(candidate)}` +
-        `&select=*` +
-        `&limit=1`;
+if (propertySlug) {
+  // New format: property + room, e.g. crown-plaza-hotel-stl-room-102
+  const roomUrl =
+    `${supabaseUrl}/rest/v1/${ROOM_TABLE}` +
+    `?room_number=eq.${encodeURIComponent(roomNumber)}` +
+    `&select=*` +
+    `&limit=50`;
 
-      const { response, json } = await fetchJson(roomUrl);
+  const { response: roomRes, json: roomData } = await fetchJson(roomUrl);
 
-      roomLookupDebug.push({
-        field: "qr_slug",
-        candidate,
-        ok: response.ok,
-        found: Array.isArray(json) ? json.length : 0,
-      });
+  if (!roomRes.ok) {
+    return res.status(500).json({
+      error: "Room lookup failed",
+      details: roomData,
+      propertySlug,
+      roomNumber
+    });
+  }
 
-      if (!response.ok) {
-        return res.status(500).json({
-          error: "Room lookup failed on qr_slug",
-          details: json,
-          debug: roomLookupDebug,
-        });
-      }
+  if (!Array.isArray(roomData) || roomData.length === 0) {
+    return res.status(404).json({
+      error: "Room not found",
+      propertySlug,
+      roomNumber
+    });
+  }
 
-      if (Array.isArray(json) && json.length > 0) {
-        room = json[0];
-        break;
-      }
-    }
+  // Find the matching property record by slug
+  const propertyUrl =
+    `${supabaseUrl}/rest/v1/${PROPERTY_TABLE}` +
+    `?property_slug=eq.${encodeURIComponent(propertySlug)}` +
+    `&select=*` +
+    `&limit=1`;
 
-    // Fallback to room_number
-    if (!room) {
-      for (const candidate of slugCandidates) {
-        const roomUrl =
-          `${supabaseUrl}/rest/v1/${ROOM_TABLE}` +
-          `?room_number=eq.${encodeURIComponent(candidate)}` +
-          `&select=*` +
-          `&limit=1`;
+  const { response: propertyRes, json: propertyData } = await fetchJson(propertyUrl);
 
-        const { response, json } = await fetchJson(roomUrl);
+  if (!propertyRes.ok) {
+    return res.status(500).json({
+      error: "Property lookup failed",
+      details: propertyData,
+      propertySlug
+    });
+  }
 
-        roomLookupDebug.push({
-          field: "room_number",
-          candidate,
-          ok: response.ok,
-          found: Array.isArray(json) ? json.length : 0,
-        });
+  if (!Array.isArray(propertyData) || propertyData.length === 0) {
+    return res.status(404).json({
+      error: "Property not found",
+      propertySlug
+    });
+  }
 
-        if (!response.ok) {
-          return res.status(500).json({
-            error: "Room lookup failed on room_number",
-            details: json,
-            debug: roomLookupDebug,
-          });
-        }
+  const matchedProperty = propertyData[0];
 
-        if (Array.isArray(json) && json.length > 0) {
-          room = json[0];
-          break;
-        }
-      }
-    }
+  room = roomData.find(r => r.property_id === matchedProperty.id) || null;
 
-    if (!room) {
-      return res.status(404).json({
-        error: "Room not found",
-        attemptedSlug: slug,
-        candidatesTried: slugCandidates,
-        debug: roomLookupDebug,
-      });
-    }
+  if (!room) {
+    return res.status(404).json({
+      error: "Room not found for selected property",
+      propertySlug,
+      roomNumber
+    });
+  }
+} else {
+  // Old format fallback: room-102
+  const roomUrl =
+    `${supabaseUrl}/rest/v1/${ROOM_TABLE}` +
+    `?room_number=eq.${encodeURIComponent(roomNumber)}` +
+    `&select=*` +
+    `&limit=1`;
 
-    if (!room.id) {
-      return res.status(500).json({
-        error: "Room record found but missing room.id",
-        room,
-      });
-    }
+  const { response: roomRes, json: roomData } = await fetchJson(roomUrl);
 
-    // Fetch property name from properties table using property_id
+  if (!roomRes.ok) {
+    return res.status(500).json({
+      error: "Room lookup failed",
+      details: roomData,
+      roomNumber
+    });
+  }
+
+  if (!Array.isArray(roomData) || roomData.length === 0) {
+    return res.status(404).json({
+      error: "Room not found",
+      roomNumber
+    });
+  }
+
+  room = roomData[0];
+}    // Fetch property name from properties table using property_id
     let propertyName = "";
 
     if (room.property_id) {
