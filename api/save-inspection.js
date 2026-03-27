@@ -162,7 +162,6 @@ export default async function handler(req, res) {
       certification_tier: String(certification_tier).trim(),
       verification_id: String(verification_id).trim(),
       score: score === "" || score === null || score === undefined ? null : Number(score),
-      status: String(status || certification_tier).trim()
     }];
 
     const inspectionUrl = `${supabaseUrl}/rest/v1/Inspections`;
