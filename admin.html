@@ -3,1133 +3,173 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>The Ready Mark | Internal Log Entry</title>
-
+  <title>Admin - Ready Mark</title>
   <style>
-    :root {
-      --bg: #121416;
-      --panel: rgba(26, 30, 34, 0.96);
-      --gold: #c7a257;
-      --gold-soft: #d8bb7a;
-      --text: #f3eee5;
-      --muted: #b7b0a5;
-      --line: rgba(199, 162, 87, 0.20);
-      --shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
-
-      --success: #3ddc84;
-      --warning: #ffb347;
-      --danger: #ff6b6b;
-    }
-
-    * {
-      box-sizing: border-box;
-    }
-
-    html, body {
-      margin: 0;
-      min-height: 100%;
-      font-family: Georgia, serif;
-      color: var(--text);
-      background:
-        radial-gradient(circle at top center, rgba(255,255,255,0.03), transparent 28%),
-        linear-gradient(180deg, #1b1815 0%, #121416 45%, #121416 100%);
-    }
-
     body {
-      position: relative;
-      overflow-x: hidden;
-    }
-
-    body::before {
-      content: "";
-      position: fixed;
-      inset: 0;
-      background-image: url("/readymarklogonobackground2.PNG");
-      background-repeat: repeat;
-      background-size: 180px;
-      opacity: 0.025;
-      filter: grayscale(100%) brightness(1.05);
-      pointer-events: none;
-      z-index: 0;
-    }
-
-    #app {
-      position: relative;
-      z-index: 1;
-      min-height: 100vh;
-      padding: 34px 18px;
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
-    }
-
-    .panel {
-      width: 100%;
-      max-width: 980px;
-      background: linear-gradient(180deg, rgba(27,31,35,0.98), rgba(21,24,27,0.98));
-      border: 1px solid var(--line);
-      border-radius: 22px;
-      box-shadow: var(--shadow);
-      overflow: hidden;
-      position: relative;
-    }
-
-    .panel::before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background: radial-gradient(circle at top center, rgba(199,162,87,0.08), transparent 40%);
-      pointer-events: none;
-    }
-
-    .panel-header {
-      padding: 34px 26px 22px;
-      text-align: center;
-      border-bottom: 1px solid var(--line);
-      position: relative;
-      z-index: 1;
-    }
-
-    .crest {
-      width: 120px;
-      display: block;
-      margin: 0 auto 12px;
-    }
-
-    .brand-lockup {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 12px;
-      margin: 0 auto 16px;
-      max-width: 680px;
-    }
-
-    .brand-lockup::before,
-    .brand-lockup::after {
-      content: "";
-      flex: 1;
-      height: 2px;
-      background: linear-gradient(90deg, rgba(199,162,87,0), rgba(216,187,122,0.95), rgba(199,162,87,0));
-      box-shadow: 0 0 8px rgba(199,162,87,0.18);
-      border-radius: 999px;
-    }
-
-    .eyebrow {
-      color: var(--gold);
-      font-size: 18px;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      font-weight: 700;
-      white-space: nowrap;
-      line-height: 1;
-    }
-
-    h1 {
-      text-align: center;
+      font-family: Arial, sans-serif;
+      background: #fff;
+      color: #111;
       margin: 0;
-      color: var(--text);
-      font-size: clamp(32px, 5vw, 52px);
-      line-height: 1.05;
+      padding: 40px 20px;
     }
 
-    .subtext {
+    .form-container {
       max-width: 700px;
-      margin: 14px auto 0;
-      color: var(--muted);
-      font-size: 16px;
-      line-height: 1.7;
+      margin: 0 auto;
       text-align: center;
-    }
-
-    .content {
-      padding: 26px;
-      position: relative;
-      z-index: 1;
-    }
-
-    .card {
-      background: linear-gradient(180deg, rgba(35,39,44,0.88), rgba(25,29,33,0.95));
-      border: 1px solid rgba(199,162,87,0.16);
-      border-radius: 18px;
-      padding: 22px;
-      margin-bottom: 20px;
     }
 
     .section-title {
-      margin: 0 0 10px;
-      font-size: 26px;
-      line-height: 1.1;
-      color: var(--text);
-    }
-
-    .section-divider {
-      width: 110px;
-      height: 2px;
-      margin: 0 0 18px;
-      background: linear-gradient(90deg, rgba(199,162,87,0), rgba(216,187,122,0.95), rgba(199,162,87,0));
-      box-shadow: 0 0 10px rgba(199,162,87,0.20);
-      border-radius: 999px;
-    }
-
-    .center-text {
       text-align: center;
+      margin-top: 30px;
+      margin-bottom: 10px;
+      font-size: 24px;
+      font-weight: 600;
     }
 
-    .center-divider {
-      margin-left: auto;
-      margin-right: auto;
-    }
-
-    .form-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
-    }
-
-    .full-width {
-      grid-column: 1 / -1;
-    }
-
-    label {
-      display: block;
-      margin-bottom: 9px;
-      color: var(--gold-soft);
-      font-size: 12px;
-      letter-spacing: 1px;
-      text-transform: uppercase;
+    .divider {
+      width: 70px;
+      height: 2px;
+      background: gold;
+      margin: 0 auto 25px;
     }
 
     input,
     select,
-    textarea {
+    textarea,
+    button {
       width: 100%;
-      background: rgba(255,255,255,0.03);
-      border: 1px solid rgba(199,162,87,0.14);
-      border-radius: 14px;
-      color: var(--text);
-      padding: 15px 16px;
+      box-sizing: border-box;
+      padding: 12px;
+      margin: 8px 0;
       font-size: 16px;
-      outline: none;
-      appearance: none;
     }
 
-    textarea {
-      min-height: 110px;
-      resize: vertical;
-      font-family: Georgia, serif;
-    }
-
-    input::placeholder,
-    textarea::placeholder {
-      color: #8e877b;
-    }
-
-    input:focus,
-    select:focus,
-    textarea:focus {
-      border-color: rgba(199,162,87,0.40);
-      box-shadow: 0 0 0 3px rgba(199,162,87,0.08);
-    }
-
-    option {
-      background: #1b1f23;
-      color: var(--text);
-    }
-
-    .button-row {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-      margin-top: 20px;
-    }
-
-    button,
-    .link-btn {
-      min-height: 50px;
-      border-radius: 14px;
-      padding: 14px 18px;
-      font-size: 15px;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
+    button {
+      background: #111;
+      color: white;
       border: none;
-      text-decoration: none;
-    }
-
-    .primary-btn {
-      background: linear-gradient(180deg, #d8ba73, #b8934c);
-      color: #111315;
-      font-weight: 700;
-      box-shadow: 0 10px 24px rgba(199,162,87,0.22);
-    }
-
-    .secondary-btn,
-    .link-btn.secondary-btn {
-      background: rgba(255,255,255,0.03);
-      color: var(--text);
-      border: 1px solid rgba(199,162,87,0.16);
-    }
-
-    .status-box {
-      border-radius: 16px;
-      padding: 16px;
-      border: 1px solid rgba(199,162,87,0.16);
-      background: rgba(255,255,255,0.02);
-      line-height: 1.65;
-      white-space: pre-wrap;
-    }
-
-    .status-success {
-      border-color: rgba(61,220,132,0.35);
-      background: rgba(61,220,132,0.08);
-      color: #dff7ea;
-    }
-
-    .status-error {
-      border-color: rgba(255,107,107,0.35);
-      background: rgba(255,107,107,0.08);
-      color: #ffe0e0;
-    }
-
-    .helper {
-      color: var(--muted);
-      font-size: 13px;
-      line-height: 1.6;
-      margin-top: 8px;
-    }
-
-    .upload-grid {
-      display: grid;
-      gap: 16px;
-    }
-
-    .qr-panel {
-      display: none;
-      margin-top: 18px;
-      padding-top: 18px;
-      border-top: 1px solid rgba(199,162,87,0.16);
-    }
-
-    .qr-panel.show {
-      display: block;
-    }
-
-    .qr-title {
-      font-size: 22px;
-      margin: 0 0 10px;
-      color: var(--text);
-      text-align: center;
-    }
-
-    .qr-subtext {
-      color: var(--muted);
-      text-align: center;
-      font-size: 14px;
-      line-height: 1.6;
-      margin-bottom: 16px;
-    }
-
-    .qr-wrap {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      margin: 0 auto 18px;
-    }
-
-    .qr-box {
-      background: #fff;
-      border-radius: 18px;
-      padding: 16px;
-      border: 1px solid rgba(199,162,87,0.18);
-      box-shadow: 0 10px 24px rgba(0,0,0,0.18);
-      display: inline-flex;
-    }
-
-    .qr-box img {
-      display: block;
-      width: 220px;
-      height: 220px;
-    }
-
-    .qr-url {
-      word-break: break-word;
-      color: var(--text);
-      font-size: 14px;
-      line-height: 1.6;
-      text-align: center;
-      margin-bottom: 16px;
-    }
-
-    .qr-actions {
-      display: flex;
-      gap: 12px;
-      justify-content: center;
-      flex-wrap: wrap;
-    }
-
-    .label-card {
-      display: none;
+      cursor: pointer;
       margin-top: 20px;
-      padding-top: 20px;
-      border-top: 1px solid rgba(199,162,87,0.16);
     }
 
-    .label-card.show {
-      display: block;
+    button:hover {
+      opacity: 0.9;
     }
 
-    .label-preview {
-      max-width: 460px;
-      margin: 0 auto 18px;
-      background: linear-gradient(180deg, rgba(19, 22, 26, 0.98), rgba(13, 15, 18, 0.98));
-      border: 1px solid rgba(199,162,87,0.22);
-      border-radius: 20px;
-      padding: 20px;
-      box-shadow: 0 12px 30px rgba(0,0,0,0.22);
+    #status {
+      margin-top: 20px;
+      font-weight: 600;
+    }
+
+    #qr-preview {
+      margin-top: 20px;
       text-align: center;
     }
 
-    .label-preview .mini-crest {
-      width: 74px;
-      display: block;
-      margin: 0 auto 10px;
-    }
-
-    .label-heading {
-      color: var(--gold-soft);
-      font-size: 14px;
-      text-transform: uppercase;
-      letter-spacing: 1.5px;
-      margin-bottom: 8px;
-    }
-
-    .label-room {
-      font-size: 28px;
-      margin: 0 0 8px;
-      color: var(--text);
-    }
-
-    .label-property {
-      color: var(--muted);
-      font-size: 14px;
-      line-height: 1.6;
-      margin-bottom: 14px;
-    }
-
-    .label-qr {
-      display: flex;
-      justify-content: center;
-      margin-bottom: 14px;
-    }
-
-    .label-qr img {
-      width: 180px;
-      height: 180px;
-      background: #fff;
-      padding: 10px;
-      border-radius: 16px;
-    }
-
-    .label-footer {
-      color: var(--gold-soft);
-      font-size: 13px;
-      line-height: 1.5;
-    }
-
-    .footer-note {
-      padding: 0 26px 28px;
-      text-align: center;
-      color: #958d82;
-      font-size: 13px;
-      line-height: 1.7;
-    }
-
-    @media (max-width: 700px) {
-      .form-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .button-row,
-      .qr-actions {
-        flex-direction: column;
-      }
-
-      button,
-      .link-btn {
-        width: 100%;
-      }
-
-      .eyebrow {
-        font-size: 16px;
-      }
-
-      .crest {
-        width: 105px;
-      }
-
-      .qr-box img {
-        width: 180px;
-        height: 180px;
-      }
+    #qr-preview img {
+      max-width: 220px;
     }
   </style>
 </head>
 <body>
-  <div id="app">
-    <div class="panel">
-      <div class="panel-header">
-        <img src="/readymarkseal(best)nobackground.PNG" alt="The Ready Mark" class="crest">
-        <div class="brand-lockup">
-          <div class="eyebrow">The Ready Mark</div>
-        </div>
-        <h1>Internal Log Entry</h1>
-        <div class="subtext">
-          Create properties, save inspection records, and prepare verification evidence without manually editing the database.
-        </div>
-      </div>
+  <div class="form-container">
+    <h2 class="section-title">Property Details</h2>
+    <div class="divider"></div>
 
-      <div class="content">
-        <div class="card">
-          <h2 class="section-title center-text">Create Property</h2>
-          <div class="section-divider center-divider"></div>
+    <input type="hidden" id="property_id" />
 
-          <div class="form-grid">
-            <div>
-              <label for="property-name">Property Name</label>
-              <input id="property-name" type="text" placeholder="e.g. Westin Downtown" />
-            </div>
+    <input type="text" id="name" placeholder="Property Name" />
 
-            <div>
-              <label for="property-slug">Property Slug</label>
-              <input id="property-slug" type="text" placeholder="Auto-generated slug" />
-              <div class="helper">You can edit the slug before saving if needed.</div>
-            </div>
+    <select id="property_type">
+      <option value="">Select Property Type</option>
+      <option value="hotel">Hotel</option>
+      <option value="apartment">Apartment</option>
+      <option value="office">Office</option>
+      <option value="bank">Bank</option>
+      <option value="medical">Medical</option>
+      <option value="dental">Dental</option>
+    </select>
 
-            <div>
-              <label for="property-city">City</label>
-              <input id="property-city" type="text" placeholder="e.g. St. Louis" />
-            </div>
+    <input type="text" id="address" placeholder="Address" />
+    <input type="text" id="city" placeholder="City" />
+    <input type="text" id="state" placeholder="State" />
+    <input type="text" id="zip" placeholder="ZIP Code" />
 
-            <div>
-              <label for="property-state">State</label>
-              <input id="property-state" type="text" placeholder="e.g. MO" />
-            </div>
+    <h2 class="section-title">Uploads</h2>
+    <div class="divider"></div>
 
-            <div class="full-width">
-              <label for="property-type">Property Type</label>
-              <select id="property-type">
-                <option value="">Select property type</option>
-                <option value="Hotel">Hotel</option>
-                <option value="Resort">Resort</option>
-                <option value="Apartment">Apartment</option>
-                <option value="Airbnb">Airbnb</option>
-                <option value="Office">Office</option>
-                <option value="Medical">Medical</option>
-                <option value="Dental">Dental</option>
-                <option value="Government">Government</option>
-                <option value="Other">Other</option>
-              </select>
-            </div>
-          </div>
+    <label for="images">Photos</label>
+    <input type="file" id="images" multiple />
 
-          <div class="button-row">
-            <button type="button" class="primary-btn" id="create-property-btn">Create Property</button>
-          </div>
-        </div>
+    <label for="documents">Documents</label>
+    <input type="file" id="documents" multiple />
 
-        <div class="card">
-          <h2 class="section-title center-text">Inspection Entry</h2>
-          <div class="section-divider center-divider"></div>
+    <button id="save-property-btn">Save Property</button>
 
-          <form id="inspection-form">
-            <div class="form-grid">
-              <div class="full-width">
-                <label for="property-slug-select">Property</label>
-                <select id="property-slug-select" required>
-                  <option value="">Loading properties...</option>
-                </select>
-                <div class="helper">Property labels show property name with city, state, and property type for easier selection.</div>
-              </div>
-
-              <div>
-                <label for="room-number">Room Number</label>
-                <input id="room-number" type="text" placeholder="e.g. 101" required />
-              </div>
-
-              <div>
-                <label for="inspector-id">Inspector ID</label>
-                <input id="inspector-id" type="text" placeholder="e.g. 4603" required />
-              </div>
-
-              <div>
-                <label for="inspection-date">Inspection Date</label>
-                <input id="inspection-date" type="datetime-local" required />
-              </div>
-
-              <div>
-                <label for="certification-tier">Certification Level</label>
-                <select id="certification-tier" required>
-                  <option value="">Select certification level</option>
-                  <option value="Verified Clean">Verified Clean</option>
-                  <option value="Needs Attention">Needs Attention</option>
-                  <option value="Not Clean">Not Clean</option>
-                  <option value="Ready Mark Premier">Ready Mark Premier</option>
-                </select>
-              </div>
-
-              <div>
-                <label for="score">Inspection Score</label>
-                <input id="score" type="number" min="0" max="100" placeholder="e.g. 96" />
-              </div>
-
-              <div>
-                <label for="verification-id">Verification Record ID</label>
-                <input id="verification-id" type="text" placeholder="e.g. RM-2026-0001" required />
-              </div>
-
-              <div>
-                <label for="status">Status</label>
-                <input id="status" type="text" placeholder="Usually same as certification level" />
-              </div>
-
-              <div class="full-width">
-                <label for="notes">Internal Notes</label>
-                <textarea id="notes" placeholder="Optional notes for internal reference only."></textarea>
-                <div class="helper">Notes are optional. The public verification page currently uses the core inspection fields.</div>
-              </div>
-            </div>
-
-            <div class="button-row">
-              <button type="submit" class="primary-btn">Save Inspection Record</button>
-              <button type="button" class="secondary-btn" id="reset-btn">Clear Form</button>
-            </div>
-          </form>
-        </div>
-
-        <div class="card">
-          <h2 class="section-title center-text">Upload Inspection Evidence</h2>
-          <div class="section-divider center-divider"></div>
-
-          <div class="upload-grid">
-            <div>
-              <label for="photoUpload">Inspection Photos</label>
-              <input type="file" id="photoUpload" multiple accept="image/*">
-            </div>
-
-            <div>
-              <label for="docUpload">Inspection Log (PDF or Image)</label>
-              <input type="file" id="docUpload" accept="image/*,.pdf,application/pdf">
-            </div>
-
-            <div class="button-row">
-              <button type="button" class="primary-btn" id="upload-files-btn">Upload Files</button>
-            </div>
-
-            <div class="helper">
-              Save the inspection record first, then upload photos and scanned logs using the verification ID tied to that room.
-            </div>
-          </div>
-        </div>
-
-        <div class="card">
-          <h2 class="section-title center-text">System Response</h2>
-          <div class="section-divider center-divider"></div>
-          <div id="status-box" class="status-box center-text">Waiting for entry.</div>
-
-          <div id="qr-panel" class="qr-panel">
-            <h3 class="qr-title">Generated QR Code</h3>
-            <div class="qr-subtext">This QR points directly to the live verification record for the room you just saved.</div>
-
-            <div class="qr-wrap">
-              <div class="qr-box">
-                <img id="qr-image" src="" alt="QR Code">
-              </div>
-            </div>
-
-            <div id="qr-url" class="qr-url"></div>
-
-            <div class="qr-actions">
-              <a id="download-qr-btn" class="link-btn primary-btn" href="#" download>Download QR</a>
-              <a id="open-public-url-btn" class="link-btn secondary-btn" href="#" target="_blank" rel="noopener noreferrer">Open Verification Page</a>
-              <button type="button" class="secondary-btn" id="print-label-btn">Print Label</button>
-            </div>
-
-            <div id="label-card" class="label-card">
-              <div id="label-preview" class="label-preview">
-                <img class="mini-crest" src="/readymarkseal(best)nobackground.PNG" alt="The Ready Mark">
-                <div class="label-heading">Ready Mark Verification</div>
-                <h4 id="label-room" class="label-room">Room</h4>
-                <div id="label-property" class="label-property"></div>
-                <div class="label-qr">
-                  <img id="label-qr-image" src="" alt="QR Label">
-                </div>
-                <div id="label-footer" class="label-footer"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="footer-note">
-        Internal use only. Once authentication is added, this page should be restricted from public access.
-      </div>
-    </div>
+    <div id="status"></div>
+    <div id="qr-preview"></div>
   </div>
 
+  <script src="/upload-evidence.js"></script>
   <script>
-    // Replace these two values with your real project values once.
-    const SUPABASE_URL = "https://zbecvxcefxxhqijakxxj.supabase.co";
-    const SUPABASE_ANON_KEY = "sb_publishable_Gy2u0jIBi_EnAQnOlGwuCA_Mypry0GX";
+    document.getElementById('save-property-btn').addEventListener('click', async () => {
+      const status = document.getElementById('status');
+      const qrPreview = document.getElementById('qr-preview');
 
-    const propertySelect = document.getElementById("property-slug-select");
-    const form = document.getElementById("inspection-form");
-    const statusBox = document.getElementById("status-box");
-    const resetBtn = document.getElementById("reset-btn");
-    const createPropertyBtn = document.getElementById("create-property-btn");
-    const uploadFilesBtn = document.getElementById("upload-files-btn");
-
-    const propertyNameInput = document.getElementById("property-name");
-    const propertySlugInput = document.getElementById("property-slug");
-    const propertyCityInput = document.getElementById("property-city");
-    const propertyStateInput = document.getElementById("property-state");
-    const propertyTypeInput = document.getElementById("property-type");
-
-    const qrPanel = document.getElementById("qr-panel");
-    const qrImage = document.getElementById("qr-image");
-    const qrUrlText = document.getElementById("qr-url");
-    const downloadQrBtn = document.getElementById("download-qr-btn");
-    const openPublicUrlBtn = document.getElementById("open-public-url-btn");
-    const printLabelBtn = document.getElementById("print-label-btn");
-    const labelCard = document.getElementById("label-card");
-    const labelRoom = document.getElementById("label-room");
-    const labelProperty = document.getElementById("label-property");
-    const labelQrImage = document.getElementById("label-qr-image");
-    const labelFooter = document.getElementById("label-footer");
-
-    let currentVerificationId = "";
-    let currentPublicUrl = "";
-    let currentPropertyName = "";
-    let currentRoomNumber = "";
-
-    function setStatus(message, type = "") {
-      statusBox.className = "status-box center-text";
-      if (type === "success") statusBox.classList.add("status-success");
-      if (type === "error") statusBox.classList.add("status-error");
-      statusBox.textContent = message;
-    }
-
-    function setDefaultDateTime() {
-      const input = document.getElementById("inspection-date");
-      const now = new Date();
-      now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-      input.value = now.toISOString().slice(0, 16);
-    }
-
-    function slugify(value) {
-      return String(value || "")
-        .toLowerCase()
-        .trim()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/^-+|-+$/g, "");
-    }
-
-    function buildPropertyLabel(property) {
-      const parts = [];
-
-      if (property.property_name) parts.push(property.property_name);
-
-      const locationBits = [];
-      if (property.city) locationBits.push(property.city);
-      if (property.state) locationBits.push(property.state);
-
-      if (locationBits.length) parts.push(locationBits.join(", "));
-      if (property.property_type) parts.push(property.property_type);
-
-      return parts.join(" — ");
-    }
-
-    function generateQrUrl(url) {
-      return `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(url)}`;
-    }
-
-    function showQrPanel(publicUrl, verificationId, propertyName, roomNumber) {
-      const qrSrc = generateQrUrl(publicUrl);
-
-      currentPublicUrl = publicUrl;
-      currentVerificationId = verificationId;
-      currentPropertyName = propertyName;
-      currentRoomNumber = roomNumber;
-
-      qrImage.src = qrSrc;
-      qrUrlText.textContent = publicUrl;
-      downloadQrBtn.href = qrSrc;
-      downloadQrBtn.setAttribute("download", `${verificationId}-qr.png`);
-      openPublicUrlBtn.href = publicUrl;
-
-      labelRoom.textContent = `Room ${roomNumber}`;
-      labelProperty.textContent = propertyName;
-      labelQrImage.src = qrSrc;
-      labelFooter.textContent = `${verificationId} • Scan to verify this room`;
-
-      qrPanel.classList.add("show");
-      labelCard.classList.add("show");
-    }
-
-    function printLabel() {
-      if (!currentPublicUrl || !currentVerificationId) return;
-
-      const qrSrc = generateQrUrl(currentPublicUrl);
-      const html = `
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <title>Print QR Label</title>
-          <style>
-            body {
-              margin: 0;
-              padding: 24px;
-              font-family: Georgia, serif;
-              background: #fff;
-            }
-            .label {
-              width: 360px;
-              border: 2px solid #c7a257;
-              border-radius: 20px;
-              padding: 20px;
-              text-align: center;
-              margin: 0 auto;
-            }
-            .crest {
-              width: 76px;
-              display: block;
-              margin: 0 auto 10px;
-            }
-            .heading {
-              font-size: 14px;
-              letter-spacing: 1px;
-              text-transform: uppercase;
-              color: #8b6b2d;
-              margin-bottom: 10px;
-            }
-            .room {
-              font-size: 28px;
-              margin: 0 0 8px;
-              color: #111;
-            }
-            .property {
-              font-size: 14px;
-              line-height: 1.6;
-              margin-bottom: 14px;
-              color: #333;
-            }
-            .qr {
-              width: 180px;
-              height: 180px;
-              display: block;
-              margin: 0 auto 14px;
-            }
-            .footer {
-              font-size: 13px;
-              line-height: 1.5;
-              color: #444;
-            }
-          </style>
-        </head>
-        <body>
-          <div class="label">
-            <img class="crest" src="${window.location.origin}/readymarkseal(best)nobackground.PNG" alt="The Ready Mark">
-            <div class="heading">Ready Mark Verification</div>
-            <h1 class="room">Room ${currentRoomNumber}</h1>
-            <div class="property">${currentPropertyName}</div>
-            <img class="qr" src="${qrSrc}" alt="QR Code">
-            <div class="footer">${currentVerificationId}<br>Scan to verify this room</div>
-          </div>
-          <script>
-            window.onload = function() {
-              window.print();
-            };
-          <\/script>
-        </body>
-        </html>
-      `;
-
-      const win = window.open("", "_blank", "width=600,height=800");
-      win.document.open();
-      win.document.write(html);
-      win.document.close();
-    }
-
-    propertyNameInput.addEventListener("input", function () {
-      propertySlugInput.value = slugify(propertyNameInput.value);
-    });
-
-    async function loadProperties(selectedSlug = "") {
-      try {
-        const res = await fetch("/api/admin-data", {
-          headers: { "Accept": "application/json" }
-        });
-
-        const data = await res.json();
-
-        if (!res.ok || !Array.isArray(data.properties)) {
-          throw new Error(data.error || "Unable to load properties.");
-        }
-
-        propertySelect.innerHTML = `
-          <option value="">Select a property</option>
-          ${data.properties.map(p => `
-            <option value="${String(p.property_slug).replace(/"/g, "&quot;")}" ${selectedSlug === p.property_slug ? "selected" : ""}>
-              ${buildPropertyLabel(p)}
-            </option>
-          `).join("")}
-        `;
-      } catch (err) {
-        propertySelect.innerHTML = `<option value="">Unable to load properties</option>`;
-        setStatus(err.message || "Failed to load properties.", "error");
-      }
-    }
-
-    createPropertyBtn.addEventListener("click", async function () {
-      const property_name = propertyNameInput.value.trim();
-      const property_slug = propertySlugInput.value.trim();
-      const city = propertyCityInput.value.trim();
-      const state = propertyStateInput.value.trim();
-      const property_type = propertyTypeInput.value.trim();
-
-      if (!property_name || !property_slug || !city || !state || !property_type) {
-        setStatus("Please complete property name, slug, city, state, and property type before saving.", "error");
-        return;
-      }
-
-      setStatus("Creating property...");
+      status.textContent = 'Saving property...';
+      qrPreview.innerHTML = '';
 
       try {
-        const res = await fetch("/api/create-property", {
-          method: "POST",
+        const propertyId = document.getElementById('property_id').value.trim();
+
+        const payload = {
+          id: propertyId || null,
+          name: document.getElementById('name').value.trim(),
+          property_type: document.getElementById('property_type').value,
+          address: document.getElementById('address').value.trim(),
+          city: document.getElementById('city').value.trim(),
+          state: document.getElementById('state').value.trim(),
+          zip: document.getElementById('zip').value.trim()
+        };
+
+        const propertyRes = await fetch('/api/create-property', {
+          method: 'POST',
           headers: {
-            "Content-Type": "application/json",
-            "Accept": "application/json"
-          },
-          body: JSON.stringify({
-            property_name,
-            property_slug,
-            city,
-            state,
-            property_type
-          })
-        });
-
-        const data = await res.json();
-
-        if (!res.ok || data.error) {
-          throw new Error(typeof data.error === "string" ? data.error : "Unable to create property.");
-        }
-
-        setStatus(
-          `Property created successfully.\n\nName: ${property_name}\nSlug: ${property_slug}\nLocation: ${city}, ${state}\nType: ${property_type}`,
-          "success"
-        );
-
-        propertyNameInput.value = "";
-        propertySlugInput.value = "";
-        propertyCityInput.value = "";
-        propertyStateInput.value = "";
-        propertyTypeInput.value = "";
-
-        await loadProperties(property_slug);
-      } catch (err) {
-        setStatus(err.message || "Property creation failed.", "error");
-      }
-    });
-
-    form.addEventListener("submit", async function (e) {
-      e.preventDefault();
-
-      const payload = {
-        property_slug: document.getElementById("property-slug-select").value,
-        room_number: document.getElementById("room-number").value.trim(),
-        inspector_id: document.getElementById("inspector-id").value.trim(),
-        inspection_date: document.getElementById("inspection-date").value,
-        certification_tier: document.getElementById("certification-tier").value,
-        score: document.getElementById("score").value.trim(),
-        verification_id: document.getElementById("verification-id").value.trim(),
-        status: document.getElementById("status").value.trim(),
-        notes: document.getElementById("notes").value.trim()
-      };
-
-      if (!payload.status) {
-        payload.status = payload.certification_tier;
-      }
-
-      setStatus("Saving inspection record...");
-
-      try {
-        const res = await fetch("/api/save-inspection", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Accept": "application/json"
+            'Content-Type': 'application/json'
           },
           body: JSON.stringify(payload)
         });
 
-        const data = await res.json();
+        const propertyData = await propertyRes.json();
 
-        if (!res.ok || data.error) {
-          throw new Error(data.error || "Unable to save inspection.");
+        if (!propertyRes.ok) {
+          throw new Error(propertyData.error || 'Failed to save property');
         }
 
-        const publicUrl = data.public_url || "";
-        const verificationId = data.verification_id || payload.verification_id;
-        const propertyName = data.property_name || propertySelect.options[propertySelect.selectedIndex]?.text || "";
-        const roomNumber = data.room_number || payload.room_number;
+        const savedProperty = propertyData.property;
+        document.getElementById('property_id').value = savedProperty.id;
 
-        currentVerificationId = verificationId;
-        currentPublicUrl = publicUrl;
-        currentPropertyName = propertyName;
-        currentRoomNumber = roomNumber;
+        const imageFiles = document.getElementById('images').files;
+        const docFiles = document.getElementById('documents').files;
 
-        setStatus(
-          `Inspection saved successfully.\n\nProperty: ${data.property_name}\nRoom: ${data.room_number}\nVerification ID: ${verificationId}\nPublic URL: ${publicUrl}`,
-          "success"
-        );
+        if (window.uploadEvidence) {
+          await window.uploadEvidence(savedProperty.id, imageFiles, docFiles);
+        }
 
-        showQrPanel(publicUrl, verificationId, propertyName, roomNumber);
+        if (savedProperty.qr_code) {
+          qrPreview.innerHTML = `
+            <p>QR Code Generated:</p>
+            <img src="${savedProperty.qr_code}" alt="QR Code" />
+          `;
+        }
 
-        // Keep verification ID in place for uploads.
-        document.getElementById("verification-id").value = verificationId;
-
-        // Clear only fields you’re likely to change next.
-        document.getElementById("room-number").value = "";
-        document.getElementById("inspector-id").value = "";
-        document.getElementById("score").value = "";
-        document.getElementById("status").value = "";
-        document.getElementById("notes").value = "";
-        document.getElementById("certification-tier").value = "";
-        setDefaultDateTime();
-      } catch (err) {
-        setStatus(err.message || "Something went wrong while saving the inspection.", "error");
+        status.textContent = 'Property saved successfully.';
+      } catch (error) {
+        console.error(error);
+        status.textContent = `Error: ${error.message}`;
       }
     });
-
-    uploadFilesBtn.addEventListener("click", async function () {
-      const verificationId = document.getElementById("verification-id").value.trim() || currentVerificationId;
-      const photoFiles = Array.from(document.getElementById("photoUpload").files || []);
-      const docFile = document.getElementById("docUpload").files[0] || null;
-
-      if (!verificationId) {
-        setStatus("Save the inspection first so the verification ID is available for uploads.", "error");
-        return;
-      }
-
-      if (!photoFiles.length && !docFile) {
-        setStatus("Please select at least one photo or one document before uploading.", "error");
-        return;
-      }
-
-      if (!SUPABASE_URL || SUPABASE_URL === "YOUR_SUPABASE_URL" || !SUPABASE_ANON_KEY || SUPABASE_ANON_KEY === "YOUR_SUPABASE_ANON_KEY") {
-        setStatus("Add your real SUPABASE_URL and SUPABASE_ANON_KEY inside admin.html before testing uploads.", "error");
-        return;
-      }
-
-      setStatus("Uploading inspection evidence...");
-
-      try {
-        const uploadedPhotoUrls = [];
-
-        for (const file of photoFiles) {
-          const path = `${verificationId}/${Date.now()}-${file.name.replace(/\s+/g, "-")}`;
-          const uploadRes = await fetch(`${SUPABASE_URL}/storage/v1/object/inspection-photos/${path}`, {
-            method: "POST",
-            headers: {
-              apikey: SUPABASE_ANON_KEY,
-              Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-              "Content-Type": file.type || "application/octet-stream",
-              "x-upsert": "false"
-            },
-            body: file
-          });
-
-          if (!uploadRes.ok) {
-            const txt = await uploadRes.text();
-            throw new Error(`Photo upload failed: ${txt}`);
-          }
-
-          uploadedPhotoUrls.push(`${SUPABASE_URL}/storage/v1/object/public/inspection-photos/${path}`);
-        }
-
-        let uploadedLogUrl = "";
-
-        if (docFile) {
-          const path = `${verificationId}/log-${Date.now()}-${docFile.name.replace(/\s+/g, "-")}`;
-          const uploadRes = await fetch(`${SUPABASE_URL}/storage/v1/object/inspection-docs/${path}`, {
-            method: "POST",
-            headers: {
-              apikey: SUPABASE_ANON_KEY,
-              Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-              "Content-Type": docFile.type || "application/octet-stream",
-              "x-upsert": "true"
-            },
-            body: docFile
-          });
-
-          if (!uploadRes.ok) {
-            const txt = await uploadRes.text();
-            throw new Error(`Document upload failed: ${txt}`);
-          }
-
-          uploadedLogUrl = `${SUPABASE_URL}/storage/v1/object/public/inspection-docs/${path}`;
-        }
-
-        const saveEvidenceRes = await fetch("/api/save-evidence", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Accept": "application/json"
-          },
-          body: JSON.stringify({
-            verification_id: verificationId,
-            photo_urls: uploadedPhotoUrls,
-            log_file_url: uploadedLogUrl
-          })
-        });
-
-        const saveEvidenceData = await saveEvidenceRes.json();
-
-        if (!saveEvidenceRes.ok || saveEvidenceData.error) {
-          throw new Error(saveEvidenceData.error || "Evidence uploaded, but saving file URLs to the inspection failed.");
-        }
-
-        setStatus(
-          `Evidence uploaded successfully.\n\nVerification ID: ${verificationId}\nPhotos added: ${uploadedPhotoUrls.length}\nLog attached: ${uploadedLogUrl ? "Yes" : "No"}`,
-          "success"
-        );
-
-        document.getElementById("photoUpload").value = "";
-        document.getElementById("docUpload").value = "";
-      } catch (err) {
-        setStatus(err.message || "Upload failed.", "error");
-      }
-    });
-
-    resetBtn.addEventListener("click", function () {
-      form.reset();
-      setDefaultDateTime();
-      qrPanel.classList.remove("show");
-      labelCard.classList.remove("show");
-      currentVerificationId = "";
-      currentPublicUrl = "";
-      currentPropertyName = "";
-      currentRoomNumber = "";
-      setStatus("Form cleared.");
-    });
-
-    printLabelBtn.addEventListener("click", printLabel);
-
-    setDefaultDateTime();
-    loadProperties();
   </script>
 </body>
 </html>
