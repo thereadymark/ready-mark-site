@@ -33,7 +33,7 @@ export default async function handler(req, res) {
 
     const propertiesUrl =
       `${supabaseUrl}/rest/v1/properties` +
-      `?select=id,property_name,property_slug` +
+      `?select=id,property_name,property_slug,city,state,property_type` +
       `&order=property_name.asc`;
 
     const propertiesRes = await fetch(propertiesUrl, { headers });
