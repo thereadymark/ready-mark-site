@@ -126,6 +126,7 @@
     }
 
     h1 {
+      text-align: center;
       margin: 0;
       color: var(--text);
       font-size: clamp(32px, 5vw, 52px);
@@ -138,6 +139,7 @@
       color: var(--muted);
       font-size: 16px;
       line-height: 1.7;
+      text-align: center;
     }
 
     .content {
@@ -168,6 +170,15 @@
       background: linear-gradient(90deg, rgba(199,162,87,0), rgba(216,187,122,0.95), rgba(199,162,87,0));
       box-shadow: 0 0 10px rgba(199,162,87,0.20);
       border-radius: 999px;
+    }
+
+    .center-text {
+      text-align: center;
+    }
+
+    .center-divider {
+      margin-left: auto;
+      margin-right: auto;
     }
 
     .form-grid {
@@ -327,11 +338,33 @@
         </div>
         <h1>Internal Log Entry</h1>
         <div class="subtext">
-          Create and save room inspection records without manually editing the database.
+          Create properties and save room inspection records without manually editing the database.
         </div>
       </div>
 
       <div class="content">
+        <div class="card">
+          <h2 class="section-title">Create Property</h2>
+          <div class="section-divider"></div>
+
+          <div class="form-grid">
+            <div>
+              <label for="property-name">Property Name</label>
+              <input id="property-name" type="text" placeholder="e.g. Crown Plaza Hotel STL" />
+            </div>
+
+            <div>
+              <label for="property-slug">Property Slug</label>
+              <input id="property-slug" type="text" placeholder="Auto-generated slug" />
+              <div class="helper">You can edit the slug before saving if needed.</div>
+            </div>
+          </div>
+
+          <div class="button-row">
+            <button type="button" class="primary-btn" id="create-property-btn">Create Property</button>
+          </div>
+        </div>
+
         <div class="card">
           <h2 class="section-title">Inspection Entry</h2>
           <div class="section-divider"></div>
@@ -339,8 +372,8 @@
           <form id="inspection-form">
             <div class="form-grid">
               <div>
-                <label for="property-slug">Property</label>
-                <select id="property-slug" required>
+                <label for="property-slug-select">Property</label>
+                <select id="property-slug-select" required>
                   <option value="">Loading properties...</option>
                 </select>
               </div>
@@ -403,9 +436,9 @@
         </div>
 
         <div class="card">
-          <h2 class="section-title">System Response</h2>
-          <div class="section-divider"></div>
-          <div id="status-box" class="status-box">Waiting for entry.</div>
+          <h2 class="section-title center-text">System Response</h2>
+          <div class="section-divider center-divider"></div>
+          <div id="status-box" class="status-box center-text">Waiting for entry.</div>
         </div>
       </div>
 
@@ -416,13 +449,16 @@
   </div>
 
   <script>
-    const propertySelect = document.getElementById("property-slug");
+    const propertySelect = document.getElementById("property-slug-select");
     const form = document.getElementById("inspection-form");
     const statusBox = document.getElementById("status-box");
     const resetBtn = document.getElementById("reset-btn");
+    const createPropertyBtn = document.getElementById("create-property-btn");
+    const propertyNameInput = document.getElementById("property-name");
+    const propertySlugInput = document.getElementById("property-slug");
 
     function setStatus(message, type = "") {
-      statusBox.className = "status-box";
+      statusBox.className = "status-box center-text";
       if (type === "success") statusBox.classList.add("status-success");
       if (type === "error") statusBox.classList.add("status-error");
       statusBox.textContent = message;
@@ -435,7 +471,19 @@
       input.value = now.toISOString().slice(0, 16);
     }
 
-    async function loadProperties() {
+    function slugify(value) {
+      return String(value || "")
+        .toLowerCase()
+        .trim()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "");
+    }
+
+    propertyNameInput.addEventListener("input", function () {
+      propertySlugInput.value = slugify(propertyNameInput.value);
+    });
+
+    async function loadProperties(selectedSlug = "") {
       try {
         const res = await fetch("/api/admin-data", {
           headers: { "Accept": "application/json" }
@@ -450,7 +498,7 @@
         propertySelect.innerHTML = `
           <option value="">Select a property</option>
           ${data.properties.map(p => `
-            <option value="${String(p.property_slug).replace(/"/g, "&quot;")}">
+            <option value="${String(p.property_slug).replace(/"/g, "&quot;")}" ${selectedSlug === p.property_slug ? "selected" : ""}>
               ${p.property_name}
             </option>
           `).join("")}
@@ -461,11 +509,49 @@
       }
     }
 
+    createPropertyBtn.addEventListener("click", async function () {
+      const property_name = propertyNameInput.value.trim();
+      const property_slug = propertySlugInput.value.trim();
+
+      if (!property_name || !property_slug) {
+        setStatus("Please enter a property name. The slug can auto-generate from it.", "error");
+        return;
+      }
+
+      setStatus("Creating property...");
+
+      try {
+        const res = await fetch("/api/create-property", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json"
+          },
+          body: JSON.stringify({ property_name, property_slug })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok || data.error) {
+          throw new Error(typeof data.error === "string" ? data.error : "Unable to create property.");
+        }
+
+        setStatus(`Property created successfully.\n\nName: ${property_name}\nSlug: ${property_slug}`, "success");
+
+        propertyNameInput.value = "";
+        propertySlugInput.value = "";
+
+        await loadProperties(property_slug);
+      } catch (err) {
+        setStatus(err.message || "Property creation failed.", "error");
+      }
+    });
+
     form.addEventListener("submit", async function (e) {
       e.preventDefault();
 
       const payload = {
-        property_slug: document.getElementById("property-slug").value,
+        property_slug: document.getElementById("property-slug-select").value,
         room_number: document.getElementById("room-number").value.trim(),
         inspector_id: document.getElementById("inspector-id").value.trim(),
         inspection_date: document.getElementById("inspection-date").value,
