@@ -16,7 +16,6 @@
   <style>
     :root {
       --bg: #121416;
-      --bg-soft: #181b1f;
       --panel: rgba(26, 30, 34, 0.96);
       --panel-soft: rgba(31, 36, 41, 0.92);
       --gold: #c7a257;
@@ -119,7 +118,7 @@
     .crest {
       width: 130px;
       display: block;
-      margin: 0 auto 16px;
+      margin: 0 auto 10px;
     }
 
     .eyebrow {
@@ -127,7 +126,7 @@
       font-size: 20px;
       letter-spacing: 2px;
       text-transform: uppercase;
-      margin-bottom: 14px;
+      margin-bottom: 12px;
       font-weight: 700;
     }
 
@@ -208,14 +207,12 @@
       margin-top: 18px;
     }
 
-    button,
-    .link-btn {
+    button {
       min-height: 50px;
       border-radius: 14px;
       padding: 14px 18px;
       font-size: 15px;
       cursor: pointer;
-      text-decoration: none;
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -227,12 +224,6 @@
       color: #111315;
       font-weight: 700;
       box-shadow: 0 10px 24px rgba(199,162,87,0.22);
-    }
-
-    .secondary-btn {
-      background: rgba(255,255,255,0.03);
-      color: var(--text);
-      border: 1px solid rgba(199,162,87,0.16);
     }
 
     .portal-link {
@@ -273,6 +264,7 @@
       color: var(--verified);
       border-color: rgba(61,220,132,0.35);
       background: rgba(61,220,132,0.08);
+      box-shadow: 0 0 12px rgba(61, 220, 132, 0.20);
     }
 
     .status-attention {
@@ -327,21 +319,91 @@
       line-height: 1.1;
     }
 
-    .verification-media {
-      min-height: 230px;
+    .verification-proof {
+      position: relative;
+      min-height: 320px;
       border-radius: 18px;
+      overflow: hidden;
       border: 1px solid rgba(199,162,87,0.16);
       background:
-        linear-gradient(rgba(20,23,26,0.55), rgba(20,23,26,0.74)),
+        linear-gradient(rgba(15,18,20,0.45), rgba(15,18,20,0.75)),
         url("/readymarkseal(best)nobackground.PNG") center/180px no-repeat,
         rgba(255,255,255,0.02);
+    }
+
+    .proof-video-wrap {
+      position: relative;
+      width: 100%;
+      padding-top: 56.25%;
+      background:
+        linear-gradient(rgba(15,18,20,0.12), rgba(15,18,20,0.18));
+    }
+
+    .proof-video-wrap iframe {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      border: 0;
+    }
+
+    .proof-overlay {
+      position: absolute;
+      inset: 0;
       display: flex;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      color: var(--muted);
+      flex-direction: column;
+      justify-content: flex-end;
       padding: 20px;
-      line-height: 1.7;
+      background:
+        linear-gradient(to top, rgba(10,12,14,0.88) 0%, rgba(10,12,14,0.52) 36%, rgba(10,12,14,0.10) 68%, rgba(10,12,14,0) 100%);
+      pointer-events: none;
+    }
+
+    .proof-kicker {
+      color: var(--gold-soft);
+      font-size: 12px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .proof-title {
+      font-size: 24px;
+      color: var(--text);
+      margin-bottom: 14px;
+      line-height: 1.2;
+    }
+
+    .proof-steps {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      max-width: 520px;
+    }
+
+    .proof-step {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      color: var(--text);
+    }
+
+    .proof-icon {
+      font-size: 18px;
+      line-height: 1;
+      margin-top: 2px;
+    }
+
+    .proof-step strong {
+      display: block;
+      font-size: 15px;
+      margin-bottom: 3px;
+    }
+
+    .proof-sub {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.5;
     }
 
     .footer-note {
@@ -367,8 +429,7 @@
         flex-direction: column;
       }
 
-      button,
-      .secondary-btn {
+      button {
         width: 100%;
       }
 
@@ -378,6 +439,18 @@
 
       .eyebrow {
         font-size: 16px;
+      }
+
+      .crest {
+        width: 120px;
+      }
+
+      .proof-title {
+        font-size: 20px;
+      }
+
+      .verification-proof {
+        min-height: 280px;
       }
     }
   </style>
@@ -389,10 +462,9 @@
     const PROPERTY_OPTIONS = [
       { value: "", label: "Select a property" },
       { value: "crown-plaza-hotel-stl", label: "Crown Plaza Hotel STL" }
-      // Add more here later:
-      // { value: "marriott-downtown-stl", label: "Marriott Downtown STL" },
-      // { value: "hilton-riverfront", label: "Hilton Riverfront" }
     ];
+
+    const YOUTUBE_EMBED_URL = "https://www.youtube.com/embed/s2mYUVarGx0?rel=0";
 
     function getStatusClass(tier) {
       if (!tier) return "";
@@ -589,8 +661,46 @@
 
               <div class="card">
                 <h2 class="section-title">How This Room Was Verified</h2>
-                <div class="verification-media">
-                  Inspection documentation, certification visuals, and verification media can appear here.
+                <div class="verification-proof">
+                  <div class="proof-video-wrap">
+                    <iframe
+                      src="${YOUTUBE_EMBED_URL}"
+                      title="Ready Mark Verification Process"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                      allowfullscreen>
+                    </iframe>
+                  </div>
+
+                  <div class="proof-overlay">
+                    <div class="proof-kicker">Verified Inspection Process</div>
+                    <div class="proof-title">Documented Cleaning & Inspection Review</div>
+
+                    <div class="proof-steps">
+                      <div class="proof-step">
+                        <div class="proof-icon">🧼</div>
+                        <div>
+                          <strong>Room Cleaned</strong>
+                          <div class="proof-sub">High-touch surfaces, linens, and guest areas were serviced according to Ready Mark standards.</div>
+                        </div>
+                      </div>
+
+                      <div class="proof-step">
+                        <div class="proof-icon">🔍</div>
+                        <div>
+                          <strong>Inspected</strong>
+                          <div class="proof-sub">A room-specific inspection was completed and reviewed against the Ready Mark protocol.</div>
+                        </div>
+                      </div>
+
+                      <div class="proof-step">
+                        <div class="proof-icon">✅</div>
+                        <div>
+                          <strong>Certified</strong>
+                          <div class="proof-sub">This verification record was logged, time-stamped, and connected to the room in our system.</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
