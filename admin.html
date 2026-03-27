@@ -65,7 +65,7 @@
 
     .panel {
       width: 100%;
-      max-width: 960px;
+      max-width: 980px;
       background: linear-gradient(180deg, rgba(27,31,35,0.98), rgba(21,24,27,0.98));
       border: 1px solid var(--line);
       border-radius: 22px;
@@ -244,7 +244,8 @@
       margin-top: 20px;
     }
 
-    button {
+    button,
+    .link-btn {
       min-height: 50px;
       border-radius: 14px;
       padding: 14px 18px;
@@ -254,6 +255,7 @@
       align-items: center;
       justify-content: center;
       border: none;
+      text-decoration: none;
     }
 
     .primary-btn {
@@ -263,7 +265,8 @@
       box-shadow: 0 10px 24px rgba(199,162,87,0.22);
     }
 
-    .secondary-btn {
+    .secondary-btn,
+    .link-btn.secondary-btn {
       background: rgba(255,255,255,0.03);
       color: var(--text);
       border: 1px solid rgba(199,162,87,0.16);
@@ -274,7 +277,7 @@
       padding: 16px;
       border: 1px solid rgba(199,162,87,0.16);
       background: rgba(255,255,255,0.02);
-      line-height: 1.6;
+      line-height: 1.65;
       white-space: pre-wrap;
     }
 
@@ -302,6 +305,139 @@
       gap: 16px;
     }
 
+    .qr-panel {
+      display: none;
+      margin-top: 18px;
+      padding-top: 18px;
+      border-top: 1px solid rgba(199,162,87,0.16);
+    }
+
+    .qr-panel.show {
+      display: block;
+    }
+
+    .qr-title {
+      font-size: 22px;
+      margin: 0 0 10px;
+      color: var(--text);
+      text-align: center;
+    }
+
+    .qr-subtext {
+      color: var(--muted);
+      text-align: center;
+      font-size: 14px;
+      line-height: 1.6;
+      margin-bottom: 16px;
+    }
+
+    .qr-wrap {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 0 auto 18px;
+    }
+
+    .qr-box {
+      background: #fff;
+      border-radius: 18px;
+      padding: 16px;
+      border: 1px solid rgba(199,162,87,0.18);
+      box-shadow: 0 10px 24px rgba(0,0,0,0.18);
+      display: inline-flex;
+    }
+
+    .qr-box img {
+      display: block;
+      width: 220px;
+      height: 220px;
+    }
+
+    .qr-url {
+      word-break: break-word;
+      color: var(--text);
+      font-size: 14px;
+      line-height: 1.6;
+      text-align: center;
+      margin-bottom: 16px;
+    }
+
+    .qr-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .label-card {
+      display: none;
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid rgba(199,162,87,0.16);
+    }
+
+    .label-card.show {
+      display: block;
+    }
+
+    .label-preview {
+      max-width: 460px;
+      margin: 0 auto 18px;
+      background: linear-gradient(180deg, rgba(19, 22, 26, 0.98), rgba(13, 15, 18, 0.98));
+      border: 1px solid rgba(199,162,87,0.22);
+      border-radius: 20px;
+      padding: 20px;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.22);
+      text-align: center;
+    }
+
+    .label-preview .mini-crest {
+      width: 74px;
+      display: block;
+      margin: 0 auto 10px;
+    }
+
+    .label-heading {
+      color: var(--gold-soft);
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin-bottom: 8px;
+    }
+
+    .label-room {
+      font-size: 28px;
+      margin: 0 0 8px;
+      color: var(--text);
+    }
+
+    .label-property {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.6;
+      margin-bottom: 14px;
+    }
+
+    .label-qr {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 14px;
+    }
+
+    .label-qr img {
+      width: 180px;
+      height: 180px;
+      background: #fff;
+      padding: 10px;
+      border-radius: 16px;
+    }
+
+    .label-footer {
+      color: var(--gold-soft);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
     .footer-note {
       padding: 0 26px 28px;
       text-align: center;
@@ -315,11 +451,13 @@
         grid-template-columns: 1fr;
       }
 
-      .button-row {
+      .button-row,
+      .qr-actions {
         flex-direction: column;
       }
 
-      button {
+      button,
+      .link-btn {
         width: 100%;
       }
 
@@ -329,6 +467,11 @@
 
       .crest {
         width: 105px;
+      }
+
+      .qr-box img {
+        width: 180px;
+        height: 180px;
       }
     }
   </style>
@@ -349,13 +492,13 @@
 
       <div class="content">
         <div class="card">
-          <h2 class="section-title">Create Property</h2>
-          <div class="section-divider"></div>
+          <h2 class="section-title center-text">Create Property</h2>
+          <div class="section-divider center-divider"></div>
 
           <div class="form-grid">
             <div>
               <label for="property-name">Property Name</label>
-              <input id="property-name" type="text" placeholder="e.g. Crown Plaza Hotel STL" />
+              <input id="property-name" type="text" placeholder="e.g. Westin Downtown" />
             </div>
 
             <div>
@@ -397,8 +540,8 @@
         </div>
 
         <div class="card">
-          <h2 class="section-title">Inspection Entry</h2>
-          <div class="section-divider"></div>
+          <h2 class="section-title center-text">Inspection Entry</h2>
+          <div class="section-divider center-divider"></div>
 
           <form id="inspection-form">
             <div class="form-grid">
@@ -407,12 +550,12 @@
                 <select id="property-slug-select" required>
                   <option value="">Loading properties...</option>
                 </select>
-                <div class="helper">Property labels include city, state, and type for easier identification.</div>
+                <div class="helper">Property labels show property name with city, state, and property type for easier selection.</div>
               </div>
 
               <div>
                 <label for="room-number">Room Number</label>
-                <input id="room-number" type="text" placeholder="e.g. 102" required />
+                <input id="room-number" type="text" placeholder="e.g. 101" required />
               </div>
 
               <div>
@@ -443,7 +586,7 @@
 
               <div>
                 <label for="verification-id">Verification Record ID</label>
-                <input id="verification-id" type="text" placeholder="e.g. RM-0002" required />
+                <input id="verification-id" type="text" placeholder="e.g. RM-2026-0001" required />
               </div>
 
               <div>
@@ -466,8 +609,8 @@
         </div>
 
         <div class="card">
-          <h2 class="section-title">Upload Inspection Evidence</h2>
-          <div class="section-divider"></div>
+          <h2 class="section-title center-text">Upload Inspection Evidence</h2>
+          <div class="section-divider center-divider"></div>
 
           <div class="upload-grid">
             <div>
@@ -494,6 +637,38 @@
           <h2 class="section-title center-text">System Response</h2>
           <div class="section-divider center-divider"></div>
           <div id="status-box" class="status-box center-text">Waiting for entry.</div>
+
+          <div id="qr-panel" class="qr-panel">
+            <h3 class="qr-title">Generated QR Code</h3>
+            <div class="qr-subtext">This QR points directly to the live verification record for the room you just saved.</div>
+
+            <div class="qr-wrap">
+              <div class="qr-box">
+                <img id="qr-image" src="" alt="QR Code">
+              </div>
+            </div>
+
+            <div id="qr-url" class="qr-url"></div>
+
+            <div class="qr-actions">
+              <a id="download-qr-btn" class="link-btn primary-btn" href="#" download>Download QR</a>
+              <a id="open-public-url-btn" class="link-btn secondary-btn" href="#" target="_blank" rel="noopener noreferrer">Open Verification Page</a>
+              <button type="button" class="secondary-btn" id="print-label-btn">Print Label</button>
+            </div>
+
+            <div id="label-card" class="label-card">
+              <div id="label-preview" class="label-preview">
+                <img class="mini-crest" src="/readymarkseal(best)nobackground.PNG" alt="The Ready Mark">
+                <div class="label-heading">Ready Mark Verification</div>
+                <h4 id="label-room" class="label-room">Room</h4>
+                <div id="label-property" class="label-property"></div>
+                <div class="label-qr">
+                  <img id="label-qr-image" src="" alt="QR Label">
+                </div>
+                <div id="label-footer" class="label-footer"></div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -504,6 +679,10 @@
   </div>
 
   <script>
+    // Replace these two values with your real project values once.
+    const SUPABASE_URL = "YOUR_SUPABASE_URL";
+    const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY";
+
     const propertySelect = document.getElementById("property-slug-select");
     const form = document.getElementById("inspection-form");
     const statusBox = document.getElementById("status-box");
@@ -516,6 +695,23 @@
     const propertyCityInput = document.getElementById("property-city");
     const propertyStateInput = document.getElementById("property-state");
     const propertyTypeInput = document.getElementById("property-type");
+
+    const qrPanel = document.getElementById("qr-panel");
+    const qrImage = document.getElementById("qr-image");
+    const qrUrlText = document.getElementById("qr-url");
+    const downloadQrBtn = document.getElementById("download-qr-btn");
+    const openPublicUrlBtn = document.getElementById("open-public-url-btn");
+    const printLabelBtn = document.getElementById("print-label-btn");
+    const labelCard = document.getElementById("label-card");
+    const labelRoom = document.getElementById("label-room");
+    const labelProperty = document.getElementById("label-property");
+    const labelQrImage = document.getElementById("label-qr-image");
+    const labelFooter = document.getElementById("label-footer");
+
+    let currentVerificationId = "";
+    let currentPublicUrl = "";
+    let currentPropertyName = "";
+    let currentRoomNumber = "";
 
     function setStatus(message, type = "") {
       statusBox.className = "status-box center-text";
@@ -539,10 +735,6 @@
         .replace(/^-+|-+$/g, "");
     }
 
-    propertyNameInput.addEventListener("input", function () {
-      propertySlugInput.value = slugify(propertyNameInput.value);
-    });
-
     function buildPropertyLabel(property) {
       const parts = [];
 
@@ -552,16 +744,126 @@
       if (property.city) locationBits.push(property.city);
       if (property.state) locationBits.push(property.state);
 
-      if (locationBits.length) {
-        parts.push(locationBits.join(", "));
-      }
-
-      if (property.property_type) {
-        parts.push(property.property_type);
-      }
+      if (locationBits.length) parts.push(locationBits.join(", "));
+      if (property.property_type) parts.push(property.property_type);
 
       return parts.join(" — ");
     }
+
+    function generateQrUrl(url) {
+      return `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(url)}`;
+    }
+
+    function showQrPanel(publicUrl, verificationId, propertyName, roomNumber) {
+      const qrSrc = generateQrUrl(publicUrl);
+
+      currentPublicUrl = publicUrl;
+      currentVerificationId = verificationId;
+      currentPropertyName = propertyName;
+      currentRoomNumber = roomNumber;
+
+      qrImage.src = qrSrc;
+      qrUrlText.textContent = publicUrl;
+      downloadQrBtn.href = qrSrc;
+      downloadQrBtn.setAttribute("download", `${verificationId}-qr.png`);
+      openPublicUrlBtn.href = publicUrl;
+
+      labelRoom.textContent = `Room ${roomNumber}`;
+      labelProperty.textContent = propertyName;
+      labelQrImage.src = qrSrc;
+      labelFooter.textContent = `${verificationId} • Scan to verify this room`;
+
+      qrPanel.classList.add("show");
+      labelCard.classList.add("show");
+    }
+
+    function printLabel() {
+      if (!currentPublicUrl || !currentVerificationId) return;
+
+      const qrSrc = generateQrUrl(currentPublicUrl);
+      const html = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Print QR Label</title>
+          <style>
+            body {
+              margin: 0;
+              padding: 24px;
+              font-family: Georgia, serif;
+              background: #fff;
+            }
+            .label {
+              width: 360px;
+              border: 2px solid #c7a257;
+              border-radius: 20px;
+              padding: 20px;
+              text-align: center;
+              margin: 0 auto;
+            }
+            .crest {
+              width: 76px;
+              display: block;
+              margin: 0 auto 10px;
+            }
+            .heading {
+              font-size: 14px;
+              letter-spacing: 1px;
+              text-transform: uppercase;
+              color: #8b6b2d;
+              margin-bottom: 10px;
+            }
+            .room {
+              font-size: 28px;
+              margin: 0 0 8px;
+              color: #111;
+            }
+            .property {
+              font-size: 14px;
+              line-height: 1.6;
+              margin-bottom: 14px;
+              color: #333;
+            }
+            .qr {
+              width: 180px;
+              height: 180px;
+              display: block;
+              margin: 0 auto 14px;
+            }
+            .footer {
+              font-size: 13px;
+              line-height: 1.5;
+              color: #444;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="label">
+            <img class="crest" src="${window.location.origin}/readymarkseal(best)nobackground.PNG" alt="The Ready Mark">
+            <div class="heading">Ready Mark Verification</div>
+            <h1 class="room">Room ${currentRoomNumber}</h1>
+            <div class="property">${currentPropertyName}</div>
+            <img class="qr" src="${qrSrc}" alt="QR Code">
+            <div class="footer">${currentVerificationId}<br>Scan to verify this room</div>
+          </div>
+          <script>
+            window.onload = function() {
+              window.print();
+            };
+          <\/script>
+        </body>
+        </html>
+      `;
+
+      const win = window.open("", "_blank", "width=600,height=800");
+      win.document.open();
+      win.document.write(html);
+      win.document.close();
+    }
+
+    propertyNameInput.addEventListener("input", function () {
+      propertySlugInput.value = slugify(propertyNameInput.value);
+    });
 
     async function loadProperties(selectedSlug = "") {
       try {
@@ -679,17 +981,30 @@
           throw new Error(data.error || "Unable to save inspection.");
         }
 
-        const publicUrl = data.public_url || "No public URL returned.";
+        const publicUrl = data.public_url || "";
+        const verificationId = data.verification_id || payload.verification_id;
+        const propertyName = data.property_name || propertySelect.options[propertySelect.selectedIndex]?.text || "";
+        const roomNumber = data.room_number || payload.room_number;
+
+        currentVerificationId = verificationId;
+        currentPublicUrl = publicUrl;
+        currentPropertyName = propertyName;
+        currentRoomNumber = roomNumber;
 
         setStatus(
-          `Inspection saved successfully.\n\nProperty: ${data.property_name}\nRoom: ${data.room_number}\nVerification ID: ${data.verification_id}\nPublic URL: ${publicUrl}`,
+          `Inspection saved successfully.\n\nProperty: ${data.property_name}\nRoom: ${data.room_number}\nVerification ID: ${verificationId}\nPublic URL: ${publicUrl}`,
           "success"
         );
 
+        showQrPanel(publicUrl, verificationId, propertyName, roomNumber);
+
+        // Keep verification ID in place for uploads.
+        document.getElementById("verification-id").value = verificationId;
+
+        // Clear only fields you’re likely to change next.
         document.getElementById("room-number").value = "";
         document.getElementById("inspector-id").value = "";
         document.getElementById("score").value = "";
-        document.getElementById("verification-id").value = "";
         document.getElementById("status").value = "";
         document.getElementById("notes").value = "";
         document.getElementById("certification-tier").value = "";
@@ -700,12 +1015,12 @@
     });
 
     uploadFilesBtn.addEventListener("click", async function () {
-      const verificationId = document.getElementById("verification-id").value.trim();
-      const photoFiles = document.getElementById("photoUpload").files;
-      const docFile = document.getElementById("docUpload").files[0];
+      const verificationId = document.getElementById("verification-id").value.trim() || currentVerificationId;
+      const photoFiles = Array.from(document.getElementById("photoUpload").files || []);
+      const docFile = document.getElementById("docUpload").files[0] || null;
 
       if (!verificationId) {
-        setStatus("Enter the verification ID tied to the inspection before uploading evidence.", "error");
+        setStatus("Save the inspection first so the verification ID is available for uploads.", "error");
         return;
       }
 
@@ -714,14 +1029,104 @@
         return;
       }
 
-      setStatus("Upload wiring is next. The admin layout is ready, but the file-upload API still needs to be connected.", "error");
+      if (!SUPABASE_URL || SUPABASE_URL === "YOUR_SUPABASE_URL" || !SUPABASE_ANON_KEY || SUPABASE_ANON_KEY === "YOUR_SUPABASE_ANON_KEY") {
+        setStatus("Add your real SUPABASE_URL and SUPABASE_ANON_KEY inside admin.html before testing uploads.", "error");
+        return;
+      }
+
+      setStatus("Uploading inspection evidence...");
+
+      try {
+        const uploadedPhotoUrls = [];
+
+        for (const file of photoFiles) {
+          const path = `${verificationId}/${Date.now()}-${file.name.replace(/\s+/g, "-")}`;
+          const uploadRes = await fetch(`${SUPABASE_URL}/storage/v1/object/inspection-photos/${path}`, {
+            method: "POST",
+            headers: {
+              apikey: SUPABASE_ANON_KEY,
+              Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+              "Content-Type": file.type || "application/octet-stream",
+              "x-upsert": "false"
+            },
+            body: file
+          });
+
+          if (!uploadRes.ok) {
+            const txt = await uploadRes.text();
+            throw new Error(`Photo upload failed: ${txt}`);
+          }
+
+          uploadedPhotoUrls.push(`${SUPABASE_URL}/storage/v1/object/public/inspection-photos/${path}`);
+        }
+
+        let uploadedLogUrl = "";
+
+        if (docFile) {
+          const path = `${verificationId}/log-${Date.now()}-${docFile.name.replace(/\s+/g, "-")}`;
+          const uploadRes = await fetch(`${SUPABASE_URL}/storage/v1/object/inspection-docs/${path}`, {
+            method: "POST",
+            headers: {
+              apikey: SUPABASE_ANON_KEY,
+              Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+              "Content-Type": docFile.type || "application/octet-stream",
+              "x-upsert": "true"
+            },
+            body: docFile
+          });
+
+          if (!uploadRes.ok) {
+            const txt = await uploadRes.text();
+            throw new Error(`Document upload failed: ${txt}`);
+          }
+
+          uploadedLogUrl = `${SUPABASE_URL}/storage/v1/object/public/inspection-docs/${path}`;
+        }
+
+        const saveEvidenceRes = await fetch("/api/save-evidence", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json"
+          },
+          body: JSON.stringify({
+            verification_id: verificationId,
+            photo_urls: uploadedPhotoUrls,
+            log_file_url: uploadedLogUrl
+          })
+        });
+
+        const saveEvidenceData = await saveEvidenceRes.json();
+
+        if (!saveEvidenceRes.ok || saveEvidenceData.error) {
+          throw new Error(saveEvidenceData.error || "Evidence uploaded, but saving file URLs to the inspection failed.");
+        }
+
+        setStatus(
+          `Evidence uploaded successfully.\n\nVerification ID: ${verificationId}\nPhotos added: ${uploadedPhotoUrls.length}\nLog attached: ${uploadedLogUrl ? "Yes" : "No"}`,
+          "success"
+        );
+
+        document.getElementById("photoUpload").value = "";
+        document.getElementById("docUpload").value = "";
+      } catch (err) {
+        setStatus(err.message || "Upload failed.", "error");
+      }
     });
 
     resetBtn.addEventListener("click", function () {
       form.reset();
       setDefaultDateTime();
+      qrPanel.classList.remove("show");
+      labelCard.classList.remove("show");
+      currentVerificationId = "";
+      currentPublicUrl = "";
+      currentPropertyName = "";
+      currentRoomNumber = "";
       setStatus("Form cleared.");
     });
+
+    printLabelBtn.addEventListener("click", printLabel);
 
     setDefaultDateTime();
     loadProperties();
