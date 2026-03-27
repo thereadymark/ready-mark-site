@@ -3,35 +3,59 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Admin - Ready Mark</title>
+  <title>Ready Mark Admin</title>
+
   <style>
     body {
-      font-family: Arial, sans-serif;
-      background: #fff;
-      color: #111;
       margin: 0;
       padding: 40px 20px;
+      font-family: Arial, sans-serif;
+      background: #ffffff;
+      color: #111111;
     }
 
-    .form-container {
-      max-width: 700px;
+    .admin-wrap {
+      max-width: 760px;
       margin: 0 auto;
+    }
+
+    .section {
+      margin-bottom: 40px;
       text-align: center;
     }
 
     .section-title {
-      text-align: center;
-      margin-top: 30px;
-      margin-bottom: 10px;
-      font-size: 24px;
+      font-size: 26px;
       font-weight: 600;
+      margin: 0 0 10px;
+      text-align: center;
     }
 
     .divider {
-      width: 70px;
+      width: 80px;
       height: 2px;
-      background: gold;
-      margin: 0 auto 25px;
+      background: #c9a227;
+      margin: 0 auto 24px;
+    }
+
+    .card {
+      border: 1px solid #e8e8e8;
+      border-radius: 14px;
+      padding: 24px;
+      background: #fff;
+      box-shadow: 0 4px 18px rgba(0, 0, 0, 0.04);
+    }
+
+    .field-group {
+      margin-bottom: 16px;
+      text-align: left;
+    }
+
+    label {
+      display: block;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 8px;
     }
 
     input,
@@ -40,85 +64,216 @@
     button {
       width: 100%;
       box-sizing: border-box;
-      padding: 12px;
-      margin: 8px 0;
       font-size: 16px;
+      border-radius: 10px;
+    }
+
+    input,
+    select,
+    textarea {
+      padding: 12px 14px;
+      border: 1px solid #d9d9d9;
+      background: #fff;
+    }
+
+    textarea {
+      min-height: 120px;
+      resize: vertical;
+    }
+
+    .button-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 20px;
     }
 
     button {
-      background: #111;
-      color: white;
       border: none;
+      padding: 14px 18px;
       cursor: pointer;
-      margin-top: 20px;
-    }
-
-    button:hover {
-      opacity: 0.9;
-    }
-
-    #status {
-      margin-top: 20px;
       font-weight: 600;
     }
 
-    #qr-preview {
-      margin-top: 20px;
+    .primary-btn {
+      background: #111111;
+      color: #ffffff;
+    }
+
+    .secondary-btn {
+      background: #f3f3f3;
+      color: #111111;
+    }
+
+    .status {
+      margin-top: 18px;
+      font-weight: 600;
       text-align: center;
     }
 
-    #qr-preview img {
-      max-width: 220px;
+    .qr-preview {
+      margin-top: 24px;
+      text-align: center;
+    }
+
+    .qr-preview img {
+      max-width: 240px;
+      width: 100%;
+      height: auto;
+      border: 1px solid #ececec;
+      border-radius: 12px;
+      padding: 12px;
+      background: #fff;
+    }
+
+    .preview-links {
+      margin-top: 18px;
+      text-align: left;
+    }
+
+    .preview-links a {
+      display: block;
+      margin: 8px 0;
+      color: #111111;
+      word-break: break-word;
+    }
+
+    .hidden {
+      display: none;
     }
   </style>
 </head>
 <body>
-  <div class="form-container">
-    <h2 class="section-title">Property Details</h2>
-    <div class="divider"></div>
+  <div class="admin-wrap">
 
-    <input type="hidden" id="property_id" />
+    <div class="section">
+      <h1 class="section-title">Property Admin</h1>
+      <div class="divider"></div>
+    </div>
 
-    <input type="text" id="name" placeholder="Property Name" />
+    <div class="section">
+      <div class="card">
+        <h2 class="section-title">Property Details</h2>
+        <div class="divider"></div>
 
-    <select id="property_type">
-      <option value="">Select Property Type</option>
-      <option value="hotel">Hotel</option>
-      <option value="apartment">Apartment</option>
-      <option value="office">Office</option>
-      <option value="bank">Bank</option>
-      <option value="medical">Medical</option>
-      <option value="dental">Dental</option>
-    </select>
+        <input type="hidden" id="property_id" />
 
-    <input type="text" id="address" placeholder="Address" />
-    <input type="text" id="city" placeholder="City" />
-    <input type="text" id="state" placeholder="State" />
-    <input type="text" id="zip" placeholder="ZIP Code" />
+        <div class="field-group">
+          <label for="name">Property Name</label>
+          <input type="text" id="name" placeholder="Enter property name" />
+        </div>
 
-    <h2 class="section-title">Uploads</h2>
-    <div class="divider"></div>
+        <div class="field-group">
+          <label for="property_type">Property Type</label>
+          <select id="property_type">
+            <option value="">Select property type</option>
+            <option value="hotel">Hotel</option>
+            <option value="apartment">Apartment</option>
+            <option value="office">Office</option>
+            <option value="bank">Bank</option>
+            <option value="medical">Medical</option>
+            <option value="dental">Dental</option>
+          </select>
+        </div>
 
-    <label for="images">Photos</label>
-    <input type="file" id="images" multiple />
+        <div class="field-group">
+          <label for="address">Address</label>
+          <input type="text" id="address" placeholder="Enter address" />
+        </div>
 
-    <label for="documents">Documents</label>
-    <input type="file" id="documents" multiple />
+        <div class="field-group">
+          <label for="city">City</label>
+          <input type="text" id="city" placeholder="Enter city" />
+        </div>
 
-    <button id="save-property-btn">Save Property</button>
+        <div class="field-group">
+          <label for="state">State</label>
+          <input type="text" id="state" placeholder="Enter state" />
+        </div>
 
-    <div id="status"></div>
-    <div id="qr-preview"></div>
+        <div class="field-group">
+          <label for="zip">ZIP Code</label>
+          <input type="text" id="zip" placeholder="Enter ZIP code" />
+        </div>
+
+        <div class="field-group">
+          <label for="property_photos">Property Photos</label>
+          <input type="file" id="property_photos" multiple accept="image/*" />
+        </div>
+
+        <div class="field-group">
+          <label for="property_documents">Property Documents</label>
+          <input type="file" id="property_documents" multiple />
+        </div>
+
+        <div class="button-row">
+          <button class="primary-btn" id="save-property-btn">Save Property</button>
+          <button class="secondary-btn" id="new-property-btn" type="button">New Property</button>
+        </div>
+
+        <div class="status" id="property-status"></div>
+
+        <div class="qr-preview" id="qr-preview"></div>
+
+        <div class="preview-links" id="property-file-links"></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="card">
+        <h2 class="section-title">Inspection Evidence</h2>
+        <div class="divider"></div>
+
+        <div class="field-group">
+          <label for="inspection_photo">Inspection Photo</label>
+          <input type="file" id="inspection_photo" accept="image/*" />
+        </div>
+
+        <div class="field-group">
+          <label for="inspection_log">Inspection Log</label>
+          <textarea id="inspection_log" placeholder="Enter inspection log details"></textarea>
+        </div>
+
+        <button class="primary-btn" id="save-evidence-btn">Save Evidence</button>
+
+        <div class="status" id="evidence-status"></div>
+      </div>
+    </div>
   </div>
 
-  <script src="/upload-evidence.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
-    document.getElementById('save-property-btn').addEventListener('click', async () => {
-      const status = document.getElementById('status');
-      const qrPreview = document.getElementById('qr-preview');
+    window.SUPABASE_URL = 'PASTE_YOUR_SUPABASE_URL_HERE';
+    window.SUPABASE_ANON_KEY = 'PASTE_YOUR_SUPABASE_ANON_KEY_HERE';
+  </script>
+  <script src="/save-evidence.js"></script>
 
-      status.textContent = 'Saving property...';
+  <script>
+    function clearPropertyForm() {
+      document.getElementById('property_id').value = '';
+      document.getElementById('name').value = '';
+      document.getElementById('property_type').value = '';
+      document.getElementById('address').value = '';
+      document.getElementById('city').value = '';
+      document.getElementById('state').value = '';
+      document.getElementById('zip').value = '';
+      document.getElementById('property_photos').value = '';
+      document.getElementById('property_documents').value = '';
+      document.getElementById('property-status').textContent = '';
+      document.getElementById('qr-preview').innerHTML = '';
+      document.getElementById('property-file-links').innerHTML = '';
+    }
+
+    document.getElementById('new-property-btn').addEventListener('click', clearPropertyForm);
+
+    document.getElementById('save-property-btn').addEventListener('click', async () => {
+      const propertyStatus = document.getElementById('property-status');
+      const qrPreview = document.getElementById('qr-preview');
+      const propertyFileLinks = document.getElementById('property-file-links');
+
+      propertyStatus.textContent = 'Saving property...';
       qrPreview.innerHTML = '';
+      propertyFileLinks.innerHTML = '';
 
       try {
         const propertyId = document.getElementById('property_id').value.trim();
@@ -150,24 +305,62 @@
         const savedProperty = propertyData.property;
         document.getElementById('property_id').value = savedProperty.id;
 
-        const imageFiles = document.getElementById('images').files;
-        const docFiles = document.getElementById('documents').files;
+        const photoFiles = document.getElementById('property_photos').files;
+        const documentFiles = document.getElementById('property_documents').files;
 
-        if (window.uploadEvidence) {
-          await window.uploadEvidence(savedProperty.id, imageFiles, docFiles);
+        let uploaded = { photoUrls: [], documentUrls: [] };
+
+        if (window.saveEvidenceFiles) {
+          uploaded = await window.saveEvidenceFiles(savedProperty.id, photoFiles, documentFiles);
         }
 
         if (savedProperty.qr_code) {
           qrPreview.innerHTML = `
-            <p>QR Code Generated:</p>
+            <p><strong>QR Code Label Preview</strong></p>
             <img src="${savedProperty.qr_code}" alt="QR Code" />
           `;
         }
 
-        status.textContent = 'Property saved successfully.';
+        if (uploaded.photoUrls.length || uploaded.documentUrls.length) {
+          let html = '<strong>Uploaded Files</strong>';
+
+          uploaded.photoUrls.forEach((url, index) => {
+            html += `<a href="${url}" target="_blank" rel="noopener noreferrer">Photo ${index + 1}</a>`;
+          });
+
+          uploaded.documentUrls.forEach((url, index) => {
+            html += `<a href="${url}" target="_blank" rel="noopener noreferrer">Document ${index + 1}</a>`;
+          });
+
+          propertyFileLinks.innerHTML = html;
+        }
+
+        propertyStatus.textContent = 'Property saved successfully.';
       } catch (error) {
         console.error(error);
-        status.textContent = `Error: ${error.message}`;
+        propertyStatus.textContent = `Error: ${error.message}`;
+      }
+    });
+
+    document.getElementById('save-evidence-btn').addEventListener('click', async () => {
+      const evidenceStatus = document.getElementById('evidence-status');
+      evidenceStatus.textContent = 'Saving evidence...';
+
+      try {
+        const propertyId = document.getElementById('property_id').value.trim();
+        const inspectionPhoto = document.getElementById('inspection_photo').files[0];
+        const inspectionLog = document.getElementById('inspection_log').value.trim();
+
+        if (!propertyId) {
+          throw new Error('Save the property first before saving evidence.');
+        }
+
+        await window.saveInspectionEvidence(propertyId, inspectionPhoto, inspectionLog);
+
+        evidenceStatus.textContent = 'Inspection evidence saved successfully.';
+      } catch (error) {
+        console.error(error);
+        evidenceStatus.textContent = `Error: ${error.message}`;
       }
     });
   </script>
