@@ -1,105 +1,42 @@
 export default async function handler(req, res) {
+
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" });
+  }
+
   try {
-    if (req.method !== "POST") {
-      return res.status(405).json({ error: "Method not allowed" });
-    }
+    const { property_name, property_slug } = req.body;
 
-    const {
-      propertyName,
-      propertyType,
-      city,
-      state,
-      status
-    } = req.body;
-
-    if (!propertyName || !propertyType || !city || !state || !status) {
-      return res.status(400).json({
-        error: "Missing propertyName, propertyType, city, state, or status"
-      });
+    if (!property_name || !property_slug) {
+      return res.status(400).json({ error: "Missing fields" });
     }
 
     const supabaseUrl = process.env.SUPABASE_URL;
-    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-    if (!supabaseUrl || !serviceRoleKey) {
-      return res.status(500).json({ error: "Missing server environment variables" });
-    }
-
-    const headers = {
-      apikey: serviceRoleKey,
-      Authorization: `Bearer ${serviceRoleKey}`,
-      "Content-Type": "application/json",
-      Prefer: "return=representation",
-    };
-
-    function slugify(text) {
-      return String(text)
-        .toLowerCase()
-        .trim()
-        .replace(/&/g, "and")
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/^-+|-+$/g, "")
-        .replace(/-{2,}/g, "-");
-    }
-
-    const baseSlug = slugify(propertyName);
-
-    // Check for existing slugs
-    const existingRes = await fetch(
-      `${supabaseUrl}/rest/v1/properties?property_slug=like.${encodeURIComponent(baseSlug)}*&select=property_slug`,
-      { headers }
-    );
-
-    const existingData = await existingRes.json();
-
-    if (!existingRes.ok) {
-      return res.status(500).json({
-        error: "Property slug lookup failed",
-        details: existingData
-      });
-    }
-
-    const existingSlugs = new Set((existingData || []).map((p) => p.property_slug));
-    let finalSlug = baseSlug;
-
-    if (existingSlugs.has(finalSlug)) {
-      let counter = 2;
-      while (existingSlugs.has(`${baseSlug}-${counter}`)) {
-        counter += 1;
-      }
-      finalSlug = `${baseSlug}-${counter}`;
-    }
-
-    const insertRes = await fetch(`${supabaseUrl}/rest/v1/properties`, {
+    const response = await fetch(`${supabaseUrl}/rest/v1/properties`, {
       method: "POST",
-      headers,
-      body: JSON.stringify({
-        property_name: propertyName,
-        property_slug: finalSlug,
-        property_type: propertyType,
-        city,
-        state,
-        status,
-      }),
+      headers: {
+        apikey: key,
+        Authorization: `Bearer ${key}`,
+        "Content-Type": "application/json",
+        Prefer: "return=representation"
+      },
+      body: JSON.stringify([{
+        property_name,
+        property_slug
+      }])
     });
 
-    const insertData = await insertRes.json();
+    const data = await response.json();
 
-    if (!insertRes.ok) {
-      return res.status(500).json({
-        error: "Property insert failed",
-        details: insertData
-      });
+    if (!response.ok) {
+      return res.status(500).json({ error: data });
     }
 
-    return res.status(200).json({
-      message: "Property created successfully",
-      property: insertData[0],
-    });
-  } catch (error) {
-    return res.status(500).json({
-      error: "Server error",
-      details: error.message,
-    });
+    res.status(200).json({ success: true });
+
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 }
