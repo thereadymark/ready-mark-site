@@ -314,9 +314,13 @@
     }
 
     .section-title {
-      margin: 0 0 12px;
+      margin: 0 0 16px;
       font-size: clamp(26px, 4vw, 36px);
       line-height: 1.1;
+    }
+
+    .centered-title {
+      text-align: center;
     }
 
     .verification-proof {
@@ -326,9 +330,7 @@
       overflow: hidden;
       border: 1px solid rgba(199,162,87,0.16);
       background:
-        linear-gradient(rgba(15,18,20,0.45), rgba(15,18,20,0.75)),
-        url("/readymarkseal(best)nobackground.PNG") center/180px no-repeat,
-        rgba(255,255,255,0.02);
+        linear-gradient(rgba(15,18,20,0.12), rgba(15,18,20,0.18));
     }
 
     .proof-video-wrap {
@@ -347,38 +349,12 @@
       border: 0;
     }
 
-    .proof-overlay {
-      position: absolute;
-      inset: 0;
+    .below-video {
+      margin-top: 20px;
+      padding: 6px 6px 0;
       display: flex;
       flex-direction: column;
-      justify-content: flex-end;
-      padding: 20px;
-      background:
-        linear-gradient(to top, rgba(10,12,14,0.88) 0%, rgba(10,12,14,0.52) 36%, rgba(10,12,14,0.10) 68%, rgba(10,12,14,0) 100%);
-      pointer-events: none;
-    }
-
-    .proof-kicker {
-      color: var(--gold-soft);
-      font-size: 12px;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      margin-bottom: 8px;
-    }
-
-    .proof-title {
-      font-size: 24px;
-      color: var(--text);
-      margin-bottom: 14px;
-      line-height: 1.2;
-    }
-
-    .proof-steps {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      max-width: 520px;
+      gap: 14px;
     }
 
     .proof-step {
@@ -443,10 +419,6 @@
 
       .crest {
         width: 120px;
-      }
-
-      .proof-title {
-        font-size: 20px;
       }
 
       .verification-proof {
@@ -660,7 +632,8 @@
               </div>
 
               <div class="card">
-                <h2 class="section-title">How This Room Was Verified</h2>
+                <h2 class="section-title centered-title">How This Room Was Verified</h2>
+
                 <div class="verification-proof">
                   <div class="proof-video-wrap">
                     <iframe
@@ -670,34 +643,35 @@
                       allowfullscreen>
                     </iframe>
                   </div>
+                </div>
 
-                  <div class="proof-overlay">
-                    <div class="proof-kicker">Verified Inspection Process</div>
-                    <div class="proof-title">Documented Cleaning & Inspection Review</div>
-
-                    <div class="proof-steps">
-                      <div class="proof-step">
-                        <div class="proof-icon">🧼</div>
-                        <div>
-                          <strong>Room Cleaned</strong>
-                          <div class="proof-sub">High-touch surfaces, linens, and guest areas were serviced according to Ready Mark standards.</div>
-                        </div>
+                <div class="below-video">
+                  <div class="proof-step">
+                    <div class="proof-icon">🧼</div>
+                    <div>
+                      <strong>Room Cleaned</strong>
+                      <div class="proof-sub">
+                        High-touch surfaces, linens, and guest areas were serviced according to Ready Mark standards.
                       </div>
+                    </div>
+                  </div>
 
-                      <div class="proof-step">
-                        <div class="proof-icon">🔍</div>
-                        <div>
-                          <strong>Inspected</strong>
-                          <div class="proof-sub">A room-specific inspection was completed and reviewed against the Ready Mark protocol.</div>
-                        </div>
+                  <div class="proof-step">
+                    <div class="proof-icon">🔍</div>
+                    <div>
+                      <strong>Inspected</strong>
+                      <div class="proof-sub">
+                        A room-specific inspection was completed and reviewed against the Ready Mark protocol.
                       </div>
+                    </div>
+                  </div>
 
-                      <div class="proof-step">
-                        <div class="proof-icon">✅</div>
-                        <div>
-                          <strong>Certified</strong>
-                          <div class="proof-sub">This verification record was logged, time-stamped, and connected to the room in our system.</div>
-                        </div>
+                  <div class="proof-step">
+                    <div class="proof-icon">✅</div>
+                    <div>
+                      <strong>Certified</strong>
+                      <div class="proof-sub">
+                        This verification record was logged, time-stamped, and connected to the room in our system.
                       </div>
                     </div>
                   </div>
