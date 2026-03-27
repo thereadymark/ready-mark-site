@@ -65,7 +65,7 @@
 
     .panel {
       width: 100%;
-      max-width: 920px;
+      max-width: 960px;
       background: linear-gradient(180deg, rgba(27,31,35,0.98), rgba(21,24,27,0.98));
       border: 1px solid var(--line);
       border-radius: 22px;
@@ -134,7 +134,7 @@
     }
 
     .subtext {
-      max-width: 660px;
+      max-width: 700px;
       margin: 14px auto 0;
       color: var(--muted);
       font-size: 16px;
@@ -297,6 +297,11 @@
       margin-top: 8px;
     }
 
+    .upload-grid {
+      display: grid;
+      gap: 16px;
+    }
+
     .footer-note {
       padding: 0 26px 28px;
       text-align: center;
@@ -338,7 +343,7 @@
         </div>
         <h1>Internal Log Entry</h1>
         <div class="subtext">
-          Create properties and save room inspection records without manually editing the database.
+          Create properties, save inspection records, and prepare verification evidence without manually editing the database.
         </div>
       </div>
 
@@ -358,6 +363,32 @@
               <input id="property-slug" type="text" placeholder="Auto-generated slug" />
               <div class="helper">You can edit the slug before saving if needed.</div>
             </div>
+
+            <div>
+              <label for="property-city">City</label>
+              <input id="property-city" type="text" placeholder="e.g. St. Louis" />
+            </div>
+
+            <div>
+              <label for="property-state">State</label>
+              <input id="property-state" type="text" placeholder="e.g. MO" />
+            </div>
+
+            <div class="full-width">
+              <label for="property-type">Property Type</label>
+              <select id="property-type">
+                <option value="">Select property type</option>
+                <option value="Hotel">Hotel</option>
+                <option value="Resort">Resort</option>
+                <option value="Apartment">Apartment</option>
+                <option value="Airbnb">Airbnb</option>
+                <option value="Office">Office</option>
+                <option value="Medical">Medical</option>
+                <option value="Dental">Dental</option>
+                <option value="Government">Government</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
           </div>
 
           <div class="button-row">
@@ -371,11 +402,12 @@
 
           <form id="inspection-form">
             <div class="form-grid">
-              <div>
+              <div class="full-width">
                 <label for="property-slug-select">Property</label>
                 <select id="property-slug-select" required>
                   <option value="">Loading properties...</option>
                 </select>
+                <div class="helper">Property labels include city, state, and type for easier identification.</div>
               </div>
 
               <div>
@@ -422,9 +454,7 @@
               <div class="full-width">
                 <label for="notes">Internal Notes</label>
                 <textarea id="notes" placeholder="Optional notes for internal reference only."></textarea>
-                <div class="helper">
-                  Notes are optional. The public verification page currently uses the core inspection fields.
-                </div>
+                <div class="helper">Notes are optional. The public verification page currently uses the core inspection fields.</div>
               </div>
             </div>
 
@@ -433,6 +463,31 @@
               <button type="button" class="secondary-btn" id="reset-btn">Clear Form</button>
             </div>
           </form>
+        </div>
+
+        <div class="card">
+          <h2 class="section-title">Upload Inspection Evidence</h2>
+          <div class="section-divider"></div>
+
+          <div class="upload-grid">
+            <div>
+              <label for="photoUpload">Inspection Photos</label>
+              <input type="file" id="photoUpload" multiple accept="image/*">
+            </div>
+
+            <div>
+              <label for="docUpload">Inspection Log (PDF or Image)</label>
+              <input type="file" id="docUpload" accept="image/*,.pdf,application/pdf">
+            </div>
+
+            <div class="button-row">
+              <button type="button" class="primary-btn" id="upload-files-btn">Upload Files</button>
+            </div>
+
+            <div class="helper">
+              Save the inspection record first, then upload photos and scanned logs using the verification ID tied to that room.
+            </div>
+          </div>
         </div>
 
         <div class="card">
@@ -454,8 +509,13 @@
     const statusBox = document.getElementById("status-box");
     const resetBtn = document.getElementById("reset-btn");
     const createPropertyBtn = document.getElementById("create-property-btn");
+    const uploadFilesBtn = document.getElementById("upload-files-btn");
+
     const propertyNameInput = document.getElementById("property-name");
     const propertySlugInput = document.getElementById("property-slug");
+    const propertyCityInput = document.getElementById("property-city");
+    const propertyStateInput = document.getElementById("property-state");
+    const propertyTypeInput = document.getElementById("property-type");
 
     function setStatus(message, type = "") {
       statusBox.className = "status-box center-text";
@@ -483,6 +543,26 @@
       propertySlugInput.value = slugify(propertyNameInput.value);
     });
 
+    function buildPropertyLabel(property) {
+      const parts = [];
+
+      if (property.property_name) parts.push(property.property_name);
+
+      const locationBits = [];
+      if (property.city) locationBits.push(property.city);
+      if (property.state) locationBits.push(property.state);
+
+      if (locationBits.length) {
+        parts.push(locationBits.join(", "));
+      }
+
+      if (property.property_type) {
+        parts.push(property.property_type);
+      }
+
+      return parts.join(" — ");
+    }
+
     async function loadProperties(selectedSlug = "") {
       try {
         const res = await fetch("/api/admin-data", {
@@ -499,7 +579,7 @@
           <option value="">Select a property</option>
           ${data.properties.map(p => `
             <option value="${String(p.property_slug).replace(/"/g, "&quot;")}" ${selectedSlug === p.property_slug ? "selected" : ""}>
-              ${p.property_name}
+              ${buildPropertyLabel(p)}
             </option>
           `).join("")}
         `;
@@ -512,9 +592,12 @@
     createPropertyBtn.addEventListener("click", async function () {
       const property_name = propertyNameInput.value.trim();
       const property_slug = propertySlugInput.value.trim();
+      const city = propertyCityInput.value.trim();
+      const state = propertyStateInput.value.trim();
+      const property_type = propertyTypeInput.value.trim();
 
-      if (!property_name || !property_slug) {
-        setStatus("Please enter a property name. The slug can auto-generate from it.", "error");
+      if (!property_name || !property_slug || !city || !state || !property_type) {
+        setStatus("Please complete property name, slug, city, state, and property type before saving.", "error");
         return;
       }
 
@@ -527,7 +610,13 @@
             "Content-Type": "application/json",
             "Accept": "application/json"
           },
-          body: JSON.stringify({ property_name, property_slug })
+          body: JSON.stringify({
+            property_name,
+            property_slug,
+            city,
+            state,
+            property_type
+          })
         });
 
         const data = await res.json();
@@ -536,10 +625,16 @@
           throw new Error(typeof data.error === "string" ? data.error : "Unable to create property.");
         }
 
-        setStatus(`Property created successfully.\n\nName: ${property_name}\nSlug: ${property_slug}`, "success");
+        setStatus(
+          `Property created successfully.\n\nName: ${property_name}\nSlug: ${property_slug}\nLocation: ${city}, ${state}\nType: ${property_type}`,
+          "success"
+        );
 
         propertyNameInput.value = "";
         propertySlugInput.value = "";
+        propertyCityInput.value = "";
+        propertyStateInput.value = "";
+        propertyTypeInput.value = "";
 
         await loadProperties(property_slug);
       } catch (err) {
@@ -602,6 +697,24 @@
       } catch (err) {
         setStatus(err.message || "Something went wrong while saving the inspection.", "error");
       }
+    });
+
+    uploadFilesBtn.addEventListener("click", async function () {
+      const verificationId = document.getElementById("verification-id").value.trim();
+      const photoFiles = document.getElementById("photoUpload").files;
+      const docFile = document.getElementById("docUpload").files[0];
+
+      if (!verificationId) {
+        setStatus("Enter the verification ID tied to the inspection before uploading evidence.", "error");
+        return;
+      }
+
+      if (!photoFiles.length && !docFile) {
+        setStatus("Please select at least one photo or one document before uploading.", "error");
+        return;
+      }
+
+      setStatus("Upload wiring is next. The admin layout is ready, but the file-upload API still needs to be connected.", "error");
     });
 
     resetBtn.addEventListener("click", function () {
