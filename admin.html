@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Ready Mark | Internal Log Entry</title>
+
+  <style>
+    :root {
+      --bg: #121416;
+      --panel: rgba(26, 30, 34, 0.96);
+      --gold: #c7a257;
+      --gold-soft: #d8bb7a;
+      --text: #f3eee5;
+      --muted: #b7b0a5;
+      --line: rgba(199, 162, 87, 0.20);
+      --shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+
+      --success: #3ddc84;
+      --warning: #ffb347;
+      --danger: #ff6b6b;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      font-family: Georgia, serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top center, rgba(255,255,255,0.03), transparent 28%),
+        linear-gradient(180deg, #1b1815 0%, #121416 45%, #121416 100%);
+    }
+
+    body {
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background-image: url("/readymarklogonobackground2.PNG");
+      background-repeat: repeat;
+      background-size: 180px;
+      opacity: 0.025;
+      filter: grayscale(100%) brightness(1.05);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    #app {
+      position: relative;
+      z-index: 1;
+      min-height: 100vh;
+      padding: 34px 18px;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+    }
+
+    .panel {
+      width: 100%;
+      max-width: 920px;
+      background: linear-gradient(180deg, rgba(27,31,35,0.98), rgba(21,24,27,0.98));
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .panel::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at top center, rgba(199,162,87,0.08), transparent 40%);
+      pointer-events: none;
+    }
+
+    .panel-header {
+      padding: 34px 26px 22px;
+      text-align: center;
+      border-bottom: 1px solid var(--line);
+      position: relative;
+      z-index: 1;
+    }
+
+    .crest {
+      width: 120px;
+      display: block;
+      margin: 0 auto 12px;
+    }
+
+    .brand-lockup {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin: 0 auto 16px;
+      max-width: 680px;
+    }
+
+    .brand-lockup::before,
+    .brand-lockup::after {
+      content: "";
+      flex: 1;
+      height: 2px;
+      background: linear-gradient(90deg, rgba(199,162,87,0), rgba(216,187,122,0.95), rgba(199,162,87,0));
+      box-shadow: 0 0 8px rgba(199,162,87,0.18);
+      border-radius: 999px;
+    }
+
+    .eyebrow {
+      color: var(--gold);
+      font-size: 18px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      font-weight: 700;
+      white-space: nowrap;
+      line-height: 1;
+    }
+
+    h1 {
+      margin: 0;
+      color: var(--text);
+      font-size: clamp(32px, 5vw, 52px);
+      line-height: 1.05;
+    }
+
+    .subtext {
+      max-width: 660px;
+      margin: 14px auto 0;
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.7;
+    }
+
+    .content {
+      padding: 26px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .card {
+      background: linear-gradient(180deg, rgba(35,39,44,0.88), rgba(25,29,33,0.95));
+      border: 1px solid rgba(199,162,87,0.16);
+      border-radius: 18px;
+      padding: 22px;
+      margin-bottom: 20px;
+    }
+
+    .section-title {
+      margin: 0 0 10px;
+      font-size: 26px;
+      line-height: 1.1;
+      color: var(--text);
+    }
+
+    .section-divider {
+      width: 110px;
+      height: 2px;
+      margin: 0 0 18px;
+      background: linear-gradient(90deg, rgba(199,162,87,0), rgba(216,187,122,0.95), rgba(199,162,87,0));
+      box-shadow: 0 0 10px rgba(199,162,87,0.20);
+      border-radius: 999px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .full-width {
+      grid-column: 1 / -1;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 9px;
+      color: var(--gold-soft);
+      font-size: 12px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(199,162,87,0.14);
+      border-radius: 14px;
+      color: var(--text);
+      padding: 15px 16px;
+      font-size: 16px;
+      outline: none;
+      appearance: none;
+    }
+
+    textarea {
+      min-height: 110px;
+      resize: vertical;
+      font-family: Georgia, serif;
+    }
+
+    input::placeholder,
+    textarea::placeholder {
+      color: #8e877b;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      border-color: rgba(199,162,87,0.40);
+      box-shadow: 0 0 0 3px rgba(199,162,87,0.08);
+    }
+
+    option {
+      background: #1b1f23;
+      color: var(--text);
+    }
+
+    .button-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 20px;
+    }
+
+    button {
+      min-height: 50px;
+      border-radius: 14px;
+      padding: 14px 18px;
+      font-size: 15px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: none;
+    }
+
+    .primary-btn {
+      background: linear-gradient(180deg, #d8ba73, #b8934c);
+      color: #111315;
+      font-weight: 700;
+      box-shadow: 0 10px 24px rgba(199,162,87,0.22);
+    }
+
+    .secondary-btn {
+      background: rgba(255,255,255,0.03);
+      color: var(--text);
+      border: 1px solid rgba(199,162,87,0.16);
+    }
+
+    .status-box {
+      border-radius: 16px;
+      padding: 16px;
+      border: 1px solid rgba(199,162,87,0.16);
+      background: rgba(255,255,255,0.02);
+      line-height: 1.6;
+      white-space: pre-wrap;
+    }
+
+    .status-success {
+      border-color: rgba(61,220,132,0.35);
+      background: rgba(61,220,132,0.08);
+      color: #dff7ea;
+    }
+
+    .status-error {
+      border-color: rgba(255,107,107,0.35);
+      background: rgba(255,107,107,0.08);
+      color: #ffe0e0;
+    }
+
+    .helper {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+      margin-top: 8px;
+    }
+
+    .footer-note {
+      padding: 0 26px 28px;
+      text-align: center;
+      color: #958d82;
+      font-size: 13px;
+      line-height: 1.7;
+    }
+
+    @media (max-width: 700px) {
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .button-row {
+        flex-direction: column;
+      }
+
+      button {
+        width: 100%;
+      }
+
+      .eyebrow {
+        font-size: 16px;
+      }
+
+      .crest {
+        width: 105px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div class="panel">
+      <div class="panel-header">
+        <img src="/readymarkseal(best)nobackground.PNG" alt="The Ready Mark" class="crest">
+        <div class="brand-lockup">
+          <div class="eyebrow">The Ready Mark</div>
+        </div>
+        <h1>Internal Log Entry</h1>
+        <div class="subtext">
+          Create and save room inspection records without manually editing the database.
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="card">
+          <h2 class="section-title">Inspection Entry</h2>
+          <div class="section-divider"></div>
+
+          <form id="inspection-form">
+            <div class="form-grid">
+              <div>
+                <label for="property-slug">Property</label>
+                <select id="property-slug" required>
+                  <option value="">Loading properties...</option>
+                </select>
+              </div>
+
+              <div>
+                <label for="room-number">Room Number</label>
+                <input id="room-number" type="text" placeholder="e.g. 102" required />
+              </div>
+
+              <div>
+                <label for="inspector-id">Inspector ID</label>
+                <input id="inspector-id" type="text" placeholder="e.g. 4603" required />
+              </div>
+
+              <div>
+                <label for="inspection-date">Inspection Date</label>
+                <input id="inspection-date" type="datetime-local" required />
+              </div>
+
+              <div>
+                <label for="certification-tier">Certification Level</label>
+                <select id="certification-tier" required>
+                  <option value="">Select certification level</option>
+                  <option value="Verified Clean">Verified Clean</option>
+                  <option value="Needs Attention">Needs Attention</option>
+                  <option value="Not Clean">Not Clean</option>
+                  <option value="Ready Mark Premier">Ready Mark Premier</option>
+                </select>
+              </div>
+
+              <div>
+                <label for="score">Inspection Score</label>
+                <input id="score" type="number" min="0" max="100" placeholder="e.g. 96" />
+              </div>
+
+              <div>
+                <label for="verification-id">Verification Record ID</label>
+                <input id="verification-id" type="text" placeholder="e.g. RM-0002" required />
+              </div>
+
+              <div>
+                <label for="status">Status</label>
+                <input id="status" type="text" placeholder="Usually same as certification level" />
+              </div>
+
+              <div class="full-width">
+                <label for="notes">Internal Notes</label>
+                <textarea id="notes" placeholder="Optional notes for internal reference only."></textarea>
+                <div class="helper">
+                  Notes are optional. The public verification page currently uses the core inspection fields.
+                </div>
+              </div>
+            </div>
+
+            <div class="button-row">
+              <button type="submit" class="primary-btn">Save Inspection Record</button>
+              <button type="button" class="secondary-btn" id="reset-btn">Clear Form</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="card">
+          <h2 class="section-title">System Response</h2>
+          <div class="section-divider"></div>
+          <div id="status-box" class="status-box">Waiting for entry.</div>
+        </div>
+      </div>
+
+      <div class="footer-note">
+        Internal use only. Once authentication is added, this page should be restricted from public access.
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const propertySelect = document.getElementById("property-slug");
+    const form = document.getElementById("inspection-form");
+    const statusBox = document.getElementById("status-box");
+    const resetBtn = document.getElementById("reset-btn");
+
+    function setStatus(message, type = "") {
+      statusBox.className = "status-box";
+      if (type === "success") statusBox.classList.add("status-success");
+      if (type === "error") statusBox.classList.add("status-error");
+      statusBox.textContent = message;
+    }
+
+    function setDefaultDateTime() {
+      const input = document.getElementById("inspection-date");
+      const now = new Date();
+      now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+      input.value = now.toISOString().slice(0, 16);
+    }
+
+    async function loadProperties() {
+      try {
+        const res = await fetch("/api/admin-data", {
+          headers: { "Accept": "application/json" }
+        });
+
+        const data = await res.json();
+
+        if (!res.ok || !Array.isArray(data.properties)) {
+          throw new Error(data.error || "Unable to load properties.");
+        }
+
+        propertySelect.innerHTML = `
+          <option value="">Select a property</option>
+          ${data.properties.map(p => `
+            <option value="${String(p.property_slug).replace(/"/g, "&quot;")}">
+              ${p.property_name}
+            </option>
+          `).join("")}
+        `;
+      } catch (err) {
+        propertySelect.innerHTML = `<option value="">Unable to load properties</option>`;
+        setStatus(err.message || "Failed to load properties.", "error");
+      }
+    }
+
+    form.addEventListener("submit", async function (e) {
+      e.preventDefault();
+
+      const payload = {
+        property_slug: document.getElementById("property-slug").value,
+        room_number: document.getElementById("room-number").value.trim(),
+        inspector_id: document.getElementById("inspector-id").value.trim(),
+        inspection_date: document.getElementById("inspection-date").value,
+        certification_tier: document.getElementById("certification-tier").value,
+        score: document.getElementById("score").value.trim(),
+        verification_id: document.getElementById("verification-id").value.trim(),
+        status: document.getElementById("status").value.trim(),
+        notes: document.getElementById("notes").value.trim()
+      };
+
+      if (!payload.status) {
+        payload.status = payload.certification_tier;
+      }
+
+      setStatus("Saving inspection record...");
+
+      try {
+        const res = await fetch("/api/save-inspection", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json"
+          },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+
+        if (!res.ok || data.error) {
+          throw new Error(data.error || "Unable to save inspection.");
+        }
+
+        const publicUrl = data.public_url || "No public URL returned.";
+
+        setStatus(
+          `Inspection saved successfully.\n\nProperty: ${data.property_name}\nRoom: ${data.room_number}\nVerification ID: ${data.verification_id}\nPublic URL: ${publicUrl}`,
+          "success"
+        );
+
+        document.getElementById("room-number").value = "";
+        document.getElementById("inspector-id").value = "";
+        document.getElementById("score").value = "";
+        document.getElementById("verification-id").value = "";
+        document.getElementById("status").value = "";
+        document.getElementById("notes").value = "";
+        document.getElementById("certification-tier").value = "";
+        setDefaultDateTime();
+      } catch (err) {
+        setStatus(err.message || "Something went wrong while saving the inspection.", "error");
+      }
+    });
+
+    resetBtn.addEventListener("click", function () {
+      form.reset();
+      setDefaultDateTime();
+      setStatus("Form cleared.");
+    });
+
+    setDefaultDateTime();
+    loadProperties();
+  </script>
+</body>
+</html>
