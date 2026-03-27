@@ -22,7 +22,9 @@ export default async function handler(req, res) {
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
     if (!supabaseUrl || !serviceRoleKey) {
-      return res.status(500).json({ error: "Missing server environment variables" });
+      return res.status(500).json({
+        error: "Missing server environment variables"
+      });
     }
 
     const headers = {
@@ -81,13 +83,14 @@ export default async function handler(req, res) {
 
     if (!propertyRes.ok) {
       return res.status(500).json({
-        error: "Property lookup failed",
-        details: propertyData
+        error: `Property lookup failed: ${JSON.stringify(propertyData)}`
       });
     }
 
     if (!Array.isArray(propertyData) || propertyData.length === 0) {
-      return res.status(404).json({ error: "Property not found" });
+      return res.status(404).json({
+        error: `Property not found for slug: ${property_slug}`
+      });
     }
 
     const property = propertyData[0];
@@ -105,8 +108,7 @@ export default async function handler(req, res) {
 
     if (!roomLookupRes.ok) {
       return res.status(500).json({
-        error: "Room lookup failed",
-        details: roomLookupData
+        error: `Room lookup failed: ${JSON.stringify(roomLookupData)}`
       });
     }
 
@@ -116,7 +118,8 @@ export default async function handler(req, res) {
     if (Array.isArray(roomLookupData) && roomLookupData.length > 0) {
       room = roomLookupData[0];
     } else {
-      const qrSlug = `${property_slug}-room-${String(room_number).trim().toLowerCase().replace(/\s+/g, "")}`;
+      const cleanRoomNumber = String(room_number).trim().toLowerCase().replace(/\s+/g, "");
+      const qrSlug = `${property_slug}-room-${cleanRoomNumber}`;
       const qrUrl = `https://verify.thereadymarkgroup.com/${qrSlug}`;
 
       const roomInsertPayload = [{
@@ -137,19 +140,21 @@ export default async function handler(req, res) {
 
       if (!roomInsertRes.ok) {
         return res.status(500).json({
-          error: "Room creation failed",
-          details: roomInsertData
+          error: `Room creation failed: ${JSON.stringify(roomInsertData)}`
         });
       }
 
       if (!Array.isArray(roomInsertData) || roomInsertData.length === 0) {
-        return res.status(500).json({ error: "Room creation returned no record" });
+        return res.status(500).json({
+          error: "Room creation returned no record"
+        });
       }
 
       room = roomInsertData[0];
     }
 
     // 4) Insert inspection
+    // Keep this conservative for now so we avoid failing on optional columns.
     const inspectionPayload = [{
       room_id: room.id,
       inspector_id: String(inspector_id).trim(),
@@ -157,8 +162,7 @@ export default async function handler(req, res) {
       certification_tier: String(certification_tier).trim(),
       verification_id: String(verification_id).trim(),
       score: score === "" || score === null || score === undefined ? null : Number(score),
-      status: String(status || certification_tier).trim(),
-      notes: notes ? String(notes).trim() : null
+      status: String(status || certification_tier).trim()
     }];
 
     const inspectionUrl = `${supabaseUrl}/rest/v1/Inspections`;
@@ -172,8 +176,7 @@ export default async function handler(req, res) {
 
     if (!inspectionRes.ok) {
       return res.status(500).json({
-        error: "Inspection save failed",
-        details: inspectionData
+        error: `Inspection save failed: ${JSON.stringify(inspectionData)}`
       });
     }
 
@@ -187,8 +190,7 @@ export default async function handler(req, res) {
     });
   } catch (error) {
     return res.status(500).json({
-      error: "Server error",
-      details: error.message
+      error: `Server error: ${error.message}`
     });
   }
 }
