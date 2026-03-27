@@ -1,68 +1,104 @@
+import { createClient } from '@supabase/supabase-js';
+
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+);
+
+function generateQRCode(propertyId) {
+  const verifyUrl = `https://yourdomain.com/verify/${propertyId}`;
+  return `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(verifyUrl)}`;
+}
+
 export default async function handler(req, res) {
-  const corsHeaders = {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "POST, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type, Authorization"
-  };
-
-  Object.entries(corsHeaders).forEach(([key, value]) => {
-    res.setHeader(key, value);
-  });
-
-  if (req.method === "OPTIONS") {
-    return res.status(200).end();
-  }
-
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
   }
 
   try {
-    const { property_name, property_slug, city, state, property_type } = req.body || {};
+    const {
+      id,
+      name,
+      property_type,
+      address,
+      city,
+      state,
+      zip
+    } = req.body;
 
-    if (!property_name || !property_slug || !city || !state || !property_type) {
-      return res.status(400).json({
-        error: "Missing one or more required fields: property_name, property_slug, city, state, property_type"
-      });
+    if (!name || !property_type) {
+      return res.status(400).json({ error: 'Name and property_type are required.' });
     }
 
-    const supabaseUrl = process.env.SUPABASE_URL;
-    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    let propertyRecord;
 
-    if (!supabaseUrl || !key) {
-      return res.status(500).json({ error: "Missing server environment variables" });
+    if (id) {
+      const { data, error } = await supabase
+        .from('properties')
+        .update({
+          name,
+          property_type,
+          address,
+          city,
+          state,
+          zip
+        })
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Update error:', error);
+        return res.status(500).json({ error: error.message });
+      }
+
+      propertyRecord = data;
+    } else {
+      const { data, error } = await supabase
+        .from('properties')
+        .insert([
+          {
+            name,
+            property_type,
+            address,
+            city,
+            state,
+            zip
+          }
+        ])
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Insert error:', error);
+        return res.status(500).json({ error: error.message });
+      }
+
+      propertyRecord = data;
     }
 
-    const response = await fetch(`${supabaseUrl}/rest/v1/properties`, {
-      method: "POST",
-      headers: {
-        apikey: key,
-        Authorization: `Bearer ${key}`,
-        "Content-Type": "application/json",
-        Prefer: "return=representation"
-      },
-      body: JSON.stringify([{
-        property_name,
-        property_slug,
-        city,
-        state,
-        property_type
-      }])
-    });
+    const qrCode = generateQRCode(propertyRecord.id);
 
-    const data = await response.json();
+    const { data: updatedProperty, error: qrError } = await supabase
+      .from('properties')
+      .update({
+        qr_code: qrCode
+      })
+      .eq('id', propertyRecord.id)
+      .select()
+      .single();
 
-    if (!response.ok) {
-      return res.status(500).json({
-        error: typeof data === "string" ? data : JSON.stringify(data)
-      });
+    if (qrError) {
+      console.error('QR update error:', qrError);
+      return res.status(500).json({ error: qrError.message });
     }
 
     return res.status(200).json({
       success: true,
-      property: Array.isArray(data) && data.length ? data[0] : null
+      property: updatedProperty
     });
-  } catch (err) {
-    return res.status(500).json({ error: err.message });
+  } catch (error) {
+    console.error('Server error:', error);
+    return res.status(500).json({ error: 'Internal server error' });
   }
 }
