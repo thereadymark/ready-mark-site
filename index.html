@@ -17,7 +17,6 @@
     :root {
       --bg: #121416;
       --panel: rgba(26, 30, 34, 0.96);
-      --panel-soft: rgba(31, 36, 41, 0.92);
       --gold: #c7a257;
       --gold-soft: #d8bb7a;
       --text: #f3eee5;
@@ -118,7 +117,31 @@
     .crest {
       width: 130px;
       display: block;
-      margin: 0 auto 10px;
+      margin: 0 auto 12px;
+    }
+
+    .brand-lockup {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin: 0 auto 16px;
+      max-width: 680px;
+    }
+
+    .brand-lockup::before,
+    .brand-lockup::after {
+      content: "";
+      flex: 1;
+      height: 2px;
+      background: linear-gradient(
+        90deg,
+        rgba(199,162,87,0),
+        rgba(216,187,122,0.95),
+        rgba(199,162,87,0)
+      );
+      box-shadow: 0 0 8px rgba(199,162,87,0.18);
+      border-radius: 999px;
     }
 
     .eyebrow {
@@ -126,8 +149,9 @@
       font-size: 20px;
       letter-spacing: 2px;
       text-transform: uppercase;
-      margin-bottom: 12px;
       font-weight: 700;
+      white-space: nowrap;
+      line-height: 1;
     }
 
     h1 {
@@ -314,13 +338,22 @@
     }
 
     .section-title {
-      margin: 0 0 16px;
+      margin: 0 0 10px;
       font-size: clamp(26px, 4vw, 36px);
       line-height: 1.1;
     }
 
     .centered-title {
       text-align: center;
+    }
+
+    .section-divider {
+      width: 120px;
+      height: 2px;
+      margin: 0 auto 18px;
+      background: linear-gradient(90deg, rgba(199,162,87,0), rgba(216,187,122,0.95), rgba(199,162,87,0));
+      box-shadow: 0 0 10px rgba(199,162,87,0.20);
+      border-radius: 999px;
     }
 
     .verification-proof {
@@ -417,6 +450,11 @@
         font-size: 16px;
       }
 
+      .brand-lockup {
+        gap: 8px;
+        margin-bottom: 14px;
+      }
+
       .crest {
         width: 120px;
       }
@@ -466,6 +504,14 @@
       ).join("");
     }
 
+    function renderBrandLockup() {
+      return `
+        <div class="brand-lockup">
+          <div class="eyebrow">The Ready Mark</div>
+        </div>
+      `;
+    }
+
     function renderLandingPage() {
       const app = document.getElementById("app");
       app.innerHTML = `
@@ -473,7 +519,7 @@
           <div class="panel">
             <div class="panel-header">
               <img src="/readymarkseal(best)nobackground.PNG" alt="The Ready Mark" class="crest">
-              <div class="eyebrow">The Ready Mark</div>
+              ${renderBrandLockup()}
               <h1>Verification Portal</h1>
               <div class="subtext">
                 Confirm the authenticity of a Ready Mark inspection record and access room-specific verification details.
@@ -579,7 +625,7 @@
           <div class="panel">
             <div class="panel-header">
               <img src="/readymarkseal(best)nobackground.PNG" alt="The Ready Mark" class="crest">
-              <div class="eyebrow">The Ready Mark</div>
+              ${renderBrandLockup()}
               <h1>Verification Record</h1>
               <div class="status-pill ${statusClass}">
                 ${escapeHtml(certificationLevel)}
@@ -633,6 +679,7 @@
 
               <div class="card">
                 <h2 class="section-title centered-title">How This Room Was Verified</h2>
+                <div class="section-divider"></div>
 
                 <div class="verification-proof">
                   <div class="proof-video-wrap">
@@ -704,7 +751,7 @@
           <div class="panel">
             <div class="panel-header">
               <img src="/readymarkseal(best)nobackground.PNG" alt="The Ready Mark" class="crest">
-              <div class="eyebrow">The Ready Mark</div>
+              ${renderBrandLockup()}
               <h1>Verification Record</h1>
               <div class="status-pill status-notclean">Lookup Error</div>
             </div>
