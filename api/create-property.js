@@ -6,7 +6,9 @@ const supabase = createClient(
 );
 
 function generateQRCode(propertyId) {
-  const verifyUrl = `https://yourdomain.com/verify/${propertyId}`;
+  const verifyBaseUrl = process.env.VERIFY_BASE_URL || 'https://yourdomain.com/verify';
+  const verifyUrl = `${verifyBaseUrl}/${propertyId}`;
+
   return `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(verifyUrl)}`;
 }
 
@@ -27,7 +29,9 @@ export default async function handler(req, res) {
     } = req.body;
 
     if (!name || !property_type) {
-      return res.status(400).json({ error: 'Name and property_type are required.' });
+      return res.status(400).json({
+        error: 'Name and property_type are required.'
+      });
     }
 
     let propertyRecord;
@@ -48,7 +52,7 @@ export default async function handler(req, res) {
         .single();
 
       if (error) {
-        console.error('Update error:', error);
+        console.error('Update property error:', error);
         return res.status(500).json({ error: error.message });
       }
 
@@ -70,7 +74,7 @@ export default async function handler(req, res) {
         .single();
 
       if (error) {
-        console.error('Insert error:', error);
+        console.error('Insert property error:', error);
         return res.status(500).json({ error: error.message });
       }
 
@@ -79,7 +83,7 @@ export default async function handler(req, res) {
 
     const qrCode = generateQRCode(propertyRecord.id);
 
-    const { data: updatedProperty, error: qrError } = await supabase
+    const { data: finalProperty, error: qrError } = await supabase
       .from('properties')
       .update({
         qr_code: qrCode
@@ -95,10 +99,12 @@ export default async function handler(req, res) {
 
     return res.status(200).json({
       success: true,
-      property: updatedProperty
+      property: finalProperty
     });
   } catch (error) {
-    console.error('Server error:', error);
-    return res.status(500).json({ error: 'Internal server error' });
+    console.error('create-property fatal error:', error);
+    return res.status(500).json({
+      error: 'Internal server error'
+    });
   }
 }
