@@ -614,8 +614,8 @@
 
           <div class="upload-grid">
             <div>
-              <label for="photoUpload">Inspection Photos</label>
-              <input type="file" id="photoUpload" multiple accept="image/*">
+              <label for="photoUpload">Inspection Photo</label>
+              <input type="file" id="photoUpload" accept="image/*">
             </div>
 
             <div>
@@ -628,7 +628,7 @@
             </div>
 
             <div class="helper">
-              Save the inspection record first, then upload photos and scanned logs using the verification ID tied to that room.
+              Save the inspection record first, then upload the inspection photo and scanned log using the verification ID tied to that room.
             </div>
           </div>
         </div>
@@ -1024,7 +1024,7 @@
 
     uploadFilesBtn.addEventListener("click", async function () {
       const verificationId = document.getElementById("verification-id").value.trim() || currentVerificationId;
-      const photoFiles = Array.from(document.getElementById("photoUpload").files || []);
+      const photoFile = document.getElementById("photoUpload").files[0] || null;
       const docFile = document.getElementById("docUpload").files[0] || null;
 
       if (!verificationId) {
@@ -1032,7 +1032,7 @@
         return;
       }
 
-      if (!photoFiles.length && !docFile) {
+      if (!photoFile && !docFile) {
         setStatus("Please select at least one photo or one document before uploading.", "error");
         return;
       }
@@ -1040,14 +1040,14 @@
       setStatus("Uploading inspection evidence...");
 
       try {
-        const photosPayload = [];
+        let photoPayload = null;
 
-        for (const file of photoFiles) {
-          photosPayload.push({
-            name: file.name,
-            type: file.type,
-            base64: await fileToBase64(file)
-          });
+        if (photoFile) {
+          photoPayload = {
+            name: photoFile.name,
+            type: photoFile.type,
+            base64: await fileToBase64(photoFile)
+          };
         }
 
         let logPayload = null;
@@ -1068,7 +1068,7 @@
           },
           body: JSON.stringify({
             verification_id: verificationId,
-            photos: photosPayload,
+            photo_file: photoPayload,
             log_file: logPayload
           })
         });
@@ -1080,7 +1080,7 @@
         }
 
         setStatus(
-          `Evidence uploaded successfully.\n\nVerification ID: ${verificationId}\nPhotos added: ${uploadData.photo_urls?.length || 0}\nLog attached: ${uploadData.log_file_url ? "Yes" : "No"}`,
+          `Evidence uploaded successfully.\n\nVerification ID: ${verificationId}\nPhoto attached: ${uploadData.photo_url ? "Yes" : "No"}\nLog attached: ${uploadData.log_file_url ? "Yes" : "No"}`,
           "success"
         );
 
