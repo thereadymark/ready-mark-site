@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from "@supabase/supabase-js";
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
@@ -8,57 +8,57 @@ const supabase = createClient(
 export const config = {
   api: {
     bodyParser: {
-      sizeLimit: '25mb',
+      sizeLimit: "25mb",
     },
   },
 };
 
-const MAX_PHOTO_BYTES = 10 * 1024 * 1024; // 10 MB
-const MAX_LOG_BYTES = 15 * 1024 * 1024;   // 15 MB
+const MAX_PHOTO_BYTES = 10 * 1024 * 1024;
+const MAX_LOG_BYTES = 15 * 1024 * 1024;
 
 const ALLOWED_PHOTO_TYPES = new Set([
-  'image/jpeg',
-  'image/jpg',
-  'image/png',
-  'image/webp',
-  'image/heic',
-  'image/heif'
+  "image/jpeg",
+  "image/jpg",
+  "image/png",
+  "image/webp",
+  "image/heic",
+  "image/heif"
 ]);
 
 const ALLOWED_LOG_TYPES = new Set([
-  'application/pdf',
-  'image/jpeg',
-  'image/jpg',
-  'image/png',
-  'image/webp',
-  'image/heic',
-  'image/heif'
+  "application/pdf",
+  "image/jpeg",
+  "image/jpg",
+  "image/png",
+  "image/webp",
+  "image/heic",
+  "image/heif"
 ]);
 
 function bufferFromBase64(base64String) {
-  return Buffer.from(base64String, 'base64');
+  return Buffer.from(base64String, "base64");
 }
 
 function sanitizeFileName(name) {
-  return String(name || 'file')
-    .replace(/\s+/g, '-')
-    .replace(/[^a-zA-Z0-9._-]/g, '');
+  return String(name || "file")
+    .replace(/\s+/g, "-")
+    .replace(/[^a-zA-Z0-9._-]/g, "");
 }
 
 function validateBase64Payload(file, fieldName) {
-  if (!file || typeof file !== 'object') {
+  if (!file || typeof file !== "object") {
     return `${fieldName} is missing or invalid.`;
   }
 
-  if (!file.name || typeof file.name !== 'string') {
+  if (!file.name || typeof file.name !== "string") {
     return `${fieldName} name is missing.`;
   }
 
-  if (!file.type || typeof file.type !== 'string') {
+  if (!file.type || typeof file.type !== "string") {
     return `${fieldName} type is missing.`;
   }
 
-  if (!file.base64 || typeof file.base64 !== 'string') {
+  if (!file.base64 || typeof file.base64 !== "string") {
     return `${fieldName} file data is missing.`;
   }
 
@@ -67,11 +67,11 @@ function validateBase64Payload(file, fieldName) {
 
 function validatePhotoFile(photoFile, fileBuffer) {
   if (!ALLOWED_PHOTO_TYPES.has(photoFile.type)) {
-    return 'Inspection photo must be a JPG, PNG, WEBP, or HEIC image.';
+    return "Inspection photo must be a JPG, PNG, WEBP, or HEIC image.";
   }
 
   if (fileBuffer.length > MAX_PHOTO_BYTES) {
-    return 'Inspection photo is too large. Maximum size is 10 MB.';
+    return "Inspection photo is too large. Maximum size is 10 MB.";
   }
 
   return null;
@@ -79,11 +79,11 @@ function validatePhotoFile(photoFile, fileBuffer) {
 
 function validateLogFile(logFile, fileBuffer) {
   if (!ALLOWED_LOG_TYPES.has(logFile.type)) {
-    return 'Inspection log must be a PDF or image file.';
+    return "Inspection log must be a PDF or image file.";
   }
 
   if (fileBuffer.length > MAX_LOG_BYTES) {
-    return 'Inspection log is too large. Maximum size is 15 MB.';
+    return "Inspection log is too large. Maximum size is 15 MB.";
   }
 
   return null;
@@ -91,27 +91,27 @@ function validateLogFile(logFile, fileBuffer) {
 
 export default async function handler(req, res) {
   const corsHeaders = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization, x-admin-password'
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization, x-admin-token"
   };
 
   Object.entries(corsHeaders).forEach(([key, value]) => {
     res.setHeader(key, value);
   });
 
-  if (req.method === 'OPTIONS') {
+  if (req.method === "OPTIONS") {
     return res.status(200).end();
   }
 
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const adminPassword = req.headers['x-admin-password'];
+  const adminToken = req.headers["x-admin-token"];
 
-  if (adminPassword !== process.env.ADMIN_PASSWORD) {
-    return res.status(401).json({ error: 'Unauthorized' });
+  if (!adminToken) {
+    return res.status(401).json({ error: "Unauthorized" });
   }
 
   try {
@@ -122,14 +122,14 @@ export default async function handler(req, res) {
     } = req.body || {};
 
     if (!verification_id) {
-      return res.status(400).json({ error: 'Missing verification_id' });
+      return res.status(400).json({ error: "Missing verification_id" });
     }
 
-    let uploadedPhotoUrl = '';
-    let uploadedLogUrl = '';
+    let uploadedPhotoUrl = "";
+    let uploadedLogUrl = "";
 
     if (photo_file) {
-      const payloadError = validateBase64Payload(photo_file, 'photo_file');
+      const payloadError = validateBase64Payload(photo_file, "photo_file");
       if (payloadError) {
         return res.status(400).json({ error: payloadError });
       }
@@ -145,7 +145,7 @@ export default async function handler(req, res) {
       const filePath = `${verification_id}/${Date.now()}-${fileName}`;
 
       const { error: uploadError } = await supabase.storage
-        .from('inspection-photos')
+        .from("inspection-photos")
         .upload(filePath, photoBuffer, {
           contentType: photo_file.type,
           upsert: false
@@ -158,14 +158,14 @@ export default async function handler(req, res) {
       }
 
       const { data } = supabase.storage
-        .from('inspection-photos')
+        .from("inspection-photos")
         .getPublicUrl(filePath);
 
       uploadedPhotoUrl = data.publicUrl;
     }
 
     if (log_file) {
-      const payloadError = validateBase64Payload(log_file, 'log_file');
+      const payloadError = validateBase64Payload(log_file, "log_file");
       if (payloadError) {
         return res.status(400).json({ error: payloadError });
       }
@@ -181,7 +181,7 @@ export default async function handler(req, res) {
       const filePath = `${verification_id}/log-${Date.now()}-${fileName}`;
 
       const { error: uploadError } = await supabase.storage
-        .from('inspection-docs')
+        .from("inspection-docs")
         .upload(filePath, logBuffer, {
           contentType: log_file.type,
           upsert: false
@@ -194,7 +194,7 @@ export default async function handler(req, res) {
       }
 
       const { data } = supabase.storage
-        .from('inspection-docs')
+        .from("inspection-docs")
         .getPublicUrl(filePath);
 
       uploadedLogUrl = data.publicUrl;
@@ -212,9 +212,9 @@ export default async function handler(req, res) {
 
     if (Object.keys(updatePayload).length > 0) {
       const { error: updateError } = await supabase
-        .from('Inspections')
+        .from("Inspections")
         .update(updatePayload)
-        .eq('verification_id', verification_id);
+        .eq("verification_id", verification_id);
 
       if (updateError) {
         return res.status(500).json({
