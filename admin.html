@@ -477,6 +477,18 @@
   </style>
 </head>
 <body>
+  <script>
+  (function () {
+    const ADMIN_PASSWORD = "ReadyMark2026!";
+    const entered = prompt("Enter admin password:");
+
+    if (entered !== ADMIN_PASSWORD) {
+      document.body.innerHTML = "";
+      alert("Incorrect password.");
+      window.location.href = "https://thereadymarkgroup.com";
+    }
+  })();
+</script>
   <div id="app">
     <div class="panel">
       <div class="panel-header">
