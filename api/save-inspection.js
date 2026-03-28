@@ -2,7 +2,7 @@ export default async function handler(req, res) {
   const corsHeaders = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "POST, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type, Authorization"
+    "Access-Control-Allow-Headers": "Content-Type, Authorization, x-admin-password"
   };
 
   Object.entries(corsHeaders).forEach(([key, value]) => {
@@ -15,6 +15,12 @@ export default async function handler(req, res) {
 
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
+  }
+
+  const adminPassword = req.headers["x-admin-password"];
+
+  if (adminPassword !== process.env.ADMIN_PASSWORD) {
+    return res.status(401).json({ error: "Unauthorized" });
   }
 
   try {
@@ -71,7 +77,6 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Missing verification_id" });
     }
 
-    // 1) Find property
     const propertyUrl =
       `${supabaseUrl}/rest/v1/properties` +
       `?property_slug=eq.${encodeURIComponent(property_slug)}` +
@@ -95,7 +100,6 @@ export default async function handler(req, res) {
 
     const property = propertyData[0];
 
-    // 2) Find room for that property
     const roomLookupUrl =
       `${supabaseUrl}/rest/v1/Rooms` +
       `?property_id=eq.${encodeURIComponent(property.id)}` +
@@ -114,7 +118,6 @@ export default async function handler(req, res) {
 
     let room = null;
 
-    // 3) Create room if missing
     if (Array.isArray(roomLookupData) && roomLookupData.length > 0) {
       room = roomLookupData[0];
     } else {
@@ -153,8 +156,6 @@ export default async function handler(req, res) {
       room = roomInsertData[0];
     }
 
-    // 4) Insert inspection
-    // Keep this conservative for now so we avoid failing on optional columns.
     const inspectionPayload = [{
       room_id: room.id,
       inspector_id: String(inspector_id).trim(),
@@ -162,6 +163,8 @@ export default async function handler(req, res) {
       certification_tier: String(certification_tier).trim(),
       verification_id: String(verification_id).trim(),
       score: score === "" || score === null || score === undefined ? null : Number(score),
+      status: status ? String(status).trim() : null,
+      notes: notes ? String(notes).trim() : null
     }];
 
     const inspectionUrl = `${supabaseUrl}/rest/v1/Inspections`;
