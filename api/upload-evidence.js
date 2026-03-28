@@ -45,7 +45,7 @@ export default async function handler(req, res) {
   try {
     const {
       verification_id,
-      photos,
+      photo_file,
       log_file
     } = req.body || {};
 
@@ -53,34 +53,32 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Missing verification_id' });
     }
 
-    const uploadedPhotoUrls = [];
+    let uploadedPhotoUrl = '';
     let uploadedLogUrl = '';
 
-    if (Array.isArray(photos) && photos.length > 0) {
-      for (const photo of photos) {
-        const fileName = sanitizeFileName(photo.name);
-        const filePath = `${verification_id}/${Date.now()}-${fileName}`;
-        const fileBuffer = bufferFromBase64(photo.base64);
+    if (photo_file && photo_file.base64) {
+      const fileName = sanitizeFileName(photo_file.name);
+      const filePath = `${verification_id}/${Date.now()}-${fileName}`;
+      const fileBuffer = bufferFromBase64(photo_file.base64);
 
-        const { error: uploadError } = await supabase.storage
-          .from('inspection-photos')
-          .upload(filePath, fileBuffer, {
-            contentType: photo.type || 'application/octet-stream',
-            upsert: false
-          });
+      const { error: uploadError } = await supabase.storage
+        .from('inspection-photos')
+        .upload(filePath, fileBuffer, {
+          contentType: photo_file.type || 'application/octet-stream',
+          upsert: false
+        });
 
-        if (uploadError) {
-          return res.status(500).json({
-            error: `Photo upload failed: ${uploadError.message}`
-          });
-        }
-
-        const { data } = supabase.storage
-          .from('inspection-photos')
-          .getPublicUrl(filePath);
-
-        uploadedPhotoUrls.push(data.publicUrl);
+      if (uploadError) {
+        return res.status(500).json({
+          error: `Photo upload failed: ${uploadError.message}`
+        });
       }
+
+      const { data } = supabase.storage
+        .from('inspection-photos')
+        .getPublicUrl(filePath);
+
+      uploadedPhotoUrl = data.publicUrl;
     }
 
     if (log_file && log_file.base64) {
@@ -110,8 +108,8 @@ export default async function handler(req, res) {
 
     const updatePayload = {};
 
-    if (uploadedPhotoUrls.length) {
-      updatePayload.photo_urls = uploadedPhotoUrls;
+    if (uploadedPhotoUrl) {
+      updatePayload.photo_url = uploadedPhotoUrl;
     }
 
     if (uploadedLogUrl) {
@@ -134,7 +132,7 @@ export default async function handler(req, res) {
     return res.status(200).json({
       success: true,
       verification_id,
-      photo_urls: uploadedPhotoUrls,
+      photo_url: uploadedPhotoUrl,
       log_file_url: uploadedLogUrl
     });
   } catch (error) {
