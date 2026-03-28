@@ -6,8 +6,28 @@ const supabase = createClient(
 );
 
 export default async function handler(req, res) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
+  const corsHeaders = {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization, x-admin-password"
+  };
+
+  Object.entries(corsHeaders).forEach(([key, value]) => {
+    res.setHeader(key, value);
+  });
+
+  if (req.method === "OPTIONS") {
+    return res.status(200).end();
+  }
+
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" });
+  }
+
+  const adminPassword = req.headers["x-admin-password"];
+
+  if (adminPassword !== process.env.ADMIN_PASSWORD) {
+    return res.status(401).json({ error: "Unauthorized" });
   }
 
   try {
@@ -17,21 +37,20 @@ export default async function handler(req, res) {
       city,
       state,
       property_type
-    } = req.body;
+    } = req.body || {};
 
     if (!property_name || !property_slug || !city || !state || !property_type) {
       return res.status(400).json({
-        error: 'property_name, property_slug, city, state, and property_type are required.'
+        error: "property_name, property_slug, city, state, and property_type are required."
       });
     }
 
     const normalizedSlug = String(property_slug).trim().toLowerCase();
 
-    // Check if slug already exists
     const { data: existingProperty, error: existingError } = await supabase
-      .from('properties')
-      .select('id')
-      .eq('property_slug', normalizedSlug)
+      .from("properties")
+      .select("id")
+      .eq("property_slug", normalizedSlug)
       .maybeSingle();
 
     if (existingError) {
@@ -40,20 +59,19 @@ export default async function handler(req, res) {
 
     if (existingProperty) {
       return res.status(400).json({
-        error: 'A property with this slug already exists.'
+        error: "A property with this slug already exists."
       });
     }
 
-    // Insert new property
     const { data, error } = await supabase
-      .from('properties')
+      .from("properties")
       .insert([
         {
-          property_name: property_name.trim(),
+          property_name: String(property_name).trim(),
           property_slug: normalizedSlug,
-          city: city.trim(),
-          state: state.trim(),
-          property_type: property_type.trim()
+          city: String(city).trim(),
+          state: String(state).trim(),
+          property_type: String(property_type).trim()
         }
       ])
       .select()
@@ -67,10 +85,9 @@ export default async function handler(req, res) {
       success: true,
       property: data
     });
-
   } catch (error) {
     return res.status(500).json({
-      error: error.message || 'Internal server error'
+      error: error.message || "Internal server error"
     });
   }
 }
