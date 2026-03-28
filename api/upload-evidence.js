@@ -13,6 +13,28 @@ export const config = {
   },
 };
 
+const MAX_PHOTO_BYTES = 10 * 1024 * 1024; // 10 MB
+const MAX_LOG_BYTES = 15 * 1024 * 1024;   // 15 MB
+
+const ALLOWED_PHOTO_TYPES = new Set([
+  'image/jpeg',
+  'image/jpg',
+  'image/png',
+  'image/webp',
+  'image/heic',
+  'image/heif'
+]);
+
+const ALLOWED_LOG_TYPES = new Set([
+  'application/pdf',
+  'image/jpeg',
+  'image/jpg',
+  'image/png',
+  'image/webp',
+  'image/heic',
+  'image/heif'
+]);
+
 function bufferFromBase64(base64String) {
   return Buffer.from(base64String, 'base64');
 }
@@ -21,6 +43,50 @@ function sanitizeFileName(name) {
   return String(name || 'file')
     .replace(/\s+/g, '-')
     .replace(/[^a-zA-Z0-9._-]/g, '');
+}
+
+function validateBase64Payload(file, fieldName) {
+  if (!file || typeof file !== 'object') {
+    return `${fieldName} is missing or invalid.`;
+  }
+
+  if (!file.name || typeof file.name !== 'string') {
+    return `${fieldName} name is missing.`;
+  }
+
+  if (!file.type || typeof file.type !== 'string') {
+    return `${fieldName} type is missing.`;
+  }
+
+  if (!file.base64 || typeof file.base64 !== 'string') {
+    return `${fieldName} file data is missing.`;
+  }
+
+  return null;
+}
+
+function validatePhotoFile(photoFile, fileBuffer) {
+  if (!ALLOWED_PHOTO_TYPES.has(photoFile.type)) {
+    return 'Inspection photo must be a JPG, PNG, WEBP, or HEIC image.';
+  }
+
+  if (fileBuffer.length > MAX_PHOTO_BYTES) {
+    return 'Inspection photo is too large. Maximum size is 10 MB.';
+  }
+
+  return null;
+}
+
+function validateLogFile(logFile, fileBuffer) {
+  if (!ALLOWED_LOG_TYPES.has(logFile.type)) {
+    return 'Inspection log must be a PDF or image file.';
+  }
+
+  if (fileBuffer.length > MAX_LOG_BYTES) {
+    return 'Inspection log is too large. Maximum size is 15 MB.';
+  }
+
+  return null;
 }
 
 export default async function handler(req, res) {
@@ -42,10 +108,10 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const adminPassword = req.headers["x-admin-password"];
+  const adminPassword = req.headers['x-admin-password'];
 
   if (adminPassword !== process.env.ADMIN_PASSWORD) {
-    return res.status(401).json({ error: "Unauthorized" });
+    return res.status(401).json({ error: 'Unauthorized' });
   }
 
   try {
@@ -62,15 +128,26 @@ export default async function handler(req, res) {
     let uploadedPhotoUrl = '';
     let uploadedLogUrl = '';
 
-    if (photo_file && photo_file.base64) {
+    if (photo_file) {
+      const payloadError = validateBase64Payload(photo_file, 'photo_file');
+      if (payloadError) {
+        return res.status(400).json({ error: payloadError });
+      }
+
+      const photoBuffer = bufferFromBase64(photo_file.base64);
+      const photoValidationError = validatePhotoFile(photo_file, photoBuffer);
+
+      if (photoValidationError) {
+        return res.status(400).json({ error: photoValidationError });
+      }
+
       const fileName = sanitizeFileName(photo_file.name);
       const filePath = `${verification_id}/${Date.now()}-${fileName}`;
-      const fileBuffer = bufferFromBase64(photo_file.base64);
 
       const { error: uploadError } = await supabase.storage
         .from('inspection-photos')
-        .upload(filePath, fileBuffer, {
-          contentType: photo_file.type || 'application/octet-stream',
+        .upload(filePath, photoBuffer, {
+          contentType: photo_file.type,
           upsert: false
         });
 
@@ -87,15 +164,26 @@ export default async function handler(req, res) {
       uploadedPhotoUrl = data.publicUrl;
     }
 
-    if (log_file && log_file.base64) {
+    if (log_file) {
+      const payloadError = validateBase64Payload(log_file, 'log_file');
+      if (payloadError) {
+        return res.status(400).json({ error: payloadError });
+      }
+
+      const logBuffer = bufferFromBase64(log_file.base64);
+      const logValidationError = validateLogFile(log_file, logBuffer);
+
+      if (logValidationError) {
+        return res.status(400).json({ error: logValidationError });
+      }
+
       const fileName = sanitizeFileName(log_file.name);
       const filePath = `${verification_id}/log-${Date.now()}-${fileName}`;
-      const fileBuffer = bufferFromBase64(log_file.base64);
 
       const { error: uploadError } = await supabase.storage
         .from('inspection-docs')
-        .upload(filePath, fileBuffer, {
-          contentType: log_file.type || 'application/octet-stream',
+        .upload(filePath, logBuffer, {
+          contentType: log_file.type,
           upsert: false
         });
 
