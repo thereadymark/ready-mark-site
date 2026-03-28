@@ -679,9 +679,6 @@
   </div>
 
   <script>
-    const SUPABASE_URL = "https://zbecvxcefxxhqijakxxj.supabase.co";
-    const SUPABASE_ANON_KEY = "sb_publishable_Gy2u0jIBi_EnAQnOlGwuCA_Mypry0GX";
-
     const propertySelect = document.getElementById("property-slug-select");
     const form = document.getElementById("inspection-form");
     const statusBox = document.getElementById("status-box");
@@ -860,6 +857,21 @@
       win.document.close();
     }
 
+    function fileToBase64(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+
+        reader.onload = () => {
+          const result = reader.result || "";
+          const base64 = String(result).split(",")[1];
+          resolve(base64);
+        };
+
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
     propertyNameInput.addEventListener("input", function () {
       propertySlugInput.value = slugify(propertyNameInput.value);
     });
@@ -1028,53 +1040,27 @@
       setStatus("Uploading inspection evidence...");
 
       try {
-        const uploadedPhotoUrls = [];
+        const photosPayload = [];
 
         for (const file of photoFiles) {
-          const path = `${verificationId}/${Date.now()}-${file.name.replace(/\s+/g, "-")}`;
-          const uploadRes = await fetch(`${SUPABASE_URL}/storage/v1/object/inspection-photos/${path}`, {
-            method: "POST",
-            headers: {
-              apikey: SUPABASE_ANON_KEY,
-              Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-              "Content-Type": file.type || "application/octet-stream",
-              "x-upsert": "false"
-            },
-            body: file
+          photosPayload.push({
+            name: file.name,
+            type: file.type,
+            base64: await fileToBase64(file)
           });
-
-          if (!uploadRes.ok) {
-            const txt = await uploadRes.text();
-            throw new Error(`Photo upload failed: ${txt}`);
-          }
-
-          uploadedPhotoUrls.push(`${SUPABASE_URL}/storage/v1/object/public/inspection-photos/${path}`);
         }
 
-        let uploadedLogUrl = "";
+        let logPayload = null;
 
         if (docFile) {
-          const path = `${verificationId}/log-${Date.now()}-${docFile.name.replace(/\s+/g, "-")}`;
-          const uploadRes = await fetch(`${SUPABASE_URL}/storage/v1/object/inspection-docs/${path}`, {
-            method: "POST",
-            headers: {
-              apikey: SUPABASE_ANON_KEY,
-              Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-              "Content-Type": docFile.type || "application/octet-stream",
-              "x-upsert": "true"
-            },
-            body: docFile
-          });
-
-          if (!uploadRes.ok) {
-            const txt = await uploadRes.text();
-            throw new Error(`Document upload failed: ${txt}`);
-          }
-
-          uploadedLogUrl = `${SUPABASE_URL}/storage/v1/object/public/inspection-docs/${path}`;
+          logPayload = {
+            name: docFile.name,
+            type: docFile.type,
+            base64: await fileToBase64(docFile)
+          };
         }
 
-        const saveEvidenceRes = await fetch("/api/save-evidence", {
+        const uploadRes = await fetch("/api/upload-evidence", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -1082,19 +1068,19 @@
           },
           body: JSON.stringify({
             verification_id: verificationId,
-            photo_urls: uploadedPhotoUrls,
-            log_file_url: uploadedLogUrl
+            photos: photosPayload,
+            log_file: logPayload
           })
         });
 
-        const saveEvidenceData = await saveEvidenceRes.json();
+        const uploadData = await uploadRes.json();
 
-        if (!saveEvidenceRes.ok || saveEvidenceData.error) {
-          throw new Error(saveEvidenceData.error || "Evidence uploaded, but saving file URLs to the inspection failed.");
+        if (!uploadRes.ok || uploadData.error) {
+          throw new Error(uploadData.error || "Upload failed.");
         }
 
         setStatus(
-          `Evidence uploaded successfully.\n\nVerification ID: ${verificationId}\nPhotos added: ${uploadedPhotoUrls.length}\nLog attached: ${uploadedLogUrl ? "Yes" : "No"}`,
+          `Evidence uploaded successfully.\n\nVerification ID: ${verificationId}\nPhotos added: ${uploadData.photo_urls?.length || 0}\nLog attached: ${uploadData.log_file_url ? "Yes" : "No"}`,
           "success"
         );
 
