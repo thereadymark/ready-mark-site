@@ -500,16 +500,16 @@
 
     function renderPropertyOptions() {
       return PROPERTY_OPTIONS.map(
-        option => <option value="${escapeHtml(option.value)}">${escapeHtml(option.label)}</option>
+        option => `<option value="${escapeHtml(option.value)}">${escapeHtml(option.label)}</option>`
       ).join("");
     }
 
     function renderBrandLockup() {
-      return 
+      return `
         <div class="brand-lockup">
           <div class="eyebrow">The Ready Mark</div>
         </div>
-      ;
+      `;
     }
 
     function renderLandingPage() {
@@ -587,7 +587,7 @@
           return;
         }
 
-        window.location.href = /${property}-room-${room};
+        window.location.href = `/${property}-room-${room}`;
       }
 
       verifyBtn.addEventListener("click", goToRoom);
@@ -615,7 +615,7 @@
 
       const certificationLevel = data.certificationTier || "Not verified";
       const score = data.score !== "" && data.score !== null && data.score !== undefined
-        ? ${data.score} / 100
+        ? `${data.score} / 100`
         : "N/A";
 
       const statusClass = getStatusClass(certificationLevel);
