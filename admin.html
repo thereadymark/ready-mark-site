@@ -679,9 +679,8 @@
   </div>
 
   <script>
-    // Replace these two values with your real project values once.
-    const SUPABASE_URL = "YOUR_SUPABASE_URL";
-    const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY";
+    const SUPABASE_URL = "https://zbecvxcefxxhqijakxxj.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_Gy2u0jIBi_EnAQnOlGwuCA_Mypry0GX";
 
     const propertySelect = document.getElementById("property-slug-select");
     const form = document.getElementById("inspection-form");
@@ -998,10 +997,7 @@
 
         showQrPanel(publicUrl, verificationId, propertyName, roomNumber);
 
-        // Keep verification ID in place for uploads.
         document.getElementById("verification-id").value = verificationId;
-
-        // Clear only fields you’re likely to change next.
         document.getElementById("room-number").value = "";
         document.getElementById("inspector-id").value = "";
         document.getElementById("score").value = "";
@@ -1026,11 +1022,6 @@
 
       if (!photoFiles.length && !docFile) {
         setStatus("Please select at least one photo or one document before uploading.", "error");
-        return;
-      }
-
-      if (!SUPABASE_URL || SUPABASE_URL === "YOUR_SUPABASE_URL" || !SUPABASE_ANON_KEY || SUPABASE_ANON_KEY === "YOUR_SUPABASE_ANON_KEY") {
-        setStatus("Add your real SUPABASE_URL and SUPABASE_ANON_KEY inside admin.html before testing uploads.", "error");
         return;
       }
 
