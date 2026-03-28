@@ -49,7 +49,6 @@ export default async function handler(req, res) {
       certification_tier,
       score,
       verification_id,
-      status,
       notes
     } = req.body || {};
 
@@ -163,7 +162,6 @@ export default async function handler(req, res) {
       certification_tier: String(certification_tier).trim(),
       verification_id: String(verification_id).trim(),
       score: score === "" || score === null || score === undefined ? null : Number(score),
-      status: status ? String(status).trim() : null,
       notes: notes ? String(notes).trim() : null
     }];
 
