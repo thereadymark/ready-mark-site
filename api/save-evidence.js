@@ -1,131 +1,72 @@
-(function () {
-  function getSupabaseClient() {
-    const SUPABASE_URL = window.SUPABASE_URL;
-    const SUPABASE_ANON_KEY = window.SUPABASE_ANON_KEY;
+import { createClient } from '@supabase/supabase-js';
 
-    if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-      throw new Error('Supabase browser credentials are missing.');
-    }
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+);
 
-    if (!window.supabase || !window.supabase.createClient) {
-      throw new Error('Supabase client library did not load.');
-    }
+export default async function handler(req, res) {
+  const corsHeaders = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+  };
 
-    return window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  Object.entries(corsHeaders).forEach(([key, value]) => {
+    res.setHeader(key, value);
+  });
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
   }
 
-  async function uploadSingleFile(supabase, bucketName, filePath, file) {
-    const { error: uploadError } = await supabase.storage
-      .from(bucketName)
-      .upload(filePath, file, {
-        upsert: false
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  try {
+    const {
+      verification_id,
+      photo_urls,
+      log_file_url
+    } = req.body;
+
+    if (!verification_id) {
+      return res.status(400).json({
+        error: 'verification_id is required.'
       });
-
-    if (uploadError) {
-      throw new Error(uploadError.message);
     }
-
-    const { data } = supabase.storage
-      .from(bucketName)
-      .getPublicUrl(filePath);
-
-    return data.publicUrl;
-  }
-
-  async function uploadMultipleFiles(supabase, bucketName, files, folderPrefix) {
-    const uploadedUrls = [];
-
-    for (const file of files) {
-      const safeName = file.name.replace(/\s+/g, '-');
-      const filePath = `${folderPrefix}/${Date.now()}-${safeName}`;
-      const url = await uploadSingleFile(supabase, bucketName, filePath, file);
-      uploadedUrls.push(url);
-    }
-
-    return uploadedUrls;
-  }
-
-  window.saveEvidenceFiles = async function saveEvidenceFiles(propertyId, photoFiles, documentFiles) {
-    if (!propertyId) {
-      throw new Error('Property ID is required before uploading files.');
-    }
-
-    const supabase = getSupabaseClient();
-
-    const photoUrls = photoFiles && photoFiles.length
-      ? await uploadMultipleFiles(supabase, 'property-files', photoFiles, `properties/${propertyId}/photos`)
-      : [];
-
-    const documentUrls = documentFiles && documentFiles.length
-      ? await uploadMultipleFiles(supabase, 'property-files', documentFiles, `properties/${propertyId}/documents`)
-      : [];
 
     const updatePayload = {};
 
-    if (photoUrls.length) {
-      updatePayload.photo_urls = photoUrls;
+    if (Array.isArray(photo_urls)) {
+      updatePayload.photo_urls = photo_urls;
     }
 
-    if (documentUrls.length) {
-      updatePayload.document_urls = documentUrls;
+    if (typeof log_file_url === 'string') {
+      updatePayload.log_file_url = log_file_url;
     }
 
-    if (Object.keys(updatePayload).length > 0) {
-      const { error } = await supabase
-        .from('properties')
-        .update(updatePayload)
-        .eq('id', propertyId);
-
-      if (error) {
-        throw new Error(error.message);
-      }
-    }
-
-    return {
-      photoUrls,
-      documentUrls
-    };
-  };
-
-  window.saveInspectionEvidence = async function saveInspectionEvidence(propertyId, inspectionPhoto, inspectionLog) {
-    if (!propertyId) {
-      throw new Error('Property ID is required.');
-    }
-
-    const supabase = getSupabaseClient();
-
-    let photoUrl = null;
-
-    if (inspectionPhoto) {
-      const safeName = inspectionPhoto.name.replace(/\s+/g, '-');
-      const filePath = `inspections/${propertyId}/${Date.now()}-${safeName}`;
-
-      photoUrl = await uploadSingleFile(
-        supabase,
-        'property-files',
-        filePath,
-        inspectionPhoto
-      );
-    }
-
-    const insertPayload = {
-      property_id: propertyId,
-      photo_url: photoUrl,
-      log: inspectionLog || ''
-    };
-
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('inspections')
-      .insert([insertPayload]);
+      .update(updatePayload)
+      .eq('verification_id', verification_id)
+      .select()
+      .single();
 
     if (error) {
-      throw new Error(error.message);
+      return res.status(500).json({
+        error: error.message
+      });
     }
 
-    return {
-      property_id: propertyId,
-      photo_url: photoUrl,
-      log: inspectionLog || ''
-    };
-  };
-})();
+    return res.status(200).json({
+      success: true,
+      inspection: data
+    });
+  } catch (error) {
+    return res.status(500).json({
+      error: error.message || 'Internal server error'
+    });
+  }
+}
