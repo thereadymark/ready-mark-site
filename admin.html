@@ -137,10 +137,6 @@
       color: #111111;
       word-break: break-word;
     }
-
-    .hidden {
-      display: none;
-    }
   </style>
 </head>
 <body>
@@ -177,26 +173,6 @@
         </div>
 
         <div class="field-group">
-          <label for="address">Address</label>
-          <input type="text" id="address" placeholder="Enter address" />
-        </div>
-
-        <div class="field-group">
-          <label for="city">City</label>
-          <input type="text" id="city" placeholder="Enter city" />
-        </div>
-
-        <div class="field-group">
-          <label for="state">State</label>
-          <input type="text" id="state" placeholder="Enter state" />
-        </div>
-
-        <div class="field-group">
-          <label for="zip">ZIP Code</label>
-          <input type="text" id="zip" placeholder="Enter ZIP code" />
-        </div>
-
-        <div class="field-group">
           <label for="property_photos">Property Photos</label>
           <input type="file" id="property_photos" multiple accept="image/*" />
         </div>
@@ -207,14 +183,12 @@
         </div>
 
         <div class="button-row">
-          <button class="primary-btn" id="save-property-btn">Save Property</button>
+          <button class="primary-btn" id="save-property-btn" type="button">Save Property</button>
           <button class="secondary-btn" id="new-property-btn" type="button">New Property</button>
         </div>
 
         <div class="status" id="property-status"></div>
-
         <div class="qr-preview" id="qr-preview"></div>
-
         <div class="preview-links" id="property-file-links"></div>
       </div>
     </div>
@@ -234,7 +208,7 @@
           <textarea id="inspection_log" placeholder="Enter inspection log details"></textarea>
         </div>
 
-        <button class="primary-btn" id="save-evidence-btn">Save Evidence</button>
+        <button class="primary-btn" id="save-evidence-btn" type="button">Save Evidence</button>
 
         <div class="status" id="evidence-status"></div>
       </div>
@@ -243,7 +217,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
-    window.SUPABASE_URL = 'https://zbecvxcefxxhqijakxxj.supabase.co;
+    window.SUPABASE_URL = 'https://zbecvxcefxxhqijakxxj.supabase.co';
     window.SUPABASE_ANON_KEY = 'sb_publishable_Gy2u0jIBi_EnAQnOlGwuCA_Mypry0GX';
   </script>
   <script src="/save-evidence.js"></script>
@@ -253,10 +227,6 @@
       document.getElementById('property_id').value = '';
       document.getElementById('name').value = '';
       document.getElementById('property_type').value = '';
-      document.getElementById('address').value = '';
-      document.getElementById('city').value = '';
-      document.getElementById('state').value = '';
-      document.getElementById('zip').value = '';
       document.getElementById('property_photos').value = '';
       document.getElementById('property_documents').value = '';
       document.getElementById('property-status').textContent = '';
@@ -281,11 +251,7 @@
         const payload = {
           id: propertyId || null,
           name: document.getElementById('name').value.trim(),
-          property_type: document.getElementById('property_type').value,
-          address: document.getElementById('address').value.trim(),
-          city: document.getElementById('city').value.trim(),
-          state: document.getElementById('state').value.trim(),
-          zip: document.getElementById('zip').value.trim()
+          property_type: document.getElementById('property_type').value
         };
 
         const propertyRes = await fetch('/api/create-property', {
