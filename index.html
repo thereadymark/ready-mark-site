@@ -5,822 +5,238 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>The Ready Mark Verification Portal</title>
 
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-63GYLY26HQ"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'G-63GYLY26HQ');
-  </script>
-
   <style>
     :root {
       --bg: #121416;
-      --panel: rgba(26, 30, 34, 0.96);
       --gold: #c7a257;
       --gold-soft: #d8bb7a;
       --text: #f3eee5;
       --muted: #b7b0a5;
       --line: rgba(199, 162, 87, 0.20);
-      --shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
-
       --verified: #3ddc84;
       --attention: #ffb347;
       --notclean: #ff6b6b;
-      --premier: #f4d06f;
-    }
-
-    * {
-      box-sizing: border-box;
-    }
-
-    html, body {
-      margin: 0;
-      min-height: 100%;
-      font-family: Georgia, serif;
-      color: var(--text);
-      background:
-        radial-gradient(circle at top center, rgba(255,255,255,0.03), transparent 28%),
-        linear-gradient(180deg, #1b1815 0%, #121416 45%, #121416 100%);
     }
 
     body {
-      position: relative;
-      overflow-x: hidden;
-    }
-
-    body::before {
-      content: "";
-      position: fixed;
-      inset: 0;
-      background-image: url("/readymarklogonobackground2.PNG");
-      background-repeat: repeat;
-      background-size: 180px;
-      opacity: 0.025;
-      filter: grayscale(100%) brightness(1.05);
-      pointer-events: none;
-      z-index: 0;
-    }
-
-    body::after {
-      content: "";
-      position: fixed;
-      inset: 0;
-      background:
-        radial-gradient(circle at center, transparent 42%, rgba(0,0,0,0.22) 100%);
-      pointer-events: none;
-      z-index: 0;
-    }
-
-    #app {
-      position: relative;
-      z-index: 1;
-      min-height: 100vh;
+      margin: 0;
+      font-family: Georgia, serif;
+      color: var(--text);
+      background: #121416;
     }
 
     .shell {
-      min-height: 100vh;
       display: flex;
       justify-content: center;
-      align-items: center;
-      padding: 34px 18px;
+      padding: 20px;
     }
 
     .panel {
       width: 100%;
       max-width: 820px;
-      background: linear-gradient(180deg, rgba(27,31,35,0.98), rgba(21,24,27,0.98));
+      background: #1a1e22;
+      border-radius: 20px;
       border: 1px solid var(--line);
-      border-radius: 22px;
-      box-shadow: var(--shadow);
-      overflow: hidden;
-      position: relative;
-    }
-
-    .panel::before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background:
-        radial-gradient(circle at top center, rgba(199,162,87,0.08), transparent 40%);
-      pointer-events: none;
     }
 
     .panel-header {
-      padding: 38px 26px 24px;
       text-align: center;
+      padding: 30px 20px;
       border-bottom: 1px solid var(--line);
-      position: relative;
-      z-index: 1;
-    }
-
-    .crest {
-      width: 130px;
-      display: block;
-      margin: 0 auto 12px;
-    }
-
-    .brand-lockup {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 12px;
-      margin: 0 auto 16px;
-      max-width: 680px;
-    }
-
-    .brand-lockup::before,
-    .brand-lockup::after {
-      content: "";
-      flex: 1;
-      height: 2px;
-      background: linear-gradient(
-        90deg,
-        rgba(199,162,87,0),
-        rgba(216,187,122,0.95),
-        rgba(199,162,87,0)
-      );
-      box-shadow: 0 0 8px rgba(199,162,87,0.18);
-      border-radius: 999px;
-    }
-
-    .eyebrow {
-      color: var(--gold);
-      font-size: 20px;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      font-weight: 700;
-      white-space: nowrap;
-      line-height: 1;
     }
 
     h1 {
-      margin: 0;
-      color: var(--text);
-      font-size: clamp(34px, 6vw, 58px);
-      line-height: 1.04;
-    }
-
-    .subtext {
-      max-width: 590px;
-      margin: 14px auto 0;
-      color: var(--muted);
-      font-size: 17px;
-      line-height: 1.7;
+      margin: 10px 0;
     }
 
     .content {
-      padding: 26px;
-      position: relative;
-      z-index: 1;
+      padding: 20px;
     }
 
     .card {
-      background: linear-gradient(180deg, rgba(35,39,44,0.88), rgba(25,29,33,0.95));
-      border: 1px solid rgba(199,162,87,0.16);
-      border-radius: 18px;
-      padding: 22px;
-      margin-bottom: 20px;
+      background: #20252a;
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 16px;
+      border: 1px solid var(--line);
     }
 
-    .form-group + .form-group {
-      margin-top: 16px;
+    .record-item {
+      margin-bottom: 18px;
     }
 
-    label {
-      display: block;
-      margin-bottom: 9px;
-      color: var(--gold-soft);
+    .record-label {
       font-size: 12px;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-    }
-
-    input,
-    select {
-      width: 100%;
-      background: rgba(255,255,255,0.03);
-      border: 1px solid rgba(199,162,87,0.14);
-      border-radius: 14px;
-      color: var(--text);
-      padding: 15px 16px;
-      font-size: 16px;
-      outline: none;
-      appearance: none;
-    }
-
-    input::placeholder {
-      color: #8e877b;
-    }
-
-    input:focus,
-    select:focus {
-      border-color: rgba(199,162,87,0.40);
-      box-shadow: 0 0 0 3px rgba(199,162,87,0.08);
-    }
-
-    option {
-      background: #1b1f23;
-      color: var(--text);
-    }
-
-    .button-row {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-      margin-top: 18px;
-    }
-
-    button {
-      min-height: 50px;
-      border-radius: 14px;
-      padding: 14px 18px;
-      font-size: 15px;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      border: none;
-    }
-
-    .primary-btn {
-      background: linear-gradient(180deg, #d8ba73, #b8934c);
-      color: #111315;
-      font-weight: 700;
-      box-shadow: 0 10px 24px rgba(199,162,87,0.22);
-    }
-
-    .portal-link {
-      text-align: center;
-      margin-top: 16px;
-    }
-
-    .portal-link a {
       color: var(--gold-soft);
-      text-decoration: none;
-      font-size: 14px;
+      text-transform: uppercase;
+      margin-bottom: 6px;
     }
 
-    .portal-note {
-      margin-top: 18px;
-      color: var(--muted);
-      font-size: 14px;
-      line-height: 1.7;
+    .record-value {
+      font-size: 20px;
     }
 
     .status-pill {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      min-width: 210px;
-      padding: 12px 20px;
+      margin-top: 12px;
+      padding: 10px;
+      border-radius: 999px;
+      text-align: center;
+      font-weight: bold;
+      border: 1px solid var(--line);
+    }
+
+    .status-verified { color: var(--verified); }
+    .status-attention { color: var(--attention); }
+    .status-notclean { color: var(--notclean); }
+
+    input, select {
+      width: 100%;
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      background: #111;
+      color: white;
+      margin-top: 6px;
+    }
+
+    button {
+      width: 100%;
       margin-top: 14px;
-      border-radius: 999px;
-      font-weight: 700;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      border: 1px solid rgba(199,162,87,0.20);
-      background: rgba(199,162,87,0.08);
-      color: var(--gold-soft);
+      padding: 14px;
+      border-radius: 10px;
+      border: none;
+      background: var(--gold);
+      font-weight: bold;
+      cursor: pointer;
     }
 
-    .status-verified {
-      color: var(--verified);
-      border-color: rgba(61,220,132,0.35);
-      background: rgba(61,220,132,0.08);
-      box-shadow: 0 0 12px rgba(61, 220, 132, 0.20);
-    }
-
-    .status-attention {
-      color: var(--attention);
-      border-color: rgba(255,179,71,0.35);
-      background: rgba(255,179,71,0.08);
-    }
-
-    .status-notclean {
-      color: var(--notclean);
-      border-color: rgba(255,107,107,0.35);
-      background: rgba(255,107,107,0.08);
-    }
-
-    .status-premier {
-      color: var(--premier);
-      border-color: rgba(244,208,111,0.35);
-      background: rgba(244,208,111,0.08);
-    }
-
-    .info-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 14px;
-    }
-
-    .info-item {
-      padding: 16px;
-      border-radius: 14px;
-      background: rgba(255,255,255,0.02);
-      border: 1px solid rgba(199,162,87,0.10);
-    }
-
-    .info-label {
-      color: var(--gold-soft);
-      font-size: 12px;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      margin-bottom: 8px;
-    }
-
-    .info-value {
-      font-size: 18px;
-      line-height: 1.45;
-      color: var(--text);
-      word-break: break-word;
-    }
-
-    .section-title {
-      margin: 0 0 10px;
-      font-size: clamp(26px, 4vw, 36px);
-      line-height: 1.1;
-    }
-
-    .centered-title {
-      text-align: center;
-    }
-
-    .section-divider {
-      width: 120px;
-      height: 2px;
-      margin: 0 auto 18px;
-      background: linear-gradient(90deg, rgba(199,162,87,0), rgba(216,187,122,0.95), rgba(199,162,87,0));
-      box-shadow: 0 0 10px rgba(199,162,87,0.20);
-      border-radius: 999px;
-    }
-
-    .verification-proof {
-      position: relative;
-      min-height: 320px;
-      border-radius: 18px;
-      overflow: hidden;
-      border: 1px solid rgba(199,162,87,0.16);
-      background:
-        linear-gradient(rgba(15,18,20,0.12), rgba(15,18,20,0.18));
-    }
-
-    .proof-video-wrap {
-      position: relative;
+    iframe {
       width: 100%;
-      padding-top: 56.25%;
-      background:
-        linear-gradient(rgba(15,18,20,0.12), rgba(15,18,20,0.18));
-    }
-
-    .proof-video-wrap iframe {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      border: 0;
-    }
-
-    .below-video {
-      margin-top: 20px;
-      padding: 6px 6px 0;
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-    }
-
-    .proof-step {
-      display: flex;
-      gap: 12px;
-      align-items: flex-start;
-      color: var(--text);
-    }
-
-    .proof-icon {
-      font-size: 18px;
-      line-height: 1;
-      margin-top: 2px;
-    }
-
-    .proof-step strong {
-      display: block;
-      font-size: 15px;
-      margin-bottom: 3px;
-    }
-
-    .proof-sub {
-      font-size: 13px;
-      color: var(--muted);
-      line-height: 1.5;
-    }
-
-    .footer-note {
-      padding: 0 26px 28px;
-      text-align: center;
-      color: #958d82;
-      font-size: 13px;
-      line-height: 1.7;
-    }
-
-    @media (max-width: 640px) {
-      .panel-header,
-      .content {
-        padding-left: 20px;
-        padding-right: 20px;
-      }
-
-      .info-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .button-row {
-        flex-direction: column;
-      }
-
-      button {
-        width: 100%;
-      }
-
-      h1 {
-        font-size: 32px;
-      }
-
-      .eyebrow {
-        font-size: 16px;
-      }
-
-      .brand-lockup {
-        gap: 8px;
-        margin-bottom: 14px;
-      }
-
-      .crest {
-        width: 120px;
-      }
-
-      .verification-proof {
-        min-height: 280px;
-      }
+      height: 220px;
+      border: none;
+      border-radius: 12px;
     }
   </style>
 </head>
+
 <body>
-  <div id="app"></div>
+<div id="app"></div>
 
-  <script>
-    const PROPERTY_OPTIONS = [
-      { value: "", label: "Select a property" },
-      { value: "crown-plaza-hotel-stl", label: "Crown Plaza Hotel STL" }
-    ];
+<script>
+const PROPERTY_OPTIONS = [
+  { value: "", label: "Select a property" },
+  { value: "crown-plaza-hotel-stl", label: "Crown Plaza Hotel STL" }
+];
 
-    const YOUTUBE_EMBED_URL = "https://www.youtube.com/embed/s2mYUVarGx0?rel=0";
+const VIDEO = "https://www.youtube.com/embed/s2mYUVarGx0";
 
-    function getStatusClass(tier) {
-      if (!tier) return "";
-      const normalized = tier.toLowerCase().trim();
+function getStatusClass(tier) {
+  if (!tier) return "";
+  tier = tier.toLowerCase();
 
-      if (normalized === "verified clean") return "status-verified";
-      if (normalized === "needs attention") return "status-attention";
-      if (normalized === "not clean") return "status-notclean";
-      if (normalized === "ready mark premier") return "status-premier";
+  if (tier.includes("verified")) return "status-verified";
+  if (tier.includes("attention")) return "status-attention";
+  if (tier.includes("not")) return "status-notclean";
+  return "";
+}
 
-      return "";
-    }
-
-    function escapeHtml(str) {
-      if (str === null || str === undefined) return "";
-      return String(str)
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
-    }
-
-    function renderPropertyOptions() {
-      return PROPERTY_OPTIONS.map(
-        option => `<option value="${escapeHtml(option.value)}">${escapeHtml(option.label)}</option>`
-      ).join("");
-    }
-
-    function renderBrandLockup() {
-      return `
-        <div class="brand-lockup">
-          <div class="eyebrow">The Ready Mark</div>
+function renderHome() {
+  app.innerHTML = `
+    <div class="shell">
+      <div class="panel">
+        <div class="panel-header">
+          <h1>Verification Portal</h1>
         </div>
-      `;
-    }
 
-    function renderLandingPage() {
-      const app = document.getElementById("app");
-      app.innerHTML = `
-        <div class="shell">
-          <div class="panel">
-            <div class="panel-header">
-              <img src="/readymarkseal(best)nobackground.PNG" alt="The Ready Mark" class="crest">
-              ${renderBrandLockup()}
-              <h1>Verification Portal</h1>
-              <div class="subtext">
-                Confirm the authenticity of a Ready Mark inspection record and access room-specific verification details.
-              </div>
-            </div>
+        <div class="content">
+          <div class="card">
+            <label>Property</label>
+            <select id="prop">
+              ${PROPERTY_OPTIONS.map(p =>
+                `<option value="${p.value}">${p.label}</option>`
+              ).join("")}
+            </select>
 
-            <div class="content">
-              <div class="card">
-                <div class="form-group">
-                  <label for="property-search">Property</label>
-                  <select id="property-search">
-                    ${renderPropertyOptions()}
-                  </select>
-                </div>
+            <label>Room</label>
+            <input id="room" placeholder="e.g. 102"/>
 
-                <div class="form-group">
-                  <label for="room-search">Room Number</label>
-                  <input id="room-search" type="text" placeholder="Enter room number, e.g. 102">
-                </div>
-
-                <div class="button-row">
-                  <button id="verify-room-btn" class="primary-btn">Verify Room</button>
-                </div>
-
-                <div class="portal-note">
-                  Each Ready Mark record is room-specific, time-stamped, and connected to a documented inspection process.
-                </div>
-              </div>
-
-              <div class="portal-link">
-                <a href="https://thereadymarkgroup.com">Return to Main Website</a>
-              </div>
-            </div>
-
-            <div class="footer-note">
-              The Ready Mark verification system is designed to provide visible, documented proof of inspection readiness.
-            </div>
+            <button onclick="go()">Verify Room</button>
           </div>
         </div>
-      `;
+      </div>
+    </div>
+  `;
+}
 
-      const verifyBtn = document.getElementById("verify-room-btn");
-      const roomInput = document.getElementById("room-search");
-      const propertySelect = document.getElementById("property-search");
+function go() {
+  const p = document.getElementById("prop").value;
+  const r = document.getElementById("room").value;
 
-      function goToRoom() {
-        const property = propertySelect.value;
-        let room = roomInput.value.trim().toLowerCase();
+  if (!p || !r) return alert("Fill both fields");
 
-        if (!property) {
-          alert("Please select a property.");
-          return;
-        }
+  location.href = `/${p}-room-${r}`;
+}
 
-        if (!room) {
-          alert("Please enter a room number.");
-          return;
-        }
-
-        room = room.replace(/\s+/g, "");
-        room = room.replace(/^room-?/i, "");
-
-        if (!/^\d+$/.test(room)) {
-          alert("Please enter a valid room number, like 102.");
-          return;
-        }
-
-        window.location.href = `/${property}-room-${room}`;
-      }
-
-      verifyBtn.addEventListener("click", goToRoom);
-      roomInput.addEventListener("keydown", function (e) {
-        if (e.key === "Enter") goToRoom();
-      });
-    }
-
-    function renderResultPage(data, slug) {
-      const app = document.getElementById("app");
-
-      const property = data.property || "—";
-      const room = data.room || slug || "—";
-      const inspectorId = data.inspectorId || "—";
-      const verificationId = data.verificationId || "—";
-
-      let inspectionDate = "—";
-      if (data.inspectionDate) {
-        try {
-          inspectionDate = new Date(data.inspectionDate).toLocaleDateString();
-        } catch {
-          inspectionDate = data.inspectionDate;
-        }
-      }
-
-      const certificationLevel = data.certificationTier || "Not verified";
-      const score = data.score !== "" && data.score !== null && data.score !== undefined
-        ? `${data.score} / 100`
-        : "N/A";
-
-      const statusClass = getStatusClass(certificationLevel);
-
-      app.innerHTML = `
-        <div class="shell">
-          <div class="panel">
-            <div class="panel-header">
-              <img src="/readymarkseal(best)nobackground.PNG" alt="The Ready Mark" class="crest">
-              ${renderBrandLockup()}
-              <h1>Verification Record</h1>
-              <div class="status-pill ${statusClass}">
-                ${escapeHtml(certificationLevel)}
-              </div>
-            </div>
-
-            <div class="content">
-              <div class="card">
-                <div class="info-grid">
-                  <div class="info-item">
-                    <div class="info-label">Property</div>
-                    <div class="info-value">${escapeHtml(property)}</div>
-                  </div>
-
-                  <div class="info-item">
-                    <div class="info-label">Room</div>
-                    <div class="info-value">${escapeHtml(room)}</div>
-                  </div>
-
-                  <div class="info-item">
-                    <div class="info-label">Inspector ID</div>
-                    <div class="info-value">${escapeHtml(inspectorId)}</div>
-                  </div>
-
-                  <div class="info-item">
-                    <div class="info-label">Inspection Date</div>
-                    <div class="info-value">${escapeHtml(inspectionDate)}</div>
-                  </div>
-
-                  <div class="info-item">
-                    <div class="info-label">Certification Level</div>
-                    <div class="info-value">${escapeHtml(certificationLevel)}</div>
-                  </div>
-
-                  <div class="info-item">
-                    <div class="info-label">Verification Record ID</div>
-                    <div class="info-value">${escapeHtml(verificationId)}</div>
-                  </div>
-
-                  <div class="info-item">
-                    <div class="info-label">Inspection Score</div>
-                    <div class="info-value">${escapeHtml(score)}</div>
-                  </div>
-
-                  <div class="info-item">
-                    <div class="info-label">Status</div>
-                    <div class="info-value">${escapeHtml(data.status || certificationLevel)}</div>
-                  </div>
-                </div>
-              </div>
-
-              <div class="card">
-                <h2 class="section-title centered-title">How This Room Was Verified</h2>
-                <div class="section-divider"></div>
-
-                <div class="verification-proof">
-                  <div class="proof-video-wrap">
-                    <iframe
-                      src="${YOUTUBE_EMBED_URL}"
-                      title="Ready Mark Verification Process"
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                      allowfullscreen>
-                    </iframe>
-                  </div>
-                </div>
-
-                <div class="below-video">
-                  <div class="proof-step">
-                    <div class="proof-icon">🧼</div>
-                    <div>
-                      <strong>Room Cleaned</strong>
-                      <div class="proof-sub">
-                        High-touch surfaces, linens, and guest areas were serviced according to Ready Mark standards.
-                      </div>
-                    </div>
-                  </div>
-
-                  <div class="proof-step">
-                    <div class="proof-icon">🔍</div>
-                    <div>
-                      <strong>Inspected</strong>
-                      <div class="proof-sub">
-                        A room-specific inspection was completed and reviewed against the Ready Mark protocol.
-                      </div>
-                    </div>
-                  </div>
-
-                  <div class="proof-step">
-                    <div class="proof-icon">✅</div>
-                    <div>
-                      <strong>Certified</strong>
-                      <div class="proof-sub">
-                        This verification record was logged, time-stamped, and connected to the room in our system.
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div class="card">
-                <div class="portal-note">
-                  This room has been inspected under The Ready Mark Cleanliness Standard. High-touch surfaces, linens, bathrooms, and guest areas were reviewed according to the Ready Mark inspection protocol.
-                </div>
-              </div>
-
-              <div class="portal-link">
-                <a href="https://verify.thereadymarkgroup.com">Back to Verification Home</a>
-              </div>
-            </div>
-
-            <div class="footer-note">
-              The Ready Mark verification system is designed to provide visible, documented proof of inspection readiness.
-            </div>
+function renderResult(d) {
+  app.innerHTML = `
+    <div class="shell">
+      <div class="panel">
+        <div class="panel-header">
+          <h1>Verification Record</h1>
+          <div class="status-pill ${getStatusClass(d.certificationTier)}">
+            ${d.certificationTier || "Not Verified"}
           </div>
         </div>
-      `;
-    }
 
-    function renderErrorPage(message, slug) {
-      const app = document.getElementById("app");
-      app.innerHTML = `
-        <div class="shell">
-          <div class="panel">
-            <div class="panel-header">
-              <img src="/readymarkseal(best)nobackground.PNG" alt="The Ready Mark" class="crest">
-              ${renderBrandLockup()}
-              <h1>Verification Record</h1>
-              <div class="status-pill status-notclean">Lookup Error</div>
-            </div>
+        <div class="content">
 
-            <div class="content">
-              <div class="card">
-                <div class="info-grid">
-                  <div class="info-item">
-                    <div class="info-label">Requested Record</div>
-                    <div class="info-value">${escapeHtml(slug || "—")}</div>
-                  </div>
-
-                  <div class="info-item">
-                    <div class="info-label">Message</div>
-                    <div class="info-value">${escapeHtml(message || "Unable to load verification record.")}</div>
-                  </div>
-                </div>
-              </div>
-
-              <div class="portal-link">
-                <a href="https://verify.thereadymarkgroup.com">Back to Verification Home</a>
-              </div>
-            </div>
-
-            <div class="footer-note">
-              If this issue persists, please contact The Ready Mark for assistance.
-            </div>
+          <div class="card">
+            ${row("Property", d.property)}
+            ${row("Room", d.room)}
+            ${row("Inspector", d.inspectorId)}
+            ${row("Date", d.inspectionDate)}
+            ${row("Score", d.score)}
+            ${row("Record ID", d.verificationId)}
           </div>
+
+          <div class="card">
+            <iframe src="${VIDEO}" allowfullscreen></iframe>
+          </div>
+
         </div>
-      `;
-    }
+      </div>
+    </div>
+  `;
+}
 
-    async function loadVerification(slug) {
-      try {
-        const res = await fetch("/api/get-verification?slug=" + encodeURIComponent(slug), {
-          method: "GET",
-          headers: { "Accept": "application/json" }
-        });
+function row(label, value) {
+  return `
+    <div class="record-item">
+      <div class="record-label">${label}</div>
+      <div class="record-value">${value || "-"}</div>
+    </div>
+  `;
+}
 
-        const data = await res.json();
+async function load(slug) {
+  try {
+    const r = await fetch("/api/get-verification?slug=" + slug);
+    const d = await r.json();
+    if (d.error) throw new Error(d.error);
+    renderResult(d);
+  } catch (e) {
+    app.innerHTML = "<h2 style='padding:20px'>Not found</h2>";
+  }
+}
 
-        if (!res.ok || data?.error) {
-          renderErrorPage(data?.error || "Verification record not found.", slug);
-          return;
-        }
+const path = location.pathname.split("/").filter(Boolean).pop();
 
-        renderResultPage(data, slug);
-      } catch (err) {
-        renderErrorPage(err?.message || "Unexpected error.", slug);
-      }
-    }
+if (!path) {
+  renderHome();
+} else {
+  load(path);
+}
+</script>
 
-    document.addEventListener("DOMContentLoaded", function () {
-      const pathParts = window.location.pathname.split("/").filter(Boolean);
-      const slug = pathParts[pathParts.length - 1] || null;
-
-      const params = new URLSearchParams(window.location.search);
-      const source = params.get("src") || "unknown";
-
-      if (typeof gtag === "function") {
-        gtag("event", "qr_scan", { source });
-      }
-
-      if (!slug) {
-        renderLandingPage();
-      } else {
-        loadVerification(slug);
-      }
-    });
-  </script>
 </body>
 </html>
