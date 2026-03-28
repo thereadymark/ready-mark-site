@@ -5,86 +5,72 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
-function generateQRCode(propertyId) {
-  const verifyBaseUrl = 'https://verify.thereadymarkgroup.com';
-  const verifyUrl = `${verifyBaseUrl}/${propertyId}`;
-
-  return `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(verifyUrl)}`;
-}
-
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
   try {
-    const { id, name, property_type } = req.body;
+    const {
+      property_name,
+      property_slug,
+      city,
+      state,
+      property_type
+    } = req.body;
 
-    if (!name || !property_type) {
+    if (!property_name || !property_slug || !city || !state || !property_type) {
       return res.status(400).json({
-        error: 'Name and property_type are required.'
+        error: 'property_name, property_slug, city, state, and property_type are required.'
       });
     }
 
-    let propertyRecord;
+    const normalizedSlug = String(property_slug).trim().toLowerCase();
 
-    if (id) {
-      const { data, error } = await supabase
-        .from('properties')
-        .update({
-          name,
-          property_type
-        })
-        .eq('id', id)
-        .select()
-        .single();
+    // Check if slug already exists
+    const { data: existingProperty, error: existingError } = await supabase
+      .from('properties')
+      .select('id')
+      .eq('property_slug', normalizedSlug)
+      .maybeSingle();
 
-      if (error) {
-        return res.status(500).json({ error: error.message });
-      }
-
-      propertyRecord = data;
-    } else {
-      const { data, error } = await supabase
-        .from('properties')
-        .insert([
-          {
-            name,
-            property_type
-          }
-        ])
-        .select()
-        .single();
-
-      if (error) {
-        return res.status(500).json({ error: error.message });
-      }
-
-      propertyRecord = data;
+    if (existingError) {
+      return res.status(500).json({ error: existingError.message });
     }
 
-    const qrCode = generateQRCode(propertyRecord.id);
+    if (existingProperty) {
+      return res.status(400).json({
+        error: 'A property with this slug already exists.'
+      });
+    }
 
-    const { data: finalProperty, error: qrError } = await supabase
+    // Insert new property
+    const { data, error } = await supabase
       .from('properties')
-      .update({
-        qr_code: qrCode
-      })
-      .eq('id', propertyRecord.id)
+      .insert([
+        {
+          property_name: property_name.trim(),
+          property_slug: normalizedSlug,
+          city: city.trim(),
+          state: state.trim(),
+          property_type: property_type.trim()
+        }
+      ])
       .select()
       .single();
 
-    if (qrError) {
-      return res.status(500).json({ error: qrError.message });
+    if (error) {
+      return res.status(500).json({ error: error.message });
     }
 
     return res.status(200).json({
       success: true,
-      property: finalProperty
+      property: data
     });
+
   } catch (error) {
     return res.status(500).json({
-      error: 'Internal server error'
+      error: error.message || 'Internal server error'
     });
   }
 }
