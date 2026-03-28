@@ -6,7 +6,7 @@ const supabase = createClient(
 );
 
 function generateQRCode(propertyId) {
-  const verifyBaseUrl = process.env.VERIFY_BASE_URL || 'https://yourdomain.com/verify';
+  const verifyBaseUrl = 'https://verify.thereadymarkgroup.com';
   const verifyUrl = `${verifyBaseUrl}/${propertyId}`;
 
   return `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(verifyUrl)}`;
@@ -52,7 +52,6 @@ export default async function handler(req, res) {
         .single();
 
       if (error) {
-        console.error('Update property error:', error);
         return res.status(500).json({ error: error.message });
       }
 
@@ -74,7 +73,6 @@ export default async function handler(req, res) {
         .single();
 
       if (error) {
-        console.error('Insert property error:', error);
         return res.status(500).json({ error: error.message });
       }
 
@@ -93,7 +91,6 @@ export default async function handler(req, res) {
       .single();
 
     if (qrError) {
-      console.error('QR update error:', qrError);
       return res.status(500).json({ error: qrError.message });
     }
 
@@ -102,7 +99,6 @@ export default async function handler(req, res) {
       property: finalProperty
     });
   } catch (error) {
-    console.error('create-property fatal error:', error);
     return res.status(500).json({
       error: 'Internal server error'
     });
