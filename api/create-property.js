@@ -18,15 +18,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const {
-      id,
-      name,
-      property_type,
-      address,
-      city,
-      state,
-      zip
-    } = req.body;
+    const { id, name, property_type } = req.body;
 
     if (!name || !property_type) {
       return res.status(400).json({
@@ -41,11 +33,7 @@ export default async function handler(req, res) {
         .from('properties')
         .update({
           name,
-          property_type,
-          address,
-          city,
-          state,
-          zip
+          property_type
         })
         .eq('id', id)
         .select()
@@ -62,11 +50,7 @@ export default async function handler(req, res) {
         .insert([
           {
             name,
-            property_type,
-            address,
-            city,
-            state,
-            zip
+            property_type
           }
         ])
         .select()
