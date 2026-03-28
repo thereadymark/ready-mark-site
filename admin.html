@@ -446,6 +446,22 @@
       line-height: 1.7;
     }
 
+    .hidden {
+      display: none !important;
+    }
+
+    .login-shell {
+      width: 100%;
+      max-width: 520px;
+      margin: 0 auto;
+    }
+
+    .logout-row {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 18px;
+    }
+
     @media (max-width: 700px) {
       .form-grid {
         grid-template-columns: 1fr;
@@ -477,23 +493,40 @@
   </style>
 </head>
 <body>
-  <script>
-    (function () {
-      const ADMIN_PASSWORD = "readypokie2026";
-      const entered = prompt("Enter admin password:");
-
-      if (entered !== ADMIN_PASSWORD) {
-        document.body.innerHTML = "";
-        alert("Incorrect password.");
-        window.location.href = "https://thereadymarkgroup.com";
-      }
-
-      window.ADMIN_PASSWORD = ADMIN_PASSWORD;
-    })();
-  </script>
-
   <div id="app">
-    <div class="panel">
+    <div id="login-view" class="login-shell">
+      <div class="panel">
+        <div class="panel-header">
+          <img src="/readymarkseal(best)nobackground.PNG" alt="The Ready Mark" class="crest">
+          <div class="brand-lockup">
+            <div class="eyebrow">The Ready Mark</div>
+          </div>
+          <h1>Admin Login</h1>
+          <div class="subtext">
+            Sign in to manage properties, inspections, evidence, and verification records.
+          </div>
+        </div>
+
+        <div class="content">
+          <div class="card">
+            <label for="login-password">Admin Password</label>
+            <input id="login-password" type="password" placeholder="Enter admin password" />
+
+            <div class="button-row">
+              <button type="button" class="primary-btn" id="login-btn">Sign In</button>
+            </div>
+
+            <div id="login-status" class="status-box center-text" style="margin-top: 18px;">Waiting for sign in.</div>
+          </div>
+        </div>
+
+        <div class="footer-note">
+          Internal use only. Authorized admin access required.
+        </div>
+      </div>
+    </div>
+
+    <div id="admin-view" class="panel hidden">
       <div class="panel-header">
         <img src="/readymarkseal(best)nobackground.PNG" alt="The Ready Mark" class="crest">
         <div class="brand-lockup">
@@ -506,6 +539,10 @@
       </div>
 
       <div class="content">
+        <div class="logout-row">
+          <button type="button" class="secondary-btn" id="logout-btn">Log Out</button>
+        </div>
+
         <div class="card">
           <h2 class="section-title center-text">Create Property</h2>
           <div class="section-divider center-divider"></div>
@@ -694,7 +731,14 @@
   </div>
 
   <script>
-    const ADMIN_PASSWORD = window.ADMIN_PASSWORD;
+    const SESSION_TOKEN_KEY = "readymark_admin_token";
+
+    const loginView = document.getElementById("login-view");
+    const adminView = document.getElementById("admin-view");
+    const loginPasswordInput = document.getElementById("login-password");
+    const loginBtn = document.getElementById("login-btn");
+    const loginStatus = document.getElementById("login-status");
+    const logoutBtn = document.getElementById("logout-btn");
 
     const propertySelect = document.getElementById("property-slug-select");
     const form = document.getElementById("inspection-form");
@@ -726,11 +770,40 @@
     let currentPropertyName = "";
     let currentRoomNumber = "";
 
+    function getSessionToken() {
+      return sessionStorage.getItem(SESSION_TOKEN_KEY) || "";
+    }
+
+    function setSessionToken(token) {
+      sessionStorage.setItem(SESSION_TOKEN_KEY, token);
+    }
+
+    function clearSessionToken() {
+      sessionStorage.removeItem(SESSION_TOKEN_KEY);
+    }
+
     function adminHeaders(extra = {}) {
       return {
-        "x-admin-password": ADMIN_PASSWORD,
+        "x-admin-token": getSessionToken(),
         ...extra
       };
+    }
+
+    function showLoginView() {
+      loginView.classList.remove("hidden");
+      adminView.classList.add("hidden");
+    }
+
+    function showAdminView() {
+      loginView.classList.add("hidden");
+      adminView.classList.remove("hidden");
+    }
+
+    function setLoginStatus(message, type = "") {
+      loginStatus.className = "status-box center-text";
+      if (type === "success") loginStatus.classList.add("status-success");
+      if (type === "error") loginStatus.classList.add("status-error");
+      loginStatus.textContent = message;
     }
 
     function setStatus(message, type = "") {
@@ -896,8 +969,90 @@
       });
     }
 
+    async function login() {
+      const password = loginPasswordInput.value.trim();
+
+      if (!password) {
+        setLoginStatus("Please enter your admin password.", "error");
+        return;
+      }
+
+      setLoginStatus("Signing in...");
+
+      try {
+        const res = await fetch("/api/admin-login", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json"
+          },
+          body: JSON.stringify({ password })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok || data.error || !data.token) {
+          throw new Error(data.error || "Login failed.");
+        }
+
+        setSessionToken(data.token);
+        setLoginStatus("Login successful.", "success");
+        showAdminView();
+        await loadProperties();
+      } catch (error) {
+        setLoginStatus(error.message || "Login failed.", "error");
+      }
+    }
+
+    async function verifyExistingSession() {
+      const token = getSessionToken();
+
+      if (!token) {
+        showLoginView();
+        return;
+      }
+
+      try {
+        const res = await fetch("/api/admin-verify", {
+          method: "GET",
+          headers: adminHeaders({
+            "Accept": "application/json"
+          })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok || data.error) {
+          clearSessionToken();
+          showLoginView();
+          return;
+        }
+
+        showAdminView();
+        await loadProperties();
+      } catch (error) {
+        clearSessionToken();
+        showLoginView();
+      }
+    }
+
     propertyNameInput.addEventListener("input", function () {
       propertySlugInput.value = slugify(propertyNameInput.value);
+    });
+
+    loginBtn.addEventListener("click", login);
+
+    loginPasswordInput.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") {
+        login();
+      }
+    });
+
+    logoutBtn.addEventListener("click", function () {
+      clearSessionToken();
+      loginPasswordInput.value = "";
+      setLoginStatus("Signed out.");
+      showLoginView();
     });
 
     async function loadProperties(selectedSlug = "") {
@@ -1132,7 +1287,7 @@
     printLabelBtn.addEventListener("click", printLabel);
 
     setDefaultDateTime();
-    loadProperties();
+    verifyExistingSession();
   </script>
 </body>
 </html>
