@@ -1,17 +1,34 @@
 import crypto from "crypto";
-import { createClient } from "@supabase/supabase-js";
+import { Resend } from "resend";
 
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-);
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 function hashPassword(password) {
   return crypto.createHash("sha256").update(password).digest("hex");
 }
 
-function generateSessionToken() {
-  return crypto.randomBytes(32).toString("hex");
+function generateVerificationCode() {
+  return String(Math.floor(100000 + Math.random() * 900000));
+}
+
+async function sendVerificationEmail(email, code) {
+  const fromEmail = process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev";
+
+  await resend.emails.send({
+    from: `Ready Mark <${fromEmail}>`,
+    to: email,
+    subject: "Your Ready Mark Verification Code",
+    html: `
+      <div style="font-family: Arial, sans-serif; padding: 24px; color: #111;">
+        <h2 style="margin-bottom: 12px;">Verify your email</h2>
+        <p style="margin-bottom: 18px;">Enter this code to continue with Ready Mark:</p>
+        <div style="font-size: 34px; font-weight: 700; letter-spacing: 6px; margin-bottom: 18px;">
+          ${code}
+        </div>
+        <p style="margin-bottom: 0;">This code expires in 10 minutes.</p>
+      </div>
+    `
+  });
 }
 
 export default async function handler(req, res) {
@@ -40,47 +57,96 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Missing email or password" });
     }
 
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+    if (!supabaseUrl || !serviceRoleKey) {
+      return res.status(500).json({ error: "Missing server environment variables" });
+    }
+
+    if (!process.env.RESEND_API_KEY) {
+      return res.status(500).json({ error: "Missing RESEND_API_KEY" });
+    }
+
     const normalizedEmail = String(email).trim().toLowerCase();
     const password_hash = hashPassword(password);
 
-    const { data: user, error: userError } = await supabase
-      .from("guest_users")
-      .select("*")
-      .eq("email", normalizedEmail)
-      .maybeSingle();
+    const headers = {
+      apikey: serviceRoleKey,
+      Authorization: `Bearer ${serviceRoleKey}`,
+      Accept: "application/json"
+    };
 
-    if (userError) {
-      return res.status(500).json({ error: userError.message });
+    const userRes = await fetch(
+      `${supabaseUrl}/rest/v1/guest_users?email=eq.${encodeURIComponent(normalizedEmail)}&select=*&limit=1`,
+      { headers }
+    );
+
+    const userData = await userRes.json();
+
+    if (!userRes.ok) {
+      return res.status(500).json({ error: "Guest login lookup failed", details: userData });
     }
+
+    const user = Array.isArray(userData) && userData.length > 0 ? userData[0] : null;
 
     if (!user || user.password_hash !== password_hash) {
       return res.status(401).json({ error: "Invalid email or password" });
     }
 
-    const session_token = generateSessionToken();
-    const expires_at = new Date(Date.now() + 1000 * 60 * 60 * 24 * 30).toISOString();
-
-    const { error: sessionError } = await supabase
-      .from("guest_sessions")
-      .insert([{
-        guest_user_id: user.id,
-        session_token,
-        expires_at
-      }]);
-
-    if (sessionError) {
-      return res.status(500).json({ error: sessionError.message });
+    if (user.email_verified) {
+      return res.status(200).json({
+        success: true,
+        email_verified: true,
+        guest: {
+          id: user.id,
+          first_name: user.first_name,
+          last_name: user.last_name,
+          email: user.email
+        }
+      });
     }
+
+    const verificationCode = generateVerificationCode();
+    const verificationExpiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
+
+    const patchRes = await fetch(
+      `${supabaseUrl}/rest/v1/guest_users?id=eq.${encodeURIComponent(user.id)}`,
+      {
+        method: "PATCH",
+        headers: {
+          ...headers,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          email_verification_code: verificationCode,
+          email_verification_expires_at: verificationExpiresAt
+        })
+      }
+    );
+
+    const patchData = await patchRes.text();
+
+    if (!patchRes.ok) {
+      return res.status(500).json({
+        error: "Failed to prepare verification code",
+        details: patchData
+      });
+    }
+
+    await sendVerificationEmail(normalizedEmail, verificationCode);
 
     return res.status(200).json({
       success: true,
-      token: session_token,
+      email_verified: false,
+      email: normalizedEmail,
       guest: {
         id: user.id,
         first_name: user.first_name,
         last_name: user.last_name,
         email: user.email
-      }
+      },
+      message: "Verification code sent."
     });
   } catch (error) {
     return res.status(500).json({
