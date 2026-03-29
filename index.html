@@ -1148,10 +1148,18 @@
 
             const data = await res.json();
 
-            if (!res.ok || data.error) {
-              throw new Error(data.error || "Unable to verify email.");
-            }
+           if (!res.ok || data.error) {
+  const friendlyError =
+    typeof data.error === "string"
+      ? data.error
+      : data.error?.message
+      ? data.error.message
+      : data.details?.message
+      ? data.details.message
+      : JSON.stringify(data.error || data.details || data);
 
+  throw new Error(friendlyError || "Unable to verify email.");
+}
             currentGuestToken = data.token;
             currentGuest = data.guest;
             sessionStorage.setItem("readymark_guest_token", currentGuestToken);
@@ -1243,11 +1251,18 @@
             });
 
             const data = await res.json();
+if (!res.ok || data.error) {
+  const friendlyError =
+    typeof data.error === "string"
+      ? data.error
+      : data.error?.message
+      ? data.error.message
+      : data.details?.message
+      ? data.details.message
+      : JSON.stringify(data.error || data.details || data);
 
-            if (!res.ok || data.error) {
-              throw new Error(data.error || "Unable to continue.");
-            }
-
+  throw new Error(friendlyError || "Unable to continue.");
+}            
             closeModal();
 
             const resolvedEmail = data.email || email;
@@ -1341,9 +1356,17 @@
           const responseData = await res.json();
 
           if (!res.ok || responseData.error) {
-            throw new Error(responseData.error || "Unable to submit report.");
-          }
+  const friendlyError =
+    typeof responseData.error === "string"
+      ? responseData.error
+      : responseData.error?.message
+      ? responseData.error.message
+      : responseData.details?.message
+      ? responseData.details.message
+      : JSON.stringify(responseData.error || responseData.details || responseData);
 
+  throw new Error(friendlyError || "Unable to submit report.");
+}
           setInlineStatus(
             reportStatus,
             "Report received.\n\nThis issue has been sent directly to the hotel team and logged with Ready Mark for follow-up.",
