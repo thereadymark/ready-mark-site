@@ -74,7 +74,7 @@ export default async function handler(req, res) {
 
     const { data: session, error: sessionError } = await supabase
       .from("guest_sessions")
-      .select("*, guest_users(*)")
+      .select("*")
       .eq("session_token", guestToken)
       .gt("expires_at", new Date().toISOString())
       .maybeSingle();
@@ -87,6 +87,24 @@ export default async function handler(req, res) {
       return res.status(401).json({ error: "Invalid or expired guest session" });
     }
 
+    const { data: guestUser, error: guestError } = await supabase
+      .from("guest_users")
+      .select("id, first_name, last_name, email, email_verified")
+      .eq("id", session.guest_user_id)
+      .maybeSingle();
+
+    if (guestError) {
+      return res.status(500).json({ error: guestError.message });
+    }
+
+    if (!guestUser) {
+      return res.status(401).json({ error: "Guest not found" });
+    }
+
+    if (!guestUser.email_verified) {
+      return res.status(401).json({ error: "Email verification required" });
+    }
+
     const {
       verification_id,
       property_slug,
@@ -94,8 +112,7 @@ export default async function handler(req, res) {
       room_number,
       issue_types,
       guest_note,
-      photo_file,
-      guest_access_code
+      photo_file
     } = req.body || {};
 
     if (!verification_id) {
@@ -106,49 +123,8 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Missing room_number" });
     }
 
-    if (!guest_access_code) {
-      return res.status(400).json({ error: "Missing guest support code" });
-    }
-
     if (!Array.isArray(issue_types) || issue_types.length === 0) {
       return res.status(400).json({ error: "Please select at least one issue type." });
-    }
-
-    const supabaseUrl = process.env.SUPABASE_URL;
-    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-    const headers = {
-      apikey: serviceRoleKey,
-      Authorization: `Bearer ${serviceRoleKey}`,
-      Accept: "application/json"
-    };
-
-    const inspectionRes = await fetch(
-      `${supabaseUrl}/rest/v1/Inspections?verification_id=eq.${encodeURIComponent(verification_id)}&select=room_id&limit=1`,
-      { headers }
-    );
-    const inspectionData = await inspectionRes.json();
-
-    if (!inspectionRes.ok || !inspectionData.length) {
-      return res.status(404).json({ error: "Verification record not found" });
-    }
-
-    const roomId = inspectionData[0].room_id;
-
-    const roomRes = await fetch(
-      `${supabaseUrl}/rest/v1/Rooms?id=eq.${encodeURIComponent(roomId)}&select=id,guest_access_code&limit=1`,
-      { headers }
-    );
-    const roomData = await roomRes.json();
-
-    if (!roomRes.ok || !roomData.length) {
-      return res.status(404).json({ error: "Room not found" });
-    }
-
-    const room = roomData[0];
-
-    if (String(room.guest_access_code || "").trim() !== String(guest_access_code).trim()) {
-      return res.status(401).json({ error: "Invalid guest support code" });
     }
 
     let uploadedPhotoUrl = "";
@@ -195,11 +171,12 @@ export default async function handler(req, res) {
       status: "new",
       priority: uploadedPhotoUrl ? "urgent" : "normal",
       reported_at: new Date().toISOString(),
-      guest_user_id: session.guest_users.id,
-      guest_email: session.guest_users.email,
-      guest_first_name: session.guest_users.first_name,
-      guest_last_name: session.guest_users.last_name,
-      access_code_verified: true
+      guest_user_id: guestUser.id,
+      guest_email: guestUser.email,
+      guest_first_name: guestUser.first_name,
+      guest_last_name: guestUser.last_name,
+      access_code_verified: false,
+      stay_match_status: "pending"
     };
 
     const { data, error } = await supabase
