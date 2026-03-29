@@ -228,6 +228,15 @@
       box-shadow: 0 0 0 3px rgba(199,162,87,0.08);
     }
 
+    input[type="checkbox"] {
+      appearance: auto !important;
+      -webkit-appearance: checkbox !important;
+      width: 18px !important;
+      height: 18px !important;
+      margin: 0 !important;
+      accent-color: #c7a257;
+    }
+
     option {
       background: #1b1f23;
       color: var(--text);
@@ -461,12 +470,6 @@
       margin-bottom: 0;
     }
 
-    .checkbox-option input {
-      width: auto;
-      margin: 0;
-      accent-color: #c7a257;
-    }
-
     .inline-status {
       margin-top: 16px;
       padding: 14px 16px;
@@ -615,14 +618,6 @@
       .auth-title {
         font-size: 28px;
       }
-      input[type="checkbox"] {
-   appearance: auto !important;
-  -webkit-appearance: checkbox !important;
-  width: 18px !important;
-  height: 18px !important;
-  margin: 0 !important;
-  accent-color: #c7a257;
-}   
     }
   </style>
 </head>
@@ -844,7 +839,7 @@
             </div>
 
             <div class="button-row">
-              <button id="guest-auth-submit" class="primary-btn">${type === "login" ? "Log In" : "Create Account"}</button>
+              <button id="guest-auth-submit" class="primary-btn">${type === "login" ? "Continue" : "Create Account"}</button>
               <button id="guest-auth-cancel" class="secondary-btn" type="button">Cancel</button>
             </div>
 
@@ -855,6 +850,31 @@
                 ? `Need an account? <a id="switch-to-signup">Create one here</a>`
                 : `Already have an account? <a id="switch-to-login">Log in</a>`}
             </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderEmailVerificationModal(email) {
+      return `
+        <div id="email-verify-overlay" class="auth-overlay">
+          <div class="auth-modal">
+            <h2 class="auth-title">Verify Your Email</h2>
+            <div class="auth-subtext">
+              We sent a 6-digit verification code to ${escapeHtml(email)}.
+            </div>
+
+            <div class="form-group">
+              <label for="email-verification-code">Verification Code</label>
+              <input id="email-verification-code" type="text" placeholder="Enter your 6-digit code">
+            </div>
+
+            <div class="button-row">
+              <button id="email-verify-submit" class="primary-btn">Verify Email</button>
+              <button id="email-verify-cancel" class="secondary-btn" type="button">Cancel</button>
+            </div>
+
+            <div id="email-verify-status" class="inline-status hidden"></div>
           </div>
         </div>
       `;
@@ -1007,20 +1027,6 @@
                   </div>
                 </div>
 
-                <div id="access-code-view" class="hidden">
-                  <div class="form-group">
-                    <label for="guest-access-code">Guest Support Code</label>
-                    <input id="guest-access-code" type="text" placeholder="Enter the support code displayed in your room">
-                  </div>
-
-                  <div class="button-row">
-                    <button id="verify-access-btn" class="primary-btn">Continue</button>
-                    <button id="cancel-access-btn" class="secondary-btn" type="button">Cancel</button>
-                  </div>
-
-                  <div id="access-code-status" class="inline-status hidden"></div>
-                </div>
-
                 <div id="report-form-view" class="hidden">
                   <div class="form-group">
                     <label>What’s the issue?</label>
@@ -1076,7 +1082,7 @@
         const wrap = document.getElementById("guest-auth-chip-wrap");
         if (!wrap) return;
 
-        if (currentGuest) {
+        if (currentGuest && currentGuest.email_verified) {
           wrap.innerHTML = `
             <div class="auth-guest-chip">
               Signed in as ${escapeHtml(currentGuest.first_name)} ${escapeHtml(currentGuest.last_name)}
@@ -1098,6 +1104,67 @@
       function clearInlineStatus(el) {
         el.className = "inline-status hidden";
         el.textContent = "";
+      }
+
+      function openEmailVerificationModal(email) {
+        const existing = document.getElementById("email-verify-overlay");
+        if (existing) existing.remove();
+
+        document.body.insertAdjacentHTML("beforeend", renderEmailVerificationModal(email));
+
+        const overlay = document.getElementById("email-verify-overlay");
+        const submitBtn = document.getElementById("email-verify-submit");
+        const cancelBtn = document.getElementById("email-verify-cancel");
+        const statusBox = document.getElementById("email-verify-status");
+
+        function closeModal() {
+          if (overlay) overlay.remove();
+        }
+
+        cancelBtn.addEventListener("click", closeModal);
+
+        submitBtn.addEventListener("click", async function () {
+          const code = document.getElementById("email-verification-code").value.trim();
+
+          if (!code) {
+            setInlineStatus(statusBox, "Please enter the verification code.", "error");
+            return;
+          }
+
+          setInlineStatus(statusBox, "Verifying email...");
+
+          try {
+            const res = await fetch("/api/verify-email", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+              },
+              body: JSON.stringify({
+                email,
+                code
+              })
+            });
+
+            const data = await res.json();
+
+            if (!res.ok || data.error) {
+              throw new Error(data.error || "Unable to verify email.");
+            }
+
+            currentGuestToken = data.token;
+            currentGuest = data.guest;
+            sessionStorage.setItem("readymark_guest_token", currentGuestToken);
+
+            closeModal();
+            renderGuestChip();
+
+            document.getElementById("report-start-view").classList.add("hidden");
+            document.getElementById("report-form-view").classList.remove("hidden");
+          } catch (error) {
+            setInlineStatus(statusBox, error.message || "Unable to verify email.", "error");
+          }
+        });
       }
 
       function openAuthModal(type = "login") {
@@ -1135,7 +1202,7 @@
 
         submitBtn.addEventListener("click", async function () {
           authStatus.className = "inline-status";
-          authStatus.textContent = type === "login" ? "Signing in..." : "Creating account...";
+          authStatus.textContent = type === "login" ? "Continuing..." : "Creating account...";
           authStatus.classList.remove("hidden");
 
           try {
@@ -1181,15 +1248,10 @@
               throw new Error(data.error || "Unable to continue.");
             }
 
-            currentGuestToken = data.token;
-            currentGuest = data.guest;
-            sessionStorage.setItem("readymark_guest_token", currentGuestToken);
-
             closeModal();
-            renderGuestChip();
 
-            document.getElementById("report-start-view").classList.add("hidden");
-            document.getElementById("access-code-view").classList.remove("hidden");
+            const resolvedEmail = data.email || email;
+            openEmailVerificationModal(resolvedEmail);
           } catch (error) {
             setInlineStatus(authStatus, error.message || "Unable to continue.", "error");
           }
@@ -1200,73 +1262,21 @@
 
       const openReportBtn = document.getElementById("open-report-btn");
       const reportStartView = document.getElementById("report-start-view");
-      const accessCodeView = document.getElementById("access-code-view");
       const reportFormView = document.getElementById("report-form-view");
-
-      const verifyAccessBtn = document.getElementById("verify-access-btn");
-      const cancelAccessBtn = document.getElementById("cancel-access-btn");
-      const accessCodeStatus = document.getElementById("access-code-status");
 
       const submitReportBtn = document.getElementById("submit-report-btn");
       const cancelReportBtn = document.getElementById("cancel-report-btn");
       const reportStatus = document.getElementById("report-status");
 
-      let verifiedAccessCode = "";
-
       openReportBtn.addEventListener("click", async function () {
-        if (!currentGuest) {
+        if (!currentGuest || !currentGuest.email_verified) {
           openAuthModal("login");
           return;
         }
 
         reportStartView.classList.add("hidden");
-        accessCodeView.classList.remove("hidden");
-        clearInlineStatus(accessCodeStatus);
-      });
-
-      cancelAccessBtn.addEventListener("click", function () {
-        accessCodeView.classList.add("hidden");
-        reportStartView.classList.remove("hidden");
-        clearInlineStatus(accessCodeStatus);
-      });
-
-      verifyAccessBtn.addEventListener("click", async function () {
-        const enteredCode = document.getElementById("guest-access-code").value.trim();
-
-        if (!enteredCode) {
-          setInlineStatus(accessCodeStatus, "Please enter the guest support code.", "error");
-          return;
-        }
-
-        setInlineStatus(accessCodeStatus, "Verifying room access...");
-
-        try {
-          const res = await fetch("/api/verify-guest-access", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "Accept": "application/json"
-            },
-            body: JSON.stringify({
-              verification_id: verificationId,
-              guest_access_code: enteredCode
-            })
-          });
-
-          const data = await res.json();
-
-          if (!res.ok || data.error) {
-            throw new Error(data.error || "Unable to verify room access.");
-          }
-
-          verifiedAccessCode = enteredCode;
-
-          accessCodeView.classList.add("hidden");
-          reportFormView.classList.remove("hidden");
-          clearInlineStatus(accessCodeStatus);
-        } catch (error) {
-          setInlineStatus(accessCodeStatus, error.message || "Unable to verify room access.", "error");
-        }
+        reportFormView.classList.remove("hidden");
+        clearInlineStatus(reportStatus);
       });
 
       cancelReportBtn.addEventListener("click", function () {
@@ -1292,8 +1302,8 @@
           return;
         }
 
-        if (!verifiedAccessCode) {
-          setInlineStatus(reportStatus, "Please verify the guest support code first.", "error");
+        if (!currentGuest || !currentGuest.email_verified) {
+          setInlineStatus(reportStatus, "Email verification required.", "error");
           return;
         }
 
@@ -1324,8 +1334,7 @@
               room_number: room,
               issue_types: checkedIssues,
               guest_note: guestNote,
-              photo_file: photoPayload,
-              guest_access_code: verifiedAccessCode
+              photo_file: photoPayload
             })
           });
 
