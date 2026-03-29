@@ -1,3 +1,6 @@
+function generateGuestAccessCode() {
+  return String(Math.floor(100000 + Math.random() * 900000));
+} 
 export default async function handler(req, res) {
   const corsHeaders = {
     "Access-Control-Allow-Origin": "*",
@@ -5,9 +8,6 @@ export default async function handler(req, res) {
     "Access-Control-Allow-Headers": "Content-Type, Authorization, x-admin-token"
   };
 
-  function generateGuestAccessCode() {
-  return String(Math.floor(100000 + Math.random() * 900000));
-}
   Object.entries(corsHeaders).forEach(([key, value]) => {
     res.setHeader(key, value);
   });
@@ -25,8 +25,7 @@ export default async function handler(req, res) {
   if (!adminToken) {
     return res.status(401).json({ error: "Unauthorized" });
   }
-
-  try {
+    try {
     const supabaseUrl = process.env.SUPABASE_URL;
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
