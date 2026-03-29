@@ -1,9 +1,8 @@
-import { createClient } from "@supabase/supabase-js";
+import crypto from "crypto";
 
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-);
+function generateSessionToken() {
+  return crypto.randomBytes(32).toString("hex");
+}
 
 export default async function handler(req, res) {
   const corsHeaders = {
@@ -31,29 +30,52 @@ export default async function handler(req, res) {
       return res.status(401).json({ error: "Missing guest token" });
     }
 
-    const { data: session, error: sessionError } = await supabase
-      .from("guest_sessions")
-      .select("*, guest_users(*)")
-      .eq("session_token", token)
-      .gt("expires_at", new Date().toISOString())
-      .maybeSingle();
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-    if (sessionError) {
-      return res.status(500).json({ error: sessionError.message });
+    const headers = {
+      apikey: serviceRoleKey,
+      Authorization: `Bearer ${serviceRoleKey}`,
+      Accept: "application/json"
+    };
+
+    const sessionRes = await fetch(
+      `${supabaseUrl}/rest/v1/guest_sessions?session_token=eq.${encodeURIComponent(token)}&select=*&limit=1`,
+      { headers }
+    );
+
+    const sessionData = await sessionRes.json();
+
+    if (!sessionRes.ok) {
+      return res.status(500).json({ error: "Session lookup failed", details: sessionData });
     }
 
-    if (!session) {
+    const session = Array.isArray(sessionData) && sessionData.length > 0 ? sessionData[0] : null;
+
+    if (!session || new Date(session.expires_at) <= new Date()) {
       return res.status(401).json({ error: "Invalid or expired session" });
+    }
+
+    const userRes = await fetch(
+      `${supabaseUrl}/rest/v1/guest_users?id=eq.${encodeURIComponent(session.guest_user_id)}&select=id,first_name,last_name,email,email_verified&limit=1`,
+      { headers }
+    );
+
+    const userData = await userRes.json();
+
+    if (!userRes.ok) {
+      return res.status(500).json({ error: "Guest lookup failed", details: userData });
+    }
+
+    const user = Array.isArray(userData) && userData.length > 0 ? userData[0] : null;
+
+    if (!user) {
+      return res.status(401).json({ error: "Guest not found" });
     }
 
     return res.status(200).json({
       success: true,
-      guest: {
-        id: session.guest_users.id,
-        first_name: session.guest_users.first_name,
-        last_name: session.guest_users.last_name,
-        email: session.guest_users.email
-      }
+      guest: user
     });
   } catch (error) {
     return res.status(500).json({
