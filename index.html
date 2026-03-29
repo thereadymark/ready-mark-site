@@ -494,6 +494,75 @@
       display: none !important;
     }
 
+    .auth-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.55);
+      backdrop-filter: blur(4px);
+      z-index: 40;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+    }
+
+    .auth-modal {
+      width: 100%;
+      max-width: 560px;
+      background: linear-gradient(180deg, rgba(27,31,35,0.99), rgba(21,24,27,0.99));
+      border: 1px solid rgba(199,162,87,0.20);
+      border-radius: 22px;
+      box-shadow: var(--shadow);
+      padding: 24px;
+      position: relative;
+    }
+
+    .auth-title {
+      text-align: center;
+      margin: 0 0 8px;
+      font-size: 32px;
+      color: var(--text);
+    }
+
+    .auth-subtext {
+      text-align: center;
+      color: var(--muted);
+      line-height: 1.7;
+      margin-bottom: 18px;
+      font-size: 15px;
+    }
+
+    .auth-switch {
+      text-align: center;
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .auth-switch a {
+      color: var(--gold-soft);
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .auth-guest-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: rgba(61,220,132,0.08);
+      border: 1px solid rgba(61,220,132,0.30);
+      color: #dff7ea;
+      font-size: 14px;
+      margin: 0 auto 18px;
+    }
+
+    .guest-auth-wrap {
+      text-align: center;
+      margin-bottom: 16px;
+    }
+
     .footer-note {
       padding: 0 26px 28px;
       text-align: center;
@@ -509,7 +578,8 @@
         padding-right: 20px;
       }
 
-      .info-grid {
+      .info-grid,
+      .checkbox-grid {
         grid-template-columns: 1fr;
       }
 
@@ -542,8 +612,8 @@
         min-height: 280px;
       }
 
-      .checkbox-grid {
-        grid-template-columns: 1fr;
+      .auth-title {
+        font-size: 28px;
       }
     }
   </style>
@@ -558,6 +628,9 @@
     ];
 
     const YOUTUBE_EMBED_URL = "https://www.youtube.com/embed/s2mYUVarGx0?rel=0";
+
+    let currentGuest = null;
+    let currentGuestToken = sessionStorage.getItem("readymark_guest_token") || "";
 
     function getStatusClass(tier) {
       if (!tier) return "";
@@ -608,6 +681,38 @@
         reader.onerror = reject;
         reader.readAsDataURL(file);
       });
+    }
+
+    async function verifyGuestSession() {
+      if (!currentGuestToken) {
+        currentGuest = null;
+        return null;
+      }
+
+      try {
+        const res = await fetch("/api/guest-verify-session", {
+          method: "GET",
+          headers: {
+            "Accept": "application/json",
+            "x-guest-token": currentGuestToken
+          }
+        });
+
+        const data = await res.json();
+
+        if (!res.ok || data.error) {
+          sessionStorage.removeItem("readymark_guest_token");
+          currentGuestToken = "";
+          currentGuest = null;
+          return null;
+        }
+
+        currentGuest = data.guest;
+        return currentGuest;
+      } catch {
+        currentGuest = null;
+        return null;
+      }
     }
 
     function renderLandingPage() {
@@ -692,6 +797,59 @@
       roomInput.addEventListener("keydown", function (e) {
         if (e.key === "Enter") goToRoom();
       });
+    }
+
+    function renderAuthModal(type = "login") {
+      const firstNameField = type === "signup" ? `
+        <div class="form-group">
+          <label for="guest-first-name">First Name</label>
+          <input id="guest-first-name" type="text" placeholder="Enter your first name">
+        </div>
+      ` : "";
+
+      const lastNameField = type === "signup" ? `
+        <div class="form-group">
+          <label for="guest-last-name">Last Name</label>
+          <input id="guest-last-name" type="text" placeholder="Enter your last name">
+        </div>
+      ` : "";
+
+      return `
+        <div id="guest-auth-overlay" class="auth-overlay">
+          <div class="auth-modal">
+            <h2 class="auth-title">${type === "login" ? "Guest Login" : "Create Guest Account"}</h2>
+            <div class="auth-subtext">
+              Sign in to continue with a room-specific cleanliness report.
+            </div>
+
+            ${firstNameField}
+            ${lastNameField}
+
+            <div class="form-group">
+              <label for="guest-email">${type === "login" ? "Email" : "Email Address"}</label>
+              <input id="guest-email" type="email" placeholder="Enter your email">
+            </div>
+
+            <div class="form-group">
+              <label for="guest-password">Password</label>
+              <input id="guest-password" type="password" placeholder="Enter your password">
+            </div>
+
+            <div class="button-row">
+              <button id="guest-auth-submit" class="primary-btn">${type === "login" ? "Log In" : "Create Account"}</button>
+              <button id="guest-auth-cancel" class="secondary-btn" type="button">Cancel</button>
+            </div>
+
+            <div id="guest-auth-status" class="inline-status hidden"></div>
+
+            <div class="auth-switch">
+              ${type === "login"
+                ? `Need an account? <a id="switch-to-signup">Create one here</a>`
+                : `Already have an account? <a id="switch-to-login">Log in</a>`}
+            </div>
+          </div>
+        </div>
+      `;
     }
 
     function renderResultPage(data, slug) {
@@ -828,13 +986,31 @@
                 <h2 class="section-title centered-title">Need Help With Room Cleanliness?</h2>
                 <div class="section-divider"></div>
                 <div class="guest-report-intro">
-                  If something about this room’s cleanliness does not meet expectations, report it directly here before it becomes a bigger issue.
+                  If something about this room’s cleanliness does not meet expectations, you can report it privately here for direct follow-up.
+                </div>
+
+                <div class="guest-auth-wrap">
+                  <div id="guest-auth-chip-wrap"></div>
                 </div>
 
                 <div id="report-start-view">
                   <div class="button-row">
                     <button id="open-report-btn" class="primary-btn">Report an Issue</button>
                   </div>
+                </div>
+
+                <div id="access-code-view" class="hidden">
+                  <div class="form-group">
+                    <label for="guest-access-code">Guest Support Code</label>
+                    <input id="guest-access-code" type="text" placeholder="Enter the support code displayed in your room">
+                  </div>
+
+                  <div class="button-row">
+                    <button id="verify-access-btn" class="primary-btn">Continue</button>
+                    <button id="cancel-access-btn" class="secondary-btn" type="button">Cancel</button>
+                  </div>
+
+                  <div id="access-code-status" class="inline-status hidden"></div>
                 </div>
 
                 <div id="report-form-view" class="hidden">
@@ -888,31 +1064,207 @@
         </div>
       `;
 
+      function renderGuestChip() {
+        const wrap = document.getElementById("guest-auth-chip-wrap");
+        if (!wrap) return;
+
+        if (currentGuest) {
+          wrap.innerHTML = `
+            <div class="auth-guest-chip">
+              Signed in as ${escapeHtml(currentGuest.first_name)} ${escapeHtml(currentGuest.last_name)}
+            </div>
+          `;
+        } else {
+          wrap.innerHTML = "";
+        }
+      }
+
+      function setInlineStatus(el, message, type = "") {
+        el.className = "inline-status";
+        if (type === "success") el.classList.add("inline-success");
+        if (type === "error") el.classList.add("inline-error");
+        el.textContent = message;
+        el.classList.remove("hidden");
+      }
+
+      function clearInlineStatus(el) {
+        el.className = "inline-status hidden";
+        el.textContent = "";
+      }
+
+      function openAuthModal(type = "login") {
+        const existing = document.getElementById("guest-auth-overlay");
+        if (existing) existing.remove();
+
+        document.body.insertAdjacentHTML("beforeend", renderAuthModal(type));
+
+        const overlay = document.getElementById("guest-auth-overlay");
+        const submitBtn = document.getElementById("guest-auth-submit");
+        const cancelBtn = document.getElementById("guest-auth-cancel");
+        const authStatus = document.getElementById("guest-auth-status");
+        const switchToSignup = document.getElementById("switch-to-signup");
+        const switchToLogin = document.getElementById("switch-to-login");
+
+        function closeModal() {
+          if (overlay) overlay.remove();
+        }
+
+        cancelBtn.addEventListener("click", closeModal);
+
+        if (switchToSignup) {
+          switchToSignup.addEventListener("click", function () {
+            closeModal();
+            openAuthModal("signup");
+          });
+        }
+
+        if (switchToLogin) {
+          switchToLogin.addEventListener("click", function () {
+            closeModal();
+            openAuthModal("login");
+          });
+        }
+
+        submitBtn.addEventListener("click", async function () {
+          authStatus.className = "inline-status";
+          authStatus.textContent = type === "login" ? "Signing in..." : "Creating account...";
+          authStatus.classList.remove("hidden");
+
+          try {
+            const email = document.getElementById("guest-email").value.trim();
+            const password = document.getElementById("guest-password").value.trim();
+
+            if (!email || !password) {
+              throw new Error("Please complete email and password.");
+            }
+
+            let endpoint = "/api/guest-login";
+            let payload = { email, password };
+
+            if (type === "signup") {
+              const firstName = document.getElementById("guest-first-name").value.trim();
+              const lastName = document.getElementById("guest-last-name").value.trim();
+
+              if (!firstName || !lastName) {
+                throw new Error("Please complete first name and last name.");
+              }
+
+              endpoint = "/api/guest-signup";
+              payload = {
+                first_name: firstName,
+                last_name: lastName,
+                email,
+                password
+              };
+            }
+
+            const res = await fetch(endpoint, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+              },
+              body: JSON.stringify(payload)
+            });
+
+            const data = await res.json();
+
+            if (!res.ok || data.error) {
+              throw new Error(data.error || "Unable to continue.");
+            }
+
+            currentGuestToken = data.token;
+            currentGuest = data.guest;
+            sessionStorage.setItem("readymark_guest_token", currentGuestToken);
+
+            closeModal();
+            renderGuestChip();
+
+            document.getElementById("report-start-view").classList.add("hidden");
+            document.getElementById("access-code-view").classList.remove("hidden");
+          } catch (error) {
+            setInlineStatus(authStatus, error.message || "Unable to continue.", "error");
+          }
+        });
+      }
+
+      renderGuestChip();
+
       const openReportBtn = document.getElementById("open-report-btn");
       const reportStartView = document.getElementById("report-start-view");
+      const accessCodeView = document.getElementById("access-code-view");
       const reportFormView = document.getElementById("report-form-view");
+
+      const verifyAccessBtn = document.getElementById("verify-access-btn");
+      const cancelAccessBtn = document.getElementById("cancel-access-btn");
+      const accessCodeStatus = document.getElementById("access-code-status");
+
       const submitReportBtn = document.getElementById("submit-report-btn");
       const cancelReportBtn = document.getElementById("cancel-report-btn");
       const reportStatus = document.getElementById("report-status");
 
-      function setReportStatus(message, type = "") {
-        reportStatus.className = "inline-status";
-        if (type === "success") reportStatus.classList.add("inline-success");
-        if (type === "error") reportStatus.classList.add("inline-error");
-        reportStatus.textContent = message;
-        reportStatus.classList.remove("hidden");
-      }
+      let verifiedAccessCode = "";
 
-      openReportBtn.addEventListener("click", function () {
+      openReportBtn.addEventListener("click", async function () {
+        if (!currentGuest) {
+          openAuthModal("login");
+          return;
+        }
+
         reportStartView.classList.add("hidden");
-        reportFormView.classList.remove("hidden");
-        reportStatus.classList.add("hidden");
+        accessCodeView.classList.remove("hidden");
+        clearInlineStatus(accessCodeStatus);
+      });
+
+      cancelAccessBtn.addEventListener("click", function () {
+        accessCodeView.classList.add("hidden");
+        reportStartView.classList.remove("hidden");
+        clearInlineStatus(accessCodeStatus);
+      });
+
+      verifyAccessBtn.addEventListener("click", async function () {
+        const enteredCode = document.getElementById("guest-access-code").value.trim();
+
+        if (!enteredCode) {
+          setInlineStatus(accessCodeStatus, "Please enter the guest support code.", "error");
+          return;
+        }
+
+        setInlineStatus(accessCodeStatus, "Verifying room access...");
+
+        try {
+          const res = await fetch("/api/verify-guest-access", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Accept": "application/json"
+            },
+            body: JSON.stringify({
+              verification_id: verificationId,
+              guest_access_code: enteredCode
+            })
+          });
+
+          const data = await res.json();
+
+          if (!res.ok || data.error) {
+            throw new Error(data.error || "Unable to verify room access.");
+          }
+
+          verifiedAccessCode = enteredCode;
+
+          accessCodeView.classList.add("hidden");
+          reportFormView.classList.remove("hidden");
+          clearInlineStatus(accessCodeStatus);
+        } catch (error) {
+          setInlineStatus(accessCodeStatus, error.message || "Unable to verify room access.", "error");
+        }
       });
 
       cancelReportBtn.addEventListener("click", function () {
         reportFormView.classList.add("hidden");
         reportStartView.classList.remove("hidden");
-        reportStatus.classList.add("hidden");
+        clearInlineStatus(reportStatus);
       });
 
       submitReportBtn.addEventListener("click", async function () {
@@ -923,11 +1275,21 @@
         const guestPhoto = document.getElementById("guest-photo").files[0] || null;
 
         if (!checkedIssues.length) {
-          setReportStatus("Please select at least one issue before submitting.", "error");
+          setInlineStatus(reportStatus, "Please select at least one issue before submitting.", "error");
           return;
         }
 
-        setReportStatus("Sending report...");
+        if (!currentGuestToken) {
+          setInlineStatus(reportStatus, "Guest login required.", "error");
+          return;
+        }
+
+        if (!verifiedAccessCode) {
+          setInlineStatus(reportStatus, "Please verify the guest support code first.", "error");
+          return;
+        }
+
+        setInlineStatus(reportStatus, "Sending report...");
 
         try {
           let photoPayload = null;
@@ -944,7 +1306,8 @@
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              "Accept": "application/json"
+              "Accept": "application/json",
+              "x-guest-token": currentGuestToken
             },
             body: JSON.stringify({
               verification_id: verificationId,
@@ -953,7 +1316,8 @@
               room_number: room,
               issue_types: checkedIssues,
               guest_note: guestNote,
-              photo_file: photoPayload
+              photo_file: photoPayload,
+              guest_access_code: verifiedAccessCode
             })
           });
 
@@ -963,7 +1327,8 @@
             throw new Error(responseData.error || "Unable to submit report.");
           }
 
-          setReportStatus(
+          setInlineStatus(
+            reportStatus,
             "Report received.\n\nThis issue has been sent directly to the hotel team and logged with Ready Mark for follow-up.",
             "success"
           );
@@ -975,7 +1340,7 @@
           document.getElementById("guest-note").value = "";
           document.getElementById("guest-photo").value = "";
         } catch (error) {
-          setReportStatus(error.message || "Unable to submit report.", "error");
+          setInlineStatus(reportStatus, error.message || "Unable to submit report.", "error");
         }
       });
     }
@@ -1040,7 +1405,9 @@
       }
     }
 
-    document.addEventListener("DOMContentLoaded", function () {
+    document.addEventListener("DOMContentLoaded", async function () {
+      await verifyGuestSession();
+
       const pathParts = window.location.pathname.split("/").filter(Boolean);
       const slug = pathParts[pathParts.length - 1] || null;
 
