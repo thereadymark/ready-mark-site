@@ -5,6 +5,9 @@ export default async function handler(req, res) {
     "Access-Control-Allow-Headers": "Content-Type, Authorization, x-admin-token"
   };
 
+  function generateGuestAccessCode() {
+  return String(Math.floor(100000 + Math.random() * 900000));
+}
   Object.entries(corsHeaders).forEach(([key, value]) => {
     res.setHeader(key, value);
   });
@@ -125,12 +128,12 @@ export default async function handler(req, res) {
       const qrUrl = `https://verify.thereadymarkgroup.com/${qrSlug}`;
 
       const roomInsertPayload = [{
-        property_id: property.id,
-        room_number: String(room_number).trim(),
-        qr_slug: qrSlug,
-        qr_url: qrUrl
-      }];
-
+  property_id: property.id,
+  room_number: String(room_number).trim(),
+  qr_slug: qrSlug,
+  qr_url: qrUrl,
+  guest_access_code: generateGuestAccessCode()
+}];
       const roomInsertUrl = `${supabaseUrl}/rest/v1/Rooms`;
       const roomInsertRes = await fetch(roomInsertUrl, {
         method: "POST",
