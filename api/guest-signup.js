@@ -1,17 +1,34 @@
 import crypto from "crypto";
-import { createClient } from "@supabase/supabase-js";
+import { Resend } from "resend";
 
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-);
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 function hashPassword(password) {
   return crypto.createHash("sha256").update(password).digest("hex");
 }
 
-function generateSessionToken() {
-  return crypto.randomBytes(32).toString("hex");
+function generateVerificationCode() {
+  return String(Math.floor(100000 + Math.random() * 900000));
+}
+
+async function sendVerificationEmail(email, code) {
+  const fromEmail = process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev";
+
+  await resend.emails.send({
+    from: `Ready Mark <${fromEmail}>`,
+    to: email,
+    subject: "Your Ready Mark Verification Code",
+    html: `
+      <div style="font-family: Arial, sans-serif; padding: 24px; color: #111;">
+        <h2 style="margin-bottom: 12px;">Verify your email</h2>
+        <p style="margin-bottom: 18px;">Enter this code to continue with Ready Mark:</p>
+        <div style="font-size: 34px; font-weight: 700; letter-spacing: 6px; margin-bottom: 18px;">
+          ${code}
+        </div>
+        <p style="margin-bottom: 0;">This code expires in 10 minutes.</p>
+      </div>
+    `
+  });
 }
 
 export default async function handler(req, res) {
@@ -40,59 +57,72 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Missing required fields" });
     }
 
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+    if (!supabaseUrl || !serviceRoleKey) {
+      return res.status(500).json({ error: "Missing server environment variables" });
+    }
+
+    if (!process.env.RESEND_API_KEY) {
+      return res.status(500).json({ error: "Missing RESEND_API_KEY" });
+    }
+
     const normalizedEmail = String(email).trim().toLowerCase();
+    const password_hash = hashPassword(password);
+    const verificationCode = generateVerificationCode();
+    const verificationExpiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
 
-    const { data: existingUser } = await supabase
-      .from("guest_users")
-      .select("id")
-      .eq("email", normalizedEmail)
-      .maybeSingle();
+    const headers = {
+      apikey: serviceRoleKey,
+      Authorization: `Bearer ${serviceRoleKey}`,
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      Prefer: "return=representation"
+    };
 
-    if (existingUser) {
+    const existingRes = await fetch(
+      `${supabaseUrl}/rest/v1/guest_users?email=eq.${encodeURIComponent(normalizedEmail)}&select=id,email_verified&limit=1`,
+      { headers }
+    );
+
+    const existingData = await existingRes.json();
+
+    if (!existingRes.ok) {
+      return res.status(500).json({ error: "User lookup failed", details: existingData });
+    }
+
+    if (Array.isArray(existingData) && existingData.length > 0) {
       return res.status(400).json({ error: "An account with this email already exists." });
     }
 
-    const password_hash = hashPassword(password);
-
-    const { data: newUser, error: userError } = await supabase
-      .from("guest_users")
-      .insert([{
+    const createRes = await fetch(`${supabaseUrl}/rest/v1/guest_users`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify([{
         first_name: String(first_name).trim(),
         last_name: String(last_name).trim(),
         email: normalizedEmail,
-        password_hash
+        password_hash,
+        email_verified: false,
+        email_verification_code: verificationCode,
+        email_verification_expires_at: verificationExpiresAt
       }])
-      .select()
-      .single();
+    });
 
-    if (userError) {
-      return res.status(500).json({ error: userError.message });
+    const createData = await createRes.json();
+
+    if (!createRes.ok) {
+      return res.status(500).json({ error: "Guest signup failed", details: createData });
     }
 
-    const session_token = generateSessionToken();
-    const expires_at = new Date(Date.now() + 1000 * 60 * 60 * 24 * 30).toISOString();
-
-    const { error: sessionError } = await supabase
-      .from("guest_sessions")
-      .insert([{
-        guest_user_id: newUser.id,
-        session_token,
-        expires_at
-      }]);
-
-    if (sessionError) {
-      return res.status(500).json({ error: sessionError.message });
-    }
+    await sendVerificationEmail(normalizedEmail, verificationCode);
 
     return res.status(200).json({
       success: true,
-      token: session_token,
-      guest: {
-        id: newUser.id,
-        first_name: newUser.first_name,
-        last_name: newUser.last_name,
-        email: newUser.email
-      }
+      email: normalizedEmail,
+      requires_email_verification: true,
+      message: "Account created. Verification code sent."
     });
   } catch (error) {
     return res.status(500).json({
