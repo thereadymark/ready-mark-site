@@ -197,7 +197,8 @@
     }
 
     input,
-    select {
+    select,
+    textarea {
       width: 100%;
       background: rgba(255,255,255,0.03);
       border: 1px solid rgba(199,162,87,0.14);
@@ -209,12 +210,20 @@
       appearance: none;
     }
 
-    input::placeholder {
+    textarea {
+      min-height: 110px;
+      resize: vertical;
+      font-family: Georgia, serif;
+    }
+
+    input::placeholder,
+    textarea::placeholder {
       color: #8e877b;
     }
 
     input:focus,
-    select:focus {
+    select:focus,
+    textarea:focus {
       border-color: rgba(199,162,87,0.40);
       box-shadow: 0 0 0 3px rgba(199,162,87,0.08);
     }
@@ -248,6 +257,12 @@
       color: #111315;
       font-weight: 700;
       box-shadow: 0 10px 24px rgba(199,162,87,0.22);
+    }
+
+    .secondary-btn {
+      background: rgba(255,255,255,0.03);
+      color: var(--text);
+      border: 1px solid rgba(199,162,87,0.16);
     }
 
     .portal-link {
@@ -415,6 +430,70 @@
       line-height: 1.5;
     }
 
+    .guest-report-intro {
+      color: var(--muted);
+      line-height: 1.7;
+      font-size: 15px;
+      text-align: center;
+      margin-bottom: 14px;
+    }
+
+    .checkbox-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px 14px;
+      margin-top: 12px;
+    }
+
+    .checkbox-option {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      border: 1px solid rgba(199,162,87,0.14);
+      background: rgba(255,255,255,0.02);
+      cursor: pointer;
+      font-size: 15px;
+      color: var(--text);
+      text-transform: none;
+      letter-spacing: 0;
+      margin-bottom: 0;
+    }
+
+    .checkbox-option input {
+      width: auto;
+      margin: 0;
+      accent-color: #c7a257;
+    }
+
+    .inline-status {
+      margin-top: 16px;
+      padding: 14px 16px;
+      border-radius: 14px;
+      line-height: 1.6;
+      border: 1px solid rgba(199,162,87,0.16);
+      background: rgba(255,255,255,0.02);
+      color: var(--text);
+      white-space: pre-wrap;
+    }
+
+    .inline-success {
+      border-color: rgba(61,220,132,0.35);
+      background: rgba(61,220,132,0.08);
+      color: #dff7ea;
+    }
+
+    .inline-error {
+      border-color: rgba(255,107,107,0.35);
+      background: rgba(255,107,107,0.08);
+      color: #ffe0e0;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
     .footer-note {
       padding: 0 26px 28px;
       text-align: center;
@@ -461,6 +540,10 @@
 
       .verification-proof {
         min-height: 280px;
+      }
+
+      .checkbox-grid {
+        grid-template-columns: 1fr;
       }
     }
   </style>
@@ -510,6 +593,21 @@
           <div class="eyebrow">The Ready Mark</div>
         </div>
       `;
+    }
+
+    function fileToBase64(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+
+        reader.onload = () => {
+          const result = reader.result || "";
+          const base64 = String(result).split(",")[1];
+          resolve(base64);
+        };
+
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
     }
 
     function renderLandingPage() {
@@ -603,8 +701,9 @@
       const room = data.room || slug || "—";
       const inspectorId = data.inspectorId || "—";
       const verificationId = data.verificationId || "—";
-
+      const propertySlug = data.property_slug || "";
       let inspectionDate = "—";
+
       if (data.inspectionDate) {
         try {
           inspectionDate = new Date(data.inspectionDate).toLocaleDateString();
@@ -726,6 +825,52 @@
               </div>
 
               <div class="card">
+                <h2 class="section-title centered-title">Need Help With Room Cleanliness?</h2>
+                <div class="section-divider"></div>
+                <div class="guest-report-intro">
+                  If something about this room’s cleanliness does not meet expectations, report it directly here before it becomes a bigger issue.
+                </div>
+
+                <div id="report-start-view">
+                  <div class="button-row">
+                    <button id="open-report-btn" class="primary-btn">Report an Issue</button>
+                  </div>
+                </div>
+
+                <div id="report-form-view" class="hidden">
+                  <div class="form-group">
+                    <label>What’s the issue?</label>
+                    <div class="checkbox-grid">
+                      <label class="checkbox-option"><input type="checkbox" name="issue_type" value="Bathroom not clean">Bathroom not clean</label>
+                      <label class="checkbox-option"><input type="checkbox" name="issue_type" value="Bed or linens issue">Bed or linens issue</label>
+                      <label class="checkbox-option"><input type="checkbox" name="issue_type" value="Dust or surfaces">Dust or surfaces</label>
+                      <label class="checkbox-option"><input type="checkbox" name="issue_type" value="Odor">Odor</label>
+                      <label class="checkbox-option"><input type="checkbox" name="issue_type" value="Trash or leftover items">Trash or leftover items</label>
+                      <label class="checkbox-option"><input type="checkbox" name="issue_type" value="Floor issue">Floor issue</label>
+                      <label class="checkbox-option"><input type="checkbox" name="issue_type" value="Other">Other</label>
+                    </div>
+                  </div>
+
+                  <div class="form-group">
+                    <label for="guest-note">Anything else we should know?</label>
+                    <textarea id="guest-note" placeholder="Optional details about the issue."></textarea>
+                  </div>
+
+                  <div class="form-group">
+                    <label for="guest-photo">Add a Photo (Optional)</label>
+                    <input id="guest-photo" type="file" accept="image/*">
+                  </div>
+
+                  <div class="button-row">
+                    <button id="submit-report-btn" class="primary-btn">Send to Hotel &amp; Ready Mark</button>
+                    <button id="cancel-report-btn" class="secondary-btn" type="button">Cancel</button>
+                  </div>
+
+                  <div id="report-status" class="inline-status hidden"></div>
+                </div>
+              </div>
+
+              <div class="card">
                 <div class="portal-note">
                   This room has been inspected under The Ready Mark Cleanliness Standard. High-touch surfaces, linens, bathrooms, and guest areas were reviewed according to the Ready Mark inspection protocol.
                 </div>
@@ -742,6 +887,97 @@
           </div>
         </div>
       `;
+
+      const openReportBtn = document.getElementById("open-report-btn");
+      const reportStartView = document.getElementById("report-start-view");
+      const reportFormView = document.getElementById("report-form-view");
+      const submitReportBtn = document.getElementById("submit-report-btn");
+      const cancelReportBtn = document.getElementById("cancel-report-btn");
+      const reportStatus = document.getElementById("report-status");
+
+      function setReportStatus(message, type = "") {
+        reportStatus.className = "inline-status";
+        if (type === "success") reportStatus.classList.add("inline-success");
+        if (type === "error") reportStatus.classList.add("inline-error");
+        reportStatus.textContent = message;
+        reportStatus.classList.remove("hidden");
+      }
+
+      openReportBtn.addEventListener("click", function () {
+        reportStartView.classList.add("hidden");
+        reportFormView.classList.remove("hidden");
+        reportStatus.classList.add("hidden");
+      });
+
+      cancelReportBtn.addEventListener("click", function () {
+        reportFormView.classList.add("hidden");
+        reportStartView.classList.remove("hidden");
+        reportStatus.classList.add("hidden");
+      });
+
+      submitReportBtn.addEventListener("click", async function () {
+        const checkedIssues = Array.from(document.querySelectorAll('input[name="issue_type"]:checked'))
+          .map(input => input.value);
+
+        const guestNote = document.getElementById("guest-note").value.trim();
+        const guestPhoto = document.getElementById("guest-photo").files[0] || null;
+
+        if (!checkedIssues.length) {
+          setReportStatus("Please select at least one issue before submitting.", "error");
+          return;
+        }
+
+        setReportStatus("Sending report...");
+
+        try {
+          let photoPayload = null;
+
+          if (guestPhoto) {
+            photoPayload = {
+              name: guestPhoto.name,
+              type: guestPhoto.type,
+              base64: await fileToBase64(guestPhoto)
+            };
+          }
+
+          const res = await fetch("/api/report-issue", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Accept": "application/json"
+            },
+            body: JSON.stringify({
+              verification_id: verificationId,
+              property_slug: propertySlug,
+              property_name: property,
+              room_number: room,
+              issue_types: checkedIssues,
+              guest_note: guestNote,
+              photo_file: photoPayload
+            })
+          });
+
+          const responseData = await res.json();
+
+          if (!res.ok || responseData.error) {
+            throw new Error(responseData.error || "Unable to submit report.");
+          }
+
+          setReportStatus(
+            "Report received.\n\nThis issue has been sent directly to the hotel team and logged with Ready Mark for follow-up.",
+            "success"
+          );
+
+          document.querySelectorAll('input[name="issue_type"]').forEach(input => {
+            input.checked = false;
+          });
+
+          document.getElementById("guest-note").value = "";
+          document.getElementById("guest-photo").value = "";
+        } catch (error) {
+          setReportStatus(error.message || "Unable to submit report.", "error");
+        }
+      });
     }
 
     function renderErrorPage(message, slug) {
