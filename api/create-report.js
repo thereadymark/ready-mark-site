@@ -20,13 +20,12 @@ export default async function handler(req, res) {
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
     if (!supabaseUrl || !serviceRoleKey) {
-      return res.status(500).json({
-        error: "Missing server env vars"
-      });
+      return res.status(500).json({ error: "Missing env vars" });
     }
 
     const {
       property,
+      property_slug,
       room,
       issue,
       details,
@@ -40,25 +39,39 @@ export default async function handler(req, res) {
       });
     }
 
+    // Generate IDs
     const now = new Date();
     const datePart = now.toISOString().slice(0, 10).replace(/-/g, "");
     const randomPart = Math.floor(1000 + Math.random() * 9000);
-    const confirmationNumber = `RM-${datePart}-${randomPart}`;
 
+    const verificationId = `RM-${datePart}-${randomPart}`;
+    const confirmationNumber = verificationId;
+
+    // Split name
     const nameParts = String(guest_name || "").trim().split(/\s+/);
-    const guestFirstName = nameParts[0] || "";
-    const guestLastName = nameParts.slice(1).join(" ") || "";
+    const first = nameParts[0] || "";
+    const last = nameParts.slice(1).join(" ") || "";
 
     const insertPayload = {
-      property,
-      room,
-      issue_types: issue,
-      details: details || null,
-      guest_first_name: guestFirstName || null,
-      guest_last_name: guestLastName || null,
-      guest_email,
+      verification_id: verificationId,
       confirmation_number: confirmationNumber,
-      stay_match_status: "pending"
+
+      property_slug: property_slug || null,
+      property_name: property || null,
+      room_number: String(room),
+
+      issue_types: Array.isArray(issue) ? issue : [issue],
+
+      guest_note: details || null,
+
+      guest_email,
+      guest_first_name: first || null,
+      guest_last_name: last || null,
+
+      status: "new",
+      priority: "urgent",
+      stay_match_status: "pending",
+      reported_at: new Date().toISOString()
     };
 
     const response = await fetch(`${supabaseUrl}/rest/v1/guest_reports`, {
@@ -75,15 +88,8 @@ export default async function handler(req, res) {
     const data = await response.json().catch(() => null);
 
     if (!response.ok) {
-      const detailedError =
-        data?.message ||
-        data?.details ||
-        data?.hint ||
-        JSON.stringify(data) ||
-        "Unknown insert error";
-
       return res.status(500).json({
-        error: `Insert failed: ${detailedError}`
+        error: data?.message || JSON.stringify(data)
       });
     }
 
@@ -95,7 +101,7 @@ export default async function handler(req, res) {
 
   } catch (err) {
     return res.status(500).json({
-      error: `Server error: ${err.message}`
+      error: err.message
     });
   }
 }
