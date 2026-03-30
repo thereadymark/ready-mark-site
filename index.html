@@ -566,6 +566,19 @@
       margin-bottom: 16px;
     }
 
+    .auth-policy-text {
+      margin-top: 12px;
+      font-size: 12px;
+      color: #aaa;
+      text-align: center;
+      line-height: 1.6;
+    }
+
+    .auth-policy-text a {
+      color: var(--gold);
+      text-decoration: none;
+    }
+
     .footer-note {
       padding: 0 26px 28px;
       text-align: center;
@@ -671,53 +684,6 @@
       `;
     }
 
-    function fileToBase64(file) {
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-
-        reader.onload = () => {
-          const result = reader.result || "";
-          const base64 = String(result).split(",")[1];
-          resolve(base64);
-        };
-
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-      });
-    }
-
-    async function verifyGuestSession() {
-      if (!currentGuestToken) {
-        currentGuest = null;
-        return null;
-      }
-
-      try {
-        const res = await fetch("/api/guest-verify-session", {
-          method: "GET",
-          headers: {
-            "Accept": "application/json",
-            "x-guest-token": currentGuestToken
-          }
-        });
-
-        const data = await res.json();
-
-        if (!res.ok || data.error) {
-          sessionStorage.removeItem("readymark_guest_token");
-          currentGuestToken = "";
-          currentGuest = null;
-          return null;
-        }
-
-        currentGuest = data.guest;
-        return currentGuest;
-      } catch {
-        currentGuest = null;
-        return null;
-      }
-    }
-
     function renderLandingPage() {
       const app = document.getElementById("app");
       app.innerHTML = `
@@ -802,6 +768,38 @@
       });
     }
 
+    async function verifyGuestSession() {
+      if (!currentGuestToken) {
+        currentGuest = null;
+        return null;
+      }
+
+      try {
+        const res = await fetch("/api/guest-verify-session", {
+          method: "GET",
+          headers: {
+            "Accept": "application/json",
+            "x-guest-token": currentGuestToken
+          }
+        });
+
+        const data = await res.json();
+
+        if (!res.ok || data.error) {
+          sessionStorage.removeItem("readymark_guest_token");
+          currentGuestToken = "";
+          currentGuest = null;
+          return null;
+        }
+
+        currentGuest = data.guest;
+        return currentGuest;
+      } catch {
+        currentGuest = null;
+        return null;
+      }
+    }
+
     function renderAuthModal(type = "login") {
       const firstNameField = type === "signup" ? `
         <div class="form-group">
@@ -843,6 +841,11 @@
               <button id="guest-auth-cancel" class="secondary-btn" type="button">Cancel</button>
             </div>
 
+            <p class="auth-policy-text">
+              By continuing, you agree to our
+              <a href="/privacy.html" target="_blank" rel="noopener noreferrer">Privacy Policy</a>.
+            </p>
+
             <div id="guest-auth-status" class="inline-status hidden"></div>
 
             <div class="auth-switch">
@@ -878,6 +881,45 @@
           </div>
         </div>
       `;
+    }
+
+    function fileToBase64(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+
+        reader.onload = () => {
+          const result = reader.result || "";
+          const base64 = String(result).split(",")[1];
+          resolve(base64);
+        };
+
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+    async function submitGuestReport(payload) {
+      const res = await fetch("/api/create-report", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(
+          typeof data.error === "string"
+            ? data.error
+            : data.details?.message
+            ? data.details.message
+            : JSON.stringify(data.error || data.details || data)
+        );
+      }
+
+      return data;
     }
 
     function renderResultPage(data, slug) {
@@ -1067,6 +1109,10 @@
               </div>
 
               <div class="portal-link">
+                <a href="/privacy.html" target="_blank" rel="noopener noreferrer">Privacy Policy</a>
+              </div>
+
+              <div class="portal-link">
                 <a href="https://verify.thereadymarkgroup.com">Back to Verification Home</a>
               </div>
             </div>
@@ -1148,18 +1194,19 @@
 
             const data = await res.json();
 
-           if (!res.ok || data.error) {
-  const friendlyError =
-    typeof data.error === "string"
-      ? data.error
-      : data.error?.message
-      ? data.error.message
-      : data.details?.message
-      ? data.details.message
-      : JSON.stringify(data.error || data.details || data);
+            if (!res.ok || data.error) {
+              const friendlyError =
+                typeof data.error === "string"
+                  ? data.error
+                  : data.error?.message
+                  ? data.error.message
+                  : data.details?.message
+                  ? data.details.message
+                  : JSON.stringify(data.error || data.details || data);
 
-  throw new Error(friendlyError || "Unable to verify email.");
-}
+              throw new Error(friendlyError || "Unable to verify email.");
+            }
+
             currentGuestToken = data.token;
             currentGuest = data.guest;
             sessionStorage.setItem("readymark_guest_token", currentGuestToken);
@@ -1251,18 +1298,20 @@
             });
 
             const data = await res.json();
-if (!res.ok || data.error) {
-  const friendlyError =
-    typeof data.error === "string"
-      ? data.error
-      : data.error?.message
-      ? data.error.message
-      : data.details?.message
-      ? data.details.message
-      : JSON.stringify(data.error || data.details || data);
 
-  throw new Error(friendlyError || "Unable to continue.");
-}            
+            if (!res.ok || data.error) {
+              const friendlyError =
+                typeof data.error === "string"
+                  ? data.error
+                  : data.error?.message
+                  ? data.error.message
+                  : data.details?.message
+                  ? data.details.message
+                  : JSON.stringify(data.error || data.details || data);
+
+              throw new Error(friendlyError || "Unable to continue.");
+            }
+
             closeModal();
 
             const resolvedEmail = data.email || email;
@@ -1278,7 +1327,6 @@ if (!res.ok || data.error) {
       const openReportBtn = document.getElementById("open-report-btn");
       const reportStartView = document.getElementById("report-start-view");
       const reportFormView = document.getElementById("report-form-view");
-
       const submitReportBtn = document.getElementById("submit-report-btn");
       const cancelReportBtn = document.getElementById("cancel-report-btn");
       const reportStatus = document.getElementById("report-status");
@@ -1325,51 +1373,30 @@ if (!res.ok || data.error) {
         setInlineStatus(reportStatus, "Sending report...");
 
         try {
-          let photoPayload = null;
+          const issueSummary = checkedIssues.join(", ");
+          const guestName = `${currentGuest.first_name || ""} ${currentGuest.last_name || ""}`.trim();
 
+          let detailsText = guestNote || "";
           if (guestPhoto) {
-            photoPayload = {
-              name: guestPhoto.name,
-              type: guestPhoto.type,
-              base64: await fileToBase64(guestPhoto)
-            };
+            detailsText = detailsText
+              ? `${detailsText} | Photo attached: ${guestPhoto.name}`
+              : `Photo attached: ${guestPhoto.name}`;
           }
 
-          const res = await fetch("/api/report-issue", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "Accept": "application/json",
-              "x-guest-token": currentGuestToken
-            },
-            body: JSON.stringify({
-              verification_id: verificationId,
-              property_slug: propertySlug,
-              property_name: property,
-              room_number: room,
-              issue_types: checkedIssues,
-              guest_note: guestNote,
-              photo_file: photoPayload
-            })
+          const responseData = await submitGuestReport({
+            property: property,
+            room: room,
+            issue: issueSummary,
+            details: detailsText,
+            guest_name: guestName,
+            guest_email: currentGuest.email
           });
 
-          const responseData = await res.json();
+          const confirmationNumber = responseData.confirmationNumber || "Pending";
 
-          if (!res.ok || responseData.error) {
-  const friendlyError =
-    typeof responseData.error === "string"
-      ? responseData.error
-      : responseData.error?.message
-      ? responseData.error.message
-      : responseData.details?.message
-      ? responseData.details.message
-      : JSON.stringify(responseData.error || responseData.details || responseData);
-
-  throw new Error(friendlyError || "Unable to submit report.");
-}
           setInlineStatus(
             reportStatus,
-            "Report received.\n\nThis issue has been sent directly to the hotel team and logged with Ready Mark for follow-up.",
+            `Report received.\n\nReference #: ${confirmationNumber}\n\nThe property has been notified.`,
             "success"
           );
 
