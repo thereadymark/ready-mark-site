@@ -1,104 +1,11 @@
-import { createClient } from "@supabase/supabase-js";
-
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-);
-
-export const config = {
-  api: {
-    bodyParser: {
-      sizeLimit: "25mb",
-    },
-  },
-};
-
-const MAX_PHOTO_BYTES = 10 * 1024 * 1024;
-const MAX_LOG_BYTES = 15 * 1024 * 1024;
-
-const ALLOWED_PHOTO_TYPES = new Set([
-  "image/jpeg",
-  "image/jpg",
-  "image/png",
-  "image/webp",
-  "image/heic",
-  "image/heif"
-]);
-
-const ALLOWED_LOG_TYPES = new Set([
-  "application/pdf",
-  "image/jpeg",
-  "image/jpg",
-  "image/png",
-  "image/webp",
-  "image/heic",
-  "image/heif"
-]);
-
-function bufferFromBase64(base64String) {
-  return Buffer.from(base64String, "base64");
-}
-
-function sanitizeFileName(name) {
-  return String(name || "file")
-    .replace(/\s+/g, "-")
-    .replace(/[^a-zA-Z0-9._-]/g, "");
-}
-
-function validateBase64Payload(file, fieldName) {
-  if (!file || typeof file !== "object") {
-    return `${fieldName} is missing or invalid.`;
-  }
-
-  if (!file.name || typeof file.name !== "string") {
-    return `${fieldName} name is missing.`;
-  }
-
-  if (!file.type || typeof file.type !== "string") {
-    return `${fieldName} type is missing.`;
-  }
-
-  if (!file.base64 || typeof file.base64 !== "string") {
-    return `${fieldName} file data is missing.`;
-  }
-
-  return null;
-}
-
-function validatePhotoFile(photoFile, fileBuffer) {
-  if (!ALLOWED_PHOTO_TYPES.has(photoFile.type)) {
-    return "Inspection photo must be a JPG, PNG, WEBP, or HEIC image.";
-  }
-
-  if (fileBuffer.length > MAX_PHOTO_BYTES) {
-    return "Inspection photo is too large. Maximum size is 10 MB.";
-  }
-
-  return null;
-}
-
-function validateLogFile(logFile, fileBuffer) {
-  if (!ALLOWED_LOG_TYPES.has(logFile.type)) {
-    return "Inspection log must be a PDF or image file.";
-  }
-
-  if (fileBuffer.length > MAX_LOG_BYTES) {
-    return "Inspection log is too large. Maximum size is 15 MB.";
-  }
-
-  return null;
-}
-
 export default async function handler(req, res) {
   const corsHeaders = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "POST, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type, Authorization, x-admin-token"
+    "Access-Control-Allow-Headers": "Content-Type, Authorization",
   };
 
-  Object.entries(corsHeaders).forEach(([key, value]) => {
-    res.setHeader(key, value);
-  });
+  Object.entries(corsHeaders).forEach(([k, v]) => res.setHeader(k, v));
 
   if (req.method === "OPTIONS") {
     return res.status(200).end();
@@ -108,130 +15,102 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const adminToken = req.headers["x-admin-token"];
-
-  if (!adminToken) {
-    return res.status(401).json({ error: "Unauthorized" });
-  }
-
   try {
-    const {
-      verification_id,
-      photo_file,
-      log_file
-    } = req.body || {};
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-    if (!verification_id) {
-      return res.status(400).json({ error: "Missing verification_id" });
+    if (!supabaseUrl || !serviceRoleKey) {
+      return res.status(500).json({
+        error: "Missing server env vars"
+      });
     }
 
-    let uploadedPhotoUrl = "";
-    let uploadedLogUrl = "";
+    const contentType = req.headers["content-type"] || "";
+    const boundaryMatch = contentType.match(/boundary=(.*)$/);
 
-    if (photo_file) {
-      const payloadError = validateBase64Payload(photo_file, "photo_file");
-      if (payloadError) {
-        return res.status(400).json({ error: payloadError });
-      }
-
-      const photoBuffer = bufferFromBase64(photo_file.base64);
-      const photoValidationError = validatePhotoFile(photo_file, photoBuffer);
-
-      if (photoValidationError) {
-        return res.status(400).json({ error: photoValidationError });
-      }
-
-      const fileName = sanitizeFileName(photo_file.name);
-      const filePath = `${verification_id}/${Date.now()}-${fileName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from("inspection-photos")
-        .upload(filePath, photoBuffer, {
-          contentType: photo_file.type,
-          upsert: false
-        });
-
-      if (uploadError) {
-        return res.status(500).json({
-          error: `Photo upload failed: ${uploadError.message}`
-        });
-      }
-
-      const { data } = supabase.storage
-        .from("inspection-photos")
-        .getPublicUrl(filePath);
-
-      uploadedPhotoUrl = data.publicUrl;
+    if (!boundaryMatch) {
+      return res.status(400).json({ error: "Missing multipart boundary" });
     }
 
-    if (log_file) {
-      const payloadError = validateBase64Payload(log_file, "log_file");
-      if (payloadError) {
-        return res.status(400).json({ error: payloadError });
-      }
+    const boundary = boundaryMatch[1];
+    const chunks = [];
 
-      const logBuffer = bufferFromBase64(log_file.base64);
-      const logValidationError = validateLogFile(log_file, logBuffer);
-
-      if (logValidationError) {
-        return res.status(400).json({ error: logValidationError });
-      }
-
-      const fileName = sanitizeFileName(log_file.name);
-      const filePath = `${verification_id}/log-${Date.now()}-${fileName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from("inspection-docs")
-        .upload(filePath, logBuffer, {
-          contentType: log_file.type,
-          upsert: false
-        });
-
-      if (uploadError) {
-        return res.status(500).json({
-          error: `Log upload failed: ${uploadError.message}`
-        });
-      }
-
-      const { data } = supabase.storage
-        .from("inspection-docs")
-        .getPublicUrl(filePath);
-
-      uploadedLogUrl = data.publicUrl;
+    for await (const chunk of req) {
+      chunks.push(chunk);
     }
 
-    const updatePayload = {};
+    const bodyBuffer = Buffer.concat(chunks);
+    const bodyText = bodyBuffer.toString("binary");
 
-    if (uploadedPhotoUrl) {
-      updatePayload.photo_url = uploadedPhotoUrl;
+    const parts = bodyText.split(`--${boundary}`);
+    const filePart = parts.find(
+      (part) =>
+        part.includes('name="file"') &&
+        part.includes("filename=")
+    );
+
+    if (!filePart) {
+      return res.status(400).json({ error: "No file uploaded" });
     }
 
-    if (uploadedLogUrl) {
-      updatePayload.log_file_url = uploadedLogUrl;
+    const fileNameMatch = filePart.match(/filename="([^"]+)"/);
+    const mimeMatch = filePart.match(/Content-Type:\s*([^\r\n]+)/i);
+
+    const originalFileName = fileNameMatch ? fileNameMatch[1] : `upload-${Date.now()}.jpg`;
+    const mimeType = mimeMatch ? mimeMatch[1].trim() : "application/octet-stream";
+
+    const headerEnd = filePart.indexOf("\r\n\r\n");
+    if (headerEnd === -1) {
+      return res.status(400).json({ error: "Invalid multipart file format" });
     }
 
-    if (Object.keys(updatePayload).length > 0) {
-      const { error: updateError } = await supabase
-        .from("Inspections")
-        .update(updatePayload)
-        .eq("verification_id", verification_id);
+    let fileBinary = filePart.slice(headerEnd + 4);
 
-      if (updateError) {
-        return res.status(500).json({
-          error: `Inspection update failed: ${updateError.message}`
-        });
+    if (fileBinary.endsWith("\r\n")) {
+      fileBinary = fileBinary.slice(0, -2);
+    }
+
+    const fileBuffer = Buffer.from(fileBinary, "binary");
+
+    const safeFileName = originalFileName.replace(/[^a-zA-Z0-9._-]/g, "_");
+    const storagePath = `guest-reports/${Date.now()}-${safeFileName}`;
+
+    const uploadRes = await fetch(
+      `${supabaseUrl}/storage/v1/object/guest_report_photos/${encodeURIComponent(storagePath).replace(/%2F/g, "/")}`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${serviceRoleKey}`,
+          apikey: serviceRoleKey,
+          "Content-Type": mimeType,
+          "x-upsert": "false"
+        },
+        body: fileBuffer
       }
+    );
+
+    const uploadData = await uploadRes.json().catch(() => null);
+
+    if (!uploadRes.ok) {
+      return res.status(500).json({
+        error:
+          uploadData?.message ||
+          uploadData?.error ||
+          JSON.stringify(uploadData) ||
+          "Upload failed"
+      });
     }
+
+    const publicUrl = `${supabaseUrl}/storage/v1/object/public/guest_report_photos/${storagePath}`;
 
     return res.status(200).json({
       success: true,
-      verification_id,
-      photo_url: uploadedPhotoUrl,
-      log_file_url: uploadedLogUrl
+      photo_url: publicUrl,
+      path: storagePath
     });
-  } catch (error) {
+  } catch (err) {
     return res.status(500).json({
-      error: `Server error: ${error.message}`
+      error: err.message || "Server error"
     });
   }
 }
