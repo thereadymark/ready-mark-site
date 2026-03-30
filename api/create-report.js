@@ -12,96 +12,146 @@ export default async function handler(req, res) {
   }
 
   if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
+    return res.status(405).json({
+      success: false,
+      error: "Method not allowed",
+    });
   }
 
   try {
     const supabaseUrl = process.env.SUPABASE_URL;
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const resendApiKey = process.env.RESEND_API_KEY;
+    const resendFromEmail = process.env.RESEND_FROM_EMAIL;
 
     if (!supabaseUrl || !serviceRoleKey) {
-      return res.status(500).json({ error: "Missing env vars" });
-    }
-
-    const {
-      property,
-      property_slug,
-      room,
-      issue,
-      details,
-      guest_name,
-      guest_email
-    } = req.body || {};
-
-    if (!room || !issue || !guest_email) {
-      return res.status(400).json({
-        error: "Missing required fields"
+      return res.status(500).json({
+        success: false,
+        error: "Missing server environment variables",
       });
     }
 
-    // Generate IDs
+    const body = typeof req.body === "string" ? JSON.parse(req.body) : req.body || {};
+
+    const propertyName = body.property || body.property_name || "";
+    const propertySlug = body.property_slug || "";
+    const roomNumber = String(body.room || body.room_number || "").trim();
+    const details = body.details || body.guest_note || null;
+    const photoUrl = body.photo_url || null;
+    const guestEmail = body.guest_email || null;
+    const guestNameRaw = body.guest_name || "";
+    const issueTypes = Array.isArray(body.issue)
+      ? body.issue
+      : Array.isArray(body.issue_types)
+      ? body.issue_types
+      : [];
+
+    if (!propertyName || !roomNumber || !issueTypes.length) {
+      return res.status(400).json({
+        success: false,
+        error: "Missing required report fields",
+      });
+    }
+
+    const guestNameParts = guestNameRaw.trim().split(/\s+/).filter(Boolean);
+    const guestFirstName = guestNameParts[0] || null;
+    const guestLastName = guestNameParts.length > 1 ? guestNameParts.slice(1).join(" ") : null;
+
     const now = new Date();
-    const datePart = now.toISOString().slice(0, 10).replace(/-/g, "");
+    const y = now.getFullYear();
+    const m = String(now.getMonth() + 1).padStart(2, "0");
+    const d = String(now.getDate()).padStart(2, "0");
     const randomPart = Math.floor(1000 + Math.random() * 9000);
-
-    const verificationId = `RM-${datePart}-${randomPart}`;
-    const confirmationNumber = verificationId;
-
-    // Split name
-    const nameParts = String(guest_name || "").trim().split(/\s+/);
-    const first = nameParts[0] || "";
-    const last = nameParts.slice(1).join(" ") || "";
+    const confirmationNumber = `RM-${y}${m}${d}-${randomPart}`;
 
     const insertPayload = {
-      verification_id: verificationId,
+      verification_id: confirmationNumber,
       confirmation_number: confirmationNumber,
-
-      property_slug: property_slug || null,
-      property_name: property || null,
-      room_number: String(room),
-
-      issue_types: Array.isArray(issue) ? issue : [issue],
-
-      guest_note: details || null,
-
-      guest_email,
-      guest_first_name: first || null,
-      guest_last_name: last || null,
-
+      property_slug: propertySlug || null,
+      property_name: propertyName,
+      room_number: roomNumber,
+      issue_types: issueTypes,
+      guest_note: details,
+      details: details,
+      photo_url: photoUrl,
       status: "new",
       priority: "urgent",
-      stay_match_status: "pending",
-      reported_at: new Date().toISOString()
+      reported_at: now.toISOString(),
+      guest_email: guestEmail,
+      guest_first_name: guestFirstName,
+      guest_last_name: guestLastName,
     };
 
-    const response = await fetch(`${supabaseUrl}/rest/v1/guest_reports`, {
+    const insertRes = await fetch(`${supabaseUrl}/rest/v1/guest_reports`, {
       method: "POST",
       headers: {
-        apikey: serviceRoleKey,
         Authorization: `Bearer ${serviceRoleKey}`,
+        apikey: serviceRoleKey,
         "Content-Type": "application/json",
-        Prefer: "return=representation"
+        Prefer: "return=representation",
       },
-      body: JSON.stringify(insertPayload)
+      body: JSON.stringify(insertPayload),
     });
 
-    const data = await response.json().catch(() => null);
+    const insertData = await insertRes.json().catch(() => null);
 
-    if (!response.ok) {
+    if (!insertRes.ok) {
       return res.status(500).json({
-        error: data?.message || JSON.stringify(data)
+        success: false,
+        error:
+          insertData?.message ||
+          insertData?.error ||
+          insertData?.details ||
+          "Failed to save report",
       });
+    }
+
+    const savedReport = Array.isArray(insertData) ? insertData[0] : insertData;
+
+    // Guest confirmation email
+    if (resendApiKey && resendFromEmail && guestEmail) {
+      const guestHtml = `
+        <div style="font-family: Georgia, serif; line-height: 1.6; color: #111;">
+          <h2 style="margin-bottom: 12px;">Your Ready Mark Report Confirmation</h2>
+          <p>Thank you for submitting your cleanliness report.</p>
+          <p>Your concern has been successfully received and forwarded for review.</p>
+          <p><strong>Reference Number:</strong> ${confirmationNumber}</p>
+          <p><strong>Property:</strong> ${propertyName}</p>
+          <p><strong>Room:</strong> ${roomNumber}</p>
+          <p><strong>Reported Issue(s):</strong> ${issueTypes.join(", ")}</p>
+          ${details ? `<p><strong>Additional Details:</strong> ${details}</p>` : ""}
+          <p>Please keep this reference number for your records.</p>
+          <p>— Ready Mark</p>
+        </div>
+      `;
+
+      await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${resendApiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          from: resendFromEmail,
+          to: guestEmail,
+          subject: `Your Ready Mark Report Confirmation – ${confirmationNumber}`,
+          html: guestHtml,
+        }),
+      }).catch(() => null);
     }
 
     return res.status(200).json({
       success: true,
+      message: "Report received.",
       confirmationNumber,
-      report: Array.isArray(data) ? data[0] : data
+      confirmation_number: confirmationNumber,
+      reference: confirmationNumber,
+      report: savedReport,
     });
-
   } catch (err) {
     return res.status(500).json({
-      error: err.message
+      success: false,
+      error: err?.message || "Server error",
     });
   }
 }
