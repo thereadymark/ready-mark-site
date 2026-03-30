@@ -21,11 +21,7 @@ export default async function handler(req, res) {
 
     if (!supabaseUrl || !serviceRoleKey) {
       return res.status(500).json({
-        error: "Missing server env vars",
-        details: {
-          SUPABASE_URL: !!supabaseUrl,
-          SUPABASE_SERVICE_ROLE_KEY: !!serviceRoleKey
-        }
+        error: "Missing server env vars"
       });
     }
 
@@ -40,8 +36,7 @@ export default async function handler(req, res) {
 
     if (!room || !issue || !guest_email) {
       return res.status(400).json({
-        error: "Missing required fields",
-        details: { property, room, issue, guest_name, guest_email }
+        error: "Missing required fields"
       });
     }
 
@@ -54,11 +49,10 @@ export default async function handler(req, res) {
       property,
       room,
       issue,
-      details,
-      guest_name,
+      details: details || null,
+      guest_name: guest_name || null,
       guest_email,
       confirmation_number: confirmationNumber,
-      created_at: new Date().toISOString(),
       stay_match_status: "pending"
     };
 
@@ -76,10 +70,15 @@ export default async function handler(req, res) {
     const data = await response.json().catch(() => null);
 
     if (!response.ok) {
+      const detailedError =
+        data?.message ||
+        data?.details ||
+        data?.hint ||
+        JSON.stringify(data) ||
+        "Unknown insert error";
+
       return res.status(500).json({
-        error: "Insert failed",
-        details: data,
-        payload: insertPayload
+        error: `Insert failed: ${detailedError}`
       });
     }
 
@@ -91,8 +90,7 @@ export default async function handler(req, res) {
 
   } catch (err) {
     return res.status(500).json({
-      error: "Server error",
-      details: err.message
+      error: `Server error: ${err.message}`
     });
   }
 }
