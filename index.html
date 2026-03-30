@@ -9,8 +9,8 @@
   <script>
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'G-63GYLY26HQ');
+    gtag("js", new Date());
+    gtag("config", "G-63GYLY26HQ");
   </script>
 
   <style>
@@ -23,7 +23,6 @@
       --muted: #b7b0a5;
       --line: rgba(199, 162, 87, 0.20);
       --shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
-
       --verified: #3ddc84;
       --attention: #ffb347;
       --notclean: #ff6b6b;
@@ -66,8 +65,7 @@
       content: "";
       position: fixed;
       inset: 0;
-      background:
-        radial-gradient(circle at center, transparent 42%, rgba(0,0,0,0.22) 100%);
+      background: radial-gradient(circle at center, transparent 42%, rgba(0,0,0,0.22) 100%);
       pointer-events: none;
       z-index: 0;
     }
@@ -101,8 +99,7 @@
       content: "";
       position: absolute;
       inset: 0;
-      background:
-        radial-gradient(circle at top center, rgba(199,162,87,0.08), transparent 40%);
+      background: radial-gradient(circle at top center, rgba(199,162,87,0.08), transparent 40%);
       pointer-events: none;
     }
 
@@ -312,7 +309,7 @@
       color: var(--verified);
       border-color: rgba(61,220,132,0.35);
       background: rgba(61,220,132,0.08);
-      box-shadow: 0 0 12px rgba(61, 220, 132, 0.20);
+      box-shadow: 0 0 12px rgba(61,220,132,0.20);
     }
 
     .status-attention {
@@ -386,16 +383,14 @@
       border-radius: 18px;
       overflow: hidden;
       border: 1px solid rgba(199,162,87,0.16);
-      background:
-        linear-gradient(rgba(15,18,20,0.12), rgba(15,18,20,0.18));
+      background: linear-gradient(rgba(15,18,20,0.12), rgba(15,18,20,0.18));
     }
 
     .proof-video-wrap {
       position: relative;
       width: 100%;
       padding-top: 56.25%;
-      background:
-        linear-gradient(rgba(15,18,20,0.12), rgba(15,18,20,0.18));
+      background: linear-gradient(rgba(15,18,20,0.12), rgba(15,18,20,0.18));
     }
 
     .proof-video-wrap iframe {
@@ -472,9 +467,9 @@
 
     .inline-status {
       margin-top: 16px;
-      padding: 14px 16px;
+      padding: 18px 18px;
       border-radius: 14px;
-      line-height: 1.6;
+      line-height: 1.8;
       border: 1px solid rgba(199,162,87,0.16);
       background: rgba(255,255,255,0.02);
       color: var(--text);
@@ -483,8 +478,8 @@
 
     .inline-success {
       border-color: rgba(61,220,132,0.35);
-      background: rgba(61,220,132,0.08);
-      color: #dff7ea;
+      background: rgba(61,220,132,0.10);
+      color: #e7fff1;
     }
 
     .inline-error {
@@ -636,86 +631,879 @@
 </head>
 <body>
   <div id="app"></div>
-<script>
-const SUPABASE_URL = "YOUR_SUPABASE_URL";
-const SUPABASE_KEY = "YOUR_SUPABASE_ANON_KEY";
 
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  <script>
+    const PROPERTY_OPTIONS = [
+      { value: "", label: "Select a property" },
+      { value: "crown-plaza-hotel-stl", label: "Crown Plaza Hotel STL" }
+    ];
 
-const form = document.querySelector("form");
-const messageBox = document.getElementById("message-box");
+    const YOUTUBE_EMBED_URL = "https://www.youtube.com/embed/s2mYUVarGx0?rel=0";
 
-form.addEventListener("submit", async (e) => {
-  e.preventDefault();
+    let currentGuest = null;
+    let currentGuestToken = sessionStorage.getItem("readymark_guest_token") || "";
 
-  try {
-    const issueCheckboxes = document.querySelectorAll('input[type="checkbox"]:checked');
-    const issues = Array.from(issueCheckboxes).map(cb => cb.value);
-
-    const details = document.querySelector("textarea").value || null;
-    const fileInput = document.querySelector('input[type="file"]');
-
-    let photoUrl = null;
-
-    // 🔥 Upload photo if exists
-    if (fileInput && fileInput.files.length > 0) {
-      const file = fileInput.files[0];
-      const fileName = `${Date.now()}-${file.name}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from("guest_report_photos")
-        .upload(fileName, file);
-
-      if (uploadError) {
-        console.error(uploadError);
-        alert("Photo upload failed");
-        return;
-      }
-
-      const { data } = supabase.storage
-        .from("guest_report_photos")
-        .getPublicUrl(fileName);
-
-      photoUrl = data.publicUrl;
+    function getStatusClass(tier) {
+      if (!tier) return "";
+      const normalized = tier.toLowerCase().trim();
+      if (normalized === "verified clean") return "status-verified";
+      if (normalized === "needs attention") return "status-attention";
+      if (normalized === "not clean") return "status-notclean";
+      if (normalized === "ready mark premier") return "status-premier";
+      return "";
     }
 
-    // 🔥 Generate reference number
-    const referenceNumber = `RM-${Date.now()}`;
+    function escapeHtml(str) {
+      if (str === null || str === undefined) return "";
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
 
-    // 🔥 Insert into DB
-    const { error } = await supabase
-      .from("guest_reports")
-      .insert({
-        verification_id: referenceNumber,
-        issue_types: issues,
-        details: details,
-        photo_url: photoUrl,
-        property_slug: window.location.pathname.split("/")[1] || null,
-        property_name: document.title || null,
-        room_number: window.location.pathname.split("-").pop() || null
+    function renderPropertyOptions() {
+      return PROPERTY_OPTIONS.map(
+        option => `<option value="${escapeHtml(option.value)}">${escapeHtml(option.label)}</option>`
+      ).join("");
+    }
+
+    function renderBrandLockup() {
+      return `
+        <div class="brand-lockup">
+          <div class="eyebrow">The Ready Mark</div>
+        </div>
+      `;
+    }
+
+    async function verifyGuestSession() {
+      if (!currentGuestToken) {
+        currentGuest = null;
+        return null;
+      }
+
+      try {
+        const res = await fetch("/api/guest-verify-session", {
+          method: "GET",
+          headers: {
+            "Accept": "application/json",
+            "x-guest-token": currentGuestToken
+          }
+        });
+
+        const data = await res.json();
+
+        if (!res.ok || data.error) {
+          sessionStorage.removeItem("readymark_guest_token");
+          currentGuestToken = "";
+          currentGuest = null;
+          return null;
+        }
+
+        currentGuest = data.guest;
+        return currentGuest;
+      } catch {
+        currentGuest = null;
+        return null;
+      }
+    }
+
+    async function uploadEvidenceFile(file) {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const res = await fetch("/api/upload-evidence", {
+        method: "POST",
+        body: formData
       });
 
-    if (error) throw error;
+      const data = await res.json().catch(() => null);
 
-    // ✅ Success UI
-    messageBox.innerHTML = `
-      <div style="padding:20px; border-radius:12px; background:#0f5132; color:white;">
-        <p><strong>Report received.</strong></p>
-        <p>Reference #: ${referenceNumber}</p>
-        <p>The property has been notified.</p>
-      </div>
-    `;
+      if (!res.ok) {
+        const uploadError =
+          data?.error ||
+          data?.message ||
+          data?.details?.message ||
+          JSON.stringify(data) ||
+          "Photo upload failed.";
+        throw new Error(uploadError);
+      }
 
-    form.reset();
+      return (
+        data?.photo_url ||
+        data?.publicUrl ||
+        data?.url ||
+        data?.fileUrl ||
+        data?.evidence_url ||
+        null
+      );
+    }
 
-  } catch (err) {
-    console.error(err);
-    messageBox.innerHTML = `
-      <div style="padding:20px; border-radius:12px; background:#842029; color:white;">
-        <p>Something went wrong. Please try again.</p>
-      </div>
-    `;
-  }
-});
-</script></body>
+    async function submitGuestReport(payload) {
+      const res = await fetch("/api/create-report", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await res.json().catch(() => null);
+
+      if (!res.ok) {
+        const errorMessage =
+          data?.error ||
+          data?.message ||
+          data?.details?.message ||
+          JSON.stringify(data) ||
+          "Unable to submit report.";
+        throw new Error(errorMessage);
+      }
+
+      return data;
+    }
+
+    function renderLandingPage() {
+      const app = document.getElementById("app");
+
+      app.innerHTML = `
+        <div class="shell">
+          <div class="panel">
+            <div class="panel-header">
+              <img src="/readymarkseal(best)nobackground.PNG" alt="The Ready Mark" class="crest">
+              ${renderBrandLockup()}
+              <h1>Verification Portal</h1>
+              <div class="subtext">
+                Confirm the authenticity of a Ready Mark inspection record and access room-specific verification details.
+              </div>
+            </div>
+
+            <div class="content">
+              <div class="card">
+                <div class="form-group">
+                  <label for="property-search">Property</label>
+                  <select id="property-search">
+                    ${renderPropertyOptions()}
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label for="room-search">Room Number</label>
+                  <input id="room-search" type="text" placeholder="Enter room number, e.g. 102">
+                </div>
+
+                <div class="button-row">
+                  <button id="verify-room-btn" class="primary-btn">Verify Room</button>
+                </div>
+
+                <div class="portal-note">
+                  Each Ready Mark record is room-specific, time-stamped, and connected to a documented inspection process.
+                </div>
+              </div>
+
+              <div class="portal-link">
+                <a href="https://thereadymarkgroup.com">Return to Main Website</a>
+              </div>
+            </div>
+
+            <div class="footer-note">
+              The Ready Mark verification system is designed to provide visible, documented proof of inspection readiness.
+            </div>
+          </div>
+        </div>
+      `;
+
+      const verifyBtn = document.getElementById("verify-room-btn");
+      const roomInput = document.getElementById("room-search");
+      const propertySelect = document.getElementById("property-search");
+
+      function goToRoom() {
+        const property = propertySelect.value;
+        let room = roomInput.value.trim().toLowerCase();
+
+        if (!property) {
+          alert("Please select a property.");
+          return;
+        }
+
+        if (!room) {
+          alert("Please enter a room number.");
+          return;
+        }
+
+        room = room.replace(/\s+/g, "");
+        room = room.replace(/^room-?/i, "");
+
+        if (!/^\d+$/.test(room)) {
+          alert("Please enter a valid room number, like 102.");
+          return;
+        }
+
+        window.location.href = `/${property}-room-${room}`;
+      }
+
+      verifyBtn.addEventListener("click", goToRoom);
+      roomInput.addEventListener("keydown", function (e) {
+        if (e.key === "Enter") goToRoom();
+      });
+    }
+
+    function renderAuthModal(type = "login") {
+      const firstNameField = type === "signup" ? `
+        <div class="form-group">
+          <label for="guest-first-name">First Name</label>
+          <input id="guest-first-name" type="text" placeholder="Enter your first name">
+        </div>
+      ` : "";
+
+      const lastNameField = type === "signup" ? `
+        <div class="form-group">
+          <label for="guest-last-name">Last Name</label>
+          <input id="guest-last-name" type="text" placeholder="Enter your last name">
+        </div>
+      ` : "";
+
+      return `
+        <div id="guest-auth-overlay" class="auth-overlay">
+          <div class="auth-modal">
+            <h2 class="auth-title">${type === "login" ? "Guest Login" : "Create Guest Account"}</h2>
+            <div class="auth-subtext">
+              Sign in to continue with a room-specific cleanliness report.
+            </div>
+
+            ${firstNameField}
+            ${lastNameField}
+
+            <div class="form-group">
+              <label for="guest-email">${type === "login" ? "Email" : "Email Address"}</label>
+              <input id="guest-email" type="email" placeholder="Enter your email">
+            </div>
+
+            <div class="form-group">
+              <label for="guest-password">Password</label>
+              <input id="guest-password" type="password" placeholder="Enter your password">
+            </div>
+
+            <div class="button-row">
+              <button id="guest-auth-submit" class="primary-btn">${type === "login" ? "Continue" : "Create Account"}</button>
+              <button id="guest-auth-cancel" class="secondary-btn" type="button">Cancel</button>
+            </div>
+
+            <p class="auth-policy-text">
+              By continuing, you agree to our
+              <a href="/privacy.html" target="_blank" rel="noopener noreferrer">Privacy Policy</a>.
+            </p>
+
+            <div id="guest-auth-status" class="inline-status hidden"></div>
+
+            <div class="auth-switch">
+              ${type === "login"
+                ? `Need an account? <a id="switch-to-signup">Create one here</a>`
+                : `Already have an account? <a id="switch-to-login">Log in</a>`}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderEmailVerificationModal(email) {
+      return `
+        <div id="email-verify-overlay" class="auth-overlay">
+          <div class="auth-modal">
+            <h2 class="auth-title">Verify Your Email</h2>
+            <div class="auth-subtext">
+              We sent a 6-digit verification code to ${escapeHtml(email)}.
+            </div>
+
+            <div class="form-group">
+              <label for="email-verification-code">Verification Code</label>
+              <input id="email-verification-code" type="text" placeholder="Enter your 6-digit code">
+            </div>
+
+            <div class="button-row">
+              <button id="email-verify-submit" class="primary-btn">Verify Email</button>
+              <button id="email-verify-cancel" class="secondary-btn" type="button">Cancel</button>
+            </div>
+
+            <div id="email-verify-status" class="inline-status hidden"></div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderResultPage(data, slug) {
+      const app = document.getElementById("app");
+
+      const property = data.property || "—";
+      const room = data.room || slug || "—";
+      const inspectorId = data.inspectorId || "—";
+      const verificationId = data.verificationId || "—";
+
+      let inspectionDate = "—";
+      if (data.inspectionDate) {
+        try {
+          inspectionDate = new Date(data.inspectionDate).toLocaleDateString();
+        } catch {
+          inspectionDate = data.inspectionDate;
+        }
+      }
+
+      const certificationLevel = data.certificationTier || "Not verified";
+      const score = data.score !== "" && data.score !== null && data.score !== undefined
+        ? `${data.score} / 100`
+        : "N/A";
+
+      const statusClass = getStatusClass(certificationLevel);
+
+      const requestedSlug = data?.debug?.requestedSlug || slug || "";
+      const derivedPropertySlug = requestedSlug.includes("-room-")
+        ? requestedSlug.split("-room-")[0]
+        : "";
+
+      app.innerHTML = `
+        <div class="shell">
+          <div class="panel">
+            <div class="panel-header">
+              <img src="/readymarkseal(best)nobackground.PNG" alt="The Ready Mark" class="crest">
+              ${renderBrandLockup()}
+              <h1>Verification Record</h1>
+              <div class="status-pill ${statusClass}">
+                ${escapeHtml(certificationLevel)}
+              </div>
+            </div>
+
+            <div class="content">
+              <div class="card">
+                <div class="info-grid">
+                  <div class="info-item">
+                    <div class="info-label">Property</div>
+                    <div class="info-value">${escapeHtml(property)}</div>
+                  </div>
+
+                  <div class="info-item">
+                    <div class="info-label">Room</div>
+                    <div class="info-value">${escapeHtml(room)}</div>
+                  </div>
+
+                  <div class="info-item">
+                    <div class="info-label">Inspector ID</div>
+                    <div class="info-value">${escapeHtml(inspectorId)}</div>
+                  </div>
+
+                  <div class="info-item">
+                    <div class="info-label">Inspection Date</div>
+                    <div class="info-value">${escapeHtml(inspectionDate)}</div>
+                  </div>
+
+                  <div class="info-item">
+                    <div class="info-label">Certification Level</div>
+                    <div class="info-value">${escapeHtml(certificationLevel)}</div>
+                  </div>
+
+                  <div class="info-item">
+                    <div class="info-label">Verification Record ID</div>
+                    <div class="info-value">${escapeHtml(verificationId)}</div>
+                  </div>
+
+                  <div class="info-item">
+                    <div class="info-label">Inspection Score</div>
+                    <div class="info-value">${escapeHtml(score)}</div>
+                  </div>
+
+                  <div class="info-item">
+                    <div class="info-label">Status</div>
+                    <div class="info-value">${escapeHtml(data.status || certificationLevel)}</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="card">
+                <h2 class="section-title centered-title">How This Room Was Verified</h2>
+                <div class="section-divider"></div>
+
+                <div class="verification-proof">
+                  <div class="proof-video-wrap">
+                    <iframe
+                      src="${YOUTUBE_EMBED_URL}"
+                      title="Ready Mark Verification Process"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                      allowfullscreen>
+                    </iframe>
+                  </div>
+                </div>
+
+                <div class="below-video">
+                  <div class="proof-step">
+                    <div class="proof-icon">🧼</div>
+                    <div>
+                      <strong>Room Cleaned</strong>
+                      <div class="proof-sub">
+                        High-touch surfaces, linens, and guest areas were serviced according to Ready Mark standards.
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="proof-step">
+                    <div class="proof-icon">🔍</div>
+                    <div>
+                      <strong>Inspected</strong>
+                      <div class="proof-sub">
+                        A room-specific inspection was completed and reviewed against the Ready Mark protocol.
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="proof-step">
+                    <div class="proof-icon">✅</div>
+                    <div>
+                      <strong>Certified</strong>
+                      <div class="proof-sub">
+                        This verification record was logged, time-stamped, and connected to the room in our system.
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="card">
+                <h2 class="section-title centered-title">Need Help With Room Cleanliness?</h2>
+                <div class="section-divider"></div>
+                <div class="guest-report-intro">
+                  If something about this room’s cleanliness does not meet expectations, you can report it privately here for direct follow-up.
+                </div>
+
+                <div class="guest-auth-wrap">
+                  <div id="guest-auth-chip-wrap"></div>
+                </div>
+
+                <div id="report-start-view">
+                  <div class="button-row">
+                    <button id="open-report-btn" class="primary-btn">Report an Issue</button>
+                  </div>
+                </div>
+
+                <div id="report-form-view" class="hidden">
+                  <div class="form-group">
+                    <label>What’s the issue?</label>
+                    <div class="checkbox-grid">
+                      <label class="checkbox-option"><input type="checkbox" name="issue_type" value="Bathroom not clean">Bathroom not clean</label>
+                      <label class="checkbox-option"><input type="checkbox" name="issue_type" value="Bed or linens issue">Bed or linens issue</label>
+                      <label class="checkbox-option"><input type="checkbox" name="issue_type" value="Dust or surfaces">Dust or surfaces</label>
+                      <label class="checkbox-option"><input type="checkbox" name="issue_type" value="Odor">Odor</label>
+                      <label class="checkbox-option"><input type="checkbox" name="issue_type" value="Trash or leftover items">Trash or leftover items</label>
+                      <label class="checkbox-option"><input type="checkbox" name="issue_type" value="Floor issue">Floor issue</label>
+                      <label class="checkbox-option"><input type="checkbox" name="issue_type" value="Other">Other</label>
+                    </div>
+                  </div>
+
+                  <div class="form-group">
+                    <label for="guest-note">Anything else we should know?</label>
+                    <textarea id="guest-note" placeholder="Optional details about the issue."></textarea>
+                  </div>
+
+                  <div class="form-group">
+                    <label for="guest-photo">Add a Photo (Optional)</label>
+                    <input id="guest-photo" type="file" accept="image/*">
+                  </div>
+
+                  <div class="button-row">
+                    <button id="submit-report-btn" class="primary-btn">Send to Hotel &amp; Ready Mark</button>
+                    <button id="cancel-report-btn" class="secondary-btn" type="button">Cancel</button>
+                  </div>
+
+                  <div id="report-status" class="inline-status hidden"></div>
+                </div>
+              </div>
+
+              <div class="card">
+                <div class="portal-note">
+                  This room has been inspected under The Ready Mark Cleanliness Standard. High-touch surfaces, linens, bathrooms, and guest areas were reviewed according to the Ready Mark inspection protocol.
+                </div>
+              </div>
+
+              <div class="portal-link">
+                <a href="/privacy.html" target="_blank" rel="noopener noreferrer">Privacy Policy</a>
+              </div>
+
+              <div class="portal-link">
+                <a href="https://verify.thereadymarkgroup.com">Back to Verification Home</a>
+              </div>
+            </div>
+
+            <div class="footer-note">
+              The Ready Mark verification system is designed to provide visible, documented proof of inspection readiness.
+            </div>
+          </div>
+        </div>
+      `;
+
+      function renderGuestChip() {
+        const wrap = document.getElementById("guest-auth-chip-wrap");
+        if (!wrap) return;
+
+        if (currentGuest && currentGuest.email_verified) {
+          wrap.innerHTML = `
+            <div class="auth-guest-chip">
+              Signed in as ${escapeHtml(currentGuest.first_name)} ${escapeHtml(currentGuest.last_name)}
+            </div>
+          `;
+        } else {
+          wrap.innerHTML = "";
+        }
+      }
+
+      function setInlineStatus(el, message, type = "") {
+        el.className = "inline-status";
+        if (type === "success") el.classList.add("inline-success");
+        if (type === "error") el.classList.add("inline-error");
+        el.textContent = message;
+        el.classList.remove("hidden");
+      }
+
+      function clearInlineStatus(el) {
+        el.className = "inline-status hidden";
+        el.textContent = "";
+      }
+
+      function openEmailVerificationModal(email) {
+        const existing = document.getElementById("email-verify-overlay");
+        if (existing) existing.remove();
+
+        document.body.insertAdjacentHTML("beforeend", renderEmailVerificationModal(email));
+
+        const overlay = document.getElementById("email-verify-overlay");
+        const submitBtn = document.getElementById("email-verify-submit");
+        const cancelBtn = document.getElementById("email-verify-cancel");
+        const statusBox = document.getElementById("email-verify-status");
+
+        function closeModal() {
+          if (overlay) overlay.remove();
+        }
+
+        cancelBtn.addEventListener("click", closeModal);
+
+        submitBtn.addEventListener("click", async function () {
+          const code = document.getElementById("email-verification-code").value.trim();
+
+          if (!code) {
+            setInlineStatus(statusBox, "Please enter the verification code.", "error");
+            return;
+          }
+
+          setInlineStatus(statusBox, "Verifying email...");
+
+          try {
+            const res = await fetch("/api/verify-email", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+              },
+              body: JSON.stringify({ email, code })
+            });
+
+            const data = await res.json();
+
+            if (!res.ok || data.error) {
+              const friendlyError =
+                typeof data.error === "string"
+                  ? data.error
+                  : data.error?.message
+                  ? data.error.message
+                  : data.details?.message
+                  ? data.details.message
+                  : JSON.stringify(data.error || data.details || data);
+
+              throw new Error(friendlyError || "Unable to verify email.");
+            }
+
+            currentGuestToken = data.token;
+            currentGuest = data.guest;
+            sessionStorage.setItem("readymark_guest_token", currentGuestToken);
+
+            closeModal();
+            renderGuestChip();
+
+            document.getElementById("report-start-view").classList.add("hidden");
+            document.getElementById("report-form-view").classList.remove("hidden");
+          } catch (error) {
+            setInlineStatus(statusBox, error.message || "Unable to verify email.", "error");
+          }
+        });
+      }
+
+      function openAuthModal(type = "login") {
+        const existing = document.getElementById("guest-auth-overlay");
+        if (existing) existing.remove();
+
+        document.body.insertAdjacentHTML("beforeend", renderAuthModal(type));
+
+        const overlay = document.getElementById("guest-auth-overlay");
+        const submitBtn = document.getElementById("guest-auth-submit");
+        const cancelBtn = document.getElementById("guest-auth-cancel");
+        const authStatus = document.getElementById("guest-auth-status");
+        const switchToSignup = document.getElementById("switch-to-signup");
+        const switchToLogin = document.getElementById("switch-to-login");
+
+        function closeModal() {
+          if (overlay) overlay.remove();
+        }
+
+        cancelBtn.addEventListener("click", closeModal);
+
+        if (switchToSignup) {
+          switchToSignup.addEventListener("click", function () {
+            closeModal();
+            openAuthModal("signup");
+          });
+        }
+
+        if (switchToLogin) {
+          switchToLogin.addEventListener("click", function () {
+            closeModal();
+            openAuthModal("login");
+          });
+        }
+
+        submitBtn.addEventListener("click", async function () {
+          authStatus.className = "inline-status";
+          authStatus.textContent = type === "login" ? "Continuing..." : "Creating account...";
+          authStatus.classList.remove("hidden");
+
+          try {
+            const email = document.getElementById("guest-email").value.trim();
+            const password = document.getElementById("guest-password").value.trim();
+
+            if (!email || !password) {
+              throw new Error("Please complete email and password.");
+            }
+
+            let endpoint = "/api/guest-login";
+            let payload = { email, password };
+
+            if (type === "signup") {
+              const firstName = document.getElementById("guest-first-name").value.trim();
+              const lastName = document.getElementById("guest-last-name").value.trim();
+
+              if (!firstName || !lastName) {
+                throw new Error("Please complete first name and last name.");
+              }
+
+              endpoint = "/api/guest-signup";
+              payload = {
+                first_name: firstName,
+                last_name: lastName,
+                email,
+                password
+              };
+            }
+
+            const res = await fetch(endpoint, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+              },
+              body: JSON.stringify(payload)
+            });
+
+            const data = await res.json();
+
+            if (!res.ok || data.error) {
+              const friendlyError =
+                typeof data.error === "string"
+                  ? data.error
+                  : data.error?.message
+                  ? data.error.message
+                  : data.details?.message
+                  ? data.details.message
+                  : JSON.stringify(data.error || data.details || data);
+
+              throw new Error(friendlyError || "Unable to continue.");
+            }
+
+            closeModal();
+            openEmailVerificationModal(data.email || email);
+          } catch (error) {
+            setInlineStatus(authStatus, error.message || "Unable to continue.", "error");
+          }
+        });
+      }
+
+      renderGuestChip();
+
+      const openReportBtn = document.getElementById("open-report-btn");
+      const reportStartView = document.getElementById("report-start-view");
+      const reportFormView = document.getElementById("report-form-view");
+      const submitReportBtn = document.getElementById("submit-report-btn");
+      const cancelReportBtn = document.getElementById("cancel-report-btn");
+      const reportStatus = document.getElementById("report-status");
+
+      openReportBtn.addEventListener("click", function () {
+        if (!currentGuest || !currentGuest.email_verified) {
+          openAuthModal("login");
+          return;
+        }
+
+        reportStartView.classList.add("hidden");
+        reportFormView.classList.remove("hidden");
+        clearInlineStatus(reportStatus);
+      });
+
+      cancelReportBtn.addEventListener("click", function () {
+        reportFormView.classList.add("hidden");
+        reportStartView.classList.remove("hidden");
+        clearInlineStatus(reportStatus);
+      });
+
+      submitReportBtn.addEventListener("click", async function () {
+        const checkedIssues = Array.from(document.querySelectorAll('input[name="issue_type"]:checked'))
+          .map(input => input.value);
+
+        const guestNote = document.getElementById("guest-note").value.trim();
+        const guestPhotoFile = document.getElementById("guest-photo").files[0] || null;
+
+        if (!checkedIssues.length) {
+          setInlineStatus(reportStatus, "Please select at least one issue before submitting.", "error");
+          return;
+        }
+
+        if (!currentGuestToken || !currentGuest || !currentGuest.email_verified) {
+          setInlineStatus(reportStatus, "Guest login and email verification are required.", "error");
+          return;
+        }
+
+        setInlineStatus(reportStatus, "Submitting report...");
+
+        try {
+          let uploadedPhotoUrl = null;
+
+          if (guestPhotoFile) {
+            setInlineStatus(reportStatus, "Uploading photo...");
+            uploadedPhotoUrl = await uploadEvidenceFile(guestPhotoFile);
+          }
+
+          setInlineStatus(reportStatus, "Saving report...");
+
+          const responseData = await submitGuestReport({
+            property,
+            property_slug: derivedPropertySlug || null,
+            room,
+            issue: checkedIssues,
+            details: guestNote || null,
+            guest_name: `${currentGuest.first_name || ""} ${currentGuest.last_name || ""}`.trim(),
+            guest_email: currentGuest.email,
+            photo_url: uploadedPhotoUrl
+          });
+
+          const confirmationNumber =
+            responseData?.confirmationNumber ||
+            responseData?.confirmation_number ||
+            responseData?.report?.confirmation_number ||
+            responseData?.report?.verification_id ||
+            "Pending";
+
+          setInlineStatus(
+            reportStatus,
+            `Report received.\n\nReference #: ${confirmationNumber}\n\nThe property has been notified.`,
+            "success"
+          );
+
+          document.querySelectorAll('input[name="issue_type"]').forEach(input => {
+            input.checked = false;
+          });
+
+          document.getElementById("guest-note").value = "";
+          document.getElementById("guest-photo").value = "";
+        } catch (error) {
+          setInlineStatus(reportStatus, error.message || "Unable to submit report.", "error");
+        }
+      });
+    }
+
+    function renderErrorPage(message, slug) {
+      const app = document.getElementById("app");
+
+      app.innerHTML = `
+        <div class="shell">
+          <div class="panel">
+            <div class="panel-header">
+              <img src="/readymarkseal(best)nobackground.PNG" alt="The Ready Mark" class="crest">
+              ${renderBrandLockup()}
+              <h1>Verification Record</h1>
+              <div class="status-pill status-notclean">Lookup Error</div>
+            </div>
+
+            <div class="content">
+              <div class="card">
+                <div class="info-grid">
+                  <div class="info-item">
+                    <div class="info-label">Requested Record</div>
+                    <div class="info-value">${escapeHtml(slug || "—")}</div>
+                  </div>
+
+                  <div class="info-item">
+                    <div class="info-label">Message</div>
+                    <div class="info-value">${escapeHtml(message || "Unable to load verification record.")}</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="portal-link">
+                <a href="https://verify.thereadymarkgroup.com">Back to Verification Home</a>
+              </div>
+            </div>
+
+            <div class="footer-note">
+              If this issue persists, please contact The Ready Mark for assistance.
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    async function loadVerification(slug) {
+      try {
+        const res = await fetch("/api/get-verification?slug=" + encodeURIComponent(slug), {
+          method: "GET",
+          headers: {
+            "Accept": "application/json"
+          }
+        });
+
+        const data = await res.json();
+
+        if (!res.ok || data?.error) {
+          renderErrorPage(data?.error || "Verification record not found.", slug);
+          return;
+        }
+
+        renderResultPage(data, slug);
+      } catch (err) {
+        renderErrorPage(err?.message || "Unexpected error.", slug);
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", async function () {
+      await verifyGuestSession();
+
+      const pathParts = window.location.pathname.split("/").filter(Boolean);
+      const slug = pathParts[pathParts.length - 1] || null;
+
+      const params = new URLSearchParams(window.location.search);
+      const source = params.get("src") || "unknown";
+
+      if (typeof gtag === "function") {
+        gtag("event", "qr_scan", { source });
+      }
+
+      if (!slug) {
+        renderLandingPage();
+      } else {
+        loadVerification(slug);
+      }
+    });
+  </script>
+</body>
 </html>
