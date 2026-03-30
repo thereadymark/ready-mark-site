@@ -45,12 +45,17 @@ export default async function handler(req, res) {
     const randomPart = Math.floor(1000 + Math.random() * 9000);
     const confirmationNumber = `RM-${datePart}-${randomPart}`;
 
+    const nameParts = String(guest_name || "").trim().split(/\s+/);
+    const guestFirstName = nameParts[0] || "";
+    const guestLastName = nameParts.slice(1).join(" ") || "";
+
     const insertPayload = {
       property,
       room,
-      issue,
+      issue_types: issue,
       details: details || null,
-      guest_name: guest_name || null,
+      guest_first_name: guestFirstName || null,
+      guest_last_name: guestLastName || null,
       guest_email,
       confirmation_number: confirmationNumber,
       stay_match_status: "pending"
