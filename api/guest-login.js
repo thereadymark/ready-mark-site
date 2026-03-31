@@ -36,12 +36,12 @@ async function sendVerificationEmail(email, code) {
 }
 
 async function createGuestSession(supabaseUrl, serviceRoleKey, user) {
-  const token = generateSessionToken();
-  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+  const sessionToken = generateSessionToken();
+  const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
 
   const sessionPayload = {
     guest_user_id: user.id,
-    token,
+    session_token: sessionToken,
     expires_at: expiresAt
   };
 
@@ -68,7 +68,7 @@ async function createGuestSession(supabaseUrl, serviceRoleKey, user) {
   }
 
   return {
-    token,
+    token: sessionToken,
     expires_at: expiresAt,
     session: Array.isArray(sessionData) ? sessionData[0] : sessionData
   };
