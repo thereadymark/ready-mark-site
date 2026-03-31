@@ -22,26 +22,28 @@ async function sendVerificationEmail(email, code) {
     from: `Ready Mark <${fromEmail}>`,
     to: email,
     subject: "Your Ready Mark Verification Code",
-    html: `
+html: `
   <div style="font-family: Georgia, serif; background:#121416; color:#f3eee5; padding:40px 20px;">
-    <div style="max-width:520px; margin:0 auto; background:linear-gradient(180deg,#1b1f23,#15181b); border:1px solid rgba(199,162,87,0.2); border-radius:16px; padding:28px; text-align:center;">
+    <div style="max-width:520px; margin:0 auto; background:linear-gradient(180deg,#1b1f23,#15181b); border:1px solid rgba(199,162,87,0.28); border-radius:18px; padding:30px; text-align:center; box-shadow:0 14px 34px rgba(0,0,0,0.35);">
       
       <img src="https://verify.thereadymarkgroup.com/readymarkseal(best)nobackground.PNG"
-           style="width:90px;margin-bottom:16px;" />
+           style="width:90px;margin-bottom:14px;" />
 
-      <h2 style="margin:0 0 10px; font-size:26px; letter-spacing:1px; color:#f3eee5;">
+      <div style="width:140px; height:2px; margin:0 auto 18px; background:linear-gradient(90deg, rgba(199,162,87,0), rgba(216,187,122,0.98), rgba(199,162,87,0)); border-radius:999px;"></div>
+
+      <h2 style="margin:0 0 10px; font-size:26px; letter-spacing:1px; color:#e6d39a;">
         The Ready Mark
       </h2>
 
-      <p style="color:#c7a257; font-size:13px; letter-spacing:2px; text-transform:uppercase; margin-bottom:20px;">
+      <p style="color:#d8bb7a; font-size:13px; letter-spacing:3px; text-transform:uppercase; margin-bottom:22px;">
         Email Verification
       </p>
 
-      <p style="font-size:16px; line-height:1.6; margin-bottom:22px; color:#f3eee5;">
+      <p style="font-size:16px; line-height:1.7; margin-bottom:20px; color:#f3eee5;">
         Enter this verification code to continue:
       </p>
 
-      <div style="font-size:34px; font-weight:700; letter-spacing:6px; margin-bottom:18px;">
+      <div style="font-size:36px; font-weight:700; letter-spacing:8px; margin-bottom:18px; color:#f3eee5;">
         ${code}
       </div>
 
@@ -51,7 +53,7 @@ async function sendVerificationEmail(email, code) {
 
     </div>
   </div>
-`  });
+` });
 }
 
 async function createGuestSession(supabaseUrl, serviceRoleKey, user) {
