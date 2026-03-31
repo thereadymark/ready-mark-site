@@ -1457,28 +1457,76 @@
           "success"
         );
       };
+async function updateReportStatus(reportId, newStatus) {
+  try {
+    const res = await fetch("/api/update-report-status", {
+      method: "POST",
+      headers: adminHeaders({
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+      }),
+      body: JSON.stringify({
+        report_id: reportId,
+        status: newStatus
+      })
+    });
 
-      markReviewBtn.onclick = function () {
-        setStatus(
-          `Under Review action selected for ${getReportReference(report)}.\n\nNext step: wire this to update the guest_reports status field in Supabase.`,
-          "success"
-        );
-      };
+    const data = await res.json();
 
-      markResolvedBtn.onclick = function () {
-        setStatus(
-          `Resolved action selected for ${getReportReference(report)}.\n\nNext step: wire this to update the guest_reports status field in Supabase.`,
-          "success"
-        );
-      };
-
-      markEscalatedBtn.onclick = function () {
-        setStatus(
-          `Escalate action selected for ${getReportReference(report)}.\n\nNext step: wire this to update the guest_reports status field in Supabase and flag for priority follow-up.`,
-          "error"
-        );
-      };
+    if (!res.ok || data.error) {
+      throw new Error(data.error || "Unable to update report status.");
     }
+
+    await loadDashboardData(propertySelect.value || "");
+
+    const updated = cachedReports.find(r => String(r.id) === String(reportId));
+    if (updated) {
+      selectedReportId = updated.id;
+      showReportDetail(updated);
+    }
+
+    setStatus(`Report status updated to "${newStatus}" successfully.`, "success");
+  } catch (error) {
+    setStatus(error.message || "Failed to update report status.", "error");
+  }
+}
+
+sendToPropertyBtn.onclick = async function () {
+  if (!selectedReportId) {
+    setStatus("Select a report first.", "error");
+    return;
+  }
+
+  await updateReportStatus(selectedReportId, "Sent to Property");
+};
+
+markReviewBtn.onclick = async function () {
+  if (!selectedReportId) {
+    setStatus("Select a report first.", "error");
+    return;
+  }
+
+  await updateReportStatus(selectedReportId, "Under Review");
+};
+
+markResolvedBtn.onclick = async function () {
+  if (!selectedReportId) {
+    setStatus("Select a report first.", "error");
+    return;
+  }
+
+  await updateReportStatus(selectedReportId, "Resolved");
+};
+
+markEscalatedBtn.onclick = async function () {
+  if (!selectedReportId) {
+    setStatus("Select a report first.", "error");
+    return;
+  }
+
+  await updateReportStatus(selectedReportId, "Escalated");
+};      
+  
 
     async function login() {
       const password = loginPasswordInput.value.trim();
