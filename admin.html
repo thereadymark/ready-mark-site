@@ -15,7 +15,6 @@
       --muted: #b7b0a5;
       --line: rgba(199, 162, 87, 0.20);
       --shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
-
       --success: #3ddc84;
       --warning: #ffb347;
       --danger: #ff6b6b;
@@ -769,9 +768,11 @@
           <div class="card">
             <label for="login-password">Admin Password</label>
             <input id="login-password" type="password" placeholder="Enter admin password" />
+
             <div class="button-row">
               <button type="button" class="primary-btn" id="login-btn">Sign In</button>
             </div>
+
             <div id="login-status" class="status-box center-text" style="margin-top:18px;">Waiting for sign in.</div>
           </div>
         </div>
@@ -923,7 +924,8 @@
 
                 <div>
                   <label for="verification-id">Verification Record ID</label>
-                  <input id="verification-id" type="text" placeholder="e.g. RM-2026-0001" required />
+                  <input id="verification-id" type="text" placeholder="Auto-generated from room number" required />
+                  <div class="helper">This will auto-generate when you enter a room number, but you can still edit it if needed.</div>
                 </div>
 
                 <div>
@@ -1160,6 +1162,8 @@
     const logoutBtn = document.getElementById("logout-btn");
 
     const propertySelect = document.getElementById("property-slug-select");
+    const roomNumberInput = document.getElementById("room-number");
+    const verificationIdInput = document.getElementById("verification-id");
     const form = document.getElementById("inspection-form");
     const statusBox = document.getElementById("status-box");
     const resetBtn = document.getElementById("reset-btn");
@@ -1314,6 +1318,23 @@
 
     function generateQrUrl(url) {
       return `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(url)}`;
+    }
+
+    function generateVerificationId(roomNumber = "") {
+      const now = new Date();
+      const yyyy = now.getFullYear();
+      const mm = String(now.getMonth() + 1).padStart(2, "0");
+      const dd = String(now.getDate()).padStart(2, "0");
+      const datePart = `${yyyy}${mm}${dd}`;
+
+      const cleanRoom = String(roomNumber || "")
+        .trim()
+        .replace(/[^a-zA-Z0-9]/g, "")
+        .toUpperCase() || "ROOM";
+
+      const randomPart = Math.floor(1000 + Math.random() * 9000);
+
+      return `RM-VFY-${datePart}-${cleanRoom}-${randomPart}`;
     }
 
     function getReportReference(report) {
@@ -1673,6 +1694,17 @@
       propertySlugInput.value = slugify(propertyNameInput.value);
     });
 
+    roomNumberInput.addEventListener("input", function () {
+      const room = roomNumberInput.value.trim();
+
+      if (!room) {
+        verificationIdInput.value = "";
+        return;
+      }
+
+      verificationIdInput.value = generateVerificationId(room);
+    });
+
     loginBtn.addEventListener("click", login);
 
     loginPasswordInput.addEventListener("keydown", function (e) {
@@ -1772,18 +1804,23 @@
 
       const payload = {
         property_slug: document.getElementById("property-slug-select").value,
-        room_number: document.getElementById("room-number").value.trim(),
+        room_number: roomNumberInput.value.trim(),
         inspector_id: document.getElementById("inspector-id").value.trim(),
         inspection_date: document.getElementById("inspection-date").value,
         certification_tier: document.getElementById("certification-tier").value,
         score: document.getElementById("score").value.trim(),
-        verification_id: document.getElementById("verification-id").value.trim(),
+        verification_id: verificationIdInput.value.trim(),
         status: document.getElementById("status").value.trim(),
         notes: document.getElementById("notes").value.trim()
       };
 
       if (!payload.status) {
         payload.status = payload.certification_tier;
+      }
+
+      if (!payload.verification_id && payload.room_number) {
+        payload.verification_id = generateVerificationId(payload.room_number);
+        verificationIdInput.value = payload.verification_id;
       }
 
       setStatus("Saving inspection record...");
@@ -1821,13 +1858,14 @@
 
         showQrPanel(publicUrl, verificationId, propertyName, roomNumber);
 
-        document.getElementById("verification-id").value = verificationId;
-        document.getElementById("room-number").value = "";
+        verificationIdInput.value = verificationId;
+        roomNumberInput.value = "";
         document.getElementById("inspector-id").value = "";
         document.getElementById("score").value = "";
         document.getElementById("status").value = "";
         document.getElementById("notes").value = "";
         document.getElementById("certification-tier").value = "";
+        verificationIdInput.value = "";
         setDefaultDateTime();
       } catch (error) {
         setStatus(error.message || "Something went wrong while saving the inspection.", "error");
@@ -1835,7 +1873,7 @@
     });
 
     uploadFilesBtn.addEventListener("click", async function () {
-      const verificationId = document.getElementById("verification-id").value.trim() || currentVerificationId;
+      const verificationId = verificationIdInput.value.trim() || currentVerificationId;
       const photoFile = document.getElementById("photoUpload").files[0] || null;
       const docFile = document.getElementById("docUpload").files[0] || null;
 
@@ -1910,6 +1948,7 @@
       currentPublicUrl = "";
       currentPropertyName = "";
       currentRoomNumber = "";
+      verificationIdInput.value = "";
       setStatus("Form cleared.");
     });
 
