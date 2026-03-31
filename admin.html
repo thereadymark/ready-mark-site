@@ -985,12 +985,17 @@
             <div class="reports-layout">
               <div>
                 <div class="reports-toolbar">
-                  <div class="reports-meta" id="reports-meta">Loading guest reports...</div>
-                  <div class="button-row" style="margin-top:0;">
-                    <button type="button" class="secondary-btn" id="refresh-reports-btn">Refresh Reports</button>
-                  </div>
-                </div>
-
+  <div class="reports-meta" id="reports-meta">Loading guest reports...</div>
+  <div class="button-row" style="margin-top:0;">
+    <button type="button" class="tab-btn active" data-report-filter="All">All</button>
+    <button type="button" class="tab-btn" data-report-filter="New">New</button>
+    <button type="button" class="tab-btn" data-report-filter="Under Review">Under Review</button>
+    <button type="button" class="tab-btn" data-report-filter="Resolved">Resolved</button>
+    <button type="button" class="tab-btn" data-report-filter="Escalated">Escalated</button>
+    <button type="button" class="tab-btn" data-report-filter="Sent to Property">Sent to Property</button>
+    <button type="button" class="secondary-btn" id="refresh-reports-btn">Refresh Reports</button>
+  </div>
+</div>
                 <div class="reports-table-wrap">
                   <table class="reports-table">
                     <thead>
@@ -1180,7 +1185,8 @@
     let cachedProperties = [];
     let cachedReports = [];
     let selectedReportId = null;
-
+    let activeReportFilter = "All";
+    
     function getSessionToken() {
       return sessionStorage.getItem(SESSION_TOKEN_KEY) || "";
     }
@@ -1353,35 +1359,54 @@
     }
 
     function renderReportsTable() {
-      reportsMeta.textContent = `${cachedReports.length} guest report${cachedReports.length === 1 ? "" : "s"} loaded.`;
+  const filteredReports = activeReportFilter === "All"
+    ? cachedReports
+    : cachedReports.filter(report => String(report.status || "New").trim() === activeReportFilter);
 
-      if (!cachedReports.length) {
-        reportsTableBody.innerHTML = `
-          <tr>
-            <td colspan="6">
-              <div class="empty-state">No guest reports yet. When guests submit issues from the verification page, they’ll appear here.</div>
-            </td>
-          </tr>
-        `;
-        clearReportDetail();
-        return;
-      }
+  reportsMeta.textContent = `${filteredReports.length} guest report${filteredReports.length === 1 ? "" : "s"} shown.`;
 
-      reportsTableBody.innerHTML = cachedReports.map(report => {
-        const isActive = selectedReportId === report.id ? "active-row" : "";
-        return `
-          <tr class="${isActive}">
-            <td>${escapeHtml(getReportReference(report))}</td>
-            <td>${escapeHtml(report.property_name || "—")}</td>
-            <td>${escapeHtml(report.room_number || "—")}</td>
-            <td>${escapeHtml(formatDateTime(report.reported_at))}</td>
-            <td><span class="${getStatusPillClass(report.status)}">${escapeHtml(getStatusLabel(report.status))}</span></td>
-            <td>
-              <button type="button" class="secondary-btn" data-report-id="${escapeHtml(report.id)}" style="min-height:40px;padding:10px 14px;">View</button>
-            </td>
-          </tr>
-        `;
-      }).join("");
+  if (!filteredReports.length) {
+    reportsTableBody.innerHTML = `
+      <tr>
+        <td colspan="6">
+          <div class="empty-state">No guest reports match this filter.</div>
+        </td>
+      </tr>
+    `;
+    clearReportDetail();
+    return;
+  }
+
+  reportsTableBody.innerHTML = filteredReports.map(report => {
+    const isActive = selectedReportId === report.id ? "active-row" : "";
+    return `
+      <tr class="${isActive}">
+        <td>${escapeHtml(getReportReference(report))}</td>
+        <td>${escapeHtml(report.property_name || "—")}</td>
+        <td>${escapeHtml(report.room_number || "—")}</td>
+        <td>${escapeHtml(formatDateTime(report.reported_at))}</td>
+        <td><span class="${getStatusPillClass(report.status)}">${escapeHtml(getStatusLabel(report.status))}</span></td>
+        <td>
+          <button type="button" class="secondary-btn" data-report-id="${escapeHtml(report.id)}" style="min-height:40px;padding:10px 14px;">View</button>
+        </td>
+      </tr>
+    `;
+  }).join("");
+
+
+  const selected = filteredReports.find(r => String(r.id) === String(selectedReportId));
+  if (selected) {
+    showReportDetail(selected);
+  } else {
+    selectedReportId = filteredReports[0]?.id || null;
+    const fallback = filteredReports.find(r => String(r.id) === String(selectedReportId));
+    if (fallback) {
+      showReportDetail(fallback);
+    } else {
+      clearReportDetail();
+    }
+  }
+}
 
       document.querySelectorAll("[data-report-id]").forEach(btn => {
         btn.addEventListener("click", function () {
