@@ -146,7 +146,7 @@ export default async function handler(req, res) {
       return res.status(200).json({
         success: true,
         email_verified: true,
-        token: guestSession.token,
+        token: guestSession.token, 
         expires_at: guestSession.expires_at,
         guest: {
           id: user.id,
