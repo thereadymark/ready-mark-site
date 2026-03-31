@@ -23,16 +23,35 @@ async function sendVerificationEmail(email, code) {
     to: email,
     subject: "Your Ready Mark Verification Code",
     html: `
-      <div style="font-family: Arial, sans-serif; padding: 24px; color: #111;">
-        <h2 style="margin-bottom: 12px;">Verify your email</h2>
-        <p style="margin-bottom: 18px;">Enter this code to continue with Ready Mark:</p>
-        <div style="font-size: 34px; font-weight: 700; letter-spacing: 6px; margin-bottom: 18px;">
-          ${code}
-        </div>
-        <p style="margin-bottom: 0;">This code expires in 10 minutes.</p>
+  <div style="font-family: Georgia, serif; background:#121416; color:#f3eee5; padding:40px 20px;">
+    <div style="max-width:520px; margin:0 auto; background:linear-gradient(180deg,#1b1f23,#15181b); border:1px solid rgba(199,162,87,0.2); border-radius:16px; padding:28px; text-align:center;">
+      
+      <img src="https://verify.thereadymarkgroup.com/readymarkseal(best)nobackground.PNG"
+           style="width:90px;margin-bottom:16px;" />
+
+      <h2 style="margin:0 0 10px; font-size:26px; letter-spacing:1px; color:#f3eee5;">
+        The Ready Mark
+      </h2>
+
+      <p style="color:#c7a257; font-size:13px; letter-spacing:2px; text-transform:uppercase; margin-bottom:20px;">
+        Email Verification
+      </p>
+
+      <p style="font-size:16px; line-height:1.6; margin-bottom:22px; color:#f3eee5;">
+        Enter this verification code to continue:
+      </p>
+
+      <div style="font-size:34px; font-weight:700; letter-spacing:6px; margin-bottom:18px;">
+        ${code}
       </div>
-    `
-  });
+
+      <p style="margin-top:10px; font-size:13px; color:#958d82;">
+        This code expires in 10 minutes.
+      </p>
+
+    </div>
+  </div>
+`  });
 }
 
 async function createGuestSession(supabaseUrl, serviceRoleKey, user) {
