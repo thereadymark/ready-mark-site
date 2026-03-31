@@ -18,7 +18,7 @@ async function sendVerificationEmail(email, code) {
     from: `Ready Mark <${fromEmail}>`,
     to: email,
     subject: "Your Ready Mark Verification Code",
-    html: `
+html: `
   <div style="font-family: Georgia, serif; background:#121416; color:#f3eee5; padding:40px 20px;">
     <div style="max-width:520px; margin:0 auto; background:#0f1216; border:2px solid #d8bb7a; border-radius:18px; padding:30px; text-align:center;">
       
@@ -47,7 +47,8 @@ async function sendVerificationEmail(email, code) {
       </p>
     </div>
   </div>
-`  });
+` 
+  });
 }
 
 export default async function handler(req, res) {
