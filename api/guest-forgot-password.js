@@ -113,10 +113,11 @@ export default async function handler(req, res) {
       subject: "Reset your Ready Mark password",
 html: `
   <div style="font-family: Georgia, serif; background:#121416; color:#f3eee5; padding:40px 20px;">
-    <div style="max-width:520px; margin:0 auto; background:linear-gradient(180deg,#1b1f23,#15181b); border:1px solid rgba(199,162,87,0.28); border-radius:18px; padding:30px; text-align:center; box-shadow:0 14px 34px rgba(0,0,0,0.35);">
+    <div style="max-width:520px; margin:0 auto; background:#0f1216; border:2px solid #d8bb7a; border-radius:18px; padding:30px; text-align:center;">
+      
       <img src="https://verify.thereadymarkgroup.com/readymarkseal(best)nobackground.PNG" style="width:90px; margin-bottom:14px;" />
 
-      <div style="width:140px; height:2px; margin:0 auto 18px; background:linear-gradient(90deg, rgba(199,162,87,0), rgba(216,187,122,0.98), rgba(199,162,87,0)); border-radius:999px;"></div>
+      <div style="width:140px; height:2px; margin:0 auto 18px; background:#d8bb7a;"></div>
 
       <h2 style="margin:0 0 10px; font-size:26px; letter-spacing:1px; color:#e6d39a;">
         The Ready Mark
@@ -134,20 +135,22 @@ html: `
         Click the button below to create a new password:
       </p>
 
-      <a
-        href="${resetLink}"
-        style="display:inline-block; padding:14px 24px; background:linear-gradient(180deg,#d8ba73,#b8934c); color:#111315; text-decoration:none; border-radius:10px; font-weight:700; box-shadow:0 10px 24px rgba(199,162,87,0.22);"
-      >
-        Reset Password
-      </a>
+      <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="margin:0 auto 20px;">
+        <tr>
+          <td align="center" bgcolor="#c7a257" style="border-radius:10px;">
+            <a href="${resetLink}" style="display:inline-block; padding:14px 28px; font-size:18px; font-weight:700; font-family:Georgia, serif; color:#111315; text-decoration:none; background:#c7a257; border-radius:10px;">
+              Reset Password
+            </a>
+          </td>
+        </tr>
+      </table>
 
-      <p style="margin-top:24px; font-size:13px; color:#958d82;">
+      <p style="margin-top:8px; font-size:13px; color:#958d82;">
         This link expires in 1 hour.
       </p>
     </div>
   </div>
-` 
-    });
+`    });
     return res.status(200).json({
       success: true,
       message: "If that email exists in our system, reset instructions have been sent."
