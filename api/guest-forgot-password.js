@@ -111,35 +111,43 @@ export default async function handler(req, res) {
       from: `Ready Mark <${resendFromEmail}>`,
       to: normalizedEmail,
       subject: "Reset your Ready Mark password",
-    html: `
+html: `
   <div style="font-family: Georgia, serif; background:#121416; color:#f3eee5; padding:40px 20px;">
-    <div style="max-width:520px; margin:0 auto; background:linear-gradient(180deg,#1b1f23,#15181b); border:1px solid rgba(199,162,87,0.2); border-radius:16px; padding:28px; text-align:center;">
-      <img src="https://verify.thereadymarkgroup.com/readymarkseal(best)nobackground.PNG" style="width:90px; margin-bottom:16px;" />
-      <h2 style="margin:0 0 10px; font-size:26px; letter-spacing:1px; color:#f3eee5;">
+    <div style="max-width:520px; margin:0 auto; background:linear-gradient(180deg,#1b1f23,#15181b); border:1px solid rgba(199,162,87,0.28); border-radius:18px; padding:30px; text-align:center; box-shadow:0 14px 34px rgba(0,0,0,0.35);">
+      <img src="https://verify.thereadymarkgroup.com/readymarkseal(best)nobackground.PNG" style="width:90px; margin-bottom:14px;" />
+
+      <div style="width:140px; height:2px; margin:0 auto 18px; background:linear-gradient(90deg, rgba(199,162,87,0), rgba(216,187,122,0.98), rgba(199,162,87,0)); border-radius:999px;"></div>
+
+      <h2 style="margin:0 0 10px; font-size:26px; letter-spacing:1px; color:#e6d39a;">
         The Ready Mark
       </h2>
-      <p style="color:#c7a257; font-size:13px; letter-spacing:2px; text-transform:uppercase; margin-bottom:20px;">
+
+      <p style="color:#d8bb7a; font-size:13px; letter-spacing:3px; text-transform:uppercase; margin-bottom:22px;">
         Password Reset
       </p>
-      <p style="font-size:16px; line-height:1.6; margin-bottom:22px; color:#f3eee5;">
+
+      <p style="font-size:16px; line-height:1.7; margin-bottom:20px; color:#f3eee5;">
         We received a request to reset your Ready Mark password.
       </p>
-      <p style="font-size:16px; line-height:1.6; margin-bottom:22px; color:#f3eee5;">
+
+      <p style="font-size:16px; line-height:1.7; margin-bottom:24px; color:#f3eee5;">
         Click the button below to create a new password:
       </p>
+
       <a
         href="${resetLink}"
-        style="display:inline-block; padding:12px 20px; background:#c7a257; color:#111; text-decoration:none; border-radius:8px; font-weight:700;"
+        style="display:inline-block; padding:14px 24px; background:linear-gradient(180deg,#d8ba73,#b8934c); color:#111315; text-decoration:none; border-radius:10px; font-weight:700; box-shadow:0 10px 24px rgba(199,162,87,0.22);"
       >
         Reset Password
       </a>
+
       <p style="margin-top:24px; font-size:13px; color:#958d82;">
         This link expires in 1 hour.
       </p>
     </div>
   </div>
-`    });
-
+` 
+    });
     return res.status(200).json({
       success: true,
       message: "If that email exists in our system, reset instructions have been sent."
