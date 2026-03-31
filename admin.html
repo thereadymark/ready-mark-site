@@ -1044,828 +1044,88 @@
     </div>
   </div>
 
-  <script>
-    const SESSION_TOKEN_KEY = "readymark_admin_token";
+  let selectedReportId = null;
 
-    const loginView = document.getElementById("login-view");
-    const adminView = document.getElementById("admin-view");
-    const loginPasswordInput = document.getElementById("login-password");
-    const loginBtn = document.getElementById("login-btn");
-    const loginStatus = document.getElementById("login-status");
-    const logoutBtn = document.getElementById("logout-btn");
+// ===== STATUS UI =====
+function setStatus(message, type = "info") {
+  console.log(`[STATUS] ${message}`);
+}
 
-    const propertySelect = document.getElementById("property-slug-select");
-    const form = document.getElementById("inspection-form");
-    const statusBox = document.getElementById("status-box");
-    const resetBtn = document.getElementById("reset-btn");
-    const createPropertyBtn = document.getElementById("create-property-btn");
-    const uploadFilesBtn = document.getElementById("upload-files-btn");
-
-    const propertyNameInput = document.getElementById("property-name");
-    const propertySlugInput = document.getElementById("property-slug");
-    const propertyCityInput = document.getElementById("property-city");
-    const propertyStateInput = document.getElementById("property-state");
-    const propertyTypeInput = document.getElementById("property-type");
-
-    const qrPanel = document.getElementById("qr-panel");
-    const qrImage = document.getElementById("qr-image");
-    const qrUrlText = document.getElementById("qr-url");
-    const downloadQrBtn = document.getElementById("download-qr-btn");
-    const openPublicUrlBtn = document.getElementById("open-public-url-btn");
-    const printLabelBtn = document.getElementById("print-label-btn");
-    const labelCard = document.getElementById("label-card");
-    const labelRoom = document.getElementById("label-room");
-    const labelProperty = document.getElementById("label-property");
-    const labelQrImage = document.getElementById("label-qr-image");
-    const labelFooter = document.getElementById("label-footer");
-
-    const reportsMeta = document.getElementById("reports-meta");
-    const reportsTableBody = document.getElementById("reports-table-body");
-    const refreshReportsBtn = document.getElementById("refresh-reports-btn");
-
-    const reportDetailEmpty = document.getElementById("report-detail-empty");
-    const reportDetailPanel = document.getElementById("report-detail-panel");
-    const detailReference = document.getElementById("detail-reference");
-    const detailReportedAt = document.getElementById("detail-reported-at");
-    const detailProperty = document.getElementById("detail-property");
-    const detailRoom = document.getElementById("detail-room");
-    const detailGuest = document.getElementById("detail-guest");
-    const detailEmail = document.getElementById("detail-email");
-    const detailIssues = document.getElementById("detail-issues");
-    const detailPriority = document.getElementById("detail-priority");
-    const detailNote = document.getElementById("detail-note");
-    const detailStatusPill = document.getElementById("detail-status-pill");
-    const detailPhotoWrap = document.getElementById("detail-photo-wrap");
-    const detailPhoto = document.getElementById("detail-photo");
-
-    const sendToPropertyBtn = document.getElementById("send-to-property-btn");
-    const markReviewBtn = document.getElementById("mark-review-btn");
-    const markResolvedBtn = document.getElementById("mark-resolved-btn");
-    const markEscalatedBtn = document.getElementById("mark-escalated-btn");
-
-    let currentVerificationId = "";
-    let currentPublicUrl = "";
-    let currentPropertyName = "";
-    let currentRoomNumber = "";
-
-    let cachedReports = [];
-    let selectedReportId = null;
-
-    function getSessionToken() {
-      return sessionStorage.getItem(SESSION_TOKEN_KEY) || "";
-    }
-
-    function setSessionToken(token) {
-      sessionStorage.setItem(SESSION_TOKEN_KEY, token);
-    }
-
-    function clearSessionToken() {
-      sessionStorage.removeItem(SESSION_TOKEN_KEY);
-    }
-
-    function adminHeaders(extra = {}) {
-      return {
-        "x-admin-token": getSessionToken(),
-        ...extra
-      };
-    }
-
-    function showLoginView() {
-      loginView.classList.remove("hidden");
-      adminView.classList.add("hidden");
-    }
-
-    function showAdminView() {
-      loginView.classList.add("hidden");
-      adminView.classList.remove("hidden");
-    }
-
-    function setLoginStatus(message, type = "") {
-      loginStatus.className = "status-box center-text";
-      if (type === "success") loginStatus.classList.add("status-success");
-      if (type === "error") loginStatus.classList.add("status-error");
-      loginStatus.textContent = message;
-    }
-
-    function setStatus(message, type = "") {
-      statusBox.className = "status-box center-text";
-      if (type === "success") statusBox.classList.add("status-success");
-      if (type === "error") statusBox.classList.add("status-error");
-      statusBox.textContent = message;
-    }
-
-    function setDefaultDateTime() {
-      const input = document.getElementById("inspection-date");
-      const now = new Date();
-      now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-      input.value = now.toISOString().slice(0, 16);
-    }
-
-    function slugify(value) {
-      return String(value || "")
-        .toLowerCase()
-        .trim()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/^-+|-+$/g, "");
-    }
-
-    function buildPropertyLabel(property) {
-      const parts = [];
-
-      if (property.property_name) parts.push(property.property_name);
-
-      const locationBits = [];
-      if (property.city) locationBits.push(property.city);
-      if (property.state) locationBits.push(property.state);
-
-      if (locationBits.length) parts.push(locationBits.join(", "));
-      if (property.property_type) parts.push(property.property_type);
-
-      return parts.join(" — ");
-    }
-
-    function generateQrUrl(url) {
-      return `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(url)}`;
-    }
-
-    function formatDateTime(value) {
-      if (!value) return "—";
-
-      try {
-        return new Date(value).toLocaleString();
-      } catch {
-        return String(value);
-      }
-    }
-
-    function escapeHtml(value) {
-      if (value === null || value === undefined) return "";
-      return String(value)
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
-    }
-
-    function getReportReference(report) {
-      return (
-        report.confirmation_number ||
-        report.verification_id ||
-        "—"
-      );
-    }
-
-    function getStatusLabel(statusValue) {
-      if (!statusValue) return "New";
-      return String(statusValue);
-    }
-
-    function getStatusPillClass(statusValue) {
-      const normalized = String(statusValue || "new").toLowerCase().trim();
-
-      if (normalized === "new") return "pill pill-new";
-      if (normalized === "sent to property") return "pill pill-sent";
-      if (normalized === "under review") return "pill pill-review";
-      if (normalized === "resolved") return "pill pill-resolved";
-      if (normalized === "escalated") return "pill pill-escalated";
-
-      return "pill pill-new";
-    }
-
-    function showQrPanel(publicUrl, verificationId, propertyName, roomNumber) {
-      const qrSrc = generateQrUrl(publicUrl);
-
-      currentPublicUrl = publicUrl;
-      currentVerificationId = verificationId;
-      currentPropertyName = propertyName;
-      currentRoomNumber = roomNumber;
-
-      qrImage.src = qrSrc;
-      qrUrlText.textContent = publicUrl;
-      downloadQrBtn.href = qrSrc;
-      downloadQrBtn.setAttribute("download", `${verificationId}-qr.png`);
-      openPublicUrlBtn.href = publicUrl;
-
-      labelRoom.textContent = `Room ${roomNumber}`;
-      labelProperty.textContent = propertyName;
-      labelQrImage.src = qrSrc;
-      labelFooter.textContent = `${verificationId} • Scan to verify this room`;
-
-      qrPanel.classList.add("show");
-      labelCard.classList.add("show");
-    }
-
-    function printLabel() {
-      if (!currentPublicUrl || !currentVerificationId) return;
-
-      const qrSrc = generateQrUrl(currentPublicUrl);
-      const html = `
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <title>Print QR Label</title>
-          <style>
-            body {
-              margin: 0;
-              padding: 24px;
-              font-family: Georgia, serif;
-              background: #fff;
-            }
-            .label {
-              width: 360px;
-              border: 2px solid #c7a257;
-              border-radius: 20px;
-              padding: 20px;
-              text-align: center;
-              margin: 0 auto;
-            }
-            .crest {
-              width: 76px;
-              display: block;
-              margin: 0 auto 10px;
-            }
-            .heading {
-              font-size: 14px;
-              letter-spacing: 1px;
-              text-transform: uppercase;
-              color: #8b6b2d;
-              margin-bottom: 10px;
-            }
-            .room {
-              font-size: 28px;
-              margin: 0 0 8px;
-              color: #111;
-            }
-            .property {
-              font-size: 14px;
-              line-height: 1.6;
-              margin-bottom: 14px;
-              color: #333;
-            }
-            .qr {
-              width: 180px;
-              height: 180px;
-              display: block;
-              margin: 0 auto 14px;
-            }
-            .footer {
-              font-size: 13px;
-              line-height: 1.5;
-              color: #444;
-            }
-          </style>
-        </head>
-        <body>
-          <div class="label">
-            <img class="crest" src="${window.location.origin}/readymarkseal(best)nobackground.PNG" alt="The Ready Mark">
-            <div class="heading">Ready Mark Verification</div>
-            <h1 class="room">Room ${currentRoomNumber}</h1>
-            <div class="property">${currentPropertyName}</div>
-            <img class="qr" src="${qrSrc}" alt="QR Code">
-            <div class="footer">${currentVerificationId}<br>Scan to verify this room</div>
-          </div>
-          <script>
-            window.onload = function() {
-              window.print();
-            };
-          <\/script>
-        </body>
-        </html>
-      `;
-
-      const win = window.open("", "_blank", "width=600,height=800");
-      win.document.open();
-      win.document.write(html);
-      win.document.close();
-    }
-
-    function fileToBase64(file) {
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-
-        reader.onload = () => {
-          const result = reader.result || "";
-          const base64 = String(result).split(",")[1];
-          resolve(base64);
-        };
-
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-      });
-    }
-
-    function renderReportsTable(reports) {
-      if (!Array.isArray(reports) || !reports.length) {
-        reportsTableBody.innerHTML = `
-          <tr>
-            <td colspan="6">
-              <div class="empty-state">No guest reports yet. When guests submit issues from the verification page, they’ll appear here.</div>
-            </td>
-          </tr>
-        `;
-        reportsMeta.textContent = "0 reports loaded.";
-        clearReportDetail();
-        return;
-      }
-
-      reportsMeta.textContent = `${reports.length} guest report${reports.length === 1 ? "" : "s"} loaded.`;
-
-      reportsTableBody.innerHTML = reports.map(report => {
-        const reference = escapeHtml(getReportReference(report));
-        const property = escapeHtml(report.property_name || "—");
-        const room = escapeHtml(report.room_number || "—");
-        const reported = escapeHtml(formatDateTime(report.reported_at));
-        const statusLabel = escapeHtml(getStatusLabel(report.status));
-        const statusClass = getStatusPillClass(report.status);
-        const isActive = selectedReportId === report.id ? "active-row" : "";
-
-        return `
-          <tr class="${isActive}">
-            <td>${reference}</td>
-            <td>${property}</td>
-            <td>${room}</td>
-            <td>${reported}</td>
-            <td><span class="${statusClass}">${statusLabel}</span></td>
-            <td>
-              <button type="button" class="secondary-btn" data-report-id="${escapeHtml(report.id)}" style="min-height:40px;padding:10px 14px;">View</button>
-            </td>
-          </tr>
-        `;
-      }).join("");
-
-      document.querySelectorAll("[data-report-id]").forEach(btn => {
-        btn.addEventListener("click", function () {
-          const reportId = this.getAttribute("data-report-id");
-          const report = cachedReports.find(item => String(item.id) === String(reportId));
-          if (report) {
-            selectedReportId = report.id;
-            renderReportsTable(cachedReports);
-            showReportDetail(report);
-          }
-        });
-      });
-
-      if (!selectedReportId && reports[0]) {
-        selectedReportId = reports[0].id;
-        renderReportsTable(cachedReports);
-        showReportDetail(reports[0]);
-      }
-    }
-
-    function clearReportDetail() {
-      reportDetailEmpty.classList.remove("hidden");
-      reportDetailPanel.classList.add("hidden");
-      detailPhotoWrap.classList.add("hidden");
-      detailPhoto.src = "";
-    }
-
-    function showReportDetail(report) {
-      reportDetailEmpty.classList.add("hidden");
-      reportDetailPanel.classList.remove("hidden");
-
-      const guestFullName = [report.guest_first_name, report.guest_last_name].filter(Boolean).join(" ").trim() || "—";
-      const issueText = Array.isArray(report.issue_types) && report.issue_types.length
-        ? report.issue_types.join(", ")
-        : "—";
-      const noteText = report.guest_note || report.details || "—";
-      const statusLabel = getStatusLabel(report.status);
-      const statusClass = getStatusPillClass(report.status);
-
-      detailReference.textContent = getReportReference(report);
-      detailReportedAt.textContent = formatDateTime(report.reported_at);
-      detailProperty.textContent = report.property_name || "—";
-      detailRoom.textContent = report.room_number || "—";
-      detailGuest.textContent = guestFullName;
-      detailEmail.textContent = report.guest_email || "—";
-      detailIssues.textContent = issueText;
-      detailPriority.textContent = report.priority || "—";
-      detailNote.textContent = noteText;
-      detailStatusPill.innerHTML = `<span class="${statusClass}">${escapeHtml(statusLabel)}</span>`;
-
-      if (report.photo_url) {
-        detailPhoto.src = report.photo_url;
-        detailPhotoWrap.classList.remove("hidden");
-      } else {
-        detailPhoto.src = "";
-        detailPhotoWrap.classList.add("hidden");
-      }
-
-      sendToPropertyBtn.onclick = function () {
-        setStatus(
-          `Send to Property action selected.\n\nReference #: ${getReportReference(report)}\nProperty: ${report.property_name || "—"}\nRoom: ${report.room_number || "—"}\n\nNext step: wire this button to send a controlled report email to the property contact.`,
-          "success"
-        );
-      };
-async function updateReportStatus(reportId, newStatus) {
+// ===== UPDATE STATUS (API CALL) =====
+async function updateReportStatus(reportId, status) {
   try {
     const res = await fetch("/api/update-report-status", {
       method: "POST",
-      headers: adminHeaders({
+      headers: {
         "Content-Type": "application/json",
-        "Accept": "application/json"
-      }),
+        "x-admin-token": localStorage.getItem("admin_token") || ""
+      },
       body: JSON.stringify({
         report_id: reportId,
-        status: newStatus
+        status: status
       })
     });
 
     const data = await res.json();
 
-    if (!res.ok || data.error) {
-      throw new Error(data.error || "Unable to update report status.");
+    if (!res.ok) {
+      throw new Error(data.error || "Failed to update status");
     }
 
-    await loadDashboardData(propertySelect.value || "");
+    setStatus(`Status updated to "${status}"`, "success");
 
-    const updated = cachedReports.find(r => String(r.id) === String(reportId));
-    if (updated) {
-      selectedReportId = updated.id;
-      showReportDetail(updated);
-    }
-
-    setStatus(`Report status updated to "${newStatus}" successfully.`, "success");
-  } catch (error) {
-    setStatus(error.message || "Failed to update report status.", "error");
+    // OPTIONAL: refresh reports list here later
+  } catch (err) {
+    console.error(err);
+    setStatus("Error updating status", "error");
   }
 }
 
-sendToPropertyBtn.onclick = async function () {
-  if (!selectedReportId) {
-    setStatus("Select a report first.", "error");
-    return;
-  }
+// ===== BUTTON HANDLERS =====
+document.addEventListener("DOMContentLoaded", () => {
+  const markReviewBtn = document.getElementById("markReviewBtn");
+  const markResolvedBtn = document.getElementById("markResolvedBtn");
+  const markEscalatedBtn = document.getElementById("markEscalatedBtn");
+  const sendToPropertyBtn = document.getElementById("sendToPropertyBtn");
 
-  await updateReportStatus(selectedReportId, "Sent to Property");
-};
-
-markReviewBtn.onclick = async function () {
-  if (!selectedReportId) {
-    setStatus("Select a report first.", "error");
-    return;
-  }
-
-  await updateReportStatus(selectedReportId, "Under Review");
-};
-
-markResolvedBtn.onclick = async function () {
-  if (!selectedReportId) {
-    setStatus("Select a report first.", "error");
-    return;
-  }
-
-  await updateReportStatus(selectedReportId, "Resolved");
-};
-
-markEscalatedBtn.onclick = async function () {
-  if (!selectedReportId) {
-    setStatus("Select a report first.", "error");
-    return;
-  }
-
-  await updateReportStatus(selectedReportId, "Escalated");
-};      
-  
-
-    async function login() {
-      const password = loginPasswordInput.value.trim();
-
-      if (!password) {
-        setLoginStatus("Please enter your admin password.", "error");
-        return;
-      }
-
-      setLoginStatus("Signing in...");
-
-      try {
-        const res = await fetch("/api/admin-login", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Accept": "application/json"
-          },
-          body: JSON.stringify({ password })
-        });
-
-        const data = await res.json();
-
-        if (!res.ok || data.error || !data.token) {
-          throw new Error(data.error || "Login failed.");
-        }
-
-        setSessionToken(data.token);
-        setLoginStatus("Login successful.", "success");
-        showAdminView();
-        await loadDashboardData();
-      } catch (error) {
-        setLoginStatus(error.message || "Login failed.", "error");
-      }
+  // Under Review
+  markReviewBtn.onclick = async function () {
+    if (!selectedReportId) {
+      setStatus("Select a report first.", "error");
+      return;
     }
 
-    async function verifyExistingSession() {
-      const token = getSessionToken();
+    await updateReportStatus(selectedReportId, "Under Review");
+  };
 
-      if (!token) {
-        showLoginView();
-        return;
-      }
-
-      try {
-        const res = await fetch("/api/admin-verify", {
-          method: "GET",
-          headers: adminHeaders({
-            "Accept": "application/json"
-          })
-        });
-
-        const data = await res.json();
-
-        if (!res.ok || data.error) {
-          clearSessionToken();
-          showLoginView();
-          return;
-        }
-
-        showAdminView();
-        await loadDashboardData();
-      } catch (error) {
-        clearSessionToken();
-        showLoginView();
-      }
+  // Resolved
+  markResolvedBtn.onclick = async function () {
+    if (!selectedReportId) {
+      setStatus("Select a report first.", "error");
+      return;
     }
 
-    propertyNameInput.addEventListener("input", function () {
-      propertySlugInput.value = slugify(propertyNameInput.value);
-    });
+    await updateReportStatus(selectedReportId, "Resolved");
+  };
 
-    loginBtn.addEventListener("click", login);
-
-    loginPasswordInput.addEventListener("keydown", function (e) {
-      if (e.key === "Enter") {
-        login();
-      }
-    });
-
-    logoutBtn.addEventListener("click", function () {
-      clearSessionToken();
-      loginPasswordInput.value = "";
-      setLoginStatus("Signed out.");
-      showLoginView();
-    });
-
-    async function loadDashboardData(selectedSlug = "") {
-      try {
-        const res = await fetch("/api/admin-data", {
-          headers: adminHeaders({
-            "Accept": "application/json"
-          })
-        });
-
-        const data = await res.json();
-
-        if (!res.ok) {
-          throw new Error(data.error || "Unable to load admin data.");
-        }
-
-        const properties = Array.isArray(data.properties) ? data.properties : [];
-        const guestReports = Array.isArray(data.guest_reports) ? data.guest_reports : [];
-
-        propertySelect.innerHTML = `
-          <option value="">Select a property</option>
-          ${properties.map(p => `
-            <option value="${String(p.property_slug).replace(/"/g, "&quot;")}" ${selectedSlug === p.property_slug ? "selected" : ""}>
-              ${buildPropertyLabel(p)}
-            </option>
-          `).join("")}
-        `;
-
-        cachedReports = guestReports;
-        renderReportsTable(cachedReports);
-      } catch (err) {
-        propertySelect.innerHTML = `<option value="">Unable to load properties</option>`;
-        reportsTableBody.innerHTML = `
-          <tr>
-            <td colspan="6">
-              <div class="empty-state">${escapeHtml(err.message || "Failed to load guest reports.")}</div>
-            </td>
-          </tr>
-        `;
-        clearReportDetail();
-        setStatus(err.message || "Failed to load admin data.", "error");
-      }
+  // Escalated
+  markEscalatedBtn.onclick = async function () {
+    if (!selectedReportId) {
+      setStatus("Select a report first.", "error");
+      return;
     }
 
-    refreshReportsBtn.addEventListener("click", async function () {
-      await loadDashboardData(propertySelect.value || "");
-      setStatus("Guest reports refreshed.", "success");
-    });
+    await updateReportStatus(selectedReportId, "Escalated");
+  };
 
-    createPropertyBtn.addEventListener("click", async function () {
-      const property_name = propertyNameInput.value.trim();
-      const property_slug = propertySlugInput.value.trim();
-      const city = propertyCityInput.value.trim();
-      const state = propertyStateInput.value.trim();
-      const property_type = propertyTypeInput.value.trim();
+  // Send to Property
+  sendToPropertyBtn.onclick = async function () {
+    if (!selectedReportId) {
+      setStatus("Select a report first.", "error");
+      return;
+    }
 
-      if (!property_name || !property_slug || !city || !state || !property_type) {
-        setStatus("Please complete property name, slug, city, state, and property type before saving.", "error");
-        return;
-      }
-
-      setStatus("Creating property...");
-
-      try {
-        const res = await fetch("/api/create-property", {
-          method: "POST",
-          headers: adminHeaders({
-            "Content-Type": "application/json",
-            "Accept": "application/json"
-          }),
-          body: JSON.stringify({
-            property_name,
-            property_slug,
-            city,
-            state,
-            property_type
-          })
-        });
-
-        const data = await res.json();
-
-        if (!res.ok || data.error) {
-          throw new Error(typeof data.error === "string" ? data.error : "Unable to create property.");
-        }
-
-        setStatus(
-          `Property created successfully.\n\nName: ${property_name}\nSlug: ${property_slug}\nLocation: ${city}, ${state}\nType: ${property_type}`,
-          "success"
-        );
-
-        propertyNameInput.value = "";
-        propertySlugInput.value = "";
-        propertyCityInput.value = "";
-        propertyStateInput.value = "";
-        propertyTypeInput.value = "";
-
-        await loadDashboardData(property_slug);
-      } catch (err) {
-        setStatus(err.message || "Property creation failed.", "error");
-      }
-    });
-
-    form.addEventListener("submit", async function (e) {
-      e.preventDefault();
-
-      const payload = {
-        property_slug: document.getElementById("property-slug-select").value,
-        room_number: document.getElementById("room-number").value.trim(),
-        inspector_id: document.getElementById("inspector-id").value.trim(),
-        inspection_date: document.getElementById("inspection-date").value,
-        certification_tier: document.getElementById("certification-tier").value,
-        score: document.getElementById("score").value.trim(),
-        verification_id: document.getElementById("verification-id").value.trim(),
-        status: document.getElementById("status").value.trim(),
-        notes: document.getElementById("notes").value.trim()
-      };
-
-      if (!payload.status) {
-        payload.status = payload.certification_tier;
-      }
-
-      setStatus("Saving inspection record...");
-
-      try {
-        const res = await fetch("/api/save-inspection", {
-          method: "POST",
-          headers: adminHeaders({
-            "Content-Type": "application/json",
-            "Accept": "application/json"
-          }),
-          body: JSON.stringify(payload)
-        });
-
-        const data = await res.json();
-
-        if (!res.ok || data.error) {
-          throw new Error(data.error || "Unable to save inspection.");
-        }
-
-        const publicUrl = data.public_url || "";
-        const verificationId = data.verification_id || payload.verification_id;
-        const propertyName = data.property_name || propertySelect.options[propertySelect.selectedIndex]?.text || "";
-        const roomNumber = data.room_number || payload.room_number;
-
-        currentVerificationId = verificationId;
-        currentPublicUrl = publicUrl;
-        currentPropertyName = propertyName;
-        currentRoomNumber = roomNumber;
-
-        setStatus(
-          `Inspection saved successfully.\n\nProperty: ${data.property_name}\nRoom: ${data.room_number}\nVerification ID: ${verificationId}\nPublic URL: ${publicUrl}`,
-          "success"
-        );
-
-        showQrPanel(publicUrl, verificationId, propertyName, roomNumber);
-
-        document.getElementById("verification-id").value = verificationId;
-        document.getElementById("room-number").value = "";
-        document.getElementById("inspector-id").value = "";
-        document.getElementById("score").value = "";
-        document.getElementById("status").value = "";
-        document.getElementById("notes").value = "";
-        document.getElementById("certification-tier").value = "";
-        setDefaultDateTime();
-      } catch (err) {
-        setStatus(err.message || "Something went wrong while saving the inspection.", "error");
-      }
-    });
-
-    uploadFilesBtn.addEventListener("click", async function () {
-      const verificationId = document.getElementById("verification-id").value.trim() || currentVerificationId;
-      const photoFile = document.getElementById("photoUpload").files[0] || null;
-      const docFile = document.getElementById("docUpload").files[0] || null;
-
-      if (!verificationId) {
-        setStatus("Save the inspection first so the verification ID is available for uploads.", "error");
-        return;
-      }
-
-      if (!photoFile && !docFile) {
-        setStatus("Please select at least one photo or one document before uploading.", "error");
-        return;
-      }
-
-      setStatus("Uploading inspection evidence...");
-
-      try {
-        let photoPayload = null;
-
-        if (photoFile) {
-          photoPayload = {
-            name: photoFile.name,
-            type: photoFile.type,
-            base64: await fileToBase64(photoFile)
-          };
-        }
-
-        let logPayload = null;
-
-        if (docFile) {
-          logPayload = {
-            name: docFile.name,
-            type: docFile.type,
-            base64: await fileToBase64(docFile)
-          };
-        }
-
-        const uploadRes = await fetch("/api/upload-evidence", {
-          method: "POST",
-          headers: adminHeaders({
-            "Content-Type": "application/json",
-            "Accept": "application/json"
-          }),
-          body: JSON.stringify({
-            verification_id: verificationId,
-            photo_file: photoPayload,
-            log_file: logPayload
-          })
-        });
-
-        const uploadData = await uploadRes.json();
-
-        if (!uploadRes.ok || uploadData.error) {
-          throw new Error(uploadData.error || "Upload failed.");
-        }
-
-        setStatus(
-          `Evidence uploaded successfully.\n\nVerification ID: ${verificationId}\nPhoto attached: ${uploadData.photo_url ? "Yes" : "No"}\nLog attached: ${uploadData.log_file_url ? "Yes" : "No"}`,
-          "success"
-        );
-
-        document.getElementById("photoUpload").value = "";
-        document.getElementById("docUpload").value = "";
-      } catch (err) {
-        setStatus(err.message || "Upload failed.", "error");
-      }
-    });
-
-    resetBtn.addEventListener("click", function () {
-      form.reset();
-      setDefaultDateTime();
-      qrPanel.classList.remove("show");
-      labelCard.classList.remove("show");
-      currentVerificationId = "";
-      currentPublicUrl = "";
-      currentPropertyName = "";
-      currentRoomNumber = "";
-      setStatus("Form cleared.");
-    });
-
-    printLabelBtn.addEventListener("click", printLabel);
-
-    setDefaultDateTime();
-    verifyExistingSession();
-  </script>
-</body>
+    await updateReportStatus(selectedReportId, "Sent to Property");
+  };
+});</body>
 </html>
