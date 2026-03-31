@@ -42,8 +42,18 @@ export default async function handler(req, res) {
       `?select=id,property_name,property_slug,city,state,property_type` +
       `&order=property_name.asc`;
 
-    const propertiesRes = await fetch(propertiesUrl, { headers });
-    const propertiesData = await propertiesRes.json();
+    const reportsUrl =
+      `${supabaseUrl}/rest/v1/guest_reports` +
+      `?select=id,verification_id,confirmation_number,property_slug,property_name,room_number,issue_types,guest_note,details,photo_url,status,priority,reported_at,guest_email,guest_first_name,guest_last_name` +
+      `&order=reported_at.desc.nullslast`;
+
+    const [propertiesRes, reportsRes] = await Promise.all([
+      fetch(propertiesUrl, { headers }),
+      fetch(reportsUrl, { headers })
+    ]);
+
+    const propertiesData = await propertiesRes.json().catch(() => []);
+    const reportsData = await reportsRes.json().catch(() => []);
 
     if (!propertiesRes.ok) {
       return res.status(500).json({
@@ -52,8 +62,16 @@ export default async function handler(req, res) {
       });
     }
 
+    if (!reportsRes.ok) {
+      return res.status(500).json({
+        error: "Guest report lookup failed",
+        details: reportsData
+      });
+    }
+
     return res.status(200).json({
-      properties: Array.isArray(propertiesData) ? propertiesData : []
+      properties: Array.isArray(propertiesData) ? propertiesData : [],
+      guest_reports: Array.isArray(reportsData) ? reportsData : []
     });
   } catch (error) {
     return res.status(500).json({
