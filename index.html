@@ -29,9 +29,7 @@
       --premier: #f4d06f;
     }
 
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     html, body {
       margin: 0;
@@ -180,9 +178,7 @@
       margin-bottom: 20px;
     }
 
-    .form-group + .form-group {
-      margin-top: 16px;
-    }
+    .form-group + .form-group { margin-top: 16px; }
 
     label {
       display: block;
@@ -269,6 +265,19 @@
       background: rgba(255,255,255,0.03);
       color: var(--text);
       border: 1px solid rgba(199,162,87,0.16);
+    }
+
+    .ghost-link {
+      background: none;
+      border: none;
+      padding: 0;
+      margin: 8px 0 0;
+      min-height: unset;
+      color: var(--gold-soft);
+      font-size: 13px;
+      cursor: pointer;
+      text-decoration: underline;
+      justify-content: flex-start;
     }
 
     .portal-link {
@@ -364,9 +373,7 @@
       line-height: 1.1;
     }
 
-    .centered-title {
-      text-align: center;
-    }
+    .centered-title { text-align: center; }
 
     .section-divider {
       width: 120px;
@@ -488,9 +495,7 @@
       color: #ffe0e0;
     }
 
-    .hidden {
-      display: none !important;
-    }
+    .hidden { display: none !important; }
 
     .auth-overlay {
       position: fixed;
@@ -602,30 +607,12 @@
         width: 100%;
       }
 
-      h1 {
-        font-size: 32px;
-      }
-
-      .eyebrow {
-        font-size: 16px;
-      }
-
-      .brand-lockup {
-        gap: 8px;
-        margin-bottom: 14px;
-      }
-
-      .crest {
-        width: 120px;
-      }
-
-      .verification-proof {
-        min-height: 280px;
-      }
-
-      .auth-title {
-        font-size: 28px;
-      }
+      h1 { font-size: 32px; }
+      .eyebrow { font-size: 16px; }
+      .brand-lockup { gap: 8px; margin-bottom: 14px; }
+      .crest { width: 120px; }
+      .verification-proof { min-height: 280px; }
+      .auth-title { font-size: 28px; }
     }
   </style>
 </head>
@@ -885,6 +872,8 @@
               <input id="guest-password" type="password" placeholder="Enter your password">
             </div>
 
+            ${type === "login" ? `<button id="forgot-password-btn" class="ghost-link" type="button">Forgot Password?</button>` : ""}
+
             <div class="button-row">
               <button id="guest-auth-submit" class="primary-btn">${type === "login" ? "Continue" : "Create Account"}</button>
               <button id="guest-auth-cancel" class="secondary-btn" type="button">Cancel</button>
@@ -902,6 +891,31 @@
                 ? `Need an account? <a id="switch-to-signup">Create one here</a>`
                 : `Already have an account? <a id="switch-to-login">Log in</a>`}
             </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderForgotPasswordModal() {
+      return `
+        <div id="forgot-password-overlay" class="auth-overlay">
+          <div class="auth-modal">
+            <h2 class="auth-title">Reset Password</h2>
+            <div class="auth-subtext">
+              Enter your email address and we’ll send password reset instructions.
+            </div>
+
+            <div class="form-group">
+              <label for="forgot-password-email">Email Address</label>
+              <input id="forgot-password-email" type="email" placeholder="Enter your email">
+            </div>
+
+            <div class="button-row">
+              <button id="forgot-password-submit" class="primary-btn">Send Reset Email</button>
+              <button id="forgot-password-cancel" class="secondary-btn" type="button">Cancel</button>
+            </div>
+
+            <div id="forgot-password-status" class="inline-status hidden"></div>
           </div>
         </div>
       `;
@@ -955,7 +969,6 @@
         : "N/A";
 
       const statusClass = getStatusClass(certificationLevel);
-
       const requestedSlug = data?.debug?.requestedSlug || slug || "";
       const derivedPropertySlug = requestedSlug.includes("-room-")
         ? requestedSlug.split("-room-")[0]
@@ -1142,10 +1155,10 @@
         const wrap = document.getElementById("guest-auth-chip-wrap");
         if (!wrap) return;
 
-        if (currentGuest && currentGuest.email_verified) {
+        if (currentGuest && currentGuest.email) {
           wrap.innerHTML = `
             <div class="auth-guest-chip">
-              Signed in as ${escapeHtml(currentGuest.first_name)} ${escapeHtml(currentGuest.last_name)}
+              Signed in as ${escapeHtml(currentGuest.first_name || "")} ${escapeHtml(currentGuest.last_name || "")}
             </div>
           `;
         } else {
@@ -1166,10 +1179,71 @@
         el.textContent = "";
       }
 
-      function openEmailVerificationModal(email) {
-        const existing = document.getElementById("email-verify-overlay");
-        if (existing) existing.remove();
+      function closeOverlayById(id) {
+        const el = document.getElementById(id);
+        if (el) el.remove();
+      }
 
+      function openForgotPasswordModal() {
+        closeOverlayById("guest-auth-overlay");
+        closeOverlayById("forgot-password-overlay");
+
+        document.body.insertAdjacentHTML("beforeend", renderForgotPasswordModal());
+
+        const overlay = document.getElementById("forgot-password-overlay");
+        const submitBtn = document.getElementById("forgot-password-submit");
+        const cancelBtn = document.getElementById("forgot-password-cancel");
+        const statusBox = document.getElementById("forgot-password-status");
+
+        function closeModal() {
+          if (overlay) overlay.remove();
+        }
+
+        cancelBtn.addEventListener("click", function () {
+          closeModal();
+          openAuthModal("login");
+        });
+
+        submitBtn.addEventListener("click", async function () {
+          const email = document.getElementById("forgot-password-email").value.trim();
+
+          if (!email) {
+            setInlineStatus(statusBox, "Please enter your email address.", "error");
+            return;
+          }
+
+          setInlineStatus(statusBox, "Sending reset email...");
+
+          try {
+            const res = await fetch("/api/guest-forgot-password", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+              },
+              body: JSON.stringify({ email })
+            });
+
+            const data = await res.json().catch(() => null);
+
+            if (!res.ok || data?.error) {
+              throw new Error(
+                data?.error ||
+                data?.message ||
+                data?.details?.message ||
+                "Unable to send reset email."
+              );
+            }
+
+            setInlineStatus(statusBox, "If that email exists in our system, reset instructions have been sent.", "success");
+          } catch (error) {
+            setInlineStatus(statusBox, error.message || "Unable to send reset email.", "error");
+          }
+        });
+      }
+
+      function openEmailVerificationModal(email) {
+        closeOverlayById("email-verify-overlay");
         document.body.insertAdjacentHTML("beforeend", renderEmailVerificationModal(email));
 
         const overlay = document.getElementById("email-verify-overlay");
@@ -1203,28 +1277,26 @@
               body: JSON.stringify({ email, code })
             });
 
-            const data = await res.json();
+            const data = await res.json().catch(() => null);
 
-            if (!res.ok || data.error) {
-              const friendlyError =
-                typeof data.error === "string"
-                  ? data.error
-                  : data.error?.message
-                  ? data.error.message
-                  : data.details?.message
-                  ? data.details.message
-                  : JSON.stringify(data.error || data.details || data);
-
-              throw new Error(friendlyError || "Unable to verify email.");
+            if (!res.ok || data?.error) {
+              throw new Error(
+                data?.error ||
+                data?.message ||
+                data?.details?.message ||
+                "Unable to verify email."
+              );
             }
 
-            currentGuestToken = data.token;
-            currentGuest = data.guest;
-            sessionStorage.setItem("readymark_guest_token", currentGuestToken);
+            currentGuestToken = data.token || "";
+            if (currentGuestToken) {
+              sessionStorage.setItem("readymark_guest_token", currentGuestToken);
+            }
+
+            currentGuest = data.guest || null;
 
             closeModal();
             renderGuestChip();
-
             document.getElementById("report-start-view").classList.add("hidden");
             document.getElementById("report-form-view").classList.remove("hidden");
           } catch (error) {
@@ -1234,9 +1306,7 @@
       }
 
       function openAuthModal(type = "login") {
-        const existing = document.getElementById("guest-auth-overlay");
-        if (existing) existing.remove();
-
+        closeOverlayById("guest-auth-overlay");
         document.body.insertAdjacentHTML("beforeend", renderAuthModal(type));
 
         const overlay = document.getElementById("guest-auth-overlay");
@@ -1245,6 +1315,7 @@
         const authStatus = document.getElementById("guest-auth-status");
         const switchToSignup = document.getElementById("switch-to-signup");
         const switchToLogin = document.getElementById("switch-to-login");
+        const forgotPasswordBtn = document.getElementById("forgot-password-btn");
 
         function closeModal() {
           if (overlay) overlay.remove();
@@ -1263,6 +1334,12 @@
           switchToLogin.addEventListener("click", function () {
             closeModal();
             openAuthModal("login");
+          });
+        }
+
+        if (forgotPasswordBtn) {
+          forgotPasswordBtn.addEventListener("click", function () {
+            openForgotPasswordModal();
           });
         }
 
@@ -1308,19 +1385,27 @@
               body: JSON.stringify(payload)
             });
 
-            const data = await res.json();
+            const data = await res.json().catch(() => null);
 
-            if (!res.ok || data.error) {
-              const friendlyError =
-                typeof data.error === "string"
-                  ? data.error
-                  : data.error?.message
-                  ? data.error.message
-                  : data.details?.message
-                  ? data.details.message
-                  : JSON.stringify(data.error || data.details || data);
+            if (!res.ok || data?.error) {
+              throw new Error(
+                data?.error ||
+                data?.message ||
+                data?.details?.message ||
+                "Unable to continue."
+              );
+            }
 
-              throw new Error(friendlyError || "Unable to continue.");
+            if (type === "login" && data?.email_verified === true && data?.token) {
+              currentGuestToken = data.token;
+              sessionStorage.setItem("readymark_guest_token", currentGuestToken);
+              currentGuest = data.guest || null;
+
+              closeModal();
+              renderGuestChip();
+              document.getElementById("report-start-view").classList.add("hidden");
+              document.getElementById("report-form-view").classList.remove("hidden");
+              return;
             }
 
             closeModal();
@@ -1341,7 +1426,7 @@
       const reportStatus = document.getElementById("report-status");
 
       openReportBtn.addEventListener("click", function () {
-        if (!currentGuest || !currentGuest.email_verified) {
+        if (!currentGuest || !currentGuest.email) {
           openAuthModal("login");
           return;
         }
@@ -1369,8 +1454,8 @@
           return;
         }
 
-        if (!currentGuestToken || !currentGuest || !currentGuest.email_verified) {
-          setInlineStatus(reportStatus, "Guest login and email verification are required.", "error");
+        if (!currentGuestToken || !currentGuest || !currentGuest.email) {
+          setInlineStatus(reportStatus, "Guest login is required.", "error");
           return;
         }
 
@@ -1400,20 +1485,22 @@
           const confirmationNumber =
             responseData?.confirmationNumber ||
             responseData?.confirmation_number ||
+            responseData?.reference ||
             responseData?.report?.confirmation_number ||
             responseData?.report?.verification_id ||
-            "Pending";
+            "Unavailable";
 
-          setInlineStatus(
-            reportStatus,
-            `Report received.\n\nReference #: ${confirmationNumber}\n\nThe property has been notified.`,
-            "success"
-          );
+          reportStatus.className = "inline-status inline-success";
+          reportStatus.innerHTML = `
+            <strong>Report received.</strong><br><br>
+            <strong>Reference #:</strong> ${escapeHtml(confirmationNumber)}<br><br>
+            The property has been notified.
+          `;
+          reportStatus.classList.remove("hidden");
 
           document.querySelectorAll('input[name="issue_type"]').forEach(input => {
             input.checked = false;
           });
-
           document.getElementById("guest-note").value = "";
           document.getElementById("guest-photo").value = "";
         } catch (error) {
