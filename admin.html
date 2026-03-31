@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>The Ready Mark | Internal Log Entry</title>
+  <title>The Ready Mark | Internal Dashboard</title>
 
   <style>
     :root {
@@ -19,6 +19,7 @@
       --success: #3ddc84;
       --warning: #ffb347;
       --danger: #ff6b6b;
+      --info: #7cc7ff;
     }
 
     * {
@@ -65,7 +66,7 @@
 
     .panel {
       width: 100%;
-      max-width: 980px;
+      max-width: 1180px;
       background: linear-gradient(180deg, rgba(27,31,35,0.98), rgba(21,24,27,0.98));
       border: 1px solid var(--line);
       border-radius: 22px;
@@ -134,7 +135,7 @@
     }
 
     .subtext {
-      max-width: 700px;
+      max-width: 760px;
       margin: 14px auto 0;
       color: var(--muted);
       font-size: 16px;
@@ -270,6 +271,18 @@
       background: rgba(255,255,255,0.03);
       color: var(--text);
       border: 1px solid rgba(199,162,87,0.16);
+    }
+
+    .warning-btn {
+      background: rgba(255,179,71,0.10);
+      color: #ffe4b5;
+      border: 1px solid rgba(255,179,71,0.30);
+    }
+
+    .danger-btn {
+      background: rgba(255,107,107,0.10);
+      color: #ffdcdc;
+      border: 1px solid rgba(255,107,107,0.30);
     }
 
     .status-box {
@@ -462,13 +475,190 @@
       margin-bottom: 18px;
     }
 
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: 1.35fr 1fr;
+      gap: 20px;
+      align-items: start;
+    }
+
+    .reports-toolbar {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+
+    .reports-meta {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .reports-table-wrap {
+      overflow-x: auto;
+      border: 1px solid rgba(199,162,87,0.14);
+      border-radius: 16px;
+      background: rgba(255,255,255,0.02);
+    }
+
+    .reports-table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 760px;
+    }
+
+    .reports-table th,
+    .reports-table td {
+      padding: 14px 14px;
+      text-align: left;
+      border-bottom: 1px solid rgba(199,162,87,0.10);
+      vertical-align: top;
+      font-size: 14px;
+    }
+
+    .reports-table th {
+      color: var(--gold-soft);
+      font-size: 12px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      background: rgba(255,255,255,0.02);
+    }
+
+    .reports-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .reports-table tr.active-row {
+      background: rgba(199,162,87,0.08);
+    }
+
+    .reports-table tr:hover {
+      background: rgba(255,255,255,0.03);
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 30px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(199,162,87,0.18);
+      background: rgba(199,162,87,0.08);
+      color: var(--gold-soft);
+      font-size: 12px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .pill-new {
+      background: rgba(124,199,255,0.10);
+      border-color: rgba(124,199,255,0.28);
+      color: #d7f0ff;
+    }
+
+    .pill-sent {
+      background: rgba(255,179,71,0.10);
+      border-color: rgba(255,179,71,0.30);
+      color: #ffe6bf;
+    }
+
+    .pill-review {
+      background: rgba(199,162,87,0.12);
+      border-color: rgba(199,162,87,0.30);
+      color: #f2dca6;
+    }
+
+    .pill-resolved {
+      background: rgba(61,220,132,0.10);
+      border-color: rgba(61,220,132,0.30);
+      color: #dff7ea;
+    }
+
+    .pill-escalated {
+      background: rgba(255,107,107,0.10);
+      border-color: rgba(255,107,107,0.30);
+      color: #ffe0e0;
+    }
+
+    .report-detail-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .detail-item {
+      padding: 16px;
+      border-radius: 14px;
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(199,162,87,0.10);
+    }
+
+    .detail-label {
+      color: var(--gold-soft);
+      font-size: 12px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .detail-value {
+      font-size: 16px;
+      line-height: 1.6;
+      color: var(--text);
+      word-break: break-word;
+    }
+
+    .report-photo-wrap {
+      display: flex;
+      justify-content: center;
+      margin-top: 16px;
+    }
+
+    .report-photo-wrap img {
+      max-width: 100%;
+      width: 100%;
+      border-radius: 16px;
+      border: 1px solid rgba(199,162,87,0.18);
+      display: block;
+    }
+
+    .empty-state {
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.7;
+      text-align: center;
+      padding: 26px 16px;
+      border: 1px dashed rgba(199,162,87,0.18);
+      border-radius: 16px;
+      background: rgba(255,255,255,0.02);
+    }
+
+    .small-note {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+      margin-top: 10px;
+    }
+
+    @media (max-width: 980px) {
+      .dashboard-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
     @media (max-width: 700px) {
-      .form-grid {
+      .form-grid,
+      .report-detail-grid {
         grid-template-columns: 1fr;
       }
 
       .button-row,
-      .qr-actions {
+      .qr-actions,
+      .reports-toolbar {
         flex-direction: column;
       }
 
@@ -503,7 +693,7 @@
           </div>
           <h1>Admin Login</h1>
           <div class="subtext">
-            Sign in to manage properties, inspections, evidence, and verification records.
+            Sign in to manage properties, inspections, evidence, verification records, and guest reports.
           </div>
         </div>
 
@@ -532,9 +722,9 @@
         <div class="brand-lockup">
           <div class="eyebrow">The Ready Mark</div>
         </div>
-        <h1>Internal Log Entry</h1>
+        <h1>Internal Dashboard</h1>
         <div class="subtext">
-          Create properties, save inspection records, and prepare verification evidence without manually editing the database.
+          Manage properties, inspection records, QR generation, evidence, and guest issue reports from one control center.
         </div>
       </div>
 
@@ -686,6 +876,130 @@
         </div>
 
         <div class="card">
+          <h2 class="section-title center-text">Guest Reports</h2>
+          <div class="section-divider center-divider"></div>
+
+          <div class="dashboard-grid">
+            <div>
+              <div class="reports-toolbar">
+                <div class="reports-meta" id="reports-meta">
+                  Loading guest reports...
+                </div>
+                <div class="button-row" style="margin-top:0;">
+                  <button type="button" class="secondary-btn" id="refresh-reports-btn">Refresh Reports</button>
+                </div>
+              </div>
+
+              <div class="reports-table-wrap">
+                <table class="reports-table">
+                  <thead>
+                    <tr>
+                      <th>Reference #</th>
+                      <th>Property</th>
+                      <th>Room</th>
+                      <th>Submitted</th>
+                      <th>Status</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody id="reports-table-body">
+                    <tr>
+                      <td colspan="6">
+                        <div class="empty-state">Loading guest reports...</div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="small-note">
+                This section is internal only. Guest issue reports are logged here first and can later be routed to the property in a controlled format.
+              </div>
+            </div>
+
+            <div>
+              <div class="card" style="margin-bottom:0;">
+                <h3 class="section-title" style="font-size:22px;">Report Detail</h3>
+                <div class="section-divider"></div>
+
+                <div id="report-detail-empty" class="empty-state">
+                  Select a guest report to view the full internal record, issue summary, and next actions.
+                </div>
+
+                <div id="report-detail-panel" class="hidden">
+                  <div class="report-detail-grid">
+                    <div class="detail-item">
+                      <div class="detail-label">Reference #</div>
+                      <div class="detail-value" id="detail-reference">—</div>
+                    </div>
+
+                    <div class="detail-item">
+                      <div class="detail-label">Submitted</div>
+                      <div class="detail-value" id="detail-reported-at">—</div>
+                    </div>
+
+                    <div class="detail-item">
+                      <div class="detail-label">Property</div>
+                      <div class="detail-value" id="detail-property">—</div>
+                    </div>
+
+                    <div class="detail-item">
+                      <div class="detail-label">Room</div>
+                      <div class="detail-value" id="detail-room">—</div>
+                    </div>
+
+                    <div class="detail-item">
+                      <div class="detail-label">Guest</div>
+                      <div class="detail-value" id="detail-guest">—</div>
+                    </div>
+
+                    <div class="detail-item">
+                      <div class="detail-label">Guest Email</div>
+                      <div class="detail-value" id="detail-email">—</div>
+                    </div>
+
+                    <div class="detail-item">
+                      <div class="detail-label">Issue Types</div>
+                      <div class="detail-value" id="detail-issues">—</div>
+                    </div>
+
+                    <div class="detail-item">
+                      <div class="detail-label">Priority</div>
+                      <div class="detail-value" id="detail-priority">—</div>
+                    </div>
+
+                    <div class="detail-item full-width">
+                      <div class="detail-label">Guest Note</div>
+                      <div class="detail-value" id="detail-note">—</div>
+                    </div>
+
+                    <div class="detail-item full-width">
+                      <div class="detail-label">Current Status</div>
+                      <div class="detail-value" id="detail-status-pill">—</div>
+                    </div>
+                  </div>
+
+                  <div id="detail-photo-wrap" class="report-photo-wrap hidden">
+                    <img id="detail-photo" src="" alt="Guest Report Photo">
+                  </div>
+
+                  <div class="button-row">
+                    <button type="button" class="primary-btn" id="send-to-property-btn">Send to Property</button>
+                    <button type="button" class="secondary-btn" id="mark-review-btn">Mark Under Review</button>
+                    <button type="button" class="secondary-btn" id="mark-resolved-btn">Mark Resolved</button>
+                    <button type="button" class="danger-btn" id="mark-escalated-btn">Escalate</button>
+                  </div>
+
+                  <div class="small-note">
+                    Send to Property is a workflow action placeholder for now. We’ll wire the outbound handoff next.
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
           <h2 class="section-title center-text">System Response</h2>
           <div class="section-divider center-divider"></div>
           <div id="status-box" class="status-box center-text">Waiting for entry.</div>
@@ -725,7 +1039,7 @@
       </div>
 
       <div class="footer-note">
-        Internal use only. Once authentication is added, this page should be restricted from public access.
+        Internal use only. This dashboard is the control center for the Ready Mark verification and guest issue workflow.
       </div>
     </div>
   </div>
@@ -765,10 +1079,37 @@
     const labelQrImage = document.getElementById("label-qr-image");
     const labelFooter = document.getElementById("label-footer");
 
+    const reportsMeta = document.getElementById("reports-meta");
+    const reportsTableBody = document.getElementById("reports-table-body");
+    const refreshReportsBtn = document.getElementById("refresh-reports-btn");
+
+    const reportDetailEmpty = document.getElementById("report-detail-empty");
+    const reportDetailPanel = document.getElementById("report-detail-panel");
+    const detailReference = document.getElementById("detail-reference");
+    const detailReportedAt = document.getElementById("detail-reported-at");
+    const detailProperty = document.getElementById("detail-property");
+    const detailRoom = document.getElementById("detail-room");
+    const detailGuest = document.getElementById("detail-guest");
+    const detailEmail = document.getElementById("detail-email");
+    const detailIssues = document.getElementById("detail-issues");
+    const detailPriority = document.getElementById("detail-priority");
+    const detailNote = document.getElementById("detail-note");
+    const detailStatusPill = document.getElementById("detail-status-pill");
+    const detailPhotoWrap = document.getElementById("detail-photo-wrap");
+    const detailPhoto = document.getElementById("detail-photo");
+
+    const sendToPropertyBtn = document.getElementById("send-to-property-btn");
+    const markReviewBtn = document.getElementById("mark-review-btn");
+    const markResolvedBtn = document.getElementById("mark-resolved-btn");
+    const markEscalatedBtn = document.getElementById("mark-escalated-btn");
+
     let currentVerificationId = "";
     let currentPublicUrl = "";
     let currentPropertyName = "";
     let currentRoomNumber = "";
+
+    let cachedReports = [];
+    let selectedReportId = null;
 
     function getSessionToken() {
       return sessionStorage.getItem(SESSION_TOKEN_KEY) || "";
@@ -845,6 +1186,51 @@
 
     function generateQrUrl(url) {
       return `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(url)}`;
+    }
+
+    function formatDateTime(value) {
+      if (!value) return "—";
+
+      try {
+        return new Date(value).toLocaleString();
+      } catch {
+        return String(value);
+      }
+    }
+
+    function escapeHtml(value) {
+      if (value === null || value === undefined) return "";
+      return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function getReportReference(report) {
+      return (
+        report.confirmation_number ||
+        report.verification_id ||
+        "—"
+      );
+    }
+
+    function getStatusLabel(statusValue) {
+      if (!statusValue) return "New";
+      return String(statusValue);
+    }
+
+    function getStatusPillClass(statusValue) {
+      const normalized = String(statusValue || "new").toLowerCase().trim();
+
+      if (normalized === "new") return "pill pill-new";
+      if (normalized === "sent to property") return "pill pill-sent";
+      if (normalized === "under review") return "pill pill-review";
+      if (normalized === "resolved") return "pill pill-resolved";
+      if (normalized === "escalated") return "pill pill-escalated";
+
+      return "pill pill-new";
     }
 
     function showQrPanel(publicUrl, verificationId, propertyName, roomNumber) {
@@ -969,6 +1355,131 @@
       });
     }
 
+    function renderReportsTable(reports) {
+      if (!Array.isArray(reports) || !reports.length) {
+        reportsTableBody.innerHTML = `
+          <tr>
+            <td colspan="6">
+              <div class="empty-state">No guest reports yet. When guests submit issues from the verification page, they’ll appear here.</div>
+            </td>
+          </tr>
+        `;
+        reportsMeta.textContent = "0 reports loaded.";
+        clearReportDetail();
+        return;
+      }
+
+      reportsMeta.textContent = `${reports.length} guest report${reports.length === 1 ? "" : "s"} loaded.`;
+
+      reportsTableBody.innerHTML = reports.map(report => {
+        const reference = escapeHtml(getReportReference(report));
+        const property = escapeHtml(report.property_name || "—");
+        const room = escapeHtml(report.room_number || "—");
+        const reported = escapeHtml(formatDateTime(report.reported_at));
+        const statusLabel = escapeHtml(getStatusLabel(report.status));
+        const statusClass = getStatusPillClass(report.status);
+        const isActive = selectedReportId === report.id ? "active-row" : "";
+
+        return `
+          <tr class="${isActive}">
+            <td>${reference}</td>
+            <td>${property}</td>
+            <td>${room}</td>
+            <td>${reported}</td>
+            <td><span class="${statusClass}">${statusLabel}</span></td>
+            <td>
+              <button type="button" class="secondary-btn" data-report-id="${escapeHtml(report.id)}" style="min-height:40px;padding:10px 14px;">View</button>
+            </td>
+          </tr>
+        `;
+      }).join("");
+
+      document.querySelectorAll("[data-report-id]").forEach(btn => {
+        btn.addEventListener("click", function () {
+          const reportId = this.getAttribute("data-report-id");
+          const report = cachedReports.find(item => String(item.id) === String(reportId));
+          if (report) {
+            selectedReportId = report.id;
+            renderReportsTable(cachedReports);
+            showReportDetail(report);
+          }
+        });
+      });
+
+      if (!selectedReportId && reports[0]) {
+        selectedReportId = reports[0].id;
+        renderReportsTable(cachedReports);
+        showReportDetail(reports[0]);
+      }
+    }
+
+    function clearReportDetail() {
+      reportDetailEmpty.classList.remove("hidden");
+      reportDetailPanel.classList.add("hidden");
+      detailPhotoWrap.classList.add("hidden");
+      detailPhoto.src = "";
+    }
+
+    function showReportDetail(report) {
+      reportDetailEmpty.classList.add("hidden");
+      reportDetailPanel.classList.remove("hidden");
+
+      const guestFullName = [report.guest_first_name, report.guest_last_name].filter(Boolean).join(" ").trim() || "—";
+      const issueText = Array.isArray(report.issue_types) && report.issue_types.length
+        ? report.issue_types.join(", ")
+        : "—";
+      const noteText = report.guest_note || report.details || "—";
+      const statusLabel = getStatusLabel(report.status);
+      const statusClass = getStatusPillClass(report.status);
+
+      detailReference.textContent = getReportReference(report);
+      detailReportedAt.textContent = formatDateTime(report.reported_at);
+      detailProperty.textContent = report.property_name || "—";
+      detailRoom.textContent = report.room_number || "—";
+      detailGuest.textContent = guestFullName;
+      detailEmail.textContent = report.guest_email || "—";
+      detailIssues.textContent = issueText;
+      detailPriority.textContent = report.priority || "—";
+      detailNote.textContent = noteText;
+      detailStatusPill.innerHTML = `<span class="${statusClass}">${escapeHtml(statusLabel)}</span>`;
+
+      if (report.photo_url) {
+        detailPhoto.src = report.photo_url;
+        detailPhotoWrap.classList.remove("hidden");
+      } else {
+        detailPhoto.src = "";
+        detailPhotoWrap.classList.add("hidden");
+      }
+
+      sendToPropertyBtn.onclick = function () {
+        setStatus(
+          `Send to Property action selected.\n\nReference #: ${getReportReference(report)}\nProperty: ${report.property_name || "—"}\nRoom: ${report.room_number || "—"}\n\nNext step: wire this button to send a controlled report email to the property contact.`,
+          "success"
+        );
+      };
+
+      markReviewBtn.onclick = function () {
+        setStatus(
+          `Under Review action selected for ${getReportReference(report)}.\n\nNext step: wire this to update the guest_reports status field in Supabase.`,
+          "success"
+        );
+      };
+
+      markResolvedBtn.onclick = function () {
+        setStatus(
+          `Resolved action selected for ${getReportReference(report)}.\n\nNext step: wire this to update the guest_reports status field in Supabase.`,
+          "success"
+        );
+      };
+
+      markEscalatedBtn.onclick = function () {
+        setStatus(
+          `Escalate action selected for ${getReportReference(report)}.\n\nNext step: wire this to update the guest_reports status field in Supabase and flag for priority follow-up.`,
+          "error"
+        );
+      };
+    }
+
     async function login() {
       const password = loginPasswordInput.value.trim();
 
@@ -998,7 +1509,7 @@
         setSessionToken(data.token);
         setLoginStatus("Login successful.", "success");
         showAdminView();
-        await loadProperties();
+        await loadDashboardData();
       } catch (error) {
         setLoginStatus(error.message || "Login failed.", "error");
       }
@@ -1029,7 +1540,7 @@
         }
 
         showAdminView();
-        await loadProperties();
+        await loadDashboardData();
       } catch (error) {
         clearSessionToken();
         showLoginView();
@@ -1055,7 +1566,7 @@
       showLoginView();
     });
 
-    async function loadProperties(selectedSlug = "") {
+    async function loadDashboardData(selectedSlug = "") {
       try {
         const res = await fetch("/api/admin-data", {
           headers: adminHeaders({
@@ -1065,23 +1576,42 @@
 
         const data = await res.json();
 
-        if (!res.ok || !Array.isArray(data.properties)) {
-          throw new Error(data.error || "Unable to load properties.");
+        if (!res.ok) {
+          throw new Error(data.error || "Unable to load admin data.");
         }
+
+        const properties = Array.isArray(data.properties) ? data.properties : [];
+        const guestReports = Array.isArray(data.guest_reports) ? data.guest_reports : [];
 
         propertySelect.innerHTML = `
           <option value="">Select a property</option>
-          ${data.properties.map(p => `
+          ${properties.map(p => `
             <option value="${String(p.property_slug).replace(/"/g, "&quot;")}" ${selectedSlug === p.property_slug ? "selected" : ""}>
               ${buildPropertyLabel(p)}
             </option>
           `).join("")}
         `;
+
+        cachedReports = guestReports;
+        renderReportsTable(cachedReports);
       } catch (err) {
         propertySelect.innerHTML = `<option value="">Unable to load properties</option>`;
-        setStatus(err.message || "Failed to load properties.", "error");
+        reportsTableBody.innerHTML = `
+          <tr>
+            <td colspan="6">
+              <div class="empty-state">${escapeHtml(err.message || "Failed to load guest reports.")}</div>
+            </td>
+          </tr>
+        `;
+        clearReportDetail();
+        setStatus(err.message || "Failed to load admin data.", "error");
       }
     }
+
+    refreshReportsBtn.addEventListener("click", async function () {
+      await loadDashboardData(propertySelect.value || "");
+      setStatus("Guest reports refreshed.", "success");
+    });
 
     createPropertyBtn.addEventListener("click", async function () {
       const property_name = propertyNameInput.value.trim();
@@ -1130,7 +1660,7 @@
         propertyStateInput.value = "";
         propertyTypeInput.value = "";
 
-        await loadProperties(property_slug);
+        await loadDashboardData(property_slug);
       } catch (err) {
         setStatus(err.message || "Property creation failed.", "error");
       }
