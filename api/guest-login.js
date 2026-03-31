@@ -11,6 +11,10 @@ function generateVerificationCode() {
   return String(Math.floor(100000 + Math.random() * 900000));
 }
 
+function generateSessionToken() {
+  return crypto.randomBytes(32).toString("hex");
+}
+
 async function sendVerificationEmail(email, code) {
   const fromEmail = process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev";
 
@@ -29,6 +33,45 @@ async function sendVerificationEmail(email, code) {
       </div>
     `
   });
+}
+
+async function createGuestSession(supabaseUrl, serviceRoleKey, user) {
+  const token = generateSessionToken();
+  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+
+  const sessionPayload = {
+    guest_user_id: user.id,
+    token,
+    expires_at: expiresAt
+  };
+
+  const sessionRes = await fetch(`${supabaseUrl}/rest/v1/guest_sessions`, {
+    method: "POST",
+    headers: {
+      apikey: serviceRoleKey,
+      Authorization: `Bearer ${serviceRoleKey}`,
+      "Content-Type": "application/json",
+      Prefer: "return=representation"
+    },
+    body: JSON.stringify(sessionPayload)
+  });
+
+  const sessionData = await sessionRes.json().catch(() => null);
+
+  if (!sessionRes.ok) {
+    throw new Error(
+      sessionData?.message ||
+      sessionData?.error ||
+      sessionData?.details ||
+      "Failed to create guest session"
+    );
+  }
+
+  return {
+    token,
+    expires_at: expiresAt,
+    session: Array.isArray(sessionData) ? sessionData[0] : sessionData
+  };
 }
 
 export default async function handler(req, res) {
@@ -82,10 +125,13 @@ export default async function handler(req, res) {
       { headers }
     );
 
-    const userData = await userRes.json();
+    const userData = await userRes.json().catch(() => null);
 
     if (!userRes.ok) {
-      return res.status(500).json({ error: "Guest login lookup failed", details: userData });
+      return res.status(500).json({
+        error: "Guest login lookup failed",
+        details: userData
+      });
     }
 
     const user = Array.isArray(userData) && userData.length > 0 ? userData[0] : null;
@@ -95,15 +141,21 @@ export default async function handler(req, res) {
     }
 
     if (user.email_verified) {
+      const guestSession = await createGuestSession(supabaseUrl, serviceRoleKey, user);
+
       return res.status(200).json({
         success: true,
         email_verified: true,
+        token: guestSession.token,
+        expires_at: guestSession.expires_at,
         guest: {
           id: user.id,
           first_name: user.first_name,
           last_name: user.last_name,
-          email: user.email
-        }
+          email: user.email,
+          email_verified: true
+        },
+        message: "Login successful."
       });
     }
 
@@ -125,12 +177,12 @@ export default async function handler(req, res) {
       }
     );
 
-    const patchData = await patchRes.text();
+    const patchText = await patchRes.text();
 
     if (!patchRes.ok) {
       return res.status(500).json({
         error: "Failed to prepare verification code",
-        details: patchData
+        details: patchText
       });
     }
 
@@ -144,7 +196,8 @@ export default async function handler(req, res) {
         id: user.id,
         first_name: user.first_name,
         last_name: user.last_name,
-        email: user.email
+        email: user.email,
+        email_verified: false
       },
       message: "Verification code sent."
     });
