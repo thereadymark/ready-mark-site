@@ -46,6 +46,17 @@ function validatePhotoFile(photoFile, fileBuffer) {
   return null;
 }
 
+function generateReportReference() {
+  const now = new Date();
+  const yyyy = now.getFullYear();
+  const mm = String(now.getMonth() + 1).padStart(2, "0");
+  const dd = String(now.getDate()).padStart(2, "0");
+  const datePart = `${yyyy}${mm}${dd}`;
+  const randomPart = Math.floor(1000 + Math.random() * 9000);
+
+  return `RM-RPT-${datePart}-${randomPart}`;
+}
+
 export default async function handler(req, res) {
   const corsHeaders = {
     "Access-Control-Allow-Origin": "*",
@@ -127,6 +138,8 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Please select at least one issue type." });
     }
 
+    const confirmationNumber = generateReportReference();
+
     let uploadedPhotoUrl = "";
 
     if (photo_file && photo_file.base64) {
@@ -138,7 +151,7 @@ export default async function handler(req, res) {
       }
 
       const fileName = sanitizeFileName(photo_file.name);
-      const filePath = `${verification_id}/${Date.now()}-${fileName}`;
+      const filePath = `${confirmationNumber}/${Date.now()}-${fileName}`;
 
       const { error: uploadError } = await supabase.storage
         .from("guest-reports")
@@ -162,14 +175,16 @@ export default async function handler(req, res) {
 
     const insertPayload = {
       verification_id: String(verification_id).trim(),
+      confirmation_number: confirmationNumber,
       property_slug: property_slug ? String(property_slug).trim() : null,
       property_name: property_name ? String(property_name).trim() : null,
       room_number: String(room_number).trim(),
       issue_types,
       guest_note: guest_note ? String(guest_note).trim() : null,
+      details: guest_note ? String(guest_note).trim() : null,
       photo_url: uploadedPhotoUrl || null,
-      status: "new",
-      priority: uploadedPhotoUrl ? "urgent" : "normal",
+      status: "New",
+      priority: uploadedPhotoUrl ? "Urgent" : "Normal",
       reported_at: new Date().toISOString(),
       guest_user_id: guestUser.id,
       guest_email: guestUser.email,
@@ -193,6 +208,8 @@ export default async function handler(req, res) {
 
     return res.status(200).json({
       success: true,
+      confirmation_number: confirmationNumber,
+      reference: confirmationNumber,
       report: data
     });
   } catch (error) {
