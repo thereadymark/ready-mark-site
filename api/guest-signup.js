@@ -19,34 +19,39 @@ async function sendVerificationEmail(email, code) {
     to: email,
     subject: "Your Ready Mark Verification Code",
 html: `
-  <div style="font-family: Georgia, serif; background:#121416; color:#f3eee5; padding:40px 20px;">
-    <div style="max-width:520px; margin:0 auto; background:#0f1216; border:2px solid #d8bb7a; border-radius:18px; padding:30px; text-align:center;">
-      
-      <img src="https://verify.thereadymarkgroup.com/readymarkseal(best)nobackground.PNG" style="width:90px; margin-bottom:14px;" />
+ <div style="font-family: Georgia, serif; background:#121416; color:#f3eee5; padding:40px 20px;">
+  <div style="max-width:520px; margin:0 auto; background:#0f1216; border:2px solid #d8bb7a; border-radius:18px; padding:30px; text-align:center;">
+    
+    <img src="https://verify.thereadymarkgroup.com/readymarkseal(best)nobackground.PNG" style="width:90px; margin-bottom:14px;" />
 
-      <div style="width:140px; height:2px; margin:0 auto 18px; background:#d8bb7a;"></div>
+    <div style="width:140px; height:2px; margin:0 auto 18px; background:#d8bb7a;"></div>
 
-      <h2 style="margin:0 0 10px; font-size:26px; letter-spacing:1px; color:#e6d39a;">
-        The Ready Mark
-      </h2>
+    <h2 style="margin:0 0 10px; font-size:26px; letter-spacing:1px; color:#e6d39a;">
+      The Ready Mark
+    </h2>
 
-      <p style="color:#d8bb7a; font-size:13px; letter-spacing:3px; text-transform:uppercase; margin-bottom:22px;">
-        Email Verification
-      </p>
+    <p style="color:#d8bb7a; font-size:13px; letter-spacing:3px; text-transform:uppercase; margin-bottom:22px;">
+      Secure Verification
+    </p>
 
-      <p style="font-size:16px; line-height:1.7; margin-bottom:20px; color:#f3eee5;">
-        Enter this verification code to continue:
-      </p>
+    <p style="font-size:16px; line-height:1.7; margin-bottom:20px; color:#f3eee5;">
+      Use the secure code below to continue your verification.
+    </p>
 
-      <div style="font-size:36px; font-weight:700; letter-spacing:8px; margin-bottom:18px; color:#f3eee5;">
-        ${code}
-      </div>
-
-      <p style="margin-top:8px; font-size:13px; color:#958d82;">
-        This code expires in 10 minutes.
-      </p>
+    <div style="font-size:38px; font-weight:700; letter-spacing:10px; margin-bottom:18px; color:#ffffff;">
+      ${code}
     </div>
+
+    <p style="margin-top:8px; font-size:13px; color:#958d82;">
+      This code expires in 10 minutes.
+    </p>
+
+    <p style="margin-top:18px; font-size:11px; color:#7a7263;">
+      The Ready Mark · Cleanliness Certification System
+    </p>
+
   </div>
+</div>
 ` 
   });
 }
