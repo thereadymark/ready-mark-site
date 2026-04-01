@@ -18,12 +18,9 @@
       --success: #3ddc84;
       --warning: #ffb347;
       --danger: #ff6b6b;
-      --info: #7cc7ff;
     }
 
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     html, body {
       margin: 0;
@@ -172,18 +169,9 @@
       border-radius: 999px;
     }
 
-    .center-text {
-      text-align: center;
-    }
-
-    .center-divider {
-      margin-left: auto;
-      margin-right: auto;
-    }
-
-    .hidden {
-      display: none !important;
-    }
+    .center-text { text-align: center; }
+    .center-divider { margin-left: auto; margin-right: auto; }
+    .hidden { display: none !important; }
 
     .login-shell {
       width: 100%;
@@ -925,7 +913,7 @@
                 <div>
                   <label for="verification-id">Verification Record ID</label>
                   <input id="verification-id" type="text" placeholder="Auto-generated from room number" required />
-                  <div class="helper">This will auto-generate when you enter a room number, but you can still edit it if needed.</div>
+                  <div class="helper">This auto-generates when you enter a room number, but you can still edit it if needed.</div>
                 </div>
 
                 <div>
@@ -1338,7 +1326,7 @@
     }
 
     function getReportReference(report) {
-      return report.confirmation_number || report.verification_id || "—";
+      return report.confirmation_number || "—";
     }
 
     function getStatusLabel(status) {
@@ -1394,7 +1382,7 @@
         ? report.issue_types.join(", ")
         : "—";
 
-      detailReference.textContent = getReportReference(report);
+      detailReference.textContent = report.confirmation_number || "—";
       detailReportedAt.textContent = formatDateTime(report.reported_at);
       detailProperty.textContent = report.property_name || "—";
       detailRoom.textContent = report.room_number || "—";
@@ -1437,7 +1425,7 @@
         const isActive = selectedReportId === report.id ? "active-row" : "";
         return `
           <tr class="${isActive}">
-            <td>${escapeHtml(getReportReference(report))}</td>
+            <td>${escapeHtml(report.confirmation_number || "—")}</td>
             <td>${escapeHtml(report.property_name || "—")}</td>
             <td>${escapeHtml(report.room_number || "—")}</td>
             <td>${escapeHtml(formatDateTime(report.reported_at))}</td>
@@ -1858,14 +1846,13 @@
 
         showQrPanel(publicUrl, verificationId, propertyName, roomNumber);
 
-        verificationIdInput.value = verificationId;
+        verificationIdInput.value = "";
         roomNumberInput.value = "";
         document.getElementById("inspector-id").value = "";
         document.getElementById("score").value = "";
         document.getElementById("status").value = "";
         document.getElementById("notes").value = "";
         document.getElementById("certification-tier").value = "";
-        verificationIdInput.value = "";
         setDefaultDateTime();
       } catch (error) {
         setStatus(error.message || "Something went wrong while saving the inspection.", "error");
