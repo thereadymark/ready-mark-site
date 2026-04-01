@@ -9,11 +9,38 @@ function generateReportReference() {
   return `RM-RPT-${datePart}-${randomPart}`;
 }
 
+function formatPropertyName(value) {
+  const normalized = String(value || "").replace(/\s+/g, " ").trim();
+  if (!normalized) return "";
+
+  const upperAcronyms = new Set([
+    "stl",
+    "nyc",
+    "la",
+    "usa",
+    "uk",
+    "llc",
+    "qa",
+    "gm"
+  ]);
+
+  return normalized
+    .split(" ")
+    .map(word => {
+      const lower = word.toLowerCase();
+      if (upperAcronyms.has(lower)) {
+        return lower.toUpperCase();
+      }
+      return lower.charAt(0).toUpperCase() + lower.slice(1);
+    })
+    .join(" ");
+}
+
 export default async function handler(req, res) {
   const corsHeaders = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "POST, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type, Authorization",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization"
   };
 
   Object.entries(corsHeaders).forEach(([k, v]) => res.setHeader(k, v));
@@ -25,7 +52,7 @@ export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({
       success: false,
-      error: "Method not allowed",
+      error: "Method not allowed"
     });
   }
 
@@ -38,18 +65,16 @@ export default async function handler(req, res) {
     if (!supabaseUrl || !serviceRoleKey) {
       return res.status(500).json({
         success: false,
-        error: "Missing server environment variables",
+        error: "Missing server environment variables"
       });
     }
 
-    const body =
-      typeof req.body === "string" ? JSON.parse(req.body) : req.body || {};
+    const body = typeof req.body === "string" ? JSON.parse(req.body) : req.body || {};
 
-    const propertyName = body.property || body.property_name || "";
+    const rawPropertyName = body.property || body.property_name || "";
+    const propertyName = formatPropertyName(rawPropertyName);
     const propertySlug = body.property_slug || "";
-    const roomNumber = String(
-      body.room || body.room_number || ""
-    ).trim();
+    const roomNumber = String(body.room || body.room_number || "").trim();
     const details = body.details || body.guest_note || null;
     const photoUrl = body.photo_url || null;
     const guestEmail = body.guest_email || null;
@@ -65,20 +90,14 @@ export default async function handler(req, res) {
     if (!propertyName || !roomNumber || !issueTypes.length) {
       return res.status(400).json({
         success: false,
-        error: "Missing required report fields",
+        error: "Missing required report fields"
       });
     }
 
-    const guestNameParts = guestNameRaw
-      .trim()
-      .split(/\s+/)
-      .filter(Boolean);
-
+    const guestNameParts = guestNameRaw.trim().split(/\s+/).filter(Boolean);
     const guestFirstName = guestNameParts[0] || null;
     const guestLastName =
-      guestNameParts.length > 1
-        ? guestNameParts.slice(1).join(" ")
-        : null;
+      guestNameParts.length > 1 ? guestNameParts.slice(1).join(" ") : null;
 
     const confirmationNumber = generateReportReference();
 
@@ -97,22 +116,19 @@ export default async function handler(req, res) {
       reported_at: new Date().toISOString(),
       guest_email: guestEmail,
       guest_first_name: guestFirstName,
-      guest_last_name: guestLastName,
+      guest_last_name: guestLastName
     };
 
-    const insertRes = await fetch(
-      `${supabaseUrl}/rest/v1/guest_reports`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${serviceRoleKey}`,
-          apikey: serviceRoleKey,
-          "Content-Type": "application/json",
-          Prefer: "return=representation",
-        },
-        body: JSON.stringify(insertPayload),
-      }
-    );
+    const insertRes = await fetch(`${supabaseUrl}/rest/v1/guest_reports`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${serviceRoleKey}`,
+        apikey: serviceRoleKey,
+        "Content-Type": "application/json",
+        Prefer: "return=representation"
+      },
+      body: JSON.stringify(insertPayload)
+    });
 
     const insertData = await insertRes.json().catch(() => null);
 
@@ -123,88 +139,123 @@ export default async function handler(req, res) {
           insertData?.message ||
           insertData?.error ||
           insertData?.details ||
-          "Failed to save report",
+          "Failed to save report"
       });
     }
 
-    const savedReport = Array.isArray(insertData)
-      ? insertData[0]
-      : insertData;
+    const savedReport = Array.isArray(insertData) ? insertData[0] : insertData;
 
-    // 🔥 UPGRADED EMAIL
     if (resendApiKey && resendFromEmail && guestEmail) {
       const guestHtml = `
-      <div style="margin:0;padding:0;background:#111315;font-family:Georgia,serif;color:#f3eee5;">
-        <div style="max-width:700px;margin:0 auto;padding:32px 20px;">
-          <div style="background:linear-gradient(180deg,#1b1f23,#161a1e);border:1px solid rgba(199,162,87,0.25);border-radius:20px;overflow:hidden;">
-            
-            <div style="padding:32px 28px 22px;text-align:center;border-bottom:1px solid rgba(199,162,87,0.18);">
-              <img src="https://verify.thereadymarkgroup.com/readymarkseal(best)nobackground.PNG" style="width:90px;display:block;margin:0 auto 12px;">
-              <div style="color:#c7a257;font-size:14px;letter-spacing:2px;text-transform:uppercase;font-weight:700;margin-bottom:10px;">
-                The Ready Mark
-              </div>
-              <h1 style="margin:0;color:#f3eee5;font-size:34px;">
-                Issue Received
-              </h1>
-              <p style="margin-top:14px;color:#b7b0a5;font-size:15px;">
-                Your report has been successfully received and forwarded for review.
-              </p>
-            </div>
+  <div style="margin:0;padding:0;background:#0d0f12;font-family:Georgia,serif;color:#f3eee5;">
+    <div style="max-width:720px;margin:0 auto;padding:36px 20px;">
+      <div style="background:#11151a;border:1px solid #d8bb7a;border-radius:24px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,0.35);">
+        
+        <div style="padding:36px 30px 26px;text-align:center;border-bottom:1px solid rgba(216,187,122,0.25);">
+          <img
+            src="https://verify.thereadymarkgroup.com/readymarkseal(best)nobackground.PNG"
+            alt="The Ready Mark"
+            style="width:92px;display:block;margin:0 auto 16px;"
+          />
 
-            <div style="padding:26px 28px;">
-              <div style="margin-bottom:16px;">
-                <strong style="color:#d8bb7a;">Reference #:</strong><br/>
+          <div style="color:#d8bb7a;font-size:13px;letter-spacing:4px;text-transform:uppercase;font-weight:700;margin-bottom:14px;">
+            The Ready Mark
+          </div>
+
+          <h1 style="margin:0;font-size:48px;line-height:1.05;color:#f0e6a6;font-weight:700;">
+            Issue Received
+          </h1>
+
+          <p style="max-width:540px;margin:18px auto 0;color:#d2cbc0;font-size:17px;line-height:1.75;">
+            Your report has been received and logged for review.
+          </p>
+        </div>
+
+        <div style="padding:28px 24px 18px;">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+            
+            <div style="background:#0c1014;border:1px solid rgba(216,187,122,0.18);border-radius:18px;padding:18px 18px 16px;">
+              <div style="color:#d8bb7a;font-size:12px;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;">
+                Reference #
+              </div>
+              <div style="color:#f5edc0;font-size:18px;line-height:1.5;font-weight:700;">
                 ${confirmationNumber}
               </div>
-
-              <div style="margin-bottom:16px;">
-                <strong style="color:#d8bb7a;">Property:</strong><br/>
-                ${propertyName}
-              </div>
-
-              <div style="margin-bottom:16px;">
-                <strong style="color:#d8bb7a;">Room:</strong><br/>
-                ${roomNumber}
-              </div>
-
-              <div style="margin-bottom:16px;">
-                <strong style="color:#d8bb7a;">Reported Issue(s):</strong><br/>
-                ${issueTypes.join(", ")}
-              </div>
-
-              ${
-                details
-                  ? `
-                <div style="margin-bottom:16px;">
-                  <strong style="color:#d8bb7a;">Additional Details:</strong><br/>
-                  ${details}
-                </div>
-              `
-                  : ""
-              }
-
-              <p style="margin-top:20px;color:#b7b0a5;font-size:14px;">
-                Please keep this reference number for your records.
-              </p>
             </div>
 
+            <div style="background:#0c1014;border:1px solid rgba(216,187,122,0.18);border-radius:18px;padding:18px 18px 16px;">
+              <div style="color:#d8bb7a;font-size:12px;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;">
+                Room
+              </div>
+              <div style="color:#f5edc0;font-size:18px;line-height:1.5;font-weight:700;">
+                ${roomNumber}
+              </div>
+            </div>
+
+            <div style="grid-column:1 / -1;background:#0c1014;border:1px solid rgba(216,187,122,0.18);border-radius:18px;padding:18px 18px 16px;">
+              <div style="color:#d8bb7a;font-size:12px;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;">
+                Property
+              </div>
+              <div style="color:#f5edc0;font-size:18px;line-height:1.6;font-weight:700;">
+                ${propertyName}
+              </div>
+            </div>
+
+            <div style="grid-column:1 / -1;background:#0c1014;border:1px solid rgba(216,187,122,0.18);border-radius:18px;padding:18px 18px 16px;">
+              <div style="color:#d8bb7a;font-size:12px;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;">
+                Reported Issue(s)
+              </div>
+              <div style="color:#f3eee5;font-size:17px;line-height:1.8;">
+                ${issueTypes.join(", ")}
+              </div>
+            </div>
+
+            ${
+              details
+                ? `
+            <div style="grid-column:1 / -1;background:#0c1014;border:1px solid rgba(216,187,122,0.18);border-radius:18px;padding:18px 18px 16px;">
+              <div style="color:#d8bb7a;font-size:12px;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;">
+                Additional Details
+              </div>
+              <div style="color:#f3eee5;font-size:17px;line-height:1.85;">
+                ${details}
+              </div>
+            </div>
+            `
+                : ""
+            }
+
+          </div>
+
+          <div style="padding:24px 6px 8px;">
+            <p style="margin:0;color:#c9c1b3;font-size:15px;line-height:1.8;">
+              Please keep this reference number for your records.
+            </p>
+          </div>
+        </div>
+
+        <div style="padding:0 30px 26px;text-align:center;">
+          <div style="color:#7f7666;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;">
+            The Ready Mark · Cleanliness Certification System
           </div>
         </div>
       </div>
-      `;
+    </div>
+  </div>
+`;
 
       await fetch("https://api.resend.com/emails", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${resendApiKey}`,
-          "Content-Type": "application/json",
+          "Content-Type": "application/json"
         },
         body: JSON.stringify({
           from: resendFromEmail,
           to: guestEmail,
           subject: `Your Ready Mark Report Confirmation – ${confirmationNumber}`,
-          html: guestHtml,
-        }),
+          html: guestHtml
+        })
       }).catch(() => null);
     }
 
@@ -214,12 +265,12 @@ export default async function handler(req, res) {
       confirmationNumber,
       confirmation_number: confirmationNumber,
       reference: confirmationNumber,
-      report: savedReport,
+      report: savedReport
     });
   } catch (err) {
     return res.status(500).json({
       success: false,
-      error: err?.message || "Server error",
+      error: err?.message || "Server error"
     });
   }
 }
