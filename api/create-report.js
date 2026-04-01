@@ -42,16 +42,20 @@ export default async function handler(req, res) {
       });
     }
 
-    const body = typeof req.body === "string" ? JSON.parse(req.body) : req.body || {};
+    const body =
+      typeof req.body === "string" ? JSON.parse(req.body) : req.body || {};
 
     const propertyName = body.property || body.property_name || "";
     const propertySlug = body.property_slug || "";
-    const roomNumber = String(body.room || body.room_number || "").trim();
+    const roomNumber = String(
+      body.room || body.room_number || ""
+    ).trim();
     const details = body.details || body.guest_note || null;
     const photoUrl = body.photo_url || null;
     const guestEmail = body.guest_email || null;
     const guestNameRaw = body.guest_name || "";
     const verificationId = String(body.verification_id || "").trim();
+
     const issueTypes = Array.isArray(body.issue)
       ? body.issue
       : Array.isArray(body.issue_types)
@@ -65,9 +69,16 @@ export default async function handler(req, res) {
       });
     }
 
-    const guestNameParts = guestNameRaw.trim().split(/\s+/).filter(Boolean);
+    const guestNameParts = guestNameRaw
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean);
+
     const guestFirstName = guestNameParts[0] || null;
-    const guestLastName = guestNameParts.length > 1 ? guestNameParts.slice(1).join(" ") : null;
+    const guestLastName =
+      guestNameParts.length > 1
+        ? guestNameParts.slice(1).join(" ")
+        : null;
 
     const confirmationNumber = generateReportReference();
 
@@ -89,16 +100,19 @@ export default async function handler(req, res) {
       guest_last_name: guestLastName,
     };
 
-    const insertRes = await fetch(`${supabaseUrl}/rest/v1/guest_reports`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${serviceRoleKey}`,
-        apikey: serviceRoleKey,
-        "Content-Type": "application/json",
-        Prefer: "return=representation",
-      },
-      body: JSON.stringify(insertPayload),
-    });
+    const insertRes = await fetch(
+      `${supabaseUrl}/rest/v1/guest_reports`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${serviceRoleKey}`,
+          apikey: serviceRoleKey,
+          "Content-Type": "application/json",
+          Prefer: "return=representation",
+        },
+        body: JSON.stringify(insertPayload),
+      }
+    );
 
     const insertData = await insertRes.json().catch(() => null);
 
@@ -113,22 +127,70 @@ export default async function handler(req, res) {
       });
     }
 
-    const savedReport = Array.isArray(insertData) ? insertData[0] : insertData;
+    const savedReport = Array.isArray(insertData)
+      ? insertData[0]
+      : insertData;
 
+    // 🔥 UPGRADED EMAIL
     if (resendApiKey && resendFromEmail && guestEmail) {
       const guestHtml = `
-        <div style="font-family: Georgia, serif; line-height: 1.6; color: #111;">
-          <h2 style="margin-bottom: 12px;">Your Ready Mark Report Confirmation</h2>
-          <p>Thank you for submitting your cleanliness report.</p>
-          <p>Your concern has been successfully received and forwarded for review.</p>
-          <p><strong>Reference Number:</strong> ${confirmationNumber}</p>
-          <p><strong>Property:</strong> ${propertyName}</p>
-          <p><strong>Room:</strong> ${roomNumber}</p>
-          <p><strong>Reported Issue(s):</strong> ${issueTypes.join(", ")}</p>
-          ${details ? `<p><strong>Additional Details:</strong> ${details}</p>` : ""}
-          <p>Please keep this reference number for your records.</p>
-          <p>— Ready Mark</p>
+      <div style="margin:0;padding:0;background:#111315;font-family:Georgia,serif;color:#f3eee5;">
+        <div style="max-width:700px;margin:0 auto;padding:32px 20px;">
+          <div style="background:linear-gradient(180deg,#1b1f23,#161a1e);border:1px solid rgba(199,162,87,0.25);border-radius:20px;overflow:hidden;">
+            
+            <div style="padding:32px 28px 22px;text-align:center;border-bottom:1px solid rgba(199,162,87,0.18);">
+              <img src="https://verify.thereadymarkgroup.com/readymarkseal(best)nobackground.PNG" style="width:90px;display:block;margin:0 auto 12px;">
+              <div style="color:#c7a257;font-size:14px;letter-spacing:2px;text-transform:uppercase;font-weight:700;margin-bottom:10px;">
+                The Ready Mark
+              </div>
+              <h1 style="margin:0;color:#f3eee5;font-size:34px;">
+                Issue Received
+              </h1>
+              <p style="margin-top:14px;color:#b7b0a5;font-size:15px;">
+                Your report has been successfully received and forwarded for review.
+              </p>
+            </div>
+
+            <div style="padding:26px 28px;">
+              <div style="margin-bottom:16px;">
+                <strong style="color:#d8bb7a;">Reference #:</strong><br/>
+                ${confirmationNumber}
+              </div>
+
+              <div style="margin-bottom:16px;">
+                <strong style="color:#d8bb7a;">Property:</strong><br/>
+                ${propertyName}
+              </div>
+
+              <div style="margin-bottom:16px;">
+                <strong style="color:#d8bb7a;">Room:</strong><br/>
+                ${roomNumber}
+              </div>
+
+              <div style="margin-bottom:16px;">
+                <strong style="color:#d8bb7a;">Reported Issue(s):</strong><br/>
+                ${issueTypes.join(", ")}
+              </div>
+
+              ${
+                details
+                  ? `
+                <div style="margin-bottom:16px;">
+                  <strong style="color:#d8bb7a;">Additional Details:</strong><br/>
+                  ${details}
+                </div>
+              `
+                  : ""
+              }
+
+              <p style="margin-top:20px;color:#b7b0a5;font-size:14px;">
+                Please keep this reference number for your records.
+              </p>
+            </div>
+
+          </div>
         </div>
+      </div>
       `;
 
       await fetch("https://api.resend.com/emails", {
