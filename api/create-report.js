@@ -1,3 +1,14 @@
+function generateReportReference() {
+  const now = new Date();
+  const yyyy = now.getFullYear();
+  const mm = String(now.getMonth() + 1).padStart(2, "0");
+  const dd = String(now.getDate()).padStart(2, "0");
+  const datePart = `${yyyy}${mm}${dd}`;
+  const randomPart = Math.floor(1000 + Math.random() * 9000);
+
+  return `RM-RPT-${datePart}-${randomPart}`;
+}
+
 export default async function handler(req, res) {
   const corsHeaders = {
     "Access-Control-Allow-Origin": "*",
@@ -40,6 +51,7 @@ export default async function handler(req, res) {
     const photoUrl = body.photo_url || null;
     const guestEmail = body.guest_email || null;
     const guestNameRaw = body.guest_name || "";
+    const verificationId = String(body.verification_id || "").trim();
     const issueTypes = Array.isArray(body.issue)
       ? body.issue
       : Array.isArray(body.issue_types)
@@ -57,15 +69,10 @@ export default async function handler(req, res) {
     const guestFirstName = guestNameParts[0] || null;
     const guestLastName = guestNameParts.length > 1 ? guestNameParts.slice(1).join(" ") : null;
 
-    const now = new Date();
-    const y = now.getFullYear();
-    const m = String(now.getMonth() + 1).padStart(2, "0");
-    const d = String(now.getDate()).padStart(2, "0");
-    const randomPart = Math.floor(1000 + Math.random() * 9000);
-    const confirmationNumber = `RM-${y}${m}${d}-${randomPart}`;
+    const confirmationNumber = generateReportReference();
 
     const insertPayload = {
-      verification_id: confirmationNumber,
+      verification_id: verificationId || null,
       confirmation_number: confirmationNumber,
       property_slug: propertySlug || null,
       property_name: propertyName,
@@ -74,9 +81,9 @@ export default async function handler(req, res) {
       guest_note: details,
       details: details,
       photo_url: photoUrl,
-      status: "new",
-      priority: "urgent",
-      reported_at: now.toISOString(),
+      status: "New",
+      priority: "Urgent",
+      reported_at: new Date().toISOString(),
       guest_email: guestEmail,
       guest_first_name: guestFirstName,
       guest_last_name: guestLastName,
@@ -108,7 +115,6 @@ export default async function handler(req, res) {
 
     const savedReport = Array.isArray(insertData) ? insertData[0] : insertData;
 
-    // Guest confirmation email
     if (resendApiKey && resendFromEmail && guestEmail) {
       const guestHtml = `
         <div style="font-family: Georgia, serif; line-height: 1.6; color: #111;">
