@@ -135,97 +135,75 @@ export default async function handler(req, res) {
     const savedReport = Array.isArray(insertData) ? insertData[0] : insertData;
 
     if (resendApiKey && resendFromEmail && guestEmail) {
-      const detailsSection = details
+      const issueText = issueTypes.join(", ");
+      const detailText = details || "No additional details provided.";
+
+      const detailSection = details
         ? `
-          <div style="margin-top:16px;padding:18px;border-radius:18px;background:#fbf9f4;border:1px solid rgba(220,195,138,0.55);">
-            <div style="color:#9f7d33;font-size:12px;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;">
-              Additional Details
-            </div>
-            <div style="color:#2b2b2b;font-size:17px;line-height:1.85;">
-              ${details}
-            </div>
+        <div style="margin-top:16px;padding:18px;border-radius:14px;background:#0f1317;border:1px solid rgba(199,162,87,0.15);">
+          <div style="color:#d8bb7a;font-size:12px;text-transform:uppercase;margin-bottom:8px;">
+            Additional Details
           </div>
+          <div style="font-size:16px;line-height:1.8;color:#f3eee5;">
+            ${detailText}
+          </div>
+        </div>
         `
         : "";
 
       const guestHtml = `
-<div style="margin:0;padding:0;background:#f6f3ed;font-family:Georgia,serif;color:#1b1b1b;">
+<div style="margin:0;padding:0;background:#0f1114;font-family:Georgia,serif;color:#f3eee5;">
   <div style="max-width:720px;margin:0 auto;padding:36px 20px;">
-    <div style="background:#ffffff;border:1px solid #dcc38a;border-radius:24px;overflow:hidden;box-shadow:0 14px 34px rgba(0,0,0,0.08);">
+    <div style="background:#15191d;border:1px solid rgba(199,162,87,0.25);border-radius:22px;overflow:hidden;box-shadow:0 0 40px rgba(199,162,87,0.08);">
       
-      <div style="padding:36px 30px 26px;text-align:center;border-bottom:1px solid rgba(220,195,138,0.45);">
-        <img
-          src="https://verify.thereadymarkgroup.com/readymarkseal(best)nobackground.PNG"
-          alt="The Ready Mark"
-          style="width:92px;display:block;margin:0 auto 16px;"
-        />
-
-        <div style="color:#9f7d33;font-size:13px;letter-spacing:4px;text-transform:uppercase;font-weight:700;margin-bottom:14px;">
+      <div style="padding:34px 30px 24px;text-align:center;border-bottom:1px solid rgba(199,162,87,0.18);">
+        <img src="https://verify.thereadymarkgroup.com/readymarkseal(best)nobackground.PNG" alt="The Ready Mark" style="width:90px;margin-bottom:12px;">
+        
+        <div style="color:#c7a257;font-size:13px;letter-spacing:3px;text-transform:uppercase;font-weight:700;">
           The Ready Mark
         </div>
 
-        <h1 style="margin:0;font-size:44px;line-height:1.08;color:#1c1c1c;font-weight:700;">
+        <h1 style="margin:10px 0 6px;font-size:32px;color:#ffffff;">
           Issue Received
         </h1>
 
-        <p style="max-width:540px;margin:18px auto 0;color:#5e584d;font-size:17px;line-height:1.75;">
+        <p style="margin:0;color:#b7b0a5;font-size:15px;line-height:1.75;max-width:540px;margin-left:auto;margin-right:auto;">
           Your report has been received and logged for review.
         </p>
       </div>
 
-      <div style="padding:28px 24px 18px;">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
-          
-          <div style="background:#fbf9f4;border:1px solid rgba(220,195,138,0.55);border-radius:18px;padding:18px 18px 16px;">
-            <div style="color:#9f7d33;font-size:12px;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;">
-              Reference #
-            </div>
-            <div style="color:#1c1c1c;font-size:18px;line-height:1.5;font-weight:700;">
-              ${confirmationNumber}
-            </div>
-          </div>
-
-          <div style="background:#fbf9f4;border:1px solid rgba(220,195,138,0.55);border-radius:18px;padding:18px 18px 16px;">
-            <div style="color:#9f7d33;font-size:12px;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;">
-              Room
-            </div>
-            <div style="color:#1c1c1c;font-size:18px;line-height:1.5;font-weight:700;">
-              ${roomNumber}
-            </div>
-          </div>
-
-          <div style="grid-column:1 / -1;background:#fbf9f4;border:1px solid rgba(220,195,138,0.55);border-radius:18px;padding:18px 18px 16px;">
-            <div style="color:#9f7d33;font-size:12px;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;">
-              Property
-            </div>
-            <div style="color:#1c1c1c;font-size:18px;line-height:1.6;font-weight:700;">
-              ${propertyName}
-            </div>
-          </div>
-
-          <div style="grid-column:1 / -1;background:#fbf9f4;border:1px solid rgba(220,195,138,0.55);border-radius:18px;padding:18px 18px 16px;">
-            <div style="color:#9f7d33;font-size:12px;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;">
-              Reported Issue(s)
-            </div>
-            <div style="color:#2b2b2b;font-size:17px;line-height:1.8;">
-              ${issueTypes.join(", ")}
-            </div>
-          </div>
-
-          ${detailsSection}
+      <div style="padding:26px 30px;">
+        
+        <div style="margin-bottom:18px;">
+          <div style="color:#d8bb7a;font-size:12px;text-transform:uppercase;margin-bottom:6px;">Reference</div>
+          <div style="font-size:18px;color:#f3eee5;font-weight:700;">${confirmationNumber}</div>
         </div>
 
-        <div style="padding:24px 6px 8px;">
-          <p style="margin:0;color:#676052;font-size:15px;line-height:1.8;">
-            Please keep this reference number for your records.
-          </p>
+        <div style="margin-bottom:18px;">
+          <div style="color:#d8bb7a;font-size:12px;text-transform:uppercase;margin-bottom:6px;">Property</div>
+          <div style="font-size:18px;color:#f3eee5;">${propertyName}</div>
         </div>
-      </div>
 
-      <div style="padding:0 30px 26px;text-align:center;">
-        <div style="color:#8a7b5b;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;">
-          The Ready Mark · Cleanliness Certification System
+        <div style="margin-bottom:18px;">
+          <div style="color:#d8bb7a;font-size:12px;text-transform:uppercase;margin-bottom:6px;">Room</div>
+          <div style="font-size:18px;color:#f3eee5;">${roomNumber}</div>
         </div>
+
+        <div style="margin-top:22px;padding:18px;border-radius:14px;background:#0f1317;border:1px solid rgba(199,162,87,0.15);">
+          <div style="color:#d8bb7a;font-size:12px;text-transform:uppercase;margin-bottom:8px;">
+            Reported Issue
+          </div>
+          <div style="font-size:16px;line-height:1.7;color:#f3eee5;">
+            ${issueText}
+          </div>
+        </div>
+
+        ${detailSection}
+
+        <div style="margin-top:24px;font-size:13px;color:#8f8775;line-height:1.7;">
+          Please keep this reference number for your records.
+        </div>
+
       </div>
     </div>
   </div>
