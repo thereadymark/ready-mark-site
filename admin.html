@@ -1941,14 +1941,49 @@
 
     printLabelBtn.addEventListener("click", printLabel);
 
-    sendToPropertyBtn.addEventListener("click", async function () {
-      if (!selectedReportId) {
-        setStatus("Select a report first.", "error");
-        return;
-      }
-      await updateReportStatus(selectedReportId, "Sent to Property");
+   sendToPropertyBtn.addEventListener("click", async function () {
+  if (!selectedReportId) {
+    setStatus("Select a report first.", "error");
+    return;
+  }
+
+  setStatus("Sending report to property...");
+
+  try {
+    const res = await fetch("/api/send-report-to-property", {
+      method: "POST",
+      headers: adminHeaders({
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+      }),
+      body: JSON.stringify({
+        report_id: selectedReportId
+      })
     });
 
+    const data = await res.json();
+
+    if (!res.ok || data.error) {
+      throw new Error(data.error || "Failed to send report to property.");
+    }
+
+    await loadDashboardData(propertySelect.value || "");
+
+    const updated = cachedReports.find(r => String(r.id) === String(selectedReportId));
+    if (updated) {
+      selectedReportId = updated.id;
+      showReportDetail(updated);
+    }
+
+    const sentToText = data?.sent_to?.email
+      ? `\n\nSent to: ${data.sent_to.email}`
+      : "";
+
+    setStatus(`Report sent to property successfully.${sentToText}`, "success");
+  } catch (error) {
+    setStatus(error.message || "Failed to send report to property.", "error");
+  }
+});
     markReviewBtn.addEventListener("click", async function () {
       if (!selectedReportId) {
         setStatus("Select a report first.", "error");
