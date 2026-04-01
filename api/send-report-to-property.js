@@ -134,79 +134,97 @@ export default async function handler(req, res) {
       : "Not available";
 
     const emailHtml = `
-      <div style="margin:0;padding:0;background:#111315;font-family:Georgia,serif;color:#f3eee5;">
-        <div style="max-width:700px;margin:0 auto;padding:32px 20px;">
-          <div style="background:linear-gradient(180deg,#1b1f23,#161a1e);border:1px solid rgba(199,162,87,0.25);border-radius:20px;overflow:hidden;">
-            <div style="padding:32px 28px 22px;text-align:center;border-bottom:1px solid rgba(199,162,87,0.18);">
-              <img src="https://verify.thereadymarkgroup.com/readymarkseal(best)nobackground.PNG" alt="The Ready Mark" style="width:90px;display:block;margin:0 auto 12px;">
-              <div style="color:#c7a257;font-size:14px;letter-spacing:2px;text-transform:uppercase;font-weight:700;margin-bottom:10px;">
-                The Ready Mark
-              </div>
-              <h1 style="margin:0;color:#f3eee5;font-size:34px;line-height:1.1;">
-                Guest Issue Report
-              </h1>
-              <p style="max-width:560px;margin:14px auto 0;color:#b7b0a5;font-size:15px;line-height:1.7;">
-                A guest-submitted issue has been received and forwarded for review.
-              </p>
-            </div>
+      const emailHtml = `
+<div style="margin:0;padding:0;background:#0f1114;font-family:Georgia,serif;color:#f3eee5;">
+  <div style="max-width:720px;margin:0 auto;padding:36px 20px;">
+    <div style="background:#15191d;border:1px solid rgba(199,162,87,0.25);border-radius:22px;overflow:hidden;">
+      
+      <div style="padding:34px 30px 24px;text-align:center;border-bottom:1px solid rgba(199,162,87,0.18);">
+        <img src="https://verify.thereadymarkgroup.com/readymarkseal(best)nobackground.PNG" style="width:90px;margin-bottom:12px;">
+        
+        <div style="color:#c7a257;font-size:13px;letter-spacing:3px;text-transform:uppercase;font-weight:700;">
+          The Ready Mark
+        </div>
 
-            <div style="padding:26px 28px;">
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
-                <div style="padding:16px;border-radius:14px;background:rgba(255,255,255,0.02);border:1px solid rgba(199,162,87,0.12);">
-                  <div style="color:#d8bb7a;font-size:12px;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;">Reference #</div>
-                  <div style="font-size:18px;line-height:1.5;color:#f3eee5;">${reportReference}</div>
-                </div>
+        <h1 style="margin:10px 0 6px;font-size:32px;color:#ffffff;">
+          Operational Notice
+        </h1>
 
-                <div style="padding:16px;border-radius:14px;background:rgba(255,255,255,0.02);border:1px solid rgba(199,162,87,0.12);">
-                  <div style="color:#d8bb7a;font-size:12px;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;">Verification ID</div>
-                  <div style="font-size:18px;line-height:1.5;color:#f3eee5;">${verificationId}</div>
-                </div>
+        <p style="margin:0;color:#b7b0a5;font-size:15px;">
+          A guest-submitted issue has been formally recorded and requires review.
+        </p>
+      </div>
 
-                <div style="padding:16px;border-radius:14px;background:rgba(255,255,255,0.02);border:1px solid rgba(199,162,87,0.12);">
-                  <div style="color:#d8bb7a;font-size:12px;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;">Property</div>
-                  <div style="font-size:18px;line-height:1.5;color:#f3eee5;">${property.property_name || report.property_name || "Not available"}</div>
-                </div>
+      <div style="padding:26px 30px;">
+        
+        <div style="margin-bottom:18px;">
+          <div style="color:#d8bb7a;font-size:12px;text-transform:uppercase;margin-bottom:6px;">Reference</div>
+          <div style="font-size:18px;">${reportReference}</div>
+        </div>
 
-                <div style="padding:16px;border-radius:14px;background:rgba(255,255,255,0.02);border:1px solid rgba(199,162,87,0.12);">
-                  <div style="color:#d8bb7a;font-size:12px;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;">Room</div>
-                  <div style="font-size:18px;line-height:1.5;color:#f3eee5;">${report.room_number || "Not available"}</div>
-                </div>
+        <div style="margin-bottom:18px;">
+          <div style="color:#d8bb7a;font-size:12px;text-transform:uppercase;margin-bottom:6px;">Property</div>
+          <div style="font-size:18px;">${property.property_name || report.property_name}</div>
+        </div>
 
-                <div style="padding:16px;border-radius:14px;background:rgba(255,255,255,0.02);border:1px solid rgba(199,162,87,0.12);">
-                  <div style="color:#d8bb7a;font-size:12px;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;">Submitted</div>
-                  <div style="font-size:18px;line-height:1.5;color:#f3eee5;">${submittedAt}</div>
-                </div>
+        <div style="margin-bottom:18px;">
+          <div style="color:#d8bb7a;font-size:12px;text-transform:uppercase;margin-bottom:6px;">Room</div>
+          <div style="font-size:18px;">${report.room_number}</div>
+        </div>
 
-                <div style="padding:16px;border-radius:14px;background:rgba(255,255,255,0.02);border:1px solid rgba(199,162,87,0.12);">
-                  <div style="color:#d8bb7a;font-size:12px;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;">Priority</div>
-                  <div style="font-size:18px;line-height:1.5;color:#f3eee5;">${report.priority || "Normal"}</div>
-                </div>
-              </div>
+        <div style="margin-bottom:18px;">
+          <div style="color:#d8bb7a;font-size:12px;text-transform:uppercase;margin-bottom:6px;">Submitted</div>
+          <div style="font-size:16px;">${submittedAt}</div>
+        </div>
 
-              <div style="margin-top:16px;padding:18px;border-radius:14px;background:rgba(255,255,255,0.02);border:1px solid rgba(199,162,87,0.12);">
-                <div style="color:#d8bb7a;font-size:12px;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;">Reported Issue Types</div>
-                <div style="font-size:17px;line-height:1.7;color:#f3eee5;">${issueText}</div>
-              </div>
+        <div style="margin-bottom:18px;">
+          <div style="color:#d8bb7a;font-size:12px;text-transform:uppercase;margin-bottom:6px;">Priority</div>
+          <div style="font-size:16px;">${report.priority || "Normal"}</div>
+        </div>
 
-              <div style="margin-top:16px;padding:18px;border-radius:14px;background:rgba(255,255,255,0.02);border:1px solid rgba(199,162,87,0.12);">
-                <div style="color:#d8bb7a;font-size:12px;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;">Guest Notes</div>
-                <div style="font-size:17px;line-height:1.8;color:#f3eee5;">${detailText}</div>
-              </div>
+        <div style="margin-top:22px;padding:18px;border-radius:14px;background:#0f1317;border:1px solid rgba(199,162,87,0.15);">
+          <div style="color:#d8bb7a;font-size:12px;text-transform:uppercase;margin-bottom:8px;">
+            Reported Issue
+          </div>
+          <div style="font-size:16px;line-height:1.7;">
+            ${issueText}
+          </div>
+        </div>
 
-              ${
-                report.photo_url
-                  ? `
-              <div style="margin-top:16px;padding:18px;border-radius:14px;background:rgba(255,255,255,0.02);border:1px solid rgba(199,162,87,0.12);">
-                <div style="color:#d8bb7a;font-size:12px;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;">Attached Photo</div>
-                <div style="font-size:16px;line-height:1.7;color:#f3eee5;">
-                  A supporting photo was included with this report.
-                </div>
-                <div style="margin-top:10px;">
-                  <a href="${report.photo_url}" style="display:inline-block;padding:12px 16px;border-radius:12px;background:linear-gradient(180deg,#d8ba73,#b8934c);color:#111315;font-weight:700;text-decoration:none;">
-                    View Attached Photo
-                  </a>
-                </div>
-              </div>
+        <div style="margin-top:16px;padding:18px;border-radius:14px;background:#0f1317;border:1px solid rgba(199,162,87,0.15);">
+          <div style="color:#d8bb7a;font-size:12px;text-transform:uppercase;margin-bottom:8px;">
+            Guest Statement
+          </div>
+          <div style="font-size:16px;line-height:1.8;">
+            ${detailText}
+          </div>
+        </div>
+
+        ${
+          report.photo_url
+            ? `
+        <div style="margin-top:16px;padding:18px;border-radius:14px;background:#0f1317;border:1px solid rgba(199,162,87,0.15);text-align:center;">
+          <div style="color:#d8bb7a;font-size:12px;text-transform:uppercase;margin-bottom:10px;">
+            Supporting Evidence
+          </div>
+          <a href="${report.photo_url}" style="display:inline-block;padding:12px 18px;border-radius:12px;background:#c7a257;color:#111;font-weight:700;text-decoration:none;">
+            View Attached Photo
+          </a>
+        </div>
+        `
+            : ""
+        }
+
+        <div style="margin-top:24px;font-size:13px;color:#8f8775;line-height:1.7;">
+          This notice was generated by The Ready Mark Cleanliness Certification System and forwarded for operational awareness and resolution tracking.
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+`;                
+            
                   `
                   : ""
               }
