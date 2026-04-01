@@ -13,24 +13,13 @@ function formatPropertyName(value) {
   const normalized = String(value || "").replace(/\s+/g, " ").trim();
   if (!normalized) return "";
 
-  const upperAcronyms = new Set([
-    "stl",
-    "nyc",
-    "la",
-    "usa",
-    "uk",
-    "llc",
-    "qa",
-    "gm"
-  ]);
+  const upperAcronyms = new Set(["stl", "nyc", "la", "usa", "uk", "llc", "qa", "gm"]);
 
   return normalized
     .split(" ")
     .map(word => {
       const lower = word.toLowerCase();
-      if (upperAcronyms.has(lower)) {
-        return lower.toUpperCase();
-      }
+      if (upperAcronyms.has(lower)) return lower.toUpperCase();
       return lower.charAt(0).toUpperCase() + lower.slice(1);
     })
     .join(" ");
@@ -147,26 +136,26 @@ export default async function handler(req, res) {
 
     if (resendApiKey && resendFromEmail && guestEmail) {
       const guestHtml = `
-  <div style="margin:0;padding:0;background:#0d0f12;font-family:Georgia,serif;color:#f3eee5;">
+  <div style="margin:0;padding:0;background:#f6f3ed;font-family:Georgia,serif;color:#1b1b1b;">
     <div style="max-width:720px;margin:0 auto;padding:36px 20px;">
-      <div style="background:#11151a;border:1px solid #d8bb7a;border-radius:24px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,0.35);">
+      <div style="background:#ffffff;border:1px solid #dcc38a;border-radius:24px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,0.08);">
         
-        <div style="padding:36px 30px 26px;text-align:center;border-bottom:1px solid rgba(216,187,122,0.25);">
+        <div style="padding:36px 30px 26px;text-align:center;border-bottom:1px solid rgba(220,195,138,0.45);">
           <img
             src="https://verify.thereadymarkgroup.com/readymarkseal(best)nobackground.PNG"
             alt="The Ready Mark"
             style="width:92px;display:block;margin:0 auto 16px;"
           />
 
-          <div style="color:#d8bb7a;font-size:13px;letter-spacing:4px;text-transform:uppercase;font-weight:700;margin-bottom:14px;">
+          <div style="color:#9f7d33;font-size:13px;letter-spacing:4px;text-transform:uppercase;font-weight:700;margin-bottom:14px;">
             The Ready Mark
           </div>
 
-          <h1 style="margin:0;font-size:48px;line-height:1.05;color:#f0e6a6;font-weight:700;">
+          <h1 style="margin:0;font-size:44px;line-height:1.08;color:#1c1c1c;font-weight:700;">
             Issue Received
           </h1>
 
-          <p style="max-width:540px;margin:18px auto 0;color:#d2cbc0;font-size:17px;line-height:1.75;">
+          <p style="max-width:540px;margin:18px auto 0;color:#5e584d;font-size:17px;line-height:1.75;">
             Your report has been received and logged for review.
           </p>
         </div>
@@ -174,38 +163,38 @@ export default async function handler(req, res) {
         <div style="padding:28px 24px 18px;">
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
             
-            <div style="background:#0c1014;border:1px solid rgba(216,187,122,0.18);border-radius:18px;padding:18px 18px 16px;">
-              <div style="color:#d8bb7a;font-size:12px;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;">
+            <div style="background:#fbf9f4;border:1px solid rgba(220,195,138,0.55);border-radius:18px;padding:18px 18px 16px;">
+              <div style="color:#9f7d33;font-size:12px;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;">
                 Reference #
               </div>
-              <div style="color:#f5edc0;font-size:18px;line-height:1.5;font-weight:700;">
+              <div style="color:#1c1c1c;font-size:18px;line-height:1.5;font-weight:700;">
                 ${confirmationNumber}
               </div>
             </div>
 
-            <div style="background:#0c1014;border:1px solid rgba(216,187,122,0.18);border-radius:18px;padding:18px 18px 16px;">
-              <div style="color:#d8bb7a;font-size:12px;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;">
+            <div style="background:#fbf9f4;border:1px solid rgba(220,195,138,0.55);border-radius:18px;padding:18px 18px 16px;">
+              <div style="color:#9f7d33;font-size:12px;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;">
                 Room
               </div>
-              <div style="color:#f5edc0;font-size:18px;line-height:1.5;font-weight:700;">
+              <div style="color:#1c1c1c;font-size:18px;line-height:1.5;font-weight:700;">
                 ${roomNumber}
               </div>
             </div>
 
-            <div style="grid-column:1 / -1;background:#0c1014;border:1px solid rgba(216,187,122,0.18);border-radius:18px;padding:18px 18px 16px;">
-              <div style="color:#d8bb7a;font-size:12px;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;">
+            <div style="grid-column:1 / -1;background:#fbf9f4;border:1px solid rgba(220,195,138,0.55);border-radius:18px;padding:18px 18px 16px;">
+              <div style="color:#9f7d33;font-size:12px;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;">
                 Property
               </div>
-              <div style="color:#f5edc0;font-size:18px;line-height:1.6;font-weight:700;">
+              <div style="color:#1c1c1c;font-size:18px;line-height:1.6;font-weight:700;">
                 ${propertyName}
               </div>
             </div>
 
-            <div style="grid-column:1 / -1;background:#0c1014;border:1px solid rgba(216,187,122,0.18);border-radius:18px;padding:18px 18px 16px;">
-              <div style="color:#d8bb7a;font-size:12px;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;">
+            <div style="grid-column:1 / -1;background:#fbf9f4;border:1px solid rgba(220,195,138,0.55);border-radius:18px;padding:18px 18px 16px;">
+              <div style="color:#9f7d33;font-size:12px;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;">
                 Reported Issue(s)
               </div>
-              <div style="color:#f3eee5;font-size:17px;line-height:1.8;">
+              <div style="color:#2b2b2b;font-size:17px;line-height:1.8;">
                 ${issueTypes.join(", ")}
               </div>
             </div>
@@ -213,11 +202,11 @@ export default async function handler(req, res) {
             ${
               details
                 ? `
-            <div style="grid-column:1 / -1;background:#0c1014;border:1px solid rgba(216,187,122,0.18);border-radius:18px;padding:18px 18px 16px;">
-              <div style="color:#d8bb7a;font-size:12px;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;">
+            <div style="grid-column:1 / -1;background:#fbf9f4;border:1px solid rgba(220,195,138,0.55);border-radius:18px;padding:18px 18px 16px;">
+              <div style="color:#9f7d33;font-size:12px;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;">
                 Additional Details
               </div>
-              <div style="color:#f3eee5;font-size:17px;line-height:1.85;">
+              <div style="color:#2b2b2b;font-size:17px;line-height:1.85;">
                 ${details}
               </div>
             </div>
@@ -228,14 +217,14 @@ export default async function handler(req, res) {
           </div>
 
           <div style="padding:24px 6px 8px;">
-            <p style="margin:0;color:#c9c1b3;font-size:15px;line-height:1.8;">
+            <p style="margin:0;color:#676052;font-size:15px;line-height:1.8;">
               Please keep this reference number for your records.
             </p>
           </div>
         </div>
 
         <div style="padding:0 30px 26px;text-align:center;">
-          <div style="color:#7f7666;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;">
+          <div style="color:#8a7b5b;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;">
             The Ready Mark · Cleanliness Certification System
           </div>
         </div>
