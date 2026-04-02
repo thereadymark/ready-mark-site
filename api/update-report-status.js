@@ -19,18 +19,18 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
+  const adminToken = req.headers["x-admin-token"];
+  const expectedAdminToken = process.env.ADMIN_TOKEN;
+
+  if (!expectedAdminToken) {
+    return res.status(500).json({ error: "Missing ADMIN_TOKEN" });
+  }
+
+  if (!adminToken || adminToken !== expectedAdminToken) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+
   try {
-    const adminToken = req.headers["x-admin-token"];
-    const expectedAdminToken = process.env.ADMIN_TOKEN;
-
-    if (!expectedAdminToken) {
-      return res.status(500).json({ error: "Missing ADMIN_TOKEN" });
-    }
-
-    if (!adminToken || adminToken !== expectedAdminToken) {
-      return res.status(401).json({ error: "Unauthorized" });
-    }
-
     const { report_id, status } = req.body || {};
 
     if (!report_id || !status) {
@@ -56,6 +56,32 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: "Missing server environment variables" });
     }
 
+    const headers = {
+      apikey: serviceRoleKey,
+      Authorization: `Bearer ${serviceRoleKey}`,
+      Accept: "application/json"
+    };
+
+    const existingRes = await fetch(
+      `${supabaseUrl}/rest/v1/guest_reports?id=eq.${encodeURIComponent(report_id)}&select=id,status&limit=1`,
+      { headers }
+    );
+
+    const existingData = await existingRes.json().catch(() => null);
+
+    if (!existingRes.ok) {
+      return res.status(500).json({
+        error: "Failed to load guest report",
+        details: existingData
+      });
+    }
+
+    const existingReport = Array.isArray(existingData) ? existingData[0] : null;
+
+    if (!existingReport) {
+      return res.status(404).json({ error: "Guest report not found" });
+    }
+
     const patchRes = await fetch(
       `${supabaseUrl}/rest/v1/guest_reports?id=eq.${encodeURIComponent(report_id)}`,
       {
@@ -66,9 +92,7 @@ export default async function handler(req, res) {
           "Content-Type": "application/json",
           Prefer: "return=representation"
         },
-        body: JSON.stringify({
-          status
-        })
+        body: JSON.stringify({ status })
       }
     );
 
