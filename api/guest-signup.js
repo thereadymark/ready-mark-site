@@ -1,8 +1,6 @@
 import crypto from "crypto";
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 function hashPassword(password) {
   return crypto.createHash("sha256").update(password).digest("hex");
 }
@@ -11,7 +9,7 @@ function generateVerificationCode() {
   return String(Math.floor(100000 + Math.random() * 900000));
 }
 
-async function sendVerificationEmail(email, code) {
+async function sendVerificationEmail(resend, email, code) {
   const fromEmail = process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev";
 
   const emailHtml = `
@@ -85,8 +83,10 @@ async function sendVerificationEmail(email, code) {
 }
 
 export default async function handler(req, res) {
+  const allowedOrigin = "https://verify.thereadymarkgroup.com";
+
   const corsHeaders = {
-    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Origin": allowedOrigin,
     "Access-Control-Allow-Methods": "POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, Authorization"
   };
@@ -110,17 +110,23 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Missing required fields" });
     }
 
+    if (String(password).length < 8) {
+      return res.status(400).json({ error: "Password must be at least 8 characters." });
+    }
+
     const supabaseUrl = process.env.SUPABASE_URL;
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const resendApiKey = process.env.RESEND_API_KEY;
 
     if (!supabaseUrl || !serviceRoleKey) {
       return res.status(500).json({ error: "Missing server environment variables" });
     }
 
-    if (!process.env.RESEND_API_KEY) {
+    if (!resendApiKey) {
       return res.status(500).json({ error: "Missing RESEND_API_KEY" });
     }
 
+    const resend = new Resend(resendApiKey);
     const normalizedEmail = String(email).trim().toLowerCase();
     const passwordHash = hashPassword(password);
     const verificationCode = generateVerificationCode();
@@ -177,7 +183,7 @@ export default async function handler(req, res) {
       });
     }
 
-    await sendVerificationEmail(normalizedEmail, verificationCode);
+    await sendVerificationEmail(resend, normalizedEmail, verificationCode);
 
     return res.status(200).json({
       success: true,
