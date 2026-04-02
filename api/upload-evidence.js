@@ -21,7 +21,6 @@ const MAX_DOC_BYTES = 15 * 1024 * 1024;
 
 const ALLOWED_PHOTO_TYPES = new Set([
   "image/jpeg",
-  "image/jpg",
   "image/png",
   "image/webp",
   "image/heic",
@@ -31,7 +30,6 @@ const ALLOWED_PHOTO_TYPES = new Set([
 const ALLOWED_DOC_TYPES = new Set([
   "application/pdf",
   "image/jpeg",
-  "image/jpg",
   "image/png",
   "image/webp",
   "image/heic",
@@ -39,34 +37,31 @@ const ALLOWED_DOC_TYPES = new Set([
 ]);
 
 function bufferFromBase64(base64String) {
-  return Buffer.from(base64String, "base64");
+  try {
+    return Buffer.from(base64String, "base64");
+  } catch {
+    return null;
+  }
 }
 
 function sanitizeFileName(name) {
   return String(name || "file")
     .replace(/\s+/g, "-")
-    .replace(/[^a-zA-Z0-9._-]/g, "");
+    .replace(/[^a-zA-Z0-9._-]/g, "")
+    .toLowerCase();
 }
 
-function validatePhotoFile(file, fileBuffer) {
-  if (!ALLOWED_PHOTO_TYPES.has(file.type)) {
-    return "Inspection photo must be a JPG, PNG, WEBP, or HEIC image.";
+function validateFile({ type, buffer, allowedTypes, maxBytes, label }) {
+  if (!type || !allowedTypes.has(type)) {
+    return `${label} must be a supported file type.`;
   }
 
-  if (fileBuffer.length > MAX_PHOTO_BYTES) {
-    return "Inspection photo is too large. Maximum size is 10 MB.";
+  if (!buffer || !buffer.length) {
+    return `${label} file is invalid or corrupted.`;
   }
 
-  return null;
-}
-
-function validateDocFile(file, fileBuffer) {
-  if (!ALLOWED_DOC_TYPES.has(file.type)) {
-    return "Inspection log must be a PDF or supported image file.";
-  }
-
-  if (fileBuffer.length > MAX_DOC_BYTES) {
-    return "Inspection log is too large. Maximum size is 15 MB.";
+  if (buffer.length > maxBytes) {
+    return `${label} exceeds maximum size.`;
   }
 
   return null;
@@ -93,18 +88,18 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
+  const adminToken = req.headers["x-admin-token"];
+  const expectedToken = process.env.ADMIN_TOKEN;
+
+  if (!expectedToken) {
+    return res.status(500).json({ error: "Missing ADMIN_TOKEN" });
+  }
+
+  if (!adminToken || adminToken !== expectedToken) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+
   try {
-    const adminToken = req.headers["x-admin-token"];
-    const expectedAdminToken = process.env.ADMIN_TOKEN;
-
-    if (!expectedAdminToken) {
-      return res.status(500).json({ error: "Missing ADMIN_TOKEN" });
-    }
-
-    if (!adminToken || adminToken !== expectedAdminToken) {
-      return res.status(401).json({ error: "Unauthorized" });
-    }
-
     const { verification_id, photo_file, log_file } = req.body || {};
 
     if (!verification_id) {
@@ -120,58 +115,76 @@ export default async function handler(req, res) {
     let uploadedPhotoPath = null;
     let uploadedLogPath = null;
 
+    // 📸 PHOTO UPLOAD
     if (photo_file?.base64) {
-      const photoBuffer = bufferFromBase64(photo_file.base64);
-      const photoValidationError = validatePhotoFile(photo_file, photoBuffer);
+      const buffer = bufferFromBase64(photo_file.base64);
 
-      if (photoValidationError) {
-        return res.status(400).json({ error: photoValidationError });
+      const error = validateFile({
+        type: photo_file.type,
+        buffer,
+        allowedTypes: ALLOWED_PHOTO_TYPES,
+        maxBytes: MAX_PHOTO_BYTES,
+        label: "Inspection photo"
+      });
+
+      if (error) {
+        return res.status(400).json({ error });
       }
 
-      const photoName = sanitizeFileName(photo_file.name);
-      const photoPath = `${verificationId}/${Date.now()}-${photoName}`;
+      const fileName = sanitizeFileName(photo_file.name);
+      const filePath = `${verificationId}/${Date.now()}-${fileName}`;
 
-      const { error: photoUploadError } = await supabase.storage
+      const { error: uploadError } = await supabase.storage
         .from(PHOTO_BUCKET)
-        .upload(photoPath, photoBuffer, {
+        .upload(filePath, buffer, {
           contentType: photo_file.type,
           upsert: false
         });
 
-      if (photoUploadError) {
+      if (uploadError) {
         return res.status(500).json({
-          error: `Inspection photo upload failed: ${photoUploadError.message}`
+          error: `Photo upload failed`,
+          details: uploadError.message
         });
       }
 
-      uploadedPhotoPath = photoPath;
+      uploadedPhotoPath = filePath;
     }
 
+    // 📄 LOG FILE UPLOAD
     if (log_file?.base64) {
-      const logBuffer = bufferFromBase64(log_file.base64);
-      const logValidationError = validateDocFile(log_file, logBuffer);
+      const buffer = bufferFromBase64(log_file.base64);
 
-      if (logValidationError) {
-        return res.status(400).json({ error: logValidationError });
+      const error = validateFile({
+        type: log_file.type,
+        buffer,
+        allowedTypes: ALLOWED_DOC_TYPES,
+        maxBytes: MAX_DOC_BYTES,
+        label: "Inspection log"
+      });
+
+      if (error) {
+        return res.status(400).json({ error });
       }
 
-      const logName = sanitizeFileName(log_file.name);
-      const logPath = `${verificationId}/${Date.now()}-${logName}`;
+      const fileName = sanitizeFileName(log_file.name);
+      const filePath = `${verificationId}/${Date.now()}-${fileName}`;
 
-      const { error: logUploadError } = await supabase.storage
+      const { error: uploadError } = await supabase.storage
         .from(DOC_BUCKET)
-        .upload(logPath, logBuffer, {
+        .upload(filePath, buffer, {
           contentType: log_file.type,
           upsert: false
         });
 
-      if (logUploadError) {
+      if (uploadError) {
         return res.status(500).json({
-          error: `Inspection log upload failed: ${logUploadError.message}`
+          error: `Log upload failed`,
+          details: uploadError.message
         });
       }
 
-      uploadedLogPath = logPath;
+      uploadedLogPath = filePath;
     }
 
     return res.status(200).json({
@@ -180,9 +193,11 @@ export default async function handler(req, res) {
       photo_path: uploadedPhotoPath,
       log_file_path: uploadedLogPath
     });
-  } catch (err) {
+
+  } catch (error) {
     return res.status(500).json({
-      error: err?.message || "Server error"
+      error: "Server error",
+      details: error.message
     });
   }
 }
