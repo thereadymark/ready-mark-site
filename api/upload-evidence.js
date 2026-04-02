@@ -1,11 +1,89 @@
+import { createClient } from "@supabase/supabase-js";
+
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+);
+
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: "20mb"
+    }
+  }
+};
+
+const PHOTO_BUCKET = "inspection-photos";
+const DOC_BUCKET = "inspection-docs";
+
+const MAX_PHOTO_BYTES = 10 * 1024 * 1024;
+const MAX_DOC_BYTES = 15 * 1024 * 1024;
+
+const ALLOWED_PHOTO_TYPES = new Set([
+  "image/jpeg",
+  "image/jpg",
+  "image/png",
+  "image/webp",
+  "image/heic",
+  "image/heif"
+]);
+
+const ALLOWED_DOC_TYPES = new Set([
+  "application/pdf",
+  "image/jpeg",
+  "image/jpg",
+  "image/png",
+  "image/webp",
+  "image/heic",
+  "image/heif"
+]);
+
+function bufferFromBase64(base64String) {
+  return Buffer.from(base64String, "base64");
+}
+
+function sanitizeFileName(name) {
+  return String(name || "file")
+    .replace(/\s+/g, "-")
+    .replace(/[^a-zA-Z0-9._-]/g, "");
+}
+
+function validatePhotoFile(file, fileBuffer) {
+  if (!ALLOWED_PHOTO_TYPES.has(file.type)) {
+    return "Inspection photo must be a JPG, PNG, WEBP, or HEIC image.";
+  }
+
+  if (fileBuffer.length > MAX_PHOTO_BYTES) {
+    return "Inspection photo is too large. Maximum size is 10 MB.";
+  }
+
+  return null;
+}
+
+function validateDocFile(file, fileBuffer) {
+  if (!ALLOWED_DOC_TYPES.has(file.type)) {
+    return "Inspection log must be a PDF or supported image file.";
+  }
+
+  if (fileBuffer.length > MAX_DOC_BYTES) {
+    return "Inspection log is too large. Maximum size is 15 MB.";
+  }
+
+  return null;
+}
+
 export default async function handler(req, res) {
+  const allowedOrigin = "https://verify.thereadymarkgroup.com";
+
   const corsHeaders = {
-    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Origin": allowedOrigin,
     "Access-Control-Allow-Methods": "POST, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type, Authorization",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization, x-admin-token"
   };
 
-  Object.entries(corsHeaders).forEach(([k, v]) => res.setHeader(k, v));
+  Object.entries(corsHeaders).forEach(([key, value]) => {
+    res.setHeader(key, value);
+  });
 
   if (req.method === "OPTIONS") {
     return res.status(200).end();
@@ -16,101 +94,95 @@ export default async function handler(req, res) {
   }
 
   try {
-    const supabaseUrl = process.env.SUPABASE_URL;
-    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const adminToken = req.headers["x-admin-token"];
+    const expectedAdminToken = process.env.ADMIN_TOKEN;
 
-    if (!supabaseUrl || !serviceRoleKey) {
-      return res.status(500).json({
-        error: "Missing server env vars"
-      });
+    if (!expectedAdminToken) {
+      return res.status(500).json({ error: "Missing ADMIN_TOKEN" });
     }
 
-    const contentType = req.headers["content-type"] || "";
-    const boundaryMatch = contentType.match(/boundary=(.*)$/);
-
-    if (!boundaryMatch) {
-      return res.status(400).json({ error: "Missing multipart boundary" });
+    if (!adminToken || adminToken !== expectedAdminToken) {
+      return res.status(401).json({ error: "Unauthorized" });
     }
 
-    const boundary = boundaryMatch[1];
-    const chunks = [];
+    const { verification_id, photo_file, log_file } = req.body || {};
 
-    for await (const chunk of req) {
-      chunks.push(chunk);
+    if (!verification_id) {
+      return res.status(400).json({ error: "Missing verification_id" });
     }
 
-    const bodyBuffer = Buffer.concat(chunks);
-    const bodyText = bodyBuffer.toString("binary");
-
-    const parts = bodyText.split(`--${boundary}`);
-    const filePart = parts.find(
-      (part) =>
-        part.includes('name="file"') &&
-        part.includes("filename=")
-    );
-
-    if (!filePart) {
-      return res.status(400).json({ error: "No file uploaded" });
+    if (!photo_file && !log_file) {
+      return res.status(400).json({ error: "No files provided" });
     }
 
-    const fileNameMatch = filePart.match(/filename="([^"]+)"/);
-    const mimeMatch = filePart.match(/Content-Type:\s*([^\r\n]+)/i);
+    const verificationId = String(verification_id).trim();
 
-    const originalFileName = fileNameMatch ? fileNameMatch[1] : `upload-${Date.now()}.jpg`;
-    const mimeType = mimeMatch ? mimeMatch[1].trim() : "application/octet-stream";
+    let uploadedPhotoPath = null;
+    let uploadedLogPath = null;
 
-    const headerEnd = filePart.indexOf("\r\n\r\n");
-    if (headerEnd === -1) {
-      return res.status(400).json({ error: "Invalid multipart file format" });
-    }
+    if (photo_file?.base64) {
+      const photoBuffer = bufferFromBase64(photo_file.base64);
+      const photoValidationError = validatePhotoFile(photo_file, photoBuffer);
 
-    let fileBinary = filePart.slice(headerEnd + 4);
-
-    if (fileBinary.endsWith("\r\n")) {
-      fileBinary = fileBinary.slice(0, -2);
-    }
-
-    const fileBuffer = Buffer.from(fileBinary, "binary");
-
-    const safeFileName = originalFileName.replace(/[^a-zA-Z0-9._-]/g, "_");
-    const storagePath = `guest-reports/${Date.now()}-${safeFileName}`;
-
-    const uploadRes = await fetch(
-      `${supabaseUrl}/storage/v1/object/guest_report_photos/${encodeURIComponent(storagePath).replace(/%2F/g, "/")}`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${serviceRoleKey}`,
-          apikey: serviceRoleKey,
-          "Content-Type": mimeType,
-          "x-upsert": "false"
-        },
-        body: fileBuffer
+      if (photoValidationError) {
+        return res.status(400).json({ error: photoValidationError });
       }
-    );
 
-    const uploadData = await uploadRes.json().catch(() => null);
+      const photoName = sanitizeFileName(photo_file.name);
+      const photoPath = `${verificationId}/${Date.now()}-${photoName}`;
 
-    if (!uploadRes.ok) {
-      return res.status(500).json({
-        error:
-          uploadData?.message ||
-          uploadData?.error ||
-          JSON.stringify(uploadData) ||
-          "Upload failed"
-      });
+      const { error: photoUploadError } = await supabase.storage
+        .from(PHOTO_BUCKET)
+        .upload(photoPath, photoBuffer, {
+          contentType: photo_file.type,
+          upsert: false
+        });
+
+      if (photoUploadError) {
+        return res.status(500).json({
+          error: `Inspection photo upload failed: ${photoUploadError.message}`
+        });
+      }
+
+      uploadedPhotoPath = photoPath;
     }
 
-    const publicUrl = `${supabaseUrl}/storage/v1/object/public/guest_report_photos/${storagePath}`;
+    if (log_file?.base64) {
+      const logBuffer = bufferFromBase64(log_file.base64);
+      const logValidationError = validateDocFile(log_file, logBuffer);
+
+      if (logValidationError) {
+        return res.status(400).json({ error: logValidationError });
+      }
+
+      const logName = sanitizeFileName(log_file.name);
+      const logPath = `${verificationId}/${Date.now()}-${logName}`;
+
+      const { error: logUploadError } = await supabase.storage
+        .from(DOC_BUCKET)
+        .upload(logPath, logBuffer, {
+          contentType: log_file.type,
+          upsert: false
+        });
+
+      if (logUploadError) {
+        return res.status(500).json({
+          error: `Inspection log upload failed: ${logUploadError.message}`
+        });
+      }
+
+      uploadedLogPath = logPath;
+    }
 
     return res.status(200).json({
       success: true,
-      photo_url: publicUrl,
-      path: storagePath
+      verification_id: verificationId,
+      photo_path: uploadedPhotoPath,
+      log_file_path: uploadedLogPath
     });
   } catch (err) {
     return res.status(500).json({
-      error: err.message || "Server error"
+      error: err?.message || "Server error"
     });
   }
 }
