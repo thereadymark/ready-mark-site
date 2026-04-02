@@ -1,8 +1,12 @@
 {
   "rewrites": [
-    {
-      "source": "/(.*)",
-      "destination": "/index.html"
-    }
+    { "source": "/api/(.*)", "destination": "/api/$1" },
+
+    { "source": "/", "destination": "/index.html" },
+
+    { "source": "/admin", "destination": "/admin.html" },
+    { "source": "/dashboard", "destination": "/dashboard.html" },
+    { "source": "/reset-password", "destination": "/reset-password.html" },
+    { "source": "/privacy", "destination": "/privacy.html" }
   ]
 }
