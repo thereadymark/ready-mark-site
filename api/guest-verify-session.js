@@ -1,12 +1,8 @@
-import crypto from "crypto";
-
-function generateSessionToken() {
-  return crypto.randomBytes(32).toString("hex");
-}
-
 export default async function handler(req, res) {
+  const allowedOrigin = "https://verify.thereadymarkgroup.com";
+
   const corsHeaders = {
-    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Origin": allowedOrigin,
     "Access-Control-Allow-Methods": "GET, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, Authorization, x-guest-token"
   };
@@ -33,6 +29,10 @@ export default async function handler(req, res) {
     const supabaseUrl = process.env.SUPABASE_URL;
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
+    if (!supabaseUrl || !serviceRoleKey) {
+      return res.status(500).json({ error: "Missing server environment variables" });
+    }
+
     const headers = {
       apikey: serviceRoleKey,
       Authorization: `Bearer ${serviceRoleKey}`,
@@ -40,14 +40,17 @@ export default async function handler(req, res) {
     };
 
     const sessionRes = await fetch(
-      `${supabaseUrl}/rest/v1/guest_sessions?session_token=eq.${encodeURIComponent(token)}&select=*&limit=1`,
+      `${supabaseUrl}/rest/v1/guest_sessions?session_token=eq.${encodeURIComponent(token)}&select=guest_user_id,expires_at&limit=1`,
       { headers }
     );
 
-    const sessionData = await sessionRes.json();
+    const sessionData = await sessionRes.json().catch(() => null);
 
     if (!sessionRes.ok) {
-      return res.status(500).json({ error: "Session lookup failed", details: sessionData });
+      return res.status(500).json({
+        error: "Session lookup failed",
+        details: sessionData
+      });
     }
 
     const session = Array.isArray(sessionData) && sessionData.length > 0 ? sessionData[0] : null;
@@ -61,10 +64,13 @@ export default async function handler(req, res) {
       { headers }
     );
 
-    const userData = await userRes.json();
+    const userData = await userRes.json().catch(() => null);
 
     if (!userRes.ok) {
-      return res.status(500).json({ error: "Guest lookup failed", details: userData });
+      return res.status(500).json({
+        error: "Guest lookup failed",
+        details: userData
+      });
     }
 
     const user = Array.isArray(userData) && userData.length > 0 ? userData[0] : null;
