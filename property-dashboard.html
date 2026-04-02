@@ -80,6 +80,11 @@
       min-width: 220px;
     }
 
+    button:disabled {
+      opacity: 0.65;
+      cursor: not-allowed;
+    }
+
     .property-header {
       margin: 10px 0 24px;
       padding: 18px;
@@ -224,6 +229,7 @@
       background: rgba(255,255,255,0.04);
       border: 1px solid rgba(212,175,87,0.18);
       color: #cbd5e1;
+      line-height: 1.7;
     }
 
     .room-link {
@@ -231,6 +237,12 @@
       text-decoration: underline;
       cursor: pointer;
       font-weight: bold;
+      background: none;
+      border: none;
+      padding: 0;
+      font: inherit;
+      width: auto;
+      min-width: 0;
     }
 
     .room-link:hover {
@@ -290,29 +302,72 @@
   </div>
 
   <script>
-    const ADMIN_PASSWORD = "readymark2026";
+    const SESSION_TOKEN_KEY = "readymark_admin_token";
 
-    let entered = sessionStorage.getItem("admin_auth");
+    const propertySelect = document.getElementById("propertySelect");
+    const loadDashboardBtn = document.getElementById("loadDashboardBtn");
+    const dashboardContent = document.getElementById("dashboardContent");
 
-    if (entered !== ADMIN_PASSWORD) {
-      entered = prompt("Enter admin password:");
+    function getSessionToken() {
+      return sessionStorage.getItem(SESSION_TOKEN_KEY) || "";
+    }
 
-      if (entered !== ADMIN_PASSWORD) {
-        document.body.innerHTML =
-          "<h1 style='color:white;text-align:center;margin-top:100px;'>Access Denied</h1>";
-        throw new Error("Unauthorized");
+    function clearSessionToken() {
+      sessionStorage.removeItem(SESSION_TOKEN_KEY);
+    }
+
+    function requireAdminToken() {
+      const token = getSessionToken();
+      if (!token) {
+        alert("Unauthorized. Please sign in through admin.html first.");
+        throw new Error("Missing admin session token");
       }
+      return token;
+    }
 
-      sessionStorage.setItem("admin_auth", entered);
+    function adminHeaders(extra = {}) {
+      return {
+        "x-admin-token": getSessionToken(),
+        ...extra
+      };
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function handleUnauthorizedResponse(response, data) {
+      if (response.status === 401 || data?.error === "Unauthorized") {
+        clearSessionToken();
+        alert("Your admin session expired. Please sign in again through admin.html.");
+        window.location.href = "/admin.html";
+        return true;
+      }
+      return false;
+    }
+
+    async function fetchJson(url, options = {}) {
+      const response = await fetch(url, options);
+      const data = await response.json().catch(() => null);
+      return { response, data };
     }
 
     function formatDate(dateString) {
       if (!dateString) return "—";
-      return new Date(dateString).toLocaleDateString();
+      try {
+        return new Date(dateString).toLocaleDateString();
+      } catch {
+        return "—";
+      }
     }
 
     function getStatusClass(status) {
-      const s = (status || "").toLowerCase();
+      const s = String(status || "").toLowerCase().trim();
 
       if (s === "ready mark premier") return "status-pill status-premier";
       if (s === "verified clean") return "status-pill status-verified";
@@ -323,198 +378,253 @@
 
     function openRoomVerification(qrUrl) {
       if (!qrUrl) return;
-      window.open(qrUrl, "_blank");
+      window.open(qrUrl, "_blank", "noopener,noreferrer");
+    }
+
+    function renderRecentActivity(items) {
+      if (!items.length) {
+        return `<div class="empty">No recent inspection activity yet.</div>`;
+      }
+
+      return items.map((item) => `
+        <div class="recent-item">
+          <button type="button" class="room-link" data-qr-url="${escapeHtml(item.qr_url || "")}">
+            Room ${escapeHtml(item.room_number || "—")}
+          </button><br>
+          <span class="${getStatusClass(item.status)}">${escapeHtml(item.status || "No Inspection")}</span><br>
+          <span class="muted">Score: ${escapeHtml(item.score ?? "—")} | Verified: ${escapeHtml(formatDate(item.inspection_date))}</span><br>
+          <span class="muted">Verification ID: ${escapeHtml(item.verification_id || "—")}</span>
+        </div>
+      `).join("");
+    }
+
+    function renderFlaggedRooms(rooms) {
+      const flaggedRooms = rooms.filter((room) =>
+        ["needs attention", "not clean", "no inspection"].includes(String(room.status || "").toLowerCase().trim())
+      );
+
+      if (!flaggedRooms.length) {
+        return `<div class="empty">No flagged rooms. Nice.</div>`;
+      }
+
+      return flaggedRooms.map((room) => `
+        <div class="recent-item">
+          <button type="button" class="room-link" data-qr-url="${escapeHtml(room.qr_url || "")}">
+            Room ${escapeHtml(room.room_number || "—")}
+          </button><br>
+          <span class="${getStatusClass(room.status)}">${escapeHtml(room.status || "No Inspection")}</span><br>
+          <span class="muted">Score: ${escapeHtml(room.score ?? "—")}</span><br>
+          <span class="muted">Verification ID: ${escapeHtml(room.verification_id || "—")}</span>
+        </div>
+      `).join("");
+    }
+
+    function renderRoomTable(rooms) {
+      if (!rooms.length) {
+        return `<div class="empty">No rooms found for this property yet.</div>`;
+      }
+
+      return `
+        <table>
+          <thead>
+            <tr>
+              <th>Room</th>
+              <th>Status</th>
+              <th>Score</th>
+              <th>Last Inspection</th>
+              <th>Verification ID</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rooms.map((room) => `
+              <tr>
+                <td>
+                  <button type="button" class="room-link" data-qr-url="${escapeHtml(room.qr_url || "")}">
+                    Room ${escapeHtml(room.room_number || "—")}
+                  </button>
+                </td>
+                <td><span class="${getStatusClass(room.status)}">${escapeHtml(room.status || "No Inspection")}</span></td>
+                <td>${escapeHtml(room.score ?? "—")}</td>
+                <td>${escapeHtml(formatDate(room.inspection_date))}</td>
+                <td>${escapeHtml(room.verification_id || "—")}</td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+      `;
+    }
+
+    function attachRoomLinkHandlers() {
+      document.querySelectorAll(".room-link").forEach((el) => {
+        el.addEventListener("click", () => {
+          openRoomVerification(el.dataset.qrUrl || "");
+        });
+      });
     }
 
     async function loadProperties() {
-      const select = document.getElementById("propertySelect");
+      requireAdminToken();
 
       try {
-        const res = await fetch("/api/list-properties");
-        const data = await res.json();
+        const { response, data } = await fetchJson("/api/list-properties", {
+          method: "GET",
+          headers: adminHeaders({
+            "Accept": "application/json"
+          })
+        });
 
-        if (!res.ok) {
-          throw new Error(data.error || "Failed to load properties");
+        if (handleUnauthorizedResponse(response, data)) {
+          return;
         }
 
-        select.innerHTML = '<option value="">Select a property</option>';
+        if (!response.ok || data?.error) {
+          throw new Error(data?.error || "Failed to load properties");
+        }
 
-        data.properties.forEach((property) => {
+        propertySelect.innerHTML = '<option value="">Select a property</option>';
+
+        const properties = Array.isArray(data?.properties) ? data.properties : [];
+
+        properties.forEach((property) => {
           const option = document.createElement("option");
           option.value = property.id;
           option.textContent = `${property.property_name} (${property.property_slug})`;
-          select.appendChild(option);
+          propertySelect.appendChild(option);
         });
       } catch (err) {
-        select.innerHTML = '<option value="">Could not load properties</option>';
-        document.getElementById("dashboardContent").innerHTML =
-          `<div class="loading-box">Error loading properties: ${err.message}</div>`;
+        propertySelect.innerHTML = '<option value="">Could not load properties</option>';
+        dashboardContent.innerHTML =
+          `<div class="loading-box">Error loading properties: ${escapeHtml(err.message)}</div>`;
       }
     }
 
     async function loadDashboard() {
-      const propertyId = document.getElementById("propertySelect").value;
-      const container = document.getElementById("dashboardContent");
+      requireAdminToken();
+
+      const propertyId = propertySelect.value;
 
       if (!propertyId) {
-        container.innerHTML = `<div class="loading-box">Please select a property.</div>`;
+        dashboardContent.innerHTML = `<div class="loading-box">Please select a property.</div>`;
         return;
       }
 
-      container.innerHTML = `<div class="loading-box">Loading dashboard...</div>`;
+      loadDashboardBtn.disabled = true;
+      dashboardContent.innerHTML = `<div class="loading-box">Loading dashboard...</div>`;
 
       try {
-        const res = await fetch(`/api/property-dashboard?propertyId=${encodeURIComponent(propertyId)}`);
-        const data = await res.json();
+        const { response, data } = await fetchJson(
+          `/api/property-dashboard?propertyId=${encodeURIComponent(propertyId)}`,
+          {
+            method: "GET",
+            headers: adminHeaders({
+              "Accept": "application/json"
+            })
+          }
+        );
 
-        if (!res.ok) {
-          throw new Error(data.error || "Failed to load dashboard");
+        if (handleUnauthorizedResponse(response, data)) {
+          return;
         }
 
-        const property = data.property;
-        const summary = data.summary;
-        const recentActivity = data.recentActivity || [];
-        const rooms = data.rooms || [];
+        if (!response.ok || data?.error) {
+          throw new Error(data?.error || "Failed to load dashboard");
+        }
 
-        container.innerHTML = `
+        const property = data?.property || {};
+        const summary = data?.summary || {};
+        const recentActivity = Array.isArray(data?.recentActivity) ? data.recentActivity : [];
+        const rooms = Array.isArray(data?.rooms) ? data.rooms : [];
+
+        const totalRooms = Number(summary.totalRooms ?? 0);
+        const pending = Number(summary.pending ?? 0);
+        const inspectedRooms = Math.max(0, totalRooms - pending);
+
+        dashboardContent.innerHTML = `
           <div class="property-header">
-            <h2>${property.property_name}</h2>
+            <h2>${escapeHtml(property.property_name || "Unnamed Property")}</h2>
             <div class="property-meta">
-              Type: ${property.property_type || "—"}<br>
-              Location: ${property.city || "—"}${property.state ? ", " + property.state : ""}<br>
-              Status: ${property.status || "—"}<br>
-              Latest Inspection: ${formatDate(summary.latestInspectionDate)}
+              Type: ${escapeHtml(property.property_type || "—")}<br>
+              Location: ${escapeHtml(property.city || "—")}${property.state ? ", " + escapeHtml(property.state) : ""}<br>
+              Status: ${escapeHtml(property.status || "—")}<br>
+              Latest Inspection: ${escapeHtml(formatDate(summary.latestInspectionDate))}
             </div>
           </div>
 
           <div class="stats-grid">
             <div class="stat-card">
               <div class="stat-label">Total Rooms</div>
-              <div class="stat-value">${summary.totalRooms}</div>
+              <div class="stat-value">${escapeHtml(totalRooms)}</div>
             </div>
 
             <div class="stat-card">
               <div class="stat-label">Verification Rate</div>
-              <div class="stat-value">${summary.verificationRate}%</div>
+              <div class="stat-value">${escapeHtml(summary.verificationRate ?? 0)}%</div>
             </div>
 
             <div class="stat-card">
               <div class="stat-label">Verified Clean</div>
-              <div class="stat-value">${summary.verifiedClean}</div>
+              <div class="stat-value">${escapeHtml(summary.verifiedClean ?? 0)}</div>
             </div>
 
             <div class="stat-card">
               <div class="stat-label">Ready Mark Premier</div>
-              <div class="stat-value">${summary.premier}</div>
+              <div class="stat-value">${escapeHtml(summary.premier ?? 0)}</div>
             </div>
 
             <div class="stat-card">
               <div class="stat-label">Needs Attention</div>
-              <div class="stat-value">${summary.needsAttention}</div>
+              <div class="stat-value">${escapeHtml(summary.needsAttention ?? 0)}</div>
             </div>
 
             <div class="stat-card">
               <div class="stat-label">Not Clean</div>
-              <div class="stat-value">${summary.notClean}</div>
+              <div class="stat-value">${escapeHtml(summary.notClean ?? 0)}</div>
             </div>
 
             <div class="stat-card">
               <div class="stat-label">No Inspection</div>
-              <div class="stat-value">${summary.pending ?? 0}</div>
+              <div class="stat-value">${escapeHtml(pending)}</div>
             </div>
 
             <div class="stat-card">
               <div class="stat-label">Inspected Rooms</div>
-              <div class="stat-value">${(summary.totalRooms ?? 0) - (summary.pending ?? 0)}</div>
+              <div class="stat-value">${escapeHtml(inspectedRooms)}</div>
             </div>
           </div>
 
           <div class="split">
             <div class="panel">
               <h3>Recent Activity</h3>
-              ${
-                recentActivity.length
-                  ? recentActivity.map((item) => `
-                    <div class="recent-item">
-                      <span class="room-link" data-qr-url="${item.qr_url || ""}">Room ${item.room_number}</span><br>
-                      <span class="${getStatusClass(item.status)}">${item.status}</span><br>
-                      <span class="muted">Score: ${item.score ?? "—"} | Verified: ${formatDate(item.inspection_date)}</span><br>
-                      <span class="muted">Verification ID: ${item.verification_id || "—"}</span>
-                    </div>
-                  `).join("")
-                  : `<div class="empty">No recent inspection activity yet.</div>`
-              }
+              ${renderRecentActivity(recentActivity)}
             </div>
 
             <div class="panel">
               <h3>Flagged Rooms</h3>
-              ${
-                rooms.filter(r =>
-                  ["needs attention", "not clean", "no inspection"].includes((r.status || "").toLowerCase())
-                ).length
-                  ? rooms
-                      .filter(r =>
-                        ["needs attention", "not clean", "no inspection"].includes((r.status || "").toLowerCase())
-                      )
-                      .map((room) => `
-                        <div class="recent-item">
-                          <span class="room-link" data-qr-url="${room.qr_url || ""}">Room ${room.room_number}</span><br>
-                          <span class="${getStatusClass(room.status)}">${room.status}</span><br>
-                          <span class="muted">Score: ${room.score ?? "—"}</span><br>
-                          <span class="muted">Verification ID: ${room.verification_id || "—"}</span>
-                        </div>
-                      `).join("")
-                  : `<div class="empty">No flagged rooms. Nice.</div>`
-              }
+              ${renderFlaggedRooms(rooms)}
             </div>
           </div>
 
           <div class="panel">
             <h3>Room Status Table</h3>
-            ${
-              rooms.length
-                ? `
-                  <table>
-                    <thead>
-                      <tr>
-                        <th>Room</th>
-                        <th>Status</th>
-                        <th>Score</th>
-                        <th>Last Inspection</th>
-                        <th>Verification ID</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      ${rooms.map((room) => `
-                        <tr>
-                          <td><span class="room-link" data-qr-url="${room.qr_url || ""}">Room ${room.room_number}</span></td>
-                          <td><span class="${getStatusClass(room.status)}">${room.status}</span></td>
-                          <td>${room.score ?? "—"}</td>
-                          <td>${formatDate(room.inspection_date)}</td>
-                          <td>${room.verification_id || "—"}</td>
-                        </tr>
-                      `).join("")}
-                    </tbody>
-                  </table>
-                `
-                : `<div class="empty">No rooms found for this property yet.</div>`
-            }
+            ${renderRoomTable(rooms)}
           </div>
         `;
 
-        document.querySelectorAll(".room-link").forEach((el) => {
-          el.addEventListener("click", () => {
-            openRoomVerification(el.dataset.qrUrl);
-          });
-        });
+        attachRoomLinkHandlers();
       } catch (err) {
-        container.innerHTML = `<div class="loading-box">Error loading dashboard: ${err.message}</div>`;
+        dashboardContent.innerHTML = `<div class="loading-box">Error loading dashboard: ${escapeHtml(err.message)}</div>`;
+      } finally {
+        loadDashboardBtn.disabled = false;
       }
     }
 
-    document.getElementById("loadDashboardBtn").addEventListener("click", loadDashboard);
+    loadDashboardBtn.addEventListener("click", loadDashboard);
 
-    loadProperties();
+    try {
+      loadProperties();
+    } catch (err) {
+      dashboardContent.innerHTML = `<div class="loading-box">Error: ${escapeHtml(err.message)}</div>`;
+    }
   </script>
 </body>
 </html>
