@@ -254,6 +254,11 @@
       border: none;
     }
 
+    button:disabled {
+      opacity: 0.65;
+      cursor: not-allowed;
+    }
+
     .primary-btn {
       background: linear-gradient(180deg, #d8ba73, #b8934c);
       color: #111315;
@@ -642,13 +647,22 @@
     ];
 
     const YOUTUBE_EMBED_URL = "https://www.youtube.com/embed/s2mYUVarGx0?rel=0";
+    const MAX_PHOTO_BYTES = 10 * 1024 * 1024;
+    const ALLOWED_PHOTO_TYPES = new Set([
+      "image/jpeg",
+      "image/jpg",
+      "image/png",
+      "image/webp",
+      "image/heic",
+      "image/heif"
+    ]);
 
     let currentGuest = null;
     let currentGuestToken = sessionStorage.getItem("readymark_guest_token") || "";
 
     function getStatusClass(tier) {
       if (!tier) return "";
-      const normalized = tier.toLowerCase().trim();
+      const normalized = String(tier).toLowerCase().trim();
       if (normalized === "verified clean") return "status-verified";
       if (normalized === "needs attention") return "status-attention";
       if (normalized === "not clean") return "status-notclean";
@@ -664,6 +678,12 @@
         .replace(/>/g, "&gt;")
         .replace(/"/g, "&quot;")
         .replace(/'/g, "&#039;");
+    }
+
+    async function fetchJson(url, options = {}) {
+      const res = await fetch(url, options);
+      const data = await res.json().catch(() => null);
+      return { res, data };
     }
 
     function renderPropertyOptions() {
@@ -713,7 +733,7 @@
       }
 
       try {
-        const res = await fetch("/api/guest-verify-session", {
+        const { res, data } = await fetchJson("/api/guest-verify-session", {
           method: "GET",
           headers: {
             "Accept": "application/json",
@@ -721,14 +741,12 @@
           }
         });
 
-        const data = await res.json();
-
         if (!res.ok || data?.error) {
           resetGuestState();
           return null;
         }
 
-        currentGuest = data.guest;
+        currentGuest = data.guest || null;
         return currentGuest;
       } catch {
         resetGuestState();
@@ -737,62 +755,75 @@
     }
 
     async function fileToPhotoObject(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
+      if (!file) return null;
 
-    reader.onload = function () {
-      const result = reader.result || "";
-      const base64 = String(result).split(",")[1] || "";
-
-      if (!base64) {
-        reject(new Error("Unable to read photo file."));
-        return;
+      if (!ALLOWED_PHOTO_TYPES.has(file.type)) {
+        throw new Error("Issue photo must be a JPG, PNG, WEBP, or HEIC image.");
       }
 
-      resolve({
-        name: file.name,
-        type: file.type,
-        base64
+      if (file.size > MAX_PHOTO_BYTES) {
+        throw new Error("Issue photo is too large. Maximum size is 10 MB.");
+      }
+
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+
+        reader.onload = function () {
+          const result = reader.result || "";
+          const base64 = String(result).split(",")[1] || "";
+
+          if (!base64) {
+            reject(new Error("Unable to read photo file."));
+            return;
+          }
+
+          resolve({
+            name: file.name,
+            type: file.type,
+            base64
+          });
+        };
+
+        reader.onerror = function () {
+          reject(new Error("Unable to read photo file."));
+        };
+
+        reader.readAsDataURL(file);
       });
-    };
+    }
 
-    reader.onerror = function () {
-      reject(new Error("Unable to read photo file."));
-    };
-
-    reader.readAsDataURL(file);
-  });
-}
     async function submitGuestReport(payload) {
-  const res = await fetch("/api/report-issue", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Accept": "application/json",
-      "x-guest-token": currentGuestToken
-    },
-    body: JSON.stringify(payload)
-  });
+      const { res, data } = await fetchJson("/api/report-issue", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json",
+          "x-guest-token": currentGuestToken
+        },
+        body: JSON.stringify(payload)
+      });
 
-  const data = await res.json().catch(() => null);
+      if (!res.ok) {
+        if (res.status === 401) {
+          resetGuestState();
+        }
 
-  if (!res.ok) {
-    const referenceText = data?.reference
-      ? ` Reference #: ${data.reference}`
-      : "";
+        const referenceText = data?.reference
+          ? ` Reference #: ${data.reference}`
+          : "";
 
-    const errorMessage =
-      data?.error ||
-      data?.message ||
-      data?.details?.message ||
-      JSON.stringify(data) ||
-      "Unable to submit report.";
+        const errorMessage =
+          data?.error ||
+          data?.message ||
+          data?.details?.message ||
+          "Unable to submit report.";
 
-    throw new Error(`${errorMessage}${referenceText}`);
-  }
+        throw new Error(`${errorMessage}${referenceText}`);
+      }
 
-  return data;
-}
+      return data || {};
+    }
+
     function renderLandingPage() {
       const app = document.getElementById("app");
 
@@ -1260,10 +1291,11 @@
             return;
           }
 
+          submitBtn.disabled = true;
           setInlineStatus(statusBox, "Sending reset email...");
 
           try {
-            const res = await fetch("/api/guest-forgot-password", {
+            const { res, data } = await fetchJson("/api/guest-forgot-password", {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
@@ -1271,8 +1303,6 @@
               },
               body: JSON.stringify({ email })
             });
-
-            const data = await res.json().catch(() => null);
 
             if (!res.ok || data?.error) {
               throw new Error(
@@ -1286,6 +1316,8 @@
             setInlineStatus(statusBox, "If that email exists in our system, reset instructions have been sent.", "success");
           } catch (error) {
             setInlineStatus(statusBox, error.message || "Unable to send reset email.", "error");
+          } finally {
+            submitBtn.disabled = false;
           }
         });
       }
@@ -1313,10 +1345,11 @@
             return;
           }
 
+          submitBtn.disabled = true;
           setInlineStatus(statusBox, "Verifying email...");
 
           try {
-            const res = await fetch("/api/verify-email", {
+            const { res, data } = await fetchJson("/api/verify-email", {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
@@ -1324,8 +1357,6 @@
               },
               body: JSON.stringify({ email, code })
             });
-
-            const data = await res.json().catch(() => null);
 
             if (!res.ok || data?.error) {
               throw new Error(
@@ -1349,6 +1380,8 @@
             document.getElementById("report-form-view").classList.remove("hidden");
           } catch (error) {
             setInlineStatus(statusBox, error.message || "Unable to verify email.", "error");
+          } finally {
+            submitBtn.disabled = false;
           }
         });
       }
@@ -1395,6 +1428,7 @@
           authStatus.className = "inline-status";
           authStatus.textContent = type === "login" ? "Continuing..." : "Creating account...";
           authStatus.classList.remove("hidden");
+          submitBtn.disabled = true;
 
           try {
             const email = document.getElementById("guest-email").value.trim();
@@ -1424,7 +1458,7 @@
               };
             }
 
-            const res = await fetch(endpoint, {
+            const { res, data } = await fetchJson(endpoint, {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
@@ -1432,8 +1466,6 @@
               },
               body: JSON.stringify(payload)
             });
-
-            const data = await res.json().catch(() => null);
 
             if (!res.ok || data?.error) {
               throw new Error(
@@ -1460,6 +1492,8 @@
             openEmailVerificationModal(data.email || email);
           } catch (error) {
             setInlineStatus(authStatus, error.message || "Unable to continue.", "error");
+          } finally {
+            submitBtn.disabled = false;
           }
         });
       }
@@ -1491,78 +1525,83 @@
       });
 
       submitReportBtn.addEventListener("click", async function () {
-  const checkedIssues = Array.from(document.querySelectorAll('input[name="issue_type"]:checked'))
-    .map(input => input.value);
+        const checkedIssues = Array.from(document.querySelectorAll('input[name="issue_type"]:checked'))
+          .map(input => input.value);
 
-  const guestNote = document.getElementById("guest-note").value.trim();
-  const guestPhotoFile = document.getElementById("guest-photo").files[0] || null;
+        const guestNote = document.getElementById("guest-note").value.trim();
+        const guestPhotoFile = document.getElementById("guest-photo").files[0] || null;
 
-  if (!checkedIssues.length) {
-    setInlineStatus(reportStatus, "Please select at least one issue before submitting.", "error");
-    return;
-  }
+        if (!checkedIssues.length) {
+          setInlineStatus(reportStatus, "Please select at least one issue before submitting.", "error");
+          return;
+        }
 
-  if (!currentGuestToken || !currentGuest || !currentGuest.email) {
-    setInlineStatus(reportStatus, "Guest login is required.", "error");
-    return;
-  }
+        if (!currentGuestToken || !currentGuest || !currentGuest.email) {
+          setInlineStatus(reportStatus, "Guest login is required.", "error");
+          return;
+        }
 
-  if (!verificationId || verificationId === "—") {
-    setInlineStatus(reportStatus, "This room is missing a verification record ID.", "error");
-    return;
-  }
+        if (!verificationId || verificationId === "—") {
+          setInlineStatus(reportStatus, "This room is missing a verification record ID.", "error");
+          return;
+        }
 
-  setInlineStatus(reportStatus, "Submitting report...");
+        submitReportBtn.disabled = true;
+        setInlineStatus(reportStatus, "Submitting report...");
 
-  try {
-    let photoFilePayload = null;
+        try {
+          let photoFilePayload = null;
 
-    if (guestPhotoFile) {
-      setInlineStatus(reportStatus, "Preparing photo...");
-      photoFilePayload = await fileToPhotoObject(guestPhotoFile);
-    }
+          if (guestPhotoFile) {
+            setInlineStatus(reportStatus, "Preparing photo...");
+            photoFilePayload = await fileToPhotoObject(guestPhotoFile);
+          }
 
-    setInlineStatus(reportStatus, "Saving report...");
+          setInlineStatus(reportStatus, "Saving report...");
 
-    const responseData = await submitGuestReport({
-      verification_id: verificationId,
-      property_slug: derivedPropertySlug || null,
-      property_name: property,
-      room_number: room,
-      issue_types: checkedIssues,
-      guest_note: guestNote || null,
-      photo_file: photoFilePayload
-    });
+          const responseData = await submitGuestReport({
+            verification_id: verificationId,
+            property_slug: derivedPropertySlug || null,
+            property_name: property,
+            room_number: room,
+            issue_types: checkedIssues,
+            guest_note: guestNote || null,
+            photo_file: photoFilePayload
+          });
 
-    const confirmationNumber =
-      responseData?.confirmationNumber ||
-      responseData?.confirmation_number ||
-      responseData?.reference ||
-      responseData?.report?.confirmation_number ||
-      responseData?.report?.verification_id ||
-      "Unavailable";
+          const confirmationNumber =
+            responseData?.confirmationNumber ||
+            responseData?.confirmation_number ||
+            responseData?.reference ||
+            responseData?.report?.confirmation_number ||
+            responseData?.report?.verification_id ||
+            "Unavailable";
 
-    reportStatus.className = "inline-status inline-success";
-    reportStatus.innerHTML = `
-      <strong>Report received.</strong><br><br>
-      <strong>Reference #:</strong> ${escapeHtml(confirmationNumber)}<br><br>
-      Ready Mark has been notified.
-    `;
-    reportStatus.classList.remove("hidden");
+          reportStatus.className = "inline-status inline-success";
+          reportStatus.innerHTML = `
+            <strong>Report received.</strong><br><br>
+            <strong>Reference #:</strong> ${escapeHtml(confirmationNumber)}<br><br>
+            Ready Mark has been notified.
+          `;
+          reportStatus.classList.remove("hidden");
 
-    document.querySelectorAll('input[name="issue_type"]').forEach(input => {
-      input.checked = false;
-    });
-    document.getElementById("guest-note").value = "";
-    document.getElementById("guest-photo").value = "";
+          document.querySelectorAll('input[name="issue_type"]').forEach(input => {
+            input.checked = false;
+          });
+          document.getElementById("guest-note").value = "";
+          document.getElementById("guest-photo").value = "";
 
-    reportFormView.classList.add("hidden");
-    reportStartView.classList.remove("hidden");
-  } catch (error) {
-    setInlineStatus(reportStatus, error.message || "Unable to submit report.", "error");
-  }
-});
-         
+          reportFormView.classList.add("hidden");
+          reportStartView.classList.remove("hidden");
+        } catch (error) {
+          if (/guest login required|invalid or expired guest session|email verification required/i.test(error.message || "")) {
+            resetGuestState();
+          }
+          setInlineStatus(reportStatus, error.message || "Unable to submit report.", "error");
+        } finally {
+          submitReportBtn.disabled = false;
+        }
+      });
     }
 
     function renderErrorPage(message, slug) {
@@ -1608,21 +1647,19 @@
 
     async function loadVerification(slug) {
       try {
-        const res = await fetch("/api/get-verification?slug=" + encodeURIComponent(slug), {
+        const { res, data } = await fetchJson("/api/get-verification?slug=" + encodeURIComponent(slug), {
           method: "GET",
           headers: {
             "Accept": "application/json"
           }
         });
 
-        const data = await res.json();
-
         if (!res.ok || data?.error) {
           renderErrorPage(data?.error || "Verification record not found.", slug);
           return;
         }
 
-        renderResultPage(data, slug);
+        renderResultPage(data || {}, slug);
       } catch (err) {
         renderErrorPage(err?.message || "Unexpected error.", slug);
       }
