@@ -1,3 +1,13 @@
+import { createClient } from "@supabase/supabase-js";
+
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+);
+
+const GUEST_REPORTS_BUCKET = "guest-reports";
+const SIGNED_URL_EXPIRES_IN = 60 * 60; // 1 hour
+
 export default async function handler(req, res) {
   const allowedOrigin = "https://verify.thereadymarkgroup.com";
 
@@ -76,9 +86,43 @@ export default async function handler(req, res) {
       });
     }
 
+    const guestReports = Array.isArray(reportsData) ? reportsData : [];
+
+    const guestReportsWithSignedUrls = await Promise.all(
+      guestReports.map(async (report) => {
+        const photoPath = report?.photo_url ? String(report.photo_url).trim() : "";
+
+        if (!photoPath) {
+          return {
+            ...report,
+            photo_path: null,
+            photo_url: null
+          };
+        }
+
+        const { data: signedData, error: signedError } = await supabase.storage
+          .from(GUEST_REPORTS_BUCKET)
+          .createSignedUrl(photoPath, SIGNED_URL_EXPIRES_IN);
+
+        if (signedError || !signedData?.signedUrl) {
+          return {
+            ...report,
+            photo_path: photoPath,
+            photo_url: null
+          };
+        }
+
+        return {
+          ...report,
+          photo_path: photoPath,
+          photo_url: signedData.signedUrl
+        };
+      })
+    );
+
     return res.status(200).json({
       properties: Array.isArray(propertiesData) ? propertiesData : [],
-      guest_reports: Array.isArray(reportsData) ? reportsData : []
+      guest_reports: guestReportsWithSignedUrls
     });
   } catch (error) {
     return res.status(500).json({
