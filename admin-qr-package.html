@@ -2,8 +2,9 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Admin QR Package | The Ready Mark</title>
+
   <style>
     body {
       margin: 0;
@@ -12,10 +13,8 @@
       color: #f8f5ee;
       min-height: 100vh;
       padding: 20px;
-      box-sizing: border-box;
       display: flex;
       justify-content: center;
-      align-items: flex-start;
     }
 
     .shell {
@@ -25,332 +24,159 @@
       border: 2px solid #c9a34a;
       border-radius: 18px;
       padding: 28px;
-      box-shadow: 0 10px 35px rgba(0, 0, 0, 0.35);
     }
 
-    h1 {
-      margin: 0 0 10px;
-      text-align: center;
-      font-size: 42px;
-      color: #f8f5ee;
-    }
-
-    p {
-      text-align: center;
-      color: #cbd5e1;
-      margin-bottom: 24px;
-      line-height: 1.6;
-    }
-
-    label {
-      display: block;
-      margin-bottom: 8px;
-      color: #d4af57;
-      font-weight: bold;
-    }
+    h1 { text-align: center; }
 
     select, button {
       width: 100%;
-      box-sizing: border-box;
       padding: 14px;
+      margin-bottom: 14px;
       border-radius: 8px;
       border: none;
-      font-size: 16px;
-      font-family: inherit;
-      margin-bottom: 18px;
-    }
-
-    select {
-      background: #f8f5ee;
-      color: #111827;
     }
 
     button {
       background: #d4af57;
-      color: #111827;
       font-weight: bold;
       cursor: pointer;
     }
 
     button:disabled {
-      opacity: 0.55;
+      opacity: 0.5;
       cursor: not-allowed;
     }
 
-    .status-line {
-      margin-top: 10px;
-      color: #cbd5e1;
-      font-size: 14px;
-      min-height: 20px;
-    }
-
-    .result {
-      margin-top: 14px;
-      padding: 16px;
-      border-radius: 10px;
-      background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(212,175,87,0.25);
-      line-height: 1.7;
-      white-space: pre-wrap;
-    }
-
-    .list-box {
-      margin-top: 20px;
-      padding: 16px;
-      border-radius: 10px;
-      background: rgba(255,255,255,0.04);
-      border: 1px solid rgba(212,175,87,0.18);
-      max-height: 350px;
-      overflow: auto;
-    }
-
-    .list-box h3 {
-      margin-top: 0;
-      color: #f8f5ee;
-    }
-
-    .room-line {
-      padding: 8px 0;
-      border-bottom: 1px solid rgba(255,255,255,0.08);
-      color: #d1d5db;
-    }
-
-    .room-line:last-child {
-      border-bottom: none;
-    }
-
-    .controls {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 14px;
-    }
-
-    @media (max-width: 700px) {
-      .controls {
-        grid-template-columns: 1fr;
-      }
-    }
+    .status { font-size: 14px; margin-top: 8px; }
   </style>
+
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 </head>
+
 <body>
-  <div class="shell">
-    <h1>Admin QR Package</h1>
-    <p>Load a property and download a full QR package for internal setup, placement, and reprints.</p>
+<div class="shell">
 
-    <label for="propertySelect">Property</label>
-    <select id="propertySelect">
-      <option value="">Loading properties...</option>
-    </select>
+  <h1>QR Package Generator</h1>
 
-    <div class="controls">
-      <button id="loadRoomsBtn" type="button">Load Property Rooms</button>
-      <button id="downloadZipBtn" type="button" disabled>Download Full QR Package ZIP</button>
-    </div>
+  <select id="propertySelect"></select>
 
-    <div class="status-line" id="statusLine"></div>
-    <div class="result" id="resultBox">Ready.</div>
+  <button id="loadBtn">Load Rooms</button>
+  <button id="downloadBtn" disabled>Download ZIP</button>
 
-    <div class="list-box" id="roomListBox" style="display:none;">
-      <h3>Property Room List</h3>
-      <div id="roomListContent"></div>
-    </div>
-  </div>
+  <div class="status" id="status"></div>
 
-  <script>
-    const ADMIN_PASSWORD = "readymark2026";
+</div>
 
-    let entered = sessionStorage.getItem("admin_auth");
+<script>
+const ADMIN_TOKEN = localStorage.getItem("admin_token");
 
-    if (entered !== ADMIN_PASSWORD) {
-      entered = prompt("Enter admin password:");
+if (!ADMIN_TOKEN) {
+  alert("Missing admin token. Please login first.");
+  throw new Error("Unauthorized");
+}
 
-      if (entered !== ADMIN_PASSWORD) {
-        document.body.innerHTML =
-          "<h1 style='color:white;text-align:center;margin-top:100px;'>Access Denied</h1>";
-        throw new Error("Unauthorized");
-      }
+const headers = {
+  "Content-Type": "application/json",
+  "x-admin-token": ADMIN_TOKEN
+};
 
-      sessionStorage.setItem("admin_auth", entered);
+let property = null;
+let rooms = [];
+
+async function loadProperties() {
+  const select = document.getElementById("propertySelect");
+
+  try {
+    const res = await fetch("/api/list-properties", { headers });
+    const data = await res.json();
+
+    select.innerHTML = '<option value="">Select property</option>';
+
+    data.properties.forEach(p => {
+      const opt = document.createElement("option");
+      opt.value = p.id;
+      opt.textContent = p.property_name;
+      select.appendChild(opt);
+    });
+
+  } catch (e) {
+    select.innerHTML = '<option>Error loading</option>';
+  }
+}
+
+async function loadRooms() {
+  const id = document.getElementById("propertySelect").value;
+  const status = document.getElementById("status");
+
+  if (!id) {
+    status.textContent = "Select a property first.";
+    return;
+  }
+
+  status.textContent = "Loading rooms...";
+  document.getElementById("downloadBtn").disabled = true;
+
+  try {
+    const res = await fetch(`/api/property-rooms?propertyId=${id}`, { headers });
+    const data = await res.json();
+
+    property = data.property;
+    rooms = data.rooms || [];
+
+    status.textContent = `${rooms.length} rooms loaded.`;
+
+    if (rooms.length) {
+      document.getElementById("downloadBtn").disabled = false;
     }
 
-    let loadedProperty = null;
-    let loadedRooms = [];
+  } catch (e) {
+    status.textContent = "Failed to load rooms.";
+  }
+}
 
-    async function loadProperties() {
-      const select = document.getElementById("propertySelect");
-      const resultBox = document.getElementById("resultBox");
+async function downloadZip() {
+  const status = document.getElementById("status");
+  const btn = document.getElementById("downloadBtn");
 
-      try {
-        const res = await fetch("/api/list-properties");
-        const data = await res.json();
+  if (!rooms.length) return;
 
-        if (!res.ok) {
-          throw new Error(data.error || "Failed to load properties");
-        }
+  btn.disabled = true;
+  status.textContent = "Generating QR package...";
 
-        select.innerHTML = '<option value="">Select a property</option>';
+  try {
+    const zip = new JSZip();
+    const folder = zip.folder("qr-codes");
 
-        data.properties.forEach((property) => {
-          const option = document.createElement("option");
-          option.value = property.id;
-          option.textContent = `${property.property_name} (${property.property_slug})`;
-          select.appendChild(option);
-        });
+    await Promise.all(rooms.map(async (room) => {
+      const url = `https://api.qrserver.com/v1/create-qr-code/?size=600x600&data=${encodeURIComponent(room.qr_url)}`;
+      const res = await fetch(url);
+      const blob = await res.blob();
 
-        resultBox.textContent = "Properties loaded.";
-      } catch (err) {
-        select.innerHTML = '<option value="">Could not load properties</option>';
-        resultBox.textContent = `Error loading properties: ${err.message}`;
-      }
-    }
+      folder.file(`${room.qr_slug}.png`, blob);
+    }));
 
-    async function loadPropertyRooms() {
-      const propertyId = document.getElementById("propertySelect").value;
-      const resultBox = document.getElementById("resultBox");
-      const statusLine = document.getElementById("statusLine");
-      const downloadZipBtn = document.getElementById("downloadZipBtn");
-      const roomListBox = document.getElementById("roomListBox");
-      const roomListContent = document.getElementById("roomListContent");
+    zip.file("rooms.json", JSON.stringify(rooms, null, 2));
 
-      if (!propertyId) {
-        resultBox.textContent = "Please choose a property.";
-        return;
-      }
+    const blob = await zip.generateAsync({ type: "blob" });
 
-      resultBox.textContent = "Loading property rooms...";
-      statusLine.textContent = "";
-      downloadZipBtn.disabled = true;
-      roomListBox.style.display = "none";
-      roomListContent.innerHTML = "";
-      loadedRooms = [];
-      loadedProperty = null;
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `${property.property_slug}-qr.zip`;
+    link.click();
 
-      try {
-        const res = await fetch(`/api/property-rooms?propertyId=${encodeURIComponent(propertyId)}`);
-        const data = await res.json();
+    status.textContent = "Download ready.";
 
-        if (!res.ok) {
-          throw new Error(data.error || "Failed to load property rooms");
-        }
+  } catch (e) {
+    status.textContent = "ZIP failed.";
+  }
 
-        loadedProperty = data.property;
-        loadedRooms = data.rooms || [];
+  btn.disabled = false;
+}
 
-        resultBox.innerHTML = `
-<strong>Property loaded successfully.</strong>
+document.getElementById("loadBtn").onclick = loadRooms;
+document.getElementById("downloadBtn").onclick = downloadZip;
 
-Property: ${loadedProperty.property_name}
-Rooms with QR codes: ${loadedRooms.length}
-        `;
-
-        if (loadedRooms.length > 0) {
-          downloadZipBtn.disabled = false;
-          statusLine.textContent = `${loadedRooms.length} QR codes are ready for package download.`;
-
-          roomListContent.innerHTML = loadedRooms
-            .map((room) => `<div class="room-line">Room ${room.room_number} → ${room.qr_slug}</div>`)
-            .join("");
-
-          roomListBox.style.display = "block";
-        } else {
-          statusLine.textContent = "No rooms with QR codes were found for this property.";
-        }
-      } catch (err) {
-        resultBox.textContent = `Error: ${err.message}`;
-      }
-    }
-
-    function buildCsvContent(property, rooms) {
-      const header = ["room_number", "qr_slug", "qr_url"];
-      const rows = rooms.map((room) => [
-        `"${String(room.room_number).replaceAll('"', '""')}"`,
-        `"${String(room.qr_slug).replaceAll('"', '""')}"`,
-        `"${String(room.qr_url).replaceAll('"', '""')}"`
-      ]);
-
-      return [header.join(","), ...rows.map((row) => row.join(","))].join("\n");
-    }
-
-    function buildReadmeContent(property, rooms) {
-      return [
-        "THE READY MARK - QR PACKAGE",
-        "",
-        `Property: ${property.property_name}`,
-        `Property Slug: ${property.property_slug}`,
-        `Total QR Codes: ${rooms.length}`,
-        "",
-        "Contents:",
-        "- /qr-codes/ folder with PNG QR files",
-        "- room-index.csv with room number, slug, and URL",
-        "",
-        "Use:",
-        "- Initial placement",
-        "- Reprints",
-        "- Internal room verification support",
-        "",
-        "Generated by The Ready Mark Admin QR Package"
-      ].join("\n");
-    }
-
-    async function downloadPropertyPackage() {
-      const statusLine = document.getElementById("statusLine");
-      const downloadZipBtn = document.getElementById("downloadZipBtn");
-
-      if (!loadedRooms.length || !loadedProperty) {
-        statusLine.textContent = "No property rooms are loaded yet.";
-        return;
-      }
-
-      downloadZipBtn.disabled = true;
-      statusLine.textContent = "Building QR package ZIP...";
-
-      try {
-        const zip = new JSZip();
-        const qrFolder = zip.folder("qr-codes");
-
-        for (const room of loadedRooms) {
-          const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=600x600&data=${encodeURIComponent(room.qr_url)}`;
-          const response = await fetch(qrApiUrl);
-
-          if (!response.ok) {
-            throw new Error(`Failed to fetch QR for room ${room.room_number}`);
-          }
-
-          const blob = await response.blob();
-          qrFolder.file(`qr-${room.qr_slug}.png`, blob);
-        }
-
-        const csvContent = buildCsvContent(loadedProperty, loadedRooms);
-        const readmeContent = buildReadmeContent(loadedProperty, loadedRooms);
-
-        zip.file("room-index.csv", csvContent);
-        zip.file("README.txt", readmeContent);
-
-        const zipBlob = await zip.generateAsync({ type: "blob" });
-        const downloadUrl = URL.createObjectURL(zipBlob);
-
-        const link = document.createElement("a");
-        link.href = downloadUrl;
-        link.download = `${loadedProperty.property_slug}-qr-package.zip`;
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
-
-        setTimeout(() => URL.revokeObjectURL(downloadUrl), 1000);
-
-        statusLine.textContent = "QR package downloaded successfully.";
-      } catch (err) {
-        statusLine.textContent = `ZIP error: ${err.message}`;
-      } finally {
-        downloadZipBtn.disabled = false;
-      }
-    }
-
-    document.getElementById("loadRoomsBtn").addEventListener("click", loadPropertyRooms);
-    document.getElementById("downloadZipBtn").addEventListener("click", downloadPropertyPackage);
-
-    loadProperties();
-  </script>
+loadProperties();
+</script>
 </body>
 </html>
