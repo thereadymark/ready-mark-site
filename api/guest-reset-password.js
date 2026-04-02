@@ -5,8 +5,10 @@ function hashPassword(password) {
 }
 
 export default async function handler(req, res) {
+  const allowedOrigin = "https://verify.thereadymarkgroup.com";
+
   const corsHeaders = {
-    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Origin": allowedOrigin,
     "Access-Control-Allow-Methods": "POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, Authorization"
   };
@@ -48,7 +50,7 @@ export default async function handler(req, res) {
     };
 
     const userRes = await fetch(
-      `${supabaseUrl}/rest/v1/guest_users?password_reset_token=eq.${encodeURIComponent(token)}&select=*&limit=1`,
+      `${supabaseUrl}/rest/v1/guest_users?password_reset_token=eq.${encodeURIComponent(token)}&select=id,password_reset_expires_at&limit=1`,
       { headers }
     );
 
@@ -72,6 +74,7 @@ export default async function handler(req, res) {
     }
 
     const expiresAtMs = new Date(user.password_reset_expires_at).getTime();
+
     if (Number.isNaN(expiresAtMs) || Date.now() > expiresAtMs) {
       return res.status(400).json({ error: "This reset link has expired." });
     }
