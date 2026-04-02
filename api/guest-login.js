@@ -1,8 +1,6 @@
 import crypto from "crypto";
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 function hashPassword(password) {
   return crypto.createHash("sha256").update(password).digest("hex");
 }
@@ -15,45 +13,44 @@ function generateSessionToken() {
   return crypto.randomBytes(32).toString("hex");
 }
 
-async function sendVerificationEmail(email, code) {
+async function sendVerificationEmail(resend, email, code) {
   const fromEmail = process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev";
 
   await resend.emails.send({
     from: `Ready Mark <${fromEmail}>`,
     to: email,
     subject: "Your Ready Mark Verification Code",
-html: `
-  <div style="font-family: Georgia, serif; background:#121416; color:#f3eee5; padding:40px 20px;">
-    <div style="max-width:520px; margin:0 auto; background:linear-gradient(180deg,#1b1f23,#15181b); border:1px solid rgba(199,162,87,0.28); border-radius:18px; padding:30px; text-align:center; box-shadow:0 14px 34px rgba(0,0,0,0.35);">
-      
-      <img src="https://verify.thereadymarkgroup.com/readymarkseal(best)nobackground.PNG"
-           style="width:90px;margin-bottom:14px;" />
+    html: `
+      <div style="font-family: Georgia, serif; background:#121416; color:#f3eee5; padding:40px 20px;">
+        <div style="max-width:520px; margin:0 auto; background:linear-gradient(180deg,#1b1f23,#15181b); border:1px solid rgba(199,162,87,0.28); border-radius:18px; padding:30px; text-align:center; box-shadow:0 14px 34px rgba(0,0,0,0.35);">
+          <img src="https://verify.thereadymarkgroup.com/readymarkseal(best)nobackground.PNG"
+               style="width:90px;margin-bottom:14px;" />
 
-      <div style="width:140px; height:2px; margin:0 auto 18px; background:linear-gradient(90deg, rgba(199,162,87,0), rgba(216,187,122,0.98), rgba(199,162,87,0)); border-radius:999px;"></div>
+          <div style="width:140px; height:2px; margin:0 auto 18px; background:linear-gradient(90deg, rgba(199,162,87,0), rgba(216,187,122,0.98), rgba(199,162,87,0)); border-radius:999px;"></div>
 
-      <h2 style="margin:0 0 10px; font-size:26px; letter-spacing:1px; color:#e6d39a;">
-        The Ready Mark
-      </h2>
+          <h2 style="margin:0 0 10px; font-size:26px; letter-spacing:1px; color:#e6d39a;">
+            The Ready Mark
+          </h2>
 
-      <p style="color:#d8bb7a; font-size:13px; letter-spacing:3px; text-transform:uppercase; margin-bottom:22px;">
-        Email Verification
-      </p>
+          <p style="color:#d8bb7a; font-size:13px; letter-spacing:3px; text-transform:uppercase; margin-bottom:22px;">
+            Email Verification
+          </p>
 
-      <p style="font-size:16px; line-height:1.7; margin-bottom:20px; color:#f3eee5;">
-        Enter this verification code to continue:
-      </p>
+          <p style="font-size:16px; line-height:1.7; margin-bottom:20px; color:#f3eee5;">
+            Enter this verification code to continue:
+          </p>
 
-      <div style="font-size:36px; font-weight:700; letter-spacing:8px; margin-bottom:18px; color:#f3eee5;">
-        ${code}
+          <div style="font-size:36px; font-weight:700; letter-spacing:8px; margin-bottom:18px; color:#f3eee5;">
+            ${code}
+          </div>
+
+          <p style="margin-top:10px; font-size:13px; color:#958d82;">
+            This code expires in 10 minutes.
+          </p>
+        </div>
       </div>
-
-      <p style="margin-top:10px; font-size:13px; color:#958d82;">
-        This code expires in 10 minutes.
-      </p>
-
-    </div>
-  </div>
-` });
+    `
+  });
 }
 
 async function createGuestSession(supabaseUrl, serviceRoleKey, user) {
@@ -96,8 +93,10 @@ async function createGuestSession(supabaseUrl, serviceRoleKey, user) {
 }
 
 export default async function handler(req, res) {
+  const allowedOrigin = "https://verify.thereadymarkgroup.com";
+
   const corsHeaders = {
-    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Origin": allowedOrigin,
     "Access-Control-Allow-Methods": "POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, Authorization"
   };
@@ -123,15 +122,17 @@ export default async function handler(req, res) {
 
     const supabaseUrl = process.env.SUPABASE_URL;
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const resendApiKey = process.env.RESEND_API_KEY;
 
     if (!supabaseUrl || !serviceRoleKey) {
       return res.status(500).json({ error: "Missing server environment variables" });
     }
 
-    if (!process.env.RESEND_API_KEY) {
+    if (!resendApiKey) {
       return res.status(500).json({ error: "Missing RESEND_API_KEY" });
     }
 
+    const resend = new Resend(resendApiKey);
     const normalizedEmail = String(email).trim().toLowerCase();
     const password_hash = hashPassword(password);
 
@@ -142,7 +143,7 @@ export default async function handler(req, res) {
     };
 
     const userRes = await fetch(
-      `${supabaseUrl}/rest/v1/guest_users?email=eq.${encodeURIComponent(normalizedEmail)}&select=*&limit=1`,
+      `${supabaseUrl}/rest/v1/guest_users?email=eq.${encodeURIComponent(normalizedEmail)}&select=id,first_name,last_name,email,email_verified,password_hash&limit=1`,
       { headers }
     );
 
@@ -167,7 +168,7 @@ export default async function handler(req, res) {
       return res.status(200).json({
         success: true,
         email_verified: true,
-        token: guestSession.token, 
+        token: guestSession.token,
         expires_at: guestSession.expires_at,
         guest: {
           id: user.id,
@@ -207,7 +208,7 @@ export default async function handler(req, res) {
       });
     }
 
-    await sendVerificationEmail(normalizedEmail, verificationCode);
+    await sendVerificationEmail(resend, normalizedEmail, verificationCode);
 
     return res.status(200).json({
       success: true,
