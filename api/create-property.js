@@ -6,8 +6,10 @@ const supabase = createClient(
 );
 
 export default async function handler(req, res) {
+  const allowedOrigin = "https://verify.thereadymarkgroup.com";
+
   const corsHeaders = {
-    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Origin": allowedOrigin,
     "Access-Control-Allow-Methods": "POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, Authorization, x-admin-token"
   };
@@ -24,13 +26,18 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const adminToken = req.headers["x-admin-token"];
-
-  if (!adminToken) {
-    return res.status(401).json({ error: "Unauthorized" });
-  }
-
   try {
+    const adminToken = req.headers["x-admin-token"];
+    const expectedAdminToken = process.env.ADMIN_TOKEN;
+
+    if (!expectedAdminToken) {
+      return res.status(500).json({ error: "Missing ADMIN_TOKEN" });
+    }
+
+    if (!adminToken || adminToken !== expectedAdminToken) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
     const {
       property_name,
       property_slug,
@@ -45,7 +52,11 @@ export default async function handler(req, res) {
       });
     }
 
-    const normalizedSlug = String(property_slug).trim().toLowerCase();
+    const normalizedSlug = String(property_slug)
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9-]/g, "-")
+      .replace(/-+/g, "-");
 
     const { data: existingProperty, error: existingError } = await supabase
       .from("properties")
