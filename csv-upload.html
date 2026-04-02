@@ -182,55 +182,118 @@
   </div>
 
   <script>
-    const ADMIN_PASSWORD = "readymark2026";
+    const SESSION_TOKEN_KEY = "readymark_admin_token";
 
-    let entered = sessionStorage.getItem("admin_auth");
-
-    if (entered !== ADMIN_PASSWORD) {
-      entered = prompt("Enter admin password:");
-
-      if (entered !== ADMIN_PASSWORD) {
-        document.body.innerHTML =
-          "<h1 style='color:white;text-align:center;margin-top:100px;'>Access Denied</h1>";
-        throw new Error("Unauthorized");
-      }
-
-      sessionStorage.setItem("admin_auth", entered);
-    }
+    const propertySelect = document.getElementById("propertySelect");
+    const csvFileInput = document.getElementById("csvFile");
+    const previewBox = document.getElementById("previewBox");
+    const parseCsvBtn = document.getElementById("parseCsvBtn");
+    const uploadCsvBtn = document.getElementById("uploadCsvBtn");
+    const downloadZipBtn = document.getElementById("downloadZipBtn");
+    const zipStatus = document.getElementById("zipStatus");
+    const resultBox = document.getElementById("resultBox");
 
     let parsedRoomNumbers = [];
     let latestCreatedRooms = [];
+    let latestSelectedProperty = null;
+
+    function getSessionToken() {
+      return sessionStorage.getItem(SESSION_TOKEN_KEY) || "";
+    }
+
+    function clearSessionToken() {
+      sessionStorage.removeItem(SESSION_TOKEN_KEY);
+    }
+
+    function adminHeaders(extra = {}) {
+      return {
+        "x-admin-token": getSessionToken(),
+        ...extra
+      };
+    }
+
+    function requireAdminToken() {
+      const token = getSessionToken();
+      if (!token) {
+        alert("Unauthorized. Please sign in through admin.html first.");
+        throw new Error("Missing admin session token");
+      }
+      return token;
+    }
+
+    function handleUnauthorizedResponse(response, data) {
+      if (response.status === 401 || data?.error === "Unauthorized") {
+        clearSessionToken();
+        alert("Your admin session expired. Please sign in again through admin.html.");
+        window.location.href = "/admin.html";
+        return true;
+      }
+      return false;
+    }
+
+    function setResult(message) {
+      resultBox.textContent = message;
+    }
+
+    function setResultHtml(html) {
+      resultBox.innerHTML = html;
+    }
+
+    function sanitizeRoomNumber(value) {
+      return String(value || "").trim();
+    }
+
+    function isValidRoomNumber(value) {
+      return /^[a-zA-Z0-9-]+$/.test(value);
+    }
+
+    async function fetchJson(url, options = {}) {
+      const response = await fetch(url, options);
+      const data = await response.json().catch(() => null);
+      return { response, data };
+    }
 
     async function loadProperties() {
-      const select = document.getElementById("propertySelect");
-      const resultBox = document.getElementById("resultBox");
+      requireAdminToken();
 
       try {
-        const res = await fetch("/api/list-properties");
-        const data = await res.json();
+        const { response, data } = await fetchJson("/api/list-properties", {
+          method: "GET",
+          headers: adminHeaders({
+            "Accept": "application/json"
+          })
+        });
 
-        if (!res.ok) {
-          throw new Error(data.error || "Failed to load properties");
+        if (handleUnauthorizedResponse(response, data)) {
+          return;
         }
 
-        select.innerHTML = '<option value="">Select a property</option>';
+        if (!response.ok || data?.error) {
+          throw new Error(data?.error || "Failed to load properties");
+        }
 
-        data.properties.forEach((property) => {
+        propertySelect.innerHTML = '<option value="">Select a property</option>';
+
+        const properties = Array.isArray(data?.properties) ? data.properties : [];
+
+        properties.forEach((property) => {
           const option = document.createElement("option");
           option.value = property.id;
           option.textContent = `${property.property_name} (${property.property_slug})`;
-          select.appendChild(option);
+          option.dataset.propertyName = property.property_name || "";
+          option.dataset.propertySlug = property.property_slug || "";
+          propertySelect.appendChild(option);
         });
 
-        resultBox.textContent = "Properties loaded.";
+        setResult("Properties loaded.");
       } catch (err) {
-        select.innerHTML = '<option value="">Could not load properties</option>';
-        resultBox.textContent = `Error loading properties: ${err.message}`;
+        propertySelect.innerHTML = '<option value="">Could not load properties</option>';
+        setResult(`Error loading properties: ${err.message}`);
       }
     }
 
     function parseCsvText(text) {
-      const lines = text
+      const lines = String(text || "")
         .split(/\r?\n/)
         .map((line) => line.trim())
         .filter(Boolean);
@@ -248,25 +311,27 @@
         dataLines = lines.slice(1);
       }
 
-      return dataLines
+      const cleaned = dataLines
         .map((line) => {
           const firstCell = line.split(",")[0].replace(/"/g, "").trim();
-          return firstCell;
+          return sanitizeRoomNumber(firstCell);
         })
-        .filter(Boolean);
+        .filter(Boolean)
+        .filter(isValidRoomNumber);
+
+      return [...new Set(cleaned)];
     }
 
     async function parseCsvFile() {
-      const fileInput = document.getElementById("csvFile");
-      const previewBox = document.getElementById("previewBox");
-      const resultBox = document.getElementById("resultBox");
-
-      const file = fileInput.files[0];
+      const file = csvFileInput.files[0];
 
       if (!file) {
-        resultBox.textContent = "Please choose a CSV file first.";
+        setResult("Please choose a CSV file first.");
         return;
       }
+
+      parseCsvBtn.disabled = true;
+      setResult("Parsing CSV file...");
 
       try {
         const text = await file.text();
@@ -274,73 +339,97 @@
 
         if (!parsedRoomNumbers.length) {
           previewBox.value = "";
-          resultBox.textContent = "No valid room numbers found in the CSV.";
+          latestCreatedRooms = [];
+          downloadZipBtn.disabled = true;
+          zipStatus.textContent = "";
+          setResult("No valid room numbers found in the CSV.");
           return;
         }
 
-        previewBox.value = parsedRoomNumbers.join("<br>");
-        resultBox.textContent = `Parsed ${parsedRoomNumbers.length} room numbers successfully.`;
+        previewBox.value = parsedRoomNumbers.join("\n");
+        latestCreatedRooms = [];
+        downloadZipBtn.disabled = true;
+        zipStatus.textContent = "";
+        setResult(`Parsed ${parsedRoomNumbers.length} unique room numbers successfully.`);
       } catch (err) {
-        resultBox.textContent = `Error parsing CSV: ${err.message}`;
+        previewBox.value = "";
+        setResult(`Error parsing CSV: ${err.message}`);
+      } finally {
+        parseCsvBtn.disabled = false;
       }
     }
 
     async function uploadParsedRooms() {
-      const propertyId = document.getElementById("propertySelect").value;
-      const resultBox = document.getElementById("resultBox");
-      const downloadZipBtn = document.getElementById("downloadZipBtn");
-      const zipStatus = document.getElementById("zipStatus");
+      requireAdminToken();
+
+      const propertyId = propertySelect.value;
+      const selectedOption = propertySelect.options[propertySelect.selectedIndex];
 
       if (!propertyId) {
-        resultBox.textContent = "Please choose a property.";
+        setResult("Please choose a property.");
         return;
       }
 
       if (!parsedRoomNumbers.length) {
-        resultBox.textContent = "Please parse a CSV file first.";
+        setResult("Please parse a CSV file first.");
         return;
       }
 
-      resultBox.textContent = "Creating rooms from CSV...";
-      zipStatus.textContent = "";
+      latestSelectedProperty = {
+        id: propertyId,
+        property_name: selectedOption?.dataset?.propertyName || "",
+        property_slug: selectedOption?.dataset?.propertySlug || ""
+      };
+
+      uploadCsvBtn.disabled = true;
       downloadZipBtn.disabled = true;
+      zipStatus.textContent = "";
+      setResult("Creating rooms from CSV...");
       latestCreatedRooms = [];
 
       try {
-        const res = await fetch("/api/bulk-create-rooms", {
+        const { response, data } = await fetchJson("/api/bulk-create-rooms", {
           method: "POST",
-          headers: {
+          headers: adminHeaders({
             "Content-Type": "application/json",
-          },
+            "Accept": "application/json"
+          }),
           body: JSON.stringify({
             propertyId,
-            roomNumbers: parsedRoomNumbers,
-          }),
+            roomNumbers: parsedRoomNumbers
+          })
         });
 
-        const data = await res.json();
-
-        if (!res.ok) {
-          throw new Error(data.error || "CSV room creation failed");
+        if (handleUnauthorizedResponse(response, data)) {
+          return;
         }
 
-        latestCreatedRooms = data.created || data.createdRooms || [];
+        if (!response.ok || data?.error) {
+          throw new Error(data?.error || "CSV room creation failed");
+        }
 
+        latestCreatedRooms = Array.isArray(data?.created)
+          ? data.created
+          : Array.isArray(data?.createdRooms)
+          ? data.createdRooms
+          : [];
+
+        const skippedRooms = Array.isArray(data?.skipped) ? data.skipped : [];
         const createdCount = latestCreatedRooms.length;
-        const skippedCount = data.skipped?.length || 0;
+        const skippedCount = skippedRooms.length;
 
-        resultBox.innerHTML = `
+        setResultHtml(`
 <strong>CSV upload complete.</strong>
 
 Created: ${createdCount}
 Skipped (already existed): ${skippedCount}
 
 ${createdCount ? `Created Rooms:
-${latestCreatedRooms.map((room) => `- Room ${room.room_number} → ${room.qr_slug}`).join("\\n")}` : ""}
+${latestCreatedRooms.map((room) => `- Room ${room.room_number} → ${room.qr_slug}`).join("\n")}` : ""}
 
 ${skippedCount ? `Skipped Rooms:
-${data.skipped.map((room) => `- ${room}`).join("\\n")}` : ""}
-        `;
+${skippedRooms.map((room) => `- ${room}`).join("\n")}` : ""}
+        `);
 
         if (createdCount > 0) {
           downloadZipBtn.disabled = false;
@@ -349,14 +438,40 @@ ${data.skipped.map((room) => `- ${room}`).join("\\n")}` : ""}
           zipStatus.textContent = "No new rooms were created, so there are no new QR codes to zip.";
         }
       } catch (err) {
-        resultBox.textContent = `Error: ${err.message}`;
+        setResult(`Error: ${err.message}`);
+      } finally {
+        uploadCsvBtn.disabled = false;
       }
     }
 
-    async function downloadQrZip() {
-      const downloadZipBtn = document.getElementById("downloadZipBtn");
-      const zipStatus = document.getElementById("zipStatus");
+    function buildReadmeContent(property, rooms) {
+      return [
+        "THE READY MARK - CSV ROOM UPLOAD ZIP",
+        "",
+        `Property: ${property?.property_name || "Unknown"}`,
+        `Property Slug: ${property?.property_slug || "Unknown"}`,
+        `New QR Codes Included: ${rooms.length}`,
+        "",
+        "Contents:",
+        "- PNG QR files for newly created rooms",
+        "- room-index.csv with room number, slug, and URL",
+        "",
+        "Generated by The Ready Mark CSV Room Upload tool."
+      ].join("\n");
+    }
 
+    function buildCsvContent(rooms) {
+      const header = ["room_number", "qr_slug", "qr_url"];
+      const rows = rooms.map((room) => [
+        `"${String(room.room_number || "").replaceAll('"', '""')}"`,
+        `"${String(room.qr_slug || "").replaceAll('"', '""')}"`,
+        `"${String(room.qr_url || "").replaceAll('"', '""')}"`
+      ]);
+
+      return [header.join(","), ...rows.map((row) => row.join(","))].join("\n");
+    }
+
+    async function downloadQrZip() {
       if (!latestCreatedRooms.length) {
         zipStatus.textContent = "No newly created rooms available for ZIP download.";
         return;
@@ -368,30 +483,34 @@ ${data.skipped.map((room) => `- ${room}`).join("\\n")}` : ""}
       try {
         const zip = new JSZip();
 
-        for (const room of latestCreatedRooms) {
-          const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=600x600&data=${encodeURIComponent(room.qr_url)}`;
-          const response = await fetch(qrApiUrl);
+        await Promise.all(
+          latestCreatedRooms.map(async (room) => {
+            const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=600x600&data=${encodeURIComponent(room.qr_url)}`;
+            const response = await fetch(qrApiUrl);
 
-          if (!response.ok) {
-            throw new Error(`Failed to fetch QR for room ${room.room_number}`);
-          }
+            if (!response.ok) {
+              throw new Error(`Failed to fetch QR for room ${room.room_number}`);
+            }
 
-          const blob = await response.blob();
-          zip.file(`qr-${room.qr_slug}.png`, blob);
-        }
+            const blob = await response.blob();
+            zip.file(`qr-${room.qr_slug}.png`, blob);
+          })
+        );
+
+        zip.file("room-index.csv", buildCsvContent(latestCreatedRooms));
+        zip.file("README.txt", buildReadmeContent(latestSelectedProperty, latestCreatedRooms));
 
         const zipBlob = await zip.generateAsync({ type: "blob" });
         const downloadUrl = URL.createObjectURL(zipBlob);
 
         const link = document.createElement("a");
         link.href = downloadUrl;
-        link.download = "ready-mark-qr-codes.zip";
+        link.download = `${latestSelectedProperty?.property_slug || "ready-mark"}-new-room-qr-codes.zip`;
         document.body.appendChild(link);
         link.click();
         link.remove();
 
         setTimeout(() => URL.revokeObjectURL(downloadUrl), 1000);
-
         zipStatus.textContent = "ZIP downloaded successfully.";
       } catch (err) {
         zipStatus.textContent = `ZIP error: ${err.message}`;
@@ -400,11 +519,15 @@ ${data.skipped.map((room) => `- ${room}`).join("\\n")}` : ""}
       }
     }
 
-    document.getElementById("parseCsvBtn").addEventListener("click", parseCsvFile);
-    document.getElementById("uploadCsvBtn").addEventListener("click", uploadParsedRooms);
-    document.getElementById("downloadZipBtn").addEventListener("click", downloadQrZip);
+    parseCsvBtn.addEventListener("click", parseCsvFile);
+    uploadCsvBtn.addEventListener("click", uploadParsedRooms);
+    downloadZipBtn.addEventListener("click", downloadQrZip);
 
-    loadProperties();
+    try {
+      loadProperties();
+    } catch (error) {
+      setResult(`Error: ${error.message}`);
+    }
   </script>
 </body>
 </html>
