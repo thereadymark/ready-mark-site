@@ -411,7 +411,7 @@ export default async function handler(req, res) {
 
     const confirmationNumber = generateReportReference();
 
-    let uploadedPhotoUrl = "";
+    let uploadedPhotoPath = "";
 
     if (photo_file && photo_file.base64) {
       const photoBuffer = bufferFromBase64(photo_file.base64);
@@ -437,11 +437,7 @@ export default async function handler(req, res) {
         });
       }
 
-      const { data: publicData } = supabase.storage
-        .from("guest-reports")
-        .getPublicUrl(filePath);
-
-      uploadedPhotoUrl = publicData?.publicUrl || "";
+      uploadedPhotoPath = filePath;
     }
 
     const insertPayload = {
@@ -453,9 +449,9 @@ export default async function handler(req, res) {
       issue_types,
       guest_note: normalizedGuestNote,
       details: normalizedGuestNote,
-      photo_url: uploadedPhotoUrl || null,
+      photo_url: uploadedPhotoPath || null,
       status: "New",
-      priority: uploadedPhotoUrl ? "Urgent" : "Normal",
+      priority: uploadedPhotoPath ? "Urgent" : "Normal",
       reported_at: new Date().toISOString(),
       guest_user_id: guestUser.id,
       guest_email: guestUser.email,
@@ -528,9 +524,9 @@ export default async function handler(req, res) {
             guestNote: normalizedGuestNote,
             guestName: guestFullName,
             guestEmail: guestUser.email,
-            photoUrl: uploadedPhotoUrl,
+            photoUrl: uploadedPhotoPath,
             submittedAt,
-            priority: uploadedPhotoUrl ? "Urgent" : "Normal"
+            priority: uploadedPhotoPath ? "Urgent" : "Normal"
           })
         });
       } catch (emailError) {
