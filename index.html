@@ -736,61 +736,63 @@
       }
     }
 
-    async function uploadEvidenceFile(file) {
-      const formData = new FormData();
-      formData.append("file", file);
+    async function fileToPhotoObject(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
 
-      const res = await fetch("/api/upload-evidence", {
-        method: "POST",
-        body: formData
-      });
+    reader.onload = function () {
+      const result = reader.result || "";
+      const base64 = String(result).split(",")[1] || "";
 
-      const data = await res.json().catch(() => null);
-
-      if (!res.ok) {
-        const uploadError =
-          data?.error ||
-          data?.message ||
-          data?.details?.message ||
-          JSON.stringify(data) ||
-          "Photo upload failed.";
-        throw new Error(uploadError);
+      if (!base64) {
+        reject(new Error("Unable to read photo file."));
+        return;
       }
 
-      return (
-        data?.photo_url ||
-        data?.publicUrl ||
-        data?.url ||
-        data?.fileUrl ||
-        data?.evidence_url ||
-        null
-      );
-    }
+      resolve({
+        name: file.name,
+        type: file.type,
+        base64
+      });
+    };
 
+    reader.onerror = function () {
+      reject(new Error("Unable to read photo file."));
+    };
+
+    reader.readAsDataURL(file);
+  });
+}
     async function submitGuestReport(payload) {
-      const res = await fetch("/api/create-report", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(payload)
-      });
+  const res = await fetch("/api/report-issue", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Accept": "application/json",
+      "x-guest-token": currentGuestToken
+    },
+    body: JSON.stringify(payload)
+  });
 
-      const data = await res.json().catch(() => null);
+  const data = await res.json().catch(() => null);
 
-      if (!res.ok) {
-        const errorMessage =
-          data?.error ||
-          data?.message ||
-          data?.details?.message ||
-          JSON.stringify(data) ||
-          "Unable to submit report.";
-        throw new Error(errorMessage);
-      }
+  if (!res.ok) {
+    const referenceText = data?.reference
+      ? ` Reference #: ${data.reference}`
+      : "";
 
-      return data;
-    }
+    const errorMessage =
+      data?.error ||
+      data?.message ||
+      data?.details?.message ||
+      JSON.stringify(data) ||
+      "Unable to submit report.";
 
+    throw new Error(`${errorMessage}${referenceText}`);
+  }
+
+  return data;
+}
     function renderLandingPage() {
       const app = document.getElementById("app");
 
@@ -1489,46 +1491,77 @@
       });
 
       submitReportBtn.addEventListener("click", async function () {
-        const checkedIssues = Array.from(document.querySelectorAll('input[name="issue_type"]:checked'))
-          .map(input => input.value);
+  const checkedIssues = Array.from(document.querySelectorAll('input[name="issue_type"]:checked'))
+    .map(input => input.value);
 
-        const guestNote = document.getElementById("guest-note").value.trim();
-        const guestPhotoFile = document.getElementById("guest-photo").files[0] || null;
+  const guestNote = document.getElementById("guest-note").value.trim();
+  const guestPhotoFile = document.getElementById("guest-photo").files[0] || null;
 
-        if (!checkedIssues.length) {
-          setInlineStatus(reportStatus, "Please select at least one issue before submitting.", "error");
-          return;
-        }
+  if (!checkedIssues.length) {
+    setInlineStatus(reportStatus, "Please select at least one issue before submitting.", "error");
+    return;
+  }
 
-        if (!currentGuestToken || !currentGuest || !currentGuest.email) {
-          setInlineStatus(reportStatus, "Guest login is required.", "error");
-          return;
-        }
+  if (!currentGuestToken || !currentGuest || !currentGuest.email) {
+    setInlineStatus(reportStatus, "Guest login is required.", "error");
+    return;
+  }
 
-        setInlineStatus(reportStatus, "Submitting report...");
+  if (!verificationId || verificationId === "—") {
+    setInlineStatus(reportStatus, "This room is missing a verification record ID.", "error");
+    return;
+  }
 
-        try {
-          let uploadedPhotoUrl = null;
+  setInlineStatus(reportStatus, "Submitting report...");
 
-          if (guestPhotoFile) {
-            setInlineStatus(reportStatus, "Uploading photo...");
-            uploadedPhotoUrl = await uploadEvidenceFile(guestPhotoFile);
-          }
+  try {
+    let photoFilePayload = null;
 
-          setInlineStatus(reportStatus, "Saving report...");
+    if (guestPhotoFile) {
+      setInlineStatus(reportStatus, "Preparing photo...");
+      photoFilePayload = await fileToPhotoObject(guestPhotoFile);
+    }
 
-          const responseData = await submitGuestReport({
-            property,
-            property_slug: derivedPropertySlug || null,
-            room,
-            issue: checkedIssues,
-            details: guestNote || null,
-            guest_name: `${currentGuest.first_name || ""} ${currentGuest.last_name || ""}`.trim(),
-            guest_email: currentGuest.email,
-            photo_url: uploadedPhotoUrl,
-            verification_id: verificationId !== "—" ? verificationId : null
-          });
+    setInlineStatus(reportStatus, "Saving report...");
 
+    const responseData = await submitGuestReport({
+      verification_id: verificationId,
+      property_slug: derivedPropertySlug || null,
+      property_name: property,
+      room_number: room,
+      issue_types: checkedIssues,
+      guest_note: guestNote || null,
+      photo_file: photoFilePayload
+    });
+
+    const confirmationNumber =
+      responseData?.confirmationNumber ||
+      responseData?.confirmation_number ||
+      responseData?.reference ||
+      responseData?.report?.confirmation_number ||
+      responseData?.report?.verification_id ||
+      "Unavailable";
+
+    reportStatus.className = "inline-status inline-success";
+    reportStatus.innerHTML = `
+      <strong>Report received.</strong><br><br>
+      <strong>Reference #:</strong> ${escapeHtml(confirmationNumber)}<br><br>
+      Ready Mark has been notified.
+    `;
+    reportStatus.classList.remove("hidden");
+
+    document.querySelectorAll('input[name="issue_type"]').forEach(input => {
+      input.checked = false;
+    });
+    document.getElementById("guest-note").value = "";
+    document.getElementById("guest-photo").value = "";
+
+    reportFormView.classList.add("hidden");
+    reportStartView.classList.remove("hidden");
+  } catch (error) {
+    setInlineStatus(reportStatus, error.message || "Unable to submit report.", "error");
+  }
+});
           const confirmationNumber =
             responseData?.confirmationNumber ||
             responseData?.confirmation_number ||
