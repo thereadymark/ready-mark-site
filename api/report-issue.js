@@ -14,6 +14,8 @@ export const config = {
 };
 
 const MAX_PHOTO_BYTES = 10 * 1024 * 1024;
+const GUEST_REPORTS_BUCKET = "guest-reports";
+const SIGNED_URL_EXPIRES_IN = 60 * 60;
 
 const ALLOWED_PHOTO_TYPES = new Set([
   "image/jpeg",
@@ -300,8 +302,10 @@ function buildInternalAlertEmail({
 }
 
 export default async function handler(req, res) {
+  const allowedOrigin = "https://verify.thereadymarkgroup.com";
+
   const corsHeaders = {
-    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Origin": allowedOrigin,
     "Access-Control-Allow-Methods": "POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, Authorization, x-guest-token"
   };
@@ -327,7 +331,7 @@ export default async function handler(req, res) {
 
     const { data: session, error: sessionError } = await supabase
       .from("guest_sessions")
-      .select("*")
+      .select("guest_user_id, expires_at")
       .eq("session_token", guestToken)
       .gt("expires_at", new Date().toISOString())
       .maybeSingle();
@@ -425,7 +429,7 @@ export default async function handler(req, res) {
       const filePath = `${confirmationNumber}/${Date.now()}-${fileName}`;
 
       const { error: uploadError } = await supabase.storage
-        .from("guest-reports")
+        .from(GUEST_REPORTS_BUCKET)
         .upload(filePath, photoBuffer, {
           contentType: photo_file.type,
           upsert: false
@@ -471,6 +475,18 @@ export default async function handler(req, res) {
       return res.status(500).json({
         error: `Guest report save failed: ${error.message}`
       });
+    }
+
+    let signedPhotoUrl = null;
+
+    if (uploadedPhotoPath) {
+      const { data: signedData, error: signedError } = await supabase.storage
+        .from(GUEST_REPORTS_BUCKET)
+        .createSignedUrl(uploadedPhotoPath, SIGNED_URL_EXPIRES_IN);
+
+      if (!signedError && signedData?.signedUrl) {
+        signedPhotoUrl = signedData.signedUrl;
+      }
     }
 
     const resendApiKey = process.env.RESEND_API_KEY;
@@ -524,7 +540,7 @@ export default async function handler(req, res) {
             guestNote: normalizedGuestNote,
             guestName: guestFullName,
             guestEmail: guestUser.email,
-            photoUrl: uploadedPhotoPath,
+            photoUrl: signedPhotoUrl,
             submittedAt,
             priority: uploadedPhotoPath ? "Urgent" : "Normal"
           })
