@@ -1,3 +1,22 @@
+import { createClient } from "@supabase/supabase-js";
+
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+);
+
+const GUEST_REPORTS_BUCKET = "guest-reports";
+const SIGNED_URL_EXPIRES_IN = 60 * 60; // 1 hour
+
+function escapeHtml(str) {
+  return String(str ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
 export default async function handler(req, res) {
   const allowedOrigin = "https://verify.thereadymarkgroup.com";
 
@@ -140,13 +159,26 @@ export default async function handler(req, res) {
       ? new Date(report.reported_at).toLocaleString()
       : "Not available";
 
-    const photoSection = report.photo_url
+    let signedPhotoUrl = null;
+    const photoPath = report.photo_url ? String(report.photo_url).trim() : "";
+
+    if (photoPath) {
+      const { data: signedData, error: signedError } = await supabase.storage
+        .from(GUEST_REPORTS_BUCKET)
+        .createSignedUrl(photoPath, SIGNED_URL_EXPIRES_IN);
+
+      if (!signedError && signedData?.signedUrl) {
+        signedPhotoUrl = signedData.signedUrl;
+      }
+    }
+
+    const photoSection = signedPhotoUrl
       ? `
         <div style="grid-column:1 / -1;background:#fbf9f4;border:1px solid rgba(220,195,138,0.55);border-radius:18px;padding:18px 18px 16px;text-align:center;">
           <div style="color:#9f7d33;font-size:12px;letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;">
             Supporting Evidence
           </div>
-          <a href="${report.photo_url}" style="display:inline-block;padding:12px 18px;border-radius:12px;background:linear-gradient(180deg,#d8ba73,#b8934c);color:#111315;font-weight:700;text-decoration:none;">
+          <a href="${escapeHtml(signedPhotoUrl)}" style="display:inline-block;padding:12px 18px;border-radius:12px;background:linear-gradient(180deg,#d8ba73,#b8934c);color:#111315;font-weight:700;text-decoration:none;">
             View Attached Photo
           </a>
         </div>
@@ -186,7 +218,7 @@ export default async function handler(req, res) {
                 Reference #
               </div>
               <div style="color:#1c1c1c;font-size:18px;line-height:1.5;font-weight:700;">
-                ${reportReference}
+                ${escapeHtml(reportReference)}
               </div>
             </div>
 
@@ -195,7 +227,7 @@ export default async function handler(req, res) {
                 Verification ID
               </div>
               <div style="color:#1c1c1c;font-size:18px;line-height:1.5;font-weight:700;">
-                ${verificationId}
+                ${escapeHtml(verificationId)}
               </div>
             </div>
 
@@ -204,7 +236,7 @@ export default async function handler(req, res) {
                 Property
               </div>
               <div style="color:#1c1c1c;font-size:18px;line-height:1.6;font-weight:700;">
-                ${property.property_name || report.property_name || "Not available"}
+                ${escapeHtml(property.property_name || report.property_name || "Not available")}
               </div>
             </div>
 
@@ -213,7 +245,7 @@ export default async function handler(req, res) {
                 Room
               </div>
               <div style="color:#1c1c1c;font-size:18px;line-height:1.5;font-weight:700;">
-                ${report.room_number || "Not available"}
+                ${escapeHtml(report.room_number || "Not available")}
               </div>
             </div>
 
@@ -222,7 +254,7 @@ export default async function handler(req, res) {
                 Submitted
               </div>
               <div style="color:#2b2b2b;font-size:16px;line-height:1.7;">
-                ${submittedAt}
+                ${escapeHtml(submittedAt)}
               </div>
             </div>
 
@@ -231,7 +263,7 @@ export default async function handler(req, res) {
                 Priority
               </div>
               <div style="color:#2b2b2b;font-size:16px;line-height:1.7;">
-                ${report.priority || "Normal"}
+                ${escapeHtml(report.priority || "Normal")}
               </div>
             </div>
 
@@ -240,7 +272,7 @@ export default async function handler(req, res) {
                 Reported Issue
               </div>
               <div style="color:#2b2b2b;font-size:17px;line-height:1.8;">
-                ${issueText}
+                ${escapeHtml(issueText)}
               </div>
             </div>
 
@@ -249,7 +281,7 @@ export default async function handler(req, res) {
                 Guest Statement
               </div>
               <div style="color:#2b2b2b;font-size:17px;line-height:1.85;">
-                ${detailText}
+                ${escapeHtml(detailText)}
               </div>
             </div>
 
