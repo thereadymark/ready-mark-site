@@ -1,360 +1,194 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Privacy Policy | The Ready Mark</title>
-  <style>
-    :root {
-      --bg: #121416;
-      --panel: rgba(26, 30, 34, 0.96);
-      --gold: #c7a257;
-      --gold-soft: #d8bb7a;
-      --text: #f3eee5;
-      --muted: #b7b0a5;
-      --line: rgba(199, 162, 87, 0.20);
-      --shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
-    }
-
-    * {
-      box-sizing: border-box;
-    }
-
-    html, body {
-      margin: 0;
-      min-height: 100%;
-      font-family: Georgia, serif;
-      color: var(--text);
-      background:
-        radial-gradient(circle at top center, rgba(255,255,255,0.03), transparent 28%),
-        linear-gradient(180deg, #1b1815 0%, #121416 45%, #121416 100%);
-    }
-
-    body {
-      position: relative;
-      overflow-x: hidden;
-    }
-
-    body::before {
-      content: "";
-      position: fixed;
-      inset: 0;
-      background-image: url("/readymarklogonobackground2.PNG");
-      background-repeat: repeat;
-      background-size: 180px;
-      opacity: 0.025;
-      filter: grayscale(100%) brightness(1.05);
-      pointer-events: none;
-      z-index: 0;
-    }
-
-    .shell {
-      position: relative;
-      z-index: 1;
-      min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      padding: 34px 18px;
-    }
-
-    .panel {
-      width: 100%;
-      max-width: 940px;
-      background: linear-gradient(180deg, rgba(27,31,35,0.98), rgba(21,24,27,0.98));
-      border: 1px solid var(--line);
-      border-radius: 22px;
-      box-shadow: var(--shadow);
-      overflow: hidden;
-      position: relative;
-      margin: 30px 0;
-    }
-
-    .panel::before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background: radial-gradient(circle at top center, rgba(199,162,87,0.08), transparent 40%);
-      pointer-events: none;
-    }
-
-    .panel-header {
-      padding: 38px 26px 24px;
-      text-align: center;
-      border-bottom: 1px solid var(--line);
-      position: relative;
-      z-index: 1;
-    }
-
-    .crest {
-      width: 120px;
-      display: block;
-      margin: 0 auto 12px;
-    }
-
-    .brand-lockup {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 12px;
-      margin: 0 auto 16px;
-      max-width: 680px;
-    }
-
-    .brand-lockup::before,
-    .brand-lockup::after {
-      content: "";
-      flex: 1;
-      height: 2px;
-      background: linear-gradient(90deg, rgba(199,162,87,0), rgba(216,187,122,0.95), rgba(199,162,87,0));
-      box-shadow: 0 0 8px rgba(199,162,87,0.18);
-      border-radius: 999px;
-    }
-
-    .eyebrow {
-      color: var(--gold);
-      font-size: 18px;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      font-weight: 700;
-      white-space: nowrap;
-      line-height: 1;
-    }
-
-    h1 {
-      margin: 0;
-      color: var(--text);
-      font-size: clamp(34px, 5vw, 54px);
-      line-height: 1.05;
-    }
-
-    .subtext {
-      max-width: 700px;
-      margin: 14px auto 0;
-      color: var(--muted);
-      font-size: 16px;
-      line-height: 1.7;
-    }
-
-    .content {
-      padding: 28px;
-      position: relative;
-      z-index: 1;
-    }
-
-    .card {
-      background: linear-gradient(180deg, rgba(35,39,44,0.88), rgba(25,29,33,0.95));
-      border: 1px solid rgba(199,162,87,0.16);
-      border-radius: 18px;
-      padding: 24px;
-      margin-bottom: 18px;
-    }
-
-    h2 {
-      margin: 0 0 10px;
-      font-size: 26px;
-      color: var(--text);
-    }
-
-    p, li {
-      color: var(--text);
-      line-height: 1.8;
-      font-size: 16px;
-    }
-
-    ul {
-      margin: 10px 0 0 20px;
-      padding: 0;
-    }
-
-    .muted {
-      color: var(--muted);
-    }
-
-    a {
-      color: var(--gold-soft);
-      text-decoration: none;
-    }
-
-    .footer-note {
-      padding: 0 28px 28px;
-      text-align: center;
-      color: #958d82;
-      font-size: 13px;
-      line-height: 1.7;
-    }
-
-    @media (max-width: 700px) {
-      .content, .panel-header {
-        padding-left: 20px;
-        padding-right: 20px;
-      }
-
-      .crest {
-        width: 105px;
-      }
-
-      h2 {
-        font-size: 22px;
-      }
-    }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Privacy Policy | The Ready Mark</title>
 </head>
-<body>
-  <div class="shell">
-    <div class="panel">
-      <div class="panel-header">
-        <img src="/readymarkseal(best)nobackground.PNG" alt="The Ready Mark" class="crest">
-        <div class="brand-lockup">
-          <div class="eyebrow">The Ready Mark</div>
-        </div>
-        <h1>Privacy Policy</h1>
-        <div class="subtext">
-          The Ready Mark is committed to protecting the privacy of guests, clients, and users of our verification and reporting platform.
-        </div>
-      </div>
+<body style="font-family: Georgia, serif; background:#121416; color:#f3eee5; padding:20px; line-height:1.7; max-width:900px; margin:auto;">
 
-      <div class="content">
-        <div class="card">
-          <p>
-            Effective Date: <strong>March 30, 2026</strong><br>
-            Last Updated:<strong>March 30, 2026</strong>   </p>
-          <p>
-            This Privacy Policy explains how The Ready Mark collects, uses, stores, and protects information submitted through our website, verification portal, guest reporting system, and related services.
-          </p>
-        </div>
+<h1>Privacy Policy</h1>
 
-        <div class="card">
-          <h2>1. Information We Collect</h2>
-          <p>We may collect the following information when you use our services:</p>
-          <ul>
-            <li>Name</li>
-            <li>Email address</li>
-            <li>Verification and login information</li>
-            <li>Property and room-related reporting details</li>
-            <li>Photos or supporting documents voluntarily submitted by a guest</li>
-            <li>Technical usage information such as browser, device, pages viewed, and timestamps</li>
-          </ul>
-        </div>
+<p><strong>Effective Date:</strong> March 30, 2026<br>
+<strong>Last Updated:</strong> March 30, 2026</p>
 
-        <div class="card">
-          <h2>2. How We Use Information</h2>
-          <p>We use collected information only for legitimate operational purposes, including:</p>
-          <ul>
-            <li>Creating and managing guest accounts</li>
-            <li>Sending verification codes and account-related emails</li>
-            <li>Receiving, logging, and managing cleanliness or service-related reports</li>
-            <li>Communicating submitted issues to the relevant property or hotel team</li>
-            <li>Improving system functionality, service quality, and user experience</li>
-            <li>Maintaining audit records, verification records, and platform security</li>
-          </ul>
-        </div>
+<p>
+The Ready Mark (“we,” “our,” or “us”) operates a verification and guest reporting platform designed to provide transparency into room inspections and cleanliness standards.
+</p>
 
-        <div class="card">
-          <h2>3. Our Privacy Commitment</h2>
-          <p>
-            The Ready Mark does not sell guest information.
-          </p>
-          <p>
-            We do not rent guest information.
-          </p>
-          <p>
-            We do not share personal information with third parties for marketing purposes.
-          </p>
-          <p>
-            Information submitted through our platform is used only as necessary to operate the verification and reporting system, support issue resolution, and communicate with the relevant property when a guest chooses to submit a report.
-          </p>
-        </div>
+<p>
+This Privacy Policy explains how we collect, use, store, and share information when you use our website, verification portal, and guest reporting system.
+</p>
 
-        <div class="card">
-          <h2>4. Limited Sharing of Information</h2>
-          <p>
-            When a guest submits a report through The Ready Mark, certain information may be shared with the relevant property, hotel, or client for the purpose of reviewing and responding to the reported issue. This may include:
-          </p>
-          <ul>
-            <li>The guest’s name</li>
-            <li>The guest’s email address</li>
-            <li>Reported issue details</li>
-            <li>Submitted photos or supporting materials</li>
-            <li>Timestamps, room information, and reference numbers</li>
-          </ul>
-          <p>
-            This information is shared only as needed for issue review, identity confirmation, response, remediation, quality assurance, and dispute documentation.
-          </p>
-        </div>
+---
 
-        <div class="card">
-          <h2>5. Data Protection and Storage</h2>
-          <p>
-            We take reasonable administrative, technical, and operational measures to protect information submitted to our platform. While no digital platform can guarantee absolute security, we work to store information using secure systems and restricted access practices appropriate to the nature of the service.
-          </p>
-        </div>
+<h2>1. Information We Collect</h2>
 
-        <div class="card">
-          <h2>6. Verification Emails and Communications</h2>
-          <p>
-            By creating an account or using our guest reporting system, you agree to receive necessary operational emails from The Ready Mark, including:
-          </p>
-          <ul>
-            <li>Email verification codes</li>
-            <li>Confirmation messages</li>
-            <li>Issue-related follow-up communications</li>
-            <li>Important system or service notices</li>
-          </ul>
-          <p>
-            We do not use these communications to send unrelated promotional marketing unless separately authorized.
-          </p>
-        </div>
+<p>We may collect the following types of information:</p>
 
-        <div class="card">
-          <h2>7. Data Retention</h2>
-          <p>
-            We retain submitted information only for as long as reasonably necessary to operate the service, maintain records, support investigations, document issue history, comply with legal obligations, and protect the integrity of the platform.
-          </p>
-        </div>
+<ul>
+<li>Name</li>
+<li>Email address</li>
+<li>Account login and authentication data</li>
+<li>Room, property, and report-related details</li>
+<li>Guest-submitted reports, notes, and issue descriptions</li>
+<li>Photos or files voluntarily uploaded</li>
+<li>Technical data such as browser type, device, IP address, and usage activity</li>
+</ul>
 
-        <div class="card">
-          <h2>8. User Responsibility</h2>
-          <p>
-            Guests should only submit truthful, accurate, and relevant information. By using the platform, users acknowledge that submitted reports may be reviewed as part of property response, service resolution, and internal documentation processes.
-          </p>
-        </div>
+---
 
-        <div class="card">
-          <h2>9. Children’s Privacy</h2>
-          <p>
-            The Ready Mark platform is not intended for use by children under the age of 13, and we do not knowingly collect personal information from children under 13.
-          </p>
-        </div>
+<h2>2. How We Use Information</h2>
 
-        <div class="card">
-          <h2>10. Updates to This Policy</h2>
-          <p>
-            We may update this Privacy Policy from time to time to reflect changes to our services, systems, or legal obligations. Updated versions will be posted on this page with a revised effective date.
-          </p>
-        </div>
+<p>We use collected information to:</p>
 
-        <div class="card">
-          <h2>11. Contact</h2>
-          <p>
-            If you have questions regarding this Privacy Policy or the handling of information through The Ready Mark, please contact:
-          </p>
-          <p>
-            <strong>The Ready Mark</strong><br>
-            Email: <a href="mailto:info@thereadymarkgroup.com">info@thereadymarkgroup.com</a>
-          </p>
-        </div>
+<ul>
+<li>Create and manage guest accounts</li>
+<li>Authenticate users and verify identity</li>
+<li>Process and log inspection-related reports</li>
+<li>Send verification codes, password resets, and system messages</li>
+<li>Notify relevant properties or hotel teams of submitted issues</li>
+<li>Maintain verification records and audit trails</li>
+<li>Improve platform functionality and reliability</li>
+<li>Protect against misuse, fraud, or system abuse</li>
+</ul>
 
-        <div class="card">
-          <p class="muted">
-            By using The Ready Mark verification portal or guest reporting system, you acknowledge that you have read and understood this Privacy Policy.
-          </p>
-        </div>
-      </div>
+---
 
-      <div class="footer-note">
-        The Ready Mark Cleanliness Standard
-      </div>
-    </div>
-  </div>
+<h2>3. How Information Is Shared</h2>
+
+<p>
+When a guest submits a report, relevant information may be shared with the associated property or hotel for the purpose of review and resolution.
+</p>
+
+<p>This may include:</p>
+
+<ul>
+<li>Guest name</li>
+<li>Email address</li>
+<li>Report details</li>
+<li>Submitted photos</li>
+<li>Room number and property information</li>
+<li>Timestamps and reference identifiers</li>
+</ul>
+
+<p>
+We do not sell or rent personal information.
+</p>
+
+---
+
+<h2>4. Third-Party Services</h2>
+
+<p>
+We use trusted third-party providers to operate our platform, including:
+</p>
+
+<ul>
+<li>Cloud database and storage systems</li>
+<li>Email delivery services</li>
+<li>Analytics tools</li>
+<li>Hosting infrastructure</li>
+</ul>
+
+<p>
+These providers may process data on our behalf solely to support platform operations.
+</p>
+
+---
+
+<h2>5. Analytics and Tracking</h2>
+
+<p>
+We may use analytics tools to understand how users interact with our platform. These tools may collect technical and usage data such as page visits, device type, and referral source.
+</p>
+
+---
+
+<h2>6. Data Retention</h2>
+
+<p>
+We retain information for as long as reasonably necessary to:
+</p>
+
+<ul>
+<li>Operate and maintain the platform</li>
+<li>Provide verification records</li>
+<li>Support investigations or dispute resolution</li>
+<li>Comply with legal obligations</li>
+<li>Maintain system integrity and security</li>
+</ul>
+
+---
+
+<h2>7. Data Security</h2>
+
+<p>
+We implement reasonable administrative and technical safeguards to protect information. However, no system can guarantee absolute security.
+</p>
+
+---
+
+<h2>8. User Rights</h2>
+
+<p>
+Users may request access to, correction of, or deletion of their personal information by contacting us.
+</p>
+
+---
+
+<h2>9. Legal Disclosure</h2>
+
+<p>
+We may disclose information when required to comply with applicable law, legal processes, or to protect the rights, safety, or integrity of our platform and users.
+</p>
+
+---
+
+<h2>10. Platform Role and Responsibility</h2>
+
+<p>
+The Ready Mark provides a verification and reporting platform. We do not guarantee the condition of any property or room.
+</p>
+
+<p>
+Responsibility for cleanliness, service, and remediation remains with the property or hotel.
+</p>
+
+---
+
+<h2>11. Children’s Privacy</h2>
+
+<p>
+Our platform is not intended for children under 13, and we do not knowingly collect information from children.
+</p>
+
+---
+
+<h2>12. Updates to This Policy</h2>
+
+<p>
+We may update this Privacy Policy as our platform evolves. Updates will be posted on this page with a revised effective date.
+</p>
+
+---
+
+<h2>13. Contact</h2>
+
+<p>
+For privacy-related questions or requests:
+</p>
+
+<p>
+<strong>The Ready Mark</strong><br>
+Email: <a href="mailto:info@thereadymarkgroup.com">info@thereadymarkgroup.com</a>
+</p>
+
+---
+
+<p style="color:#aaa;">
+By using The Ready Mark platform, you acknowledge that you have read and understand this Privacy Policy.
+</p>
+
 </body>
 </html>
