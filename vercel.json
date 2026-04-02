@@ -7,6 +7,8 @@
     { "source": "/admin", "destination": "/admin.html" },
     { "source": "/dashboard", "destination": "/dashboard.html" },
     { "source": "/reset-password", "destination": "/reset-password.html" },
-    { "source": "/privacy", "destination": "/privacy.html" }
+    { "source": "/privacy", "destination": "/privacy.html" },
+
+    { "source": "/(.*)-room-(.*)", "destination": "/index.html" }
   ]
 }
