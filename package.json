@@ -1,6 +1,16 @@
 {
   "name": "ready-mark-site",
   "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "dev": "vercel dev",
+    "build": "echo \"No build step required\"",
+    "start": "vercel dev"
+  },
   "dependencies": {
     "@supabase/supabase-js": "^2.0.0",
     "resend": "^4.0.0"
