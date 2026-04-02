@@ -5,13 +5,17 @@ function generateSessionToken() {
 }
 
 export default async function handler(req, res) {
+  const allowedOrigin = "https://verify.thereadymarkgroup.com";
+
   const corsHeaders = {
-    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Origin": allowedOrigin,
     "Access-Control-Allow-Methods": "POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, Authorization"
   };
 
-  Object.entries(corsHeaders).forEach(([k, v]) => res.setHeader(k, v));
+  Object.entries(corsHeaders).forEach(([key, value]) => {
+    res.setHeader(key, value);
+  });
 
   if (req.method === "OPTIONS") {
     return res.status(200).end();
@@ -45,13 +49,12 @@ export default async function handler(req, res) {
       Accept: "application/json"
     };
 
-    // 🔍 GET USER
     const userRes = await fetch(
-      `${supabaseUrl}/rest/v1/guest_users?email=eq.${encodeURIComponent(normalizedEmail)}&limit=1`,
+      `${supabaseUrl}/rest/v1/guest_users?email=eq.${encodeURIComponent(normalizedEmail)}&select=id,first_name,last_name,email,email_verified,email_verification_code,email_verification_expires_at&limit=1`,
       { headers }
     );
 
-    const userData = await userRes.json();
+    const userData = await userRes.json().catch(() => null);
 
     if (!userRes.ok) {
       return res.status(500).json({
@@ -63,31 +66,75 @@ export default async function handler(req, res) {
     const user = Array.isArray(userData) ? userData[0] : null;
 
     if (!user) {
-      return res.status(404).json({ error: "User not found" });
+      return res.status(400).json({ error: "Invalid or expired verification code" });
     }
 
-    // 🔐 VALIDATE CODE
-    if (!user.email_verification_code) {
-      return res.status(400).json({ error: "No verification code found" });
+    if (user.email_verified === true) {
+      const sessionToken = generateSessionToken();
+      const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 30).toISOString();
+
+      const sessionRes = await fetch(`${supabaseUrl}/rest/v1/guest_sessions`, {
+        method: "POST",
+        headers: {
+          ...headers,
+          Prefer: "return=representation"
+        },
+        body: JSON.stringify([
+          {
+            guest_user_id: user.id,
+            session_token: sessionToken,
+            expires_at: expiresAt
+          }
+        ])
+      });
+
+      const sessionData = await sessionRes.json().catch(() => null);
+
+      if (!sessionRes.ok) {
+        return res.status(500).json({
+          error: "Failed to create session",
+          details: sessionData
+        });
+      }
+
+      return res.status(200).json({
+        success: true,
+        token: sessionToken,
+        guest: {
+          id: user.id,
+          first_name: user.first_name,
+          last_name: user.last_name,
+          email: user.email,
+          email_verified: true
+        }
+      });
     }
 
-    if (String(user.email_verification_code) !== normalizedCode) {
-      return res.status(400).json({ error: "Invalid verification code" });
-    }
+    const codeMatches =
+      user.email_verification_code &&
+      String(user.email_verification_code) === normalizedCode;
 
-    if (
+    const expiresAtMs = user.email_verification_expires_at
+      ? new Date(user.email_verification_expires_at).getTime()
+      : NaN;
+
+    const codeExpired =
       !user.email_verification_expires_at ||
-      new Date(user.email_verification_expires_at).getTime() < Date.now()
-    ) {
-      return res.status(400).json({ error: "Verification code expired" });
+      Number.isNaN(expiresAtMs) ||
+      expiresAtMs < Date.now();
+
+    if (!codeMatches || codeExpired) {
+      return res.status(400).json({ error: "Invalid or expired verification code" });
     }
 
-    // ✅ MARK VERIFIED
     const verifyRes = await fetch(
       `${supabaseUrl}/rest/v1/guest_users?id=eq.${encodeURIComponent(user.id)}`,
       {
         method: "PATCH",
-        headers,
+        headers: {
+          ...headers,
+          Prefer: "return=representation"
+        },
         body: JSON.stringify({
           email_verified: true,
           email_verification_code: null,
@@ -96,21 +143,24 @@ export default async function handler(req, res) {
       }
     );
 
+    const verifyData = await verifyRes.json().catch(() => null);
+
     if (!verifyRes.ok) {
-      const errText = await verifyRes.text();
       return res.status(500).json({
         error: "Failed to verify email",
-        details: errText
+        details: verifyData
       });
     }
 
-    // 🔑 CREATE SESSION
     const sessionToken = generateSessionToken();
     const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 30).toISOString();
 
     const sessionRes = await fetch(`${supabaseUrl}/rest/v1/guest_sessions`, {
       method: "POST",
-      headers,
+      headers: {
+        ...headers,
+        Prefer: "return=representation"
+      },
       body: JSON.stringify([
         {
           guest_user_id: user.id,
@@ -120,15 +170,15 @@ export default async function handler(req, res) {
       ])
     });
 
+    const sessionData = await sessionRes.json().catch(() => null);
+
     if (!sessionRes.ok) {
-      const errText = await sessionRes.text();
       return res.status(500).json({
         error: "Failed to create session",
-        details: errText
+        details: sessionData
       });
     }
 
-    // 🎯 SUCCESS
     return res.status(200).json({
       success: true,
       token: sessionToken,
@@ -140,7 +190,6 @@ export default async function handler(req, res) {
         email_verified: true
       }
     });
-
   } catch (error) {
     return res.status(500).json({
       error: `Server error: ${error.message}`
