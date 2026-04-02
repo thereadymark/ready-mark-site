@@ -551,7 +551,7 @@
     .auth-guest-chip {
       display: inline-flex;
       align-items: center;
-      gap: 8px;
+      gap: 10px;
       padding: 8px 14px;
       border-radius: 999px;
       background: rgba(61,220,132,0.08);
@@ -559,11 +559,26 @@
       color: #dff7ea;
       font-size: 14px;
       margin: 0 auto 18px;
+      flex-wrap: wrap;
+      justify-content: center;
     }
 
     .guest-auth-wrap {
       text-align: center;
       margin-bottom: 16px;
+    }
+
+    .guest-logout-btn {
+      min-height: unset;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(199,162,87,0.24);
+      color: var(--gold-soft);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      width: auto;
     }
 
     .auth-policy-text {
@@ -613,6 +628,7 @@
       .crest { width: 120px; }
       .verification-proof { min-height: 280px; }
       .auth-title { font-size: 28px; }
+      .guest-logout-btn { width: auto; }
     }
   </style>
 </head>
@@ -664,6 +680,32 @@
       `;
     }
 
+    function resetGuestState() {
+      currentGuest = null;
+      currentGuestToken = "";
+      sessionStorage.removeItem("readymark_guest_token");
+    }
+
+    async function logoutGuest() {
+      resetGuestState();
+
+      const guestChipWrap = document.getElementById("guest-auth-chip-wrap");
+      if (guestChipWrap) {
+        guestChipWrap.innerHTML = "";
+      }
+
+      const reportStartView = document.getElementById("report-start-view");
+      const reportFormView = document.getElementById("report-form-view");
+      const reportStatus = document.getElementById("report-status");
+
+      if (reportFormView) reportFormView.classList.add("hidden");
+      if (reportStartView) reportStartView.classList.remove("hidden");
+      if (reportStatus) {
+        reportStatus.className = "inline-status hidden";
+        reportStatus.textContent = "";
+      }
+    }
+
     async function verifyGuestSession() {
       if (!currentGuestToken) {
         currentGuest = null;
@@ -681,17 +723,15 @@
 
         const data = await res.json();
 
-        if (!res.ok || data.error) {
-          sessionStorage.removeItem("readymark_guest_token");
-          currentGuestToken = "";
-          currentGuest = null;
+        if (!res.ok || data?.error) {
+          resetGuestState();
           return null;
         }
 
         currentGuest = data.guest;
         return currentGuest;
       } catch {
-        currentGuest = null;
+        resetGuestState();
         return null;
       }
     }
@@ -1158,9 +1198,15 @@
         if (currentGuest && currentGuest.email) {
           wrap.innerHTML = `
             <div class="auth-guest-chip">
-              Signed in as ${escapeHtml(currentGuest.first_name || "")} ${escapeHtml(currentGuest.last_name || "")}
+              <span>Signed in as ${escapeHtml(currentGuest.first_name || "")} ${escapeHtml(currentGuest.last_name || "")}</span>
+              <button id="guest-logout-btn" class="guest-logout-btn" type="button">Logout</button>
             </div>
           `;
+
+          const logoutBtn = document.getElementById("guest-logout-btn");
+          if (logoutBtn) {
+            logoutBtn.addEventListener("click", logoutGuest);
+          }
         } else {
           wrap.innerHTML = "";
         }
@@ -1479,7 +1525,8 @@
             details: guestNote || null,
             guest_name: `${currentGuest.first_name || ""} ${currentGuest.last_name || ""}`.trim(),
             guest_email: currentGuest.email,
-            photo_url: uploadedPhotoUrl
+            photo_url: uploadedPhotoUrl,
+            verification_id: verificationId !== "—" ? verificationId : null
           });
 
           const confirmationNumber =
