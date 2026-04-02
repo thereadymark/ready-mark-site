@@ -1,15 +1,8 @@
-import crypto from "crypto";
-
-function generateAdminToken() {
-  return crypto
-    .createHash("sha256")
-    .update(`${process.env.ADMIN_PASSWORD}:${Date.now()}:${Math.random()}`)
-    .digest("hex");
-}
-
 export default async function handler(req, res) {
+  const allowedOrigin = "https://verify.thereadymarkgroup.com";
+
   const corsHeaders = {
-    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Origin": allowedOrigin,
     "Access-Control-Allow-Methods": "POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, Authorization"
   };
@@ -29,19 +22,24 @@ export default async function handler(req, res) {
   try {
     const { password } = req.body || {};
 
-    if (!process.env.ADMIN_PASSWORD) {
+    const adminPassword = process.env.ADMIN_PASSWORD;
+    const adminToken = process.env.ADMIN_TOKEN;
+
+    if (!adminPassword) {
       return res.status(500).json({ error: "Missing ADMIN_PASSWORD environment variable" });
     }
 
-    if (!password || password !== process.env.ADMIN_PASSWORD) {
+    if (!adminToken) {
+      return res.status(500).json({ error: "Missing ADMIN_TOKEN environment variable" });
+    }
+
+    if (!password || password !== adminPassword) {
       return res.status(401).json({ error: "Invalid password" });
     }
 
-    const token = generateAdminToken();
-
     return res.status(200).json({
       success: true,
-      token
+      token: adminToken
     });
   } catch (error) {
     return res.status(500).json({
