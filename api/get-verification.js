@@ -1,8 +1,10 @@
 export default async function handler(req, res) {
+  const allowedOrigin = "https://verify.thereadymarkgroup.com";
+
   const corsHeaders = {
-    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Origin": allowedOrigin,
     "Access-Control-Allow-Methods": "GET, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type, Authorization",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization"
   };
 
   Object.entries(corsHeaders).forEach(([key, value]) => {
@@ -45,18 +47,14 @@ export default async function handler(req, res) {
 
     if (!supabaseUrl || !serviceRoleKey) {
       return res.status(500).json({
-        error: "Missing server environment variables",
-        missing: {
-          SUPABASE_URL: !supabaseUrl,
-          SUPABASE_SERVICE_ROLE_KEY: !serviceRoleKey,
-        },
+        error: "Missing server environment variables"
       });
     }
 
     const headers = {
       apikey: serviceRoleKey,
       Authorization: `Bearer ${serviceRoleKey}`,
-      Accept: "application/json",
+      Accept: "application/json"
     };
 
     const ROOM_TABLE = "Rooms";
@@ -76,48 +74,40 @@ export default async function handler(req, res) {
       const roomUrl =
         `${supabaseUrl}/rest/v1/${ROOM_TABLE}` +
         `?room_number=eq.${encodeURIComponent(roomNumber)}` +
-        `&select=*` +
+        `&select=id,property_id,room_number,qr_slug,qr_url` +
         `&limit=50`;
 
       const { response: roomRes, json: roomData } = await fetchJson(roomUrl);
 
       if (!roomRes.ok) {
         return res.status(500).json({
-          error: "Room lookup failed",
-          details: roomData,
-          propertySlug,
-          roomNumber
+          error: "Room lookup failed"
         });
       }
 
       if (!Array.isArray(roomData) || roomData.length === 0) {
         return res.status(404).json({
-          error: "Room not found",
-          propertySlug,
-          roomNumber
+          error: "Room not found"
         });
       }
 
       const propertyUrl =
         `${supabaseUrl}/rest/v1/${PROPERTY_TABLE}` +
         `?property_slug=eq.${encodeURIComponent(propertySlug)}` +
-        `&select=*` +
+        `&select=id,property_name,property_slug` +
         `&limit=1`;
 
       const { response: propertyRes, json: propertyData } = await fetchJson(propertyUrl);
 
       if (!propertyRes.ok) {
         return res.status(500).json({
-          error: "Property lookup failed",
-          details: propertyData,
-          propertySlug
+          error: "Property lookup failed"
         });
       }
 
       if (!Array.isArray(propertyData) || propertyData.length === 0) {
         return res.status(404).json({
-          error: "Property not found",
-          propertySlug
+          error: "Property not found"
         });
       }
 
@@ -126,32 +116,27 @@ export default async function handler(req, res) {
 
       if (!room) {
         return res.status(404).json({
-          error: "Room not found for selected property",
-          propertySlug,
-          roomNumber
+          error: "Room not found for selected property"
         });
       }
     } else {
       const roomUrl =
         `${supabaseUrl}/rest/v1/${ROOM_TABLE}` +
         `?room_number=eq.${encodeURIComponent(roomNumber)}` +
-        `&select=*` +
+        `&select=id,property_id,room_number,qr_slug,qr_url` +
         `&limit=1`;
 
       const { response: roomRes, json: roomData } = await fetchJson(roomUrl);
 
       if (!roomRes.ok) {
         return res.status(500).json({
-          error: "Room lookup failed",
-          details: roomData,
-          roomNumber
+          error: "Room lookup failed"
         });
       }
 
       if (!Array.isArray(roomData) || roomData.length === 0) {
         return res.status(404).json({
-          error: "Room not found",
-          roomNumber
+          error: "Room not found"
         });
       }
 
@@ -162,16 +147,14 @@ export default async function handler(req, res) {
       const propertyUrl =
         `${supabaseUrl}/rest/v1/${PROPERTY_TABLE}` +
         `?id=eq.${encodeURIComponent(room.property_id)}` +
-        `&select=*` +
+        `&select=id,property_name,property_slug` +
         `&limit=1`;
 
       const { response: propertyRes, json: propertyData } = await fetchJson(propertyUrl);
 
       if (!propertyRes.ok) {
         return res.status(500).json({
-          error: "Property lookup failed",
-          details: propertyData,
-          propertyId: room.property_id,
+          error: "Property lookup failed"
         });
       }
 
@@ -180,21 +163,10 @@ export default async function handler(req, res) {
       }
     }
 
-    const propertyName =
-      property?.property_name ??
-      property?.name ??
-      property?.title ??
-      "";
-
-    const resolvedPropertySlug =
-      property?.property_slug ??
-      propertySlug ??
-      "";
-
     const inspectionUrl =
       `${supabaseUrl}/rest/v1/${INSPECTION_TABLE}` +
       `?room_id=eq.${encodeURIComponent(room.id)}` +
-      `&select=*` +
+      `&select=inspector_id,created_at,inspection_date,certification_tier,verification_id,score` +
       `&order=created_at.desc` +
       `&limit=1`;
 
@@ -202,9 +174,7 @@ export default async function handler(req, res) {
 
     if (!inspectionRes.ok) {
       return res.status(500).json({
-        error: "Inspection lookup failed",
-        details: inspectionData,
-        roomId: room.id,
+        error: "Inspection lookup failed"
       });
     }
 
@@ -214,43 +184,31 @@ export default async function handler(req, res) {
         : null;
 
     return res.status(200).json({
-      property: propertyName,
-      property_slug: resolvedPropertySlug,
-      room: room.room_number ?? room.room ?? room.number ?? "",
-      qrSlug: room.qr_slug ?? room.slug ?? "",
+      property: property?.property_name ?? "",
+      property_slug: property?.property_slug ?? propertySlug ?? "",
+      room: room.room_number ?? "",
+      qrSlug: room.qr_slug ?? "",
       qrUrl: room.qr_url ?? "",
-      inspectorId: inspection?.inspector_id ?? inspection?.inspectorId ?? "",
+      inspectorId: inspection?.inspector_id ?? "",
       inspectionDate:
         inspection?.created_at ??
         inspection?.inspection_date ??
-        inspection?.inspectionDate ??
         "",
       certificationTier:
         inspection?.certification_tier ??
-        inspection?.certificationTier ??
         "Not verified",
       verificationId:
         inspection?.verification_id ??
-        inspection?.verificationId ??
         "",
       score: inspection?.score ?? "",
       status:
         inspection?.certification_tier ??
-        inspection?.certificationTier ??
-        "Not verified",
-      debug: {
-        requestedSlug: slug,
-        matchedRoomId: room.id,
-        matchedPropertyId: room.property_id ?? null,
-        matchedPropertySlug: resolvedPropertySlug || null,
-        matchedQrSlug: room.qr_slug ?? null,
-        matchedRoomNumber: room.room_number ?? null,
-      },
+        "Not verified"
     });
   } catch (error) {
     return res.status(500).json({
       error: "Server error",
-      details: error.message,
+      details: error.message
     });
   }
 }
