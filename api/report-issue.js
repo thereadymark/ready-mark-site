@@ -8,9 +8,9 @@ const supabase = createClient(
 export const config = {
   api: {
     bodyParser: {
-      sizeLimit: "20mb",
-    },
-  },
+      sizeLimit: "20mb"
+    }
+  }
 };
 
 const MAX_PHOTO_BYTES = 10 * 1024 * 1024;
@@ -55,6 +55,248 @@ function generateReportReference() {
   const randomPart = Math.floor(1000 + Math.random() * 9000);
 
   return `RM-RPT-${datePart}-${randomPart}`;
+}
+
+function formatPropertyName(value) {
+  const normalized = String(value || "").replace(/\s+/g, " ").trim();
+  if (!normalized) return "";
+
+  const upperAcronyms = new Set(["stl", "nyc", "la", "usa", "uk", "llc", "qa", "gm"]);
+
+  return normalized
+    .split(" ")
+    .map((word) => {
+      const lower = word.toLowerCase();
+      if (upperAcronyms.has(lower)) return lower.toUpperCase();
+      return lower.charAt(0).toUpperCase() + lower.slice(1);
+    })
+    .join(" ");
+}
+
+function escapeHtml(str) {
+  return String(str ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+async function sendEmail({ resendApiKey, from, to, subject, html }) {
+  const res = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${resendApiKey}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      from,
+      to,
+      subject,
+      html
+    })
+  });
+
+  const data = await res.json().catch(() => null);
+
+  if (!res.ok) {
+    throw new Error(
+      data?.message ||
+      data?.error ||
+      data?.name ||
+      "Email send failed."
+    );
+  }
+
+  return data;
+}
+
+function buildGuestConfirmationEmail({
+  confirmationNumber,
+  propertyName,
+  roomNumber,
+  issueText,
+  guestNote
+}) {
+  const detailsSection = guestNote
+    ? `
+      <div style="margin-top:16px;padding:18px;border-radius:14px;background:#0f1317;border:1px solid rgba(199,162,87,0.15);">
+        <div style="color:#d8bb7a;font-size:12px;text-transform:uppercase;margin-bottom:8px;">
+          Additional Details
+        </div>
+        <div style="font-size:16px;line-height:1.8;color:#f3eee5;">
+          ${escapeHtml(guestNote)}
+        </div>
+      </div>
+    `
+    : "";
+
+  return `
+<div style="margin:0;padding:0;background:#0f1114;font-family:Georgia,serif;color:#f3eee5;">
+  <div style="max-width:720px;margin:0 auto;padding:36px 20px;">
+    <div style="background:#15191d;border:1px solid rgba(199,162,87,0.25);border-radius:22px;overflow:hidden;box-shadow:0 0 40px rgba(199,162,87,0.08);">
+      <div style="padding:34px 30px 24px;text-align:center;border-bottom:1px solid rgba(199,162,87,0.18);">
+        <img src="https://verify.thereadymarkgroup.com/readymarkseal(best)nobackground.PNG" alt="The Ready Mark" style="width:90px;margin-bottom:12px;">
+        <div style="color:#c7a257;font-size:13px;letter-spacing:3px;text-transform:uppercase;font-weight:700;">
+          The Ready Mark
+        </div>
+        <h1 style="margin:10px 0 6px;font-size:32px;color:#ffffff;">
+          Issue Received
+        </h1>
+        <p style="margin:0;color:#b7b0a5;font-size:15px;line-height:1.75;max-width:540px;margin-left:auto;margin-right:auto;">
+          Your report has been received and logged for review.
+        </p>
+      </div>
+
+      <div style="padding:26px 30px;">
+        <div style="margin-bottom:18px;">
+          <div style="color:#d8bb7a;font-size:12px;text-transform:uppercase;margin-bottom:6px;">Reference</div>
+          <div style="font-size:18px;color:#f3eee5;font-weight:700;">${escapeHtml(confirmationNumber)}</div>
+        </div>
+
+        <div style="margin-bottom:18px;">
+          <div style="color:#d8bb7a;font-size:12px;text-transform:uppercase;margin-bottom:6px;">Property</div>
+          <div style="font-size:18px;color:#f3eee5;">${escapeHtml(propertyName)}</div>
+        </div>
+
+        <div style="margin-bottom:18px;">
+          <div style="color:#d8bb7a;font-size:12px;text-transform:uppercase;margin-bottom:6px;">Room</div>
+          <div style="font-size:18px;color:#f3eee5;">${escapeHtml(roomNumber)}</div>
+        </div>
+
+        <div style="margin-top:22px;padding:18px;border-radius:14px;background:#0f1317;border:1px solid rgba(199,162,87,0.15);">
+          <div style="color:#d8bb7a;font-size:12px;text-transform:uppercase;margin-bottom:8px;">
+            Reported Issue
+          </div>
+          <div style="font-size:16px;line-height:1.7;color:#f3eee5;">
+            ${escapeHtml(issueText)}
+          </div>
+        </div>
+
+        ${detailsSection}
+
+        <div style="margin-top:24px;font-size:13px;color:#8f8775;line-height:1.7;">
+          Please keep this reference number for your records.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+`;
+}
+
+function buildInternalAlertEmail({
+  confirmationNumber,
+  verificationId,
+  propertyName,
+  roomNumber,
+  issueText,
+  guestNote,
+  guestName,
+  guestEmail,
+  photoUrl,
+  submittedAt,
+  priority
+}) {
+  const photoSection = photoUrl
+    ? `
+      <div style="margin-top:16px;padding:18px;border-radius:14px;background:#0f1317;border:1px solid rgba(199,162,87,0.15);text-align:center;">
+        <div style="color:#d8bb7a;font-size:12px;text-transform:uppercase;margin-bottom:10px;">
+          Supporting Evidence
+        </div>
+        <a href="${escapeHtml(photoUrl)}" style="display:inline-block;padding:12px 18px;border-radius:12px;background:#c7a257;color:#111;font-weight:700;text-decoration:none;">
+          View Attached Photo
+        </a>
+      </div>
+    `
+    : "";
+
+  return `
+<div style="margin:0;padding:0;background:#0f1114;font-family:Georgia,serif;color:#f3eee5;">
+  <div style="max-width:720px;margin:0 auto;padding:36px 20px;">
+    <div style="background:#15191d;border:1px solid rgba(199,162,87,0.25);border-radius:22px;overflow:hidden;box-shadow:0 0 40px rgba(199,162,87,0.08);">
+      <div style="padding:34px 30px 24px;text-align:center;border-bottom:1px solid rgba(199,162,87,0.18);">
+        <img src="https://verify.thereadymarkgroup.com/readymarkseal(best)nobackground.PNG" alt="The Ready Mark" style="width:90px;margin-bottom:12px;">
+        <div style="color:#c7a257;font-size:13px;letter-spacing:3px;text-transform:uppercase;font-weight:700;">
+          The Ready Mark
+        </div>
+        <h1 style="margin:10px 0 6px;font-size:32px;color:#ffffff;">
+          New Guest Report
+        </h1>
+        <p style="margin:0;color:#b7b0a5;font-size:15px;line-height:1.75;max-width:540px;margin-left:auto;margin-right:auto;">
+          A guest-submitted issue has been received and requires Ready Mark review.
+        </p>
+      </div>
+
+      <div style="padding:26px 30px;">
+        <div style="margin-bottom:18px;">
+          <div style="color:#d8bb7a;font-size:12px;text-transform:uppercase;margin-bottom:6px;">Reference</div>
+          <div style="font-size:18px;color:#f3eee5;font-weight:700;">${escapeHtml(confirmationNumber)}</div>
+        </div>
+
+        <div style="margin-bottom:18px;">
+          <div style="color:#d8bb7a;font-size:12px;text-transform:uppercase;margin-bottom:6px;">Verification ID</div>
+          <div style="font-size:18px;color:#f3eee5;">${escapeHtml(verificationId)}</div>
+        </div>
+
+        <div style="margin-bottom:18px;">
+          <div style="color:#d8bb7a;font-size:12px;text-transform:uppercase;margin-bottom:6px;">Property</div>
+          <div style="font-size:18px;color:#f3eee5;">${escapeHtml(propertyName)}</div>
+        </div>
+
+        <div style="margin-bottom:18px;">
+          <div style="color:#d8bb7a;font-size:12px;text-transform:uppercase;margin-bottom:6px;">Room</div>
+          <div style="font-size:18px;color:#f3eee5;">${escapeHtml(roomNumber)}</div>
+        </div>
+
+        <div style="margin-bottom:18px;">
+          <div style="color:#d8bb7a;font-size:12px;text-transform:uppercase;margin-bottom:6px;">Guest</div>
+          <div style="font-size:18px;color:#f3eee5;">${escapeHtml(guestName || "Not available")}</div>
+        </div>
+
+        <div style="margin-bottom:18px;">
+          <div style="color:#d8bb7a;font-size:12px;text-transform:uppercase;margin-bottom:6px;">Guest Email</div>
+          <div style="font-size:18px;color:#f3eee5;">${escapeHtml(guestEmail || "Not available")}</div>
+        </div>
+
+        <div style="margin-bottom:18px;">
+          <div style="color:#d8bb7a;font-size:12px;text-transform:uppercase;margin-bottom:6px;">Submitted</div>
+          <div style="font-size:18px;color:#f3eee5;">${escapeHtml(submittedAt)}</div>
+        </div>
+
+        <div style="margin-bottom:18px;">
+          <div style="color:#d8bb7a;font-size:12px;text-transform:uppercase;margin-bottom:6px;">Priority</div>
+          <div style="font-size:18px;color:#f3eee5;">${escapeHtml(priority)}</div>
+        </div>
+
+        <div style="margin-top:22px;padding:18px;border-radius:14px;background:#0f1317;border:1px solid rgba(199,162,87,0.15);">
+          <div style="color:#d8bb7a;font-size:12px;text-transform:uppercase;margin-bottom:8px;">
+            Reported Issue
+          </div>
+          <div style="font-size:16px;line-height:1.7;color:#f3eee5;">
+            ${escapeHtml(issueText)}
+          </div>
+        </div>
+
+        <div style="margin-top:16px;padding:18px;border-radius:14px;background:#0f1317;border:1px solid rgba(199,162,87,0.15);">
+          <div style="color:#d8bb7a;font-size:12px;text-transform:uppercase;margin-bottom:8px;">
+            Guest Statement
+          </div>
+          <div style="font-size:16px;line-height:1.8;color:#f3eee5;">
+            ${escapeHtml(guestNote || "No additional details provided.")}
+          </div>
+        </div>
+
+        ${photoSection}
+
+        <div style="margin-top:24px;font-size:13px;color:#8f8775;line-height:1.7;">
+          This is an internal Ready Mark alert. Review the dashboard before forwarding a controlled version to the property.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+`;
 }
 
 export default async function handler(req, res) {
@@ -138,6 +380,35 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Please select at least one issue type." });
     }
 
+    const normalizedVerificationId = String(verification_id).trim();
+    const normalizedPropertySlug = property_slug ? String(property_slug).trim() : null;
+    const normalizedPropertyName = formatPropertyName(property_name);
+    const normalizedRoomNumber = String(room_number).trim();
+    const normalizedGuestNote = guest_note ? String(guest_note).trim() : null;
+
+    const duplicateCheck = await supabase
+      .from("guest_reports")
+      .select("id, confirmation_number, status, reported_at")
+      .eq("verification_id", normalizedVerificationId)
+      .eq("guest_email", guestUser.email)
+      .in("status", ["New", "Under Review", "Escalated", "Sent to Property"])
+      .order("reported_at", { ascending: false })
+      .limit(1);
+
+    if (duplicateCheck.error) {
+      return res.status(500).json({ error: duplicateCheck.error.message });
+    }
+
+    if (duplicateCheck.data && duplicateCheck.data.length > 0) {
+      const existing = duplicateCheck.data[0];
+      return res.status(409).json({
+        error: "A report for this room is already open under your account.",
+        reference: existing.confirmation_number || null,
+        existing_report_id: existing.id || null,
+        existing_status: existing.status || null
+      });
+    }
+
     const confirmationNumber = generateReportReference();
 
     let uploadedPhotoUrl = "";
@@ -166,22 +437,22 @@ export default async function handler(req, res) {
         });
       }
 
-      const { data } = supabase.storage
+      const { data: publicData } = supabase.storage
         .from("guest-reports")
         .getPublicUrl(filePath);
 
-      uploadedPhotoUrl = data.publicUrl;
+      uploadedPhotoUrl = publicData?.publicUrl || "";
     }
 
     const insertPayload = {
-      verification_id: String(verification_id).trim(),
+      verification_id: normalizedVerificationId,
       confirmation_number: confirmationNumber,
-      property_slug: property_slug ? String(property_slug).trim() : null,
-      property_name: property_name ? String(property_name).trim() : null,
-      room_number: String(room_number).trim(),
+      property_slug: normalizedPropertySlug,
+      property_name: normalizedPropertyName || null,
+      room_number: normalizedRoomNumber,
       issue_types,
-      guest_note: guest_note ? String(guest_note).trim() : null,
-      details: guest_note ? String(guest_note).trim() : null,
+      guest_note: normalizedGuestNote,
+      details: normalizedGuestNote,
       photo_url: uploadedPhotoUrl || null,
       status: "New",
       priority: uploadedPhotoUrl ? "Urgent" : "Normal",
@@ -206,11 +477,75 @@ export default async function handler(req, res) {
       });
     }
 
+    const resendApiKey = process.env.RESEND_API_KEY;
+    const resendFromEmail = process.env.RESEND_FROM_EMAIL;
+    const internalAlertEmail =
+      process.env.REPORT_ISSUES_EMAIL ||
+      process.env.INTERNAL_REPORT_ALERT_EMAIL ||
+      "reportissues@thereadymarkgroup.com";
+
+    const guestFullName =
+      `${guestUser.first_name || ""} ${guestUser.last_name || ""}`.trim();
+
+    const issueText = issue_types.join(", ");
+    const submittedAt = data?.reported_at
+      ? new Date(data.reported_at).toLocaleString()
+      : new Date().toLocaleString();
+
+    const emailErrors = [];
+
+    if (resendApiKey && resendFromEmail) {
+      try {
+        await sendEmail({
+          resendApiKey,
+          from: resendFromEmail,
+          to: guestUser.email,
+          subject: `Your Ready Mark Report Confirmation – ${confirmationNumber}`,
+          html: buildGuestConfirmationEmail({
+            confirmationNumber,
+            propertyName: normalizedPropertyName,
+            roomNumber: normalizedRoomNumber,
+            issueText,
+            guestNote: normalizedGuestNote
+          })
+        });
+      } catch (emailError) {
+        emailErrors.push(`Guest confirmation email failed: ${emailError.message}`);
+      }
+
+      try {
+        await sendEmail({
+          resendApiKey,
+          from: resendFromEmail,
+          to: internalAlertEmail,
+          subject: `Ready Mark New Guest Report – ${confirmationNumber}`,
+          html: buildInternalAlertEmail({
+            confirmationNumber,
+            verificationId: normalizedVerificationId,
+            propertyName: normalizedPropertyName,
+            roomNumber: normalizedRoomNumber,
+            issueText,
+            guestNote: normalizedGuestNote,
+            guestName: guestFullName,
+            guestEmail: guestUser.email,
+            photoUrl: uploadedPhotoUrl,
+            submittedAt,
+            priority: uploadedPhotoUrl ? "Urgent" : "Normal"
+          })
+        });
+      } catch (emailError) {
+        emailErrors.push(`Internal alert email failed: ${emailError.message}`);
+      }
+    } else {
+      emailErrors.push("Email configuration missing. RESEND_API_KEY or RESEND_FROM_EMAIL is not set.");
+    }
+
     return res.status(200).json({
       success: true,
       confirmation_number: confirmationNumber,
       reference: confirmationNumber,
-      report: data
+      report: data,
+      warnings: emailErrors.length ? emailErrors : undefined
     });
   } catch (error) {
     return res.status(500).json({
