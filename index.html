@@ -1562,31 +1562,7 @@
     setInlineStatus(reportStatus, error.message || "Unable to submit report.", "error");
   }
 });
-          const confirmationNumber =
-            responseData?.confirmationNumber ||
-            responseData?.confirmation_number ||
-            responseData?.reference ||
-            responseData?.report?.confirmation_number ||
-            responseData?.report?.verification_id ||
-            "Unavailable";
-
-          reportStatus.className = "inline-status inline-success";
-          reportStatus.innerHTML = `
-            <strong>Report received.</strong><br><br>
-            <strong>Reference #:</strong> ${escapeHtml(confirmationNumber)}<br><br>
-            The property has been notified.
-          `;
-          reportStatus.classList.remove("hidden");
-
-          document.querySelectorAll('input[name="issue_type"]').forEach(input => {
-            input.checked = false;
-          });
-          document.getElementById("guest-note").value = "";
-          document.getElementById("guest-photo").value = "";
-        } catch (error) {
-          setInlineStatus(reportStatus, error.message || "Unable to submit report.", "error");
-        }
-      });
+         
     }
 
     function renderErrorPage(message, slug) {
