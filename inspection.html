@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <title>Log Inspection | Ready Mark</title>
+
 <style>
 body {
   font-family: Georgia, serif;
@@ -34,6 +35,11 @@ button {
   cursor:pointer;
 }
 
+button:disabled {
+  opacity:0.6;
+  cursor:not-allowed;
+}
+
 .result {
   margin-top:15px;
 }
@@ -60,78 +66,199 @@ button {
 <input id="inspector" placeholder="Inspector Name" />
 <textarea id="notes" placeholder="Notes"></textarea>
 
-<button onclick="submitInspection()">Submit Inspection</button>
+<button id="submitBtn">Submit Inspection</button>
 
 <div class="result" id="result"></div>
 </div>
 
 <script>
-const ADMIN_PASSWORD = "readymark2026";
+const SESSION_TOKEN_KEY = "readymark_admin_token";
 
-let entered = sessionStorage.getItem("admin_auth");
-if (entered !== ADMIN_PASSWORD) {
-  entered = prompt("Enter admin password:");
-  if (entered !== ADMIN_PASSWORD) {
-    document.body.innerHTML = "Access Denied";
+const propertySelect = document.getElementById("propertySelect");
+const roomSelect = document.getElementById("roomSelect");
+const submitBtn = document.getElementById("submitBtn");
+const resultBox = document.getElementById("result");
+
+function getToken() {
+  return sessionStorage.getItem(SESSION_TOKEN_KEY) || "";
+}
+
+function clearToken() {
+  sessionStorage.removeItem(SESSION_TOKEN_KEY);
+}
+
+function requireAuth() {
+  const token = getToken();
+  if (!token) {
+    alert("Please login via admin.html");
     throw new Error("Unauthorized");
   }
-  sessionStorage.setItem("admin_auth", entered);
+  return token;
 }
 
+function authHeaders(extra = {}) {
+  return {
+    "x-admin-token": getToken(),
+    ...extra
+  };
+}
+
+function handleAuthFail(res, data) {
+  if (res.status === 401 || data?.error === "Unauthorized") {
+    clearToken();
+    alert("Session expired. Please login again.");
+    window.location.href = "/admin.html";
+    return true;
+  }
+  return false;
+}
+
+function setResult(msg) {
+  resultBox.innerHTML = msg;
+}
+
+async function fetchJson(url, options = {}) {
+  const res = await fetch(url, options);
+  const data = await res.json().catch(() => null);
+  return { res, data };
+}
+
+/* =========================
+   LOAD PROPERTIES
+========================= */
 async function loadProperties() {
-  const res = await fetch("/api/list-properties");
-  const data = await res.json();
+  requireAuth();
 
-  const select = document.getElementById("propertySelect");
-  select.innerHTML = "<option>Select Property</option>";
+  try {
+    const { res, data } = await fetchJson("/api/list-properties", {
+      headers: authHeaders()
+    });
 
-  data.properties.forEach(p => {
-    const opt = document.createElement("option");
-    opt.value = p.id;
-    opt.textContent = p.property_name;
-    select.appendChild(opt);
-  });
+    if (handleAuthFail(res, data)) return;
+
+    if (!res.ok) throw new Error(data?.error || "Failed to load properties");
+
+    propertySelect.innerHTML = `<option value="">Select Property</option>`;
+
+    data.properties.forEach(p => {
+      const opt = document.createElement("option");
+      opt.value = p.id;
+      opt.textContent = p.property_name;
+      propertySelect.appendChild(opt);
+    });
+
+  } catch (err) {
+    setResult(`Error loading properties: ${err.message}`);
+  }
 }
 
+/* =========================
+   LOAD ROOMS
+========================= */
 async function loadRooms(propertyId) {
-  const res = await fetch(`/api/property-rooms?propertyId=${propertyId}`);
-  const data = await res.json();
+  if (!propertyId) return;
 
-  const select = document.getElementById("roomSelect");
-  select.innerHTML = "<option>Select Room</option>";
+  try {
+    const { res, data } = await fetchJson(`/api/property-rooms?propertyId=${propertyId}`, {
+      headers: authHeaders()
+    });
 
-  data.rooms.forEach(r => {
-    const opt = document.createElement("option");
-    opt.value = r.id;
-    opt.textContent = r.room_number;
-    select.appendChild(opt);
-  });
+    if (handleAuthFail(res, data)) return;
+
+    if (!res.ok) throw new Error(data?.error || "Failed to load rooms");
+
+    roomSelect.innerHTML = `<option value="">Select Room</option>`;
+
+    data.rooms.forEach(r => {
+      const opt = document.createElement("option");
+      opt.value = r.id;
+      opt.textContent = r.room_number;
+      roomSelect.appendChild(opt);
+    });
+
+  } catch (err) {
+    setResult(`Error loading rooms: ${err.message}`);
+  }
 }
 
-document.getElementById("propertySelect").addEventListener("change", (e) => {
+propertySelect.addEventListener("change", (e) => {
+  roomSelect.innerHTML = `<option>Loading...</option>`;
   loadRooms(e.target.value);
 });
 
+/* =========================
+   SUBMIT INSPECTION
+========================= */
 async function submitInspection() {
-  const roomId = document.getElementById("roomSelect").value;
-  const score = document.getElementById("score").value;
+  requireAuth();
+
+  const roomId = roomSelect.value;
+  const scoreRaw = document.getElementById("score").value.trim();
   const status = document.getElementById("status").value;
-  const inspector = document.getElementById("inspector").value;
-  const notes = document.getElementById("notes").value;
+  const inspector = document.getElementById("inspector").value.trim();
+  const notes = document.getElementById("notes").value.trim();
 
-  const res = await fetch("/api/create-inspection", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ roomId, score, status, inspector, notes })
-  });
+  /* VALIDATION */
+  if (!roomId) return setResult("Please select a room.");
+  if (!scoreRaw) return setResult("Score is required.");
 
-  const data = await res.json();
+  const score = Number(scoreRaw);
 
-  document.getElementById("result").innerHTML =
-    res.ok ? "Inspection Logged ✅" : data.error;
+  if (isNaN(score) || score < 0 || score > 100) {
+    return setResult("Score must be a number between 0 and 100.");
+  }
+
+  if (!status) return setResult("Please select a status.");
+  if (!inspector) return setResult("Inspector name is required.");
+
+  submitBtn.disabled = true;
+  setResult("Submitting inspection...");
+
+  try {
+    const { res, data } = await fetchJson("/api/create-inspection", {
+      method: "POST",
+      headers: authHeaders({
+        "Content-Type": "application/json"
+      }),
+      body: JSON.stringify({
+        roomId,
+        score,
+        status,
+        inspector,
+        notes
+      })
+    });
+
+    if (handleAuthFail(res, data)) return;
+
+    if (!res.ok) {
+      throw new Error(data?.error || "Failed to log inspection");
+    }
+
+    setResult("Inspection Logged ✅");
+
+    // optional reset
+    document.getElementById("score").value = "";
+    document.getElementById("status").value = "";
+    document.getElementById("notes").value = "";
+
+  } catch (err) {
+    setResult(`Error: ${err.message}`);
+  } finally {
+    submitBtn.disabled = false;
+  }
 }
 
-loadProperties();
+submitBtn.addEventListener("click", submitInspection);
+
+/* =========================
+   INIT
+========================= */
+try {
+  loadProperties();
+} catch (err) {
+  setResult(`Error: ${err.message}`);
+}
 </script>
 
 </body>
