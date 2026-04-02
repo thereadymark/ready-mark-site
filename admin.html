@@ -1122,7 +1122,7 @@
                     </div>
 
                     <div class="small-note">
-                      Send to Property email wiring comes after status + filters + reference number cleanup.
+                      Property delivery is active. Use this panel to forward controlled guest reports and manage internal status.
                     </div>
                   </div>
                 </div>
@@ -1325,10 +1325,6 @@
       return `RM-VFY-${datePart}-${cleanRoom}-${randomPart}`;
     }
 
-    function getReportReference(report) {
-      return report.confirmation_number || "—";
-    }
-
     function getStatusLabel(status) {
       return status || "New";
     }
@@ -1343,11 +1339,37 @@
       return "pill pill-new";
     }
 
+    function extractReportPhotoUrl(report) {
+      const candidates = [
+        report?.signed_photo_url,
+        report?.photo_signed_url,
+        report?.photo_url_signed,
+        report?.photo_url
+      ].filter(Boolean);
+
+      const selected = candidates.find(value => /^https?:\/\//i.test(String(value).trim()));
+      return selected ? String(selected).trim() : "";
+    }
+
+    function handleUnauthorizedResponse(response, data) {
+      if (response.status === 401 || data?.error === "Unauthorized") {
+        clearSessionToken();
+        showLoginView();
+        setLoginStatus("Your session expired. Please sign in again.", "error");
+        return true;
+      }
+      return false;
+    }
+
     function updateMetrics() {
       metricProperties.textContent = String(cachedProperties.length);
       metricReports.textContent = String(cachedReports.length);
-      metricNew.textContent = String(cachedReports.filter(r => String(r.status || "New").toLowerCase() === "new").length);
-      metricResolved.textContent = String(cachedReports.filter(r => String(r.status || "").toLowerCase() === "resolved").length);
+      metricNew.textContent = String(
+        cachedReports.filter(r => String(r.status || "New").toLowerCase() === "new").length
+      );
+      metricResolved.textContent = String(
+        cachedReports.filter(r => String(r.status || "").toLowerCase() === "resolved").length
+      );
     }
 
     function populatePropertySelect(selectedSlug = "") {
@@ -1365,7 +1387,7 @@
       reportDetailEmpty.classList.remove("hidden");
       reportDetailPanel.classList.add("hidden");
       detailPhotoWrap.classList.add("hidden");
-      detailPhoto.src = "";
+      detailPhoto.removeAttribute("src");
     }
 
     function showReportDetail(report) {
@@ -1377,7 +1399,11 @@
       reportDetailEmpty.classList.add("hidden");
       reportDetailPanel.classList.remove("hidden");
 
-      const guestFullName = [report.guest_first_name, report.guest_last_name].filter(Boolean).join(" ").trim() || "—";
+      const guestFullName = [report.guest_first_name, report.guest_last_name]
+        .filter(Boolean)
+        .join(" ")
+        .trim() || "—";
+
       const issueText = Array.isArray(report.issue_types) && report.issue_types.length
         ? report.issue_types.join(", ")
         : "—";
@@ -1393,11 +1419,13 @@
       detailNote.textContent = report.guest_note || report.details || "—";
       detailStatusPill.innerHTML = `<span class="${getStatusPillClass(report.status)}">${escapeHtml(getStatusLabel(report.status))}</span>`;
 
-      if (report.photo_url) {
-        detailPhoto.src = report.photo_url;
+      const photoUrl = extractReportPhotoUrl(report);
+
+      if (photoUrl) {
+        detailPhoto.src = photoUrl;
         detailPhotoWrap.classList.remove("hidden");
       } else {
-        detailPhoto.src = "";
+        detailPhoto.removeAttribute("src");
         detailPhotoWrap.classList.add("hidden");
       }
     }
@@ -1538,24 +1566,32 @@
           resolve(base64);
         };
 
-        reader.onerror = reject;
+        reader.onerror = () => reject(new Error("Unable to read file."));
         reader.readAsDataURL(file);
       });
     }
 
+    async function fetchJson(url, options = {}) {
+      const response = await fetch(url, options);
+      const data = await response.json().catch(() => null);
+      return { response, data };
+    }
+
     async function loadDashboardData(selectedSlug = "") {
       try {
-        const res = await fetch("/api/admin-data", {
+        const { response, data } = await fetchJson("/api/admin-data", {
           method: "GET",
           headers: adminHeaders({
             "Accept": "application/json"
           })
         });
 
-        const data = await res.json();
+        if (handleUnauthorizedResponse(response, data)) {
+          return;
+        }
 
-        if (!res.ok || data.error) {
-          throw new Error(data.error || "Unable to load dashboard data.");
+        if (!response.ok || data?.error) {
+          throw new Error(data?.error || "Unable to load dashboard data.");
         }
 
         cachedProperties = Array.isArray(data.properties) ? data.properties : [];
@@ -1585,10 +1621,11 @@
         return;
       }
 
+      loginBtn.disabled = true;
       setLoginStatus("Signing in...");
 
       try {
-        const res = await fetch("/api/admin-login", {
+        const { response, data } = await fetchJson("/api/admin-login", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -1597,10 +1634,8 @@
           body: JSON.stringify({ password })
         });
 
-        const data = await res.json();
-
-        if (!res.ok || data.error || !data.token) {
-          throw new Error(data.error || "Login failed.");
+        if (!response.ok || data?.error || !data?.token) {
+          throw new Error(data?.error || "Login failed.");
         }
 
         setSessionToken(data.token);
@@ -1609,6 +1644,8 @@
         await loadDashboardData();
       } catch (error) {
         setLoginStatus(error.message || "Login failed.", "error");
+      } finally {
+        loginBtn.disabled = false;
       }
     }
 
@@ -1621,16 +1658,14 @@
       }
 
       try {
-        const res = await fetch("/api/admin-verify", {
+        const { response, data } = await fetchJson("/api/admin-verify", {
           method: "GET",
           headers: adminHeaders({
             "Accept": "application/json"
           })
         });
 
-        const data = await res.json();
-
-        if (!res.ok || data.error) {
+        if (!response.ok || data?.error) {
           clearSessionToken();
           showLoginView();
           return;
@@ -1638,7 +1673,7 @@
 
         showAdminView();
         await loadDashboardData();
-      } catch (error) {
+      } catch {
         clearSessionToken();
         showLoginView();
       }
@@ -1646,7 +1681,7 @@
 
     async function updateReportStatus(reportId, newStatus) {
       try {
-        const res = await fetch("/api/update-report-status", {
+        const { response, data } = await fetchJson("/api/update-report-status", {
           method: "POST",
           headers: adminHeaders({
             "Content-Type": "application/json",
@@ -1658,10 +1693,12 @@
           })
         });
 
-        const data = await res.json();
+        if (handleUnauthorizedResponse(response, data)) {
+          return;
+        }
 
-        if (!res.ok || data.error) {
-          throw new Error(data.error || "Unable to update report status.");
+        if (!response.ok || data?.error) {
+          throw new Error(data?.error || "Unable to update report status.");
         }
 
         await loadDashboardData(propertySelect.value || "");
@@ -1746,10 +1783,11 @@
         return;
       }
 
+      createPropertyBtn.disabled = true;
       setStatus("Creating property...");
 
       try {
-        const res = await fetch("/api/create-property", {
+        const { response, data } = await fetchJson("/api/create-property", {
           method: "POST",
           headers: adminHeaders({
             "Content-Type": "application/json",
@@ -1764,10 +1802,12 @@
           })
         });
 
-        const data = await res.json();
+        if (handleUnauthorizedResponse(response, data)) {
+          return;
+        }
 
-        if (!res.ok || data.error) {
-          throw new Error(typeof data.error === "string" ? data.error : "Unable to create property.");
+        if (!response.ok || data?.error) {
+          throw new Error(typeof data?.error === "string" ? data.error : "Unable to create property.");
         }
 
         setStatus(
@@ -1784,6 +1824,8 @@
         await loadDashboardData(property_slug);
       } catch (error) {
         setStatus(error.message || "Property creation failed.", "error");
+      } finally {
+        createPropertyBtn.disabled = false;
       }
     });
 
@@ -1814,7 +1856,7 @@
       setStatus("Saving inspection record...");
 
       try {
-        const res = await fetch("/api/save-inspection", {
+        const { response, data } = await fetchJson("/api/save-inspection", {
           method: "POST",
           headers: adminHeaders({
             "Content-Type": "application/json",
@@ -1823,10 +1865,12 @@
           body: JSON.stringify(payload)
         });
 
-        const data = await res.json();
+        if (handleUnauthorizedResponse(response, data)) {
+          return;
+        }
 
-        if (!res.ok || data.error) {
-          throw new Error(data.error || "Unable to save inspection.");
+        if (!response.ok || data?.error) {
+          throw new Error(data?.error || "Unable to save inspection.");
         }
 
         const publicUrl = data.public_url || "";
@@ -1874,6 +1918,7 @@
         return;
       }
 
+      uploadFilesBtn.disabled = true;
       setStatus("Uploading inspection evidence...");
 
       try {
@@ -1895,7 +1940,7 @@
           };
         }
 
-        const uploadRes = await fetch("/api/upload-evidence", {
+        const { response, data } = await fetchJson("/api/upload-evidence", {
           method: "POST",
           headers: adminHeaders({
             "Content-Type": "application/json",
@@ -1908,14 +1953,16 @@
           })
         });
 
-        const uploadData = await uploadRes.json();
+        if (handleUnauthorizedResponse(response, data)) {
+          return;
+        }
 
-        if (!uploadRes.ok || uploadData.error) {
-          throw new Error(uploadData.error || "Upload failed.");
+        if (!response.ok || data?.error) {
+          throw new Error(data?.error || "Upload failed.");
         }
 
         setStatus(
-          `Evidence uploaded successfully.\n\nVerification ID: ${verificationId}\nPhoto attached: ${uploadData.photo_url ? "Yes" : "No"}\nLog attached: ${uploadData.log_file_url ? "Yes" : "No"}`,
+          `Evidence uploaded successfully.\n\nVerification ID: ${verificationId}\nPhoto attached: ${data.photo_path ? "Yes" : "No"}\nLog attached: ${data.log_file_path ? "Yes" : "No"}`,
           "success"
         );
 
@@ -1923,6 +1970,8 @@
         document.getElementById("docUpload").value = "";
       } catch (error) {
         setStatus(error.message || "Upload failed.", "error");
+      } finally {
+        uploadFilesBtn.disabled = false;
       }
     });
 
@@ -1941,49 +1990,55 @@
 
     printLabelBtn.addEventListener("click", printLabel);
 
-   sendToPropertyBtn.addEventListener("click", async function () {
-  if (!selectedReportId) {
-    setStatus("Select a report first.", "error");
-    return;
-  }
+    sendToPropertyBtn.addEventListener("click", async function () {
+      if (!selectedReportId) {
+        setStatus("Select a report first.", "error");
+        return;
+      }
 
-  setStatus("Sending report to property...");
+      sendToPropertyBtn.disabled = true;
+      setStatus("Sending report to property...");
 
-  try {
-    const res = await fetch("/api/send-report-to-property", {
-      method: "POST",
-      headers: adminHeaders({
-        "Content-Type": "application/json",
-        "Accept": "application/json"
-      }),
-      body: JSON.stringify({
-        report_id: selectedReportId
-      })
+      try {
+        const { response, data } = await fetchJson("/api/send-report-to-property", {
+          method: "POST",
+          headers: adminHeaders({
+            "Content-Type": "application/json",
+            "Accept": "application/json"
+          }),
+          body: JSON.stringify({
+            report_id: selectedReportId
+          })
+        });
+
+        if (handleUnauthorizedResponse(response, data)) {
+          return;
+        }
+
+        if (!response.ok || data?.error) {
+          throw new Error(data?.error || "Failed to send report to property.");
+        }
+
+        await loadDashboardData(propertySelect.value || "");
+
+        const updated = cachedReports.find(r => String(r.id) === String(selectedReportId));
+        if (updated) {
+          selectedReportId = updated.id;
+          showReportDetail(updated);
+        }
+
+        const sentToText = data?.sent_to?.email
+          ? `\n\nSent to: ${data.sent_to.email}`
+          : "";
+
+        setStatus(`Report sent to property successfully.${sentToText}`, "success");
+      } catch (error) {
+        setStatus(error.message || "Failed to send report to property.", "error");
+      } finally {
+        sendToPropertyBtn.disabled = false;
+      }
     });
 
-    const data = await res.json();
-
-    if (!res.ok || data.error) {
-      throw new Error(data.error || "Failed to send report to property.");
-    }
-
-    await loadDashboardData(propertySelect.value || "");
-
-    const updated = cachedReports.find(r => String(r.id) === String(selectedReportId));
-    if (updated) {
-      selectedReportId = updated.id;
-      showReportDetail(updated);
-    }
-
-    const sentToText = data?.sent_to?.email
-      ? `\n\nSent to: ${data.sent_to.email}`
-      : "";
-
-    setStatus(`Report sent to property successfully.${sentToText}`, "success");
-  } catch (error) {
-    setStatus(error.message || "Failed to send report to property.", "error");
-  }
-});
     markReviewBtn.addEventListener("click", async function () {
       if (!selectedReportId) {
         setStatus("Select a report first.", "error");
