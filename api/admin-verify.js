@@ -1,6 +1,8 @@
 export default async function handler(req, res) {
+  const allowedOrigin = "https://verify.thereadymarkgroup.com";
+
   const corsHeaders = {
-    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Origin": allowedOrigin,
     "Access-Control-Allow-Methods": "GET, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, Authorization, x-admin-token"
   };
@@ -17,14 +19,26 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const token = req.headers["x-admin-token"];
+  try {
+    const token = req.headers["x-admin-token"];
+    const expectedAdminToken = process.env.ADMIN_TOKEN;
 
-  if (!token) {
-    return res.status(401).json({ error: "Missing admin token" });
+    if (!expectedAdminToken) {
+      return res.status(500).json({ error: "Missing ADMIN_TOKEN" });
+    }
+
+    if (!token || token !== expectedAdminToken) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    return res.status(200).json({
+      success: true,
+      valid: true
+    });
+  } catch (error) {
+    return res.status(500).json({
+      error: "Verification failed",
+      details: error.message
+    });
   }
-
-  return res.status(200).json({
-    success: true,
-    valid: true
-  });
 }
