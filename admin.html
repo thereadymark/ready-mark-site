@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Portal | The Ready Mark</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600&family=Lato:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f7f7f5;
+      --panel: #ffffff;
+      --panel-soft: #fbfaf7;
+      --text: #111315;
+      --muted: #6d6a64;
+      --line: #e8e4dc;
+      --gold: #c7a257;
+      --gold-dark: #b08c42;
+      --success: #2f8f57;
+      --warning: #c98a2b;
+      --danger: #b44c4c;
+      --shadow: 0 12px 34px rgba(0, 0, 0, 0.05);
+      --radius: 18px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Lato", sans-serif;
+    }
+
+    body {
+      display: flex;
+    }
+
+    .app-shell {
+      display: flex;
+      width: 100%;
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      width: 270px;
+      background: #ffffff;
+      border-right: 1px solid var(--line);
+      padding: 28px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .brand {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding-bottom: 18px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .brand-title {
+      font-family: "Cinzel", serif;
+      font-size: 22px;
+      line-height: 1.1;
+      letter-spacing: 0.5px;
+    }
+
+    .brand-subtitle {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .nav {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .nav-btn {
+      width: 100%;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--text);
+      font-size: 15px;
+      font-family: "Lato", sans-serif;
+      text-align: left;
+      padding: 12px 14px;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: 0.2s ease;
+    }
+
+    .nav-btn:hover {
+      background: var(--panel-soft);
+      border-color: var(--line);
+    }
+
+    .nav-btn.active {
+      background: linear-gradient(180deg, #d8ba73, #b8934c);
+      color: #111315;
+      font-weight: 700;
+      border-color: transparent;
+    }
+
+    .sidebar-footer {
+      margin-top: auto;
+      padding-top: 18px;
+      border-top: 1px solid var(--line);
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    .topbar {
+      background: #ffffff;
+      border-bottom: 1px solid var(--line);
+      padding: 18px 28px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      position: sticky;
+      top: 0;
+      z-index: 5;
+    }
+
+    .topbar-left h1 {
+      margin: 0;
+      font-size: 24px;
+      font-family: "Cinzel", serif;
+      font-weight: 600;
+      line-height: 1.1;
+    }
+
+    .topbar-left p {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .user-chip {
+      display: inline-flex;
+      align-items: center;
+      padding: 10px 14px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--panel-soft);
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .btn {
+      min-height: 44px;
+      border: none;
+      border-radius: 12px;
+      padding: 11px 16px;
+      cursor: pointer;
+      font-family: "Lato", sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      transition: 0.2s ease;
+    }
+
+    .btn-primary {
+      background: linear-gradient(180deg, #d8ba73, #b8934c);
+      color: #111315;
+      box-shadow: 0 10px 20px rgba(199, 162, 87, 0.18);
+    }
+
+    .btn-secondary {
+      background: #fff;
+      color: var(--text);
+      border: 1px solid var(--line);
+    }
+
+    .content {
+      padding: 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .view {
+      display: none;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .view.active {
+      display: flex;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 22px;
+      box-shadow: var(--shadow);
+    }
+
+    .card-label {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+
+    .card-value {
+      font-size: 30px;
+      line-height: 1.1;
+      font-weight: 700;
+    }
+
+    .card-subtext {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .section-card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .section-header {
+      padding: 22px 22px 16px;
+      border-bottom: 1px solid var(--line);
+      background: #fff;
+    }
+
+    .section-header h2 {
+      margin: 0;
+      font-size: 20px;
+      font-family: "Cinzel", serif;
+      font-weight: 600;
+      line-height: 1.1;
+    }
+
+    .section-header p {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .section-body {
+      padding: 22px;
+    }
+
+    .quick-actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 780px;
+    }
+
+    .table th,
+    .table td {
+      text-align: left;
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--line);
+      font-size: 14px;
+      vertical-align: middle;
+    }
+
+    .table th {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--muted);
+      background: var(--panel-soft);
+    }
+
+    .table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .table tr:hover td {
+      background: #fcfbf8;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 30px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+      border: 1px solid transparent;
+    }
+
+    .status-verified {
+      background: rgba(47, 143, 87, 0.10);
+      color: var(--success);
+      border-color: rgba(47, 143, 87, 0.22);
+    }
+
+    .status-issues {
+      background: rgba(201, 138, 43, 0.10);
+      color: var(--warning);
+      border-color: rgba(201, 138, 43, 0.22);
+    }
+
+    .status-new {
+      background: rgba(180, 76, 76, 0.10);
+      color: var(--danger);
+      border-color: rgba(180, 76, 76, 0.22);
+    }
+
+    .text-btn {
+      background: none;
+      border: none;
+      color: var(--gold-dark);
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 14px;
+      font-family: "Lato", sans-serif;
+      padding: 0;
+    }
+
+    .text-btn:hover {
+      text-decoration: underline;
+    }
+
+    .split-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 18px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .full-width {
+      grid-column: 1 / -1;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--muted);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      background: #fff;
+      border-radius: 12px;
+      padding: 13px 14px;
+      font-family: "Lato", sans-serif;
+      font-size: 14px;
+      color: var(--text);
+      outline: none;
+    }
+
+    textarea {
+      min-height: 120px;
+      resize: vertical;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      border-color: rgba(199, 162, 87, 0.55);
+      box-shadow: 0 0 0 3px rgba(199, 162, 87, 0.08);
+    }
+
+    .helper {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .status-box {
+      border: 1px solid var(--line);
+      background: var(--panel-soft);
+      border-radius: 14px;
+      padding: 16px;
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.7;
+      white-space: pre-wrap;
+    }
+
+    @media (max-width: 1100px) {
+      .cards {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .split-grid,
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 980px) {
+      .sidebar {
+        display: none;
+      }
+    }
+
+    @media (max-width: 700px) {
+      .topbar {
+        padding: 18px;
+      }
+
+      .content {
+        padding: 18px;
+      }
+
+      .cards {
+        grid-template-columns: 1fr;
+      }
+
+      .topbar-right {
+        width: 100%;
+        justify-content: flex-start;
+      }
+
+      .user-chip {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-title">The Ready Mark</div>
+        <div class="brand-subtitle">Admin Control Center</div>
+      </div>
+
+      <nav class="nav">
+        <button class="nav-btn active" data-view-target="admin-dashboard-view">Dashboard</button>
+        <button class="nav-btn" data-view-target="properties-view">Properties</button>
+        <button class="nav-btn" data-view-target="inspections-view">Inspections</button>
+        <button class="nav-btn" data-view-target="guest-reports-view">Guest Reports</button>
+        <button class="nav-btn" data-view-target="evidence-view">Evidence</button>
+      </nav>
+
+      <div class="sidebar-footer">
+        Internal Ready Mark workspace for inspections, property records, evidence, and guest issue management.
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="topbar">
+        <div class="topbar-left">
+          <h1>Admin Portal</h1>
+          <p>Operations, reporting, and verification management in one place.</p>
+        </div>
+
+        <div class="topbar-right">
+          <div class="user-chip">admin@thereadymarkgroup.com</div>
+          <button class="btn btn-primary">New Inspection</button>
+        </div>
+      </div>
+
+      <div class="content">
+        <section id="admin-dashboard-view" class="view active">
+          <div class="cards">
+            <div class="card">
+              <div class="card-label">Properties</div>
+              <div class="card-value">12</div>
+              <div class="card-subtext">Tracked across current client portfolio.</div>
+            </div>
+
+            <div class="card">
+              <div class="card-label">Inspections This Week</div>
+              <div class="card-value">8</div>
+              <div class="card-subtext">Completed and logged into the system.</div>
+            </div>
+
+            <div class="card">
+              <div class="card-label">Open Guest Reports</div>
+              <div class="card-value" style="color: var(--warning);">3</div>
+              <div class="card-subtext">Waiting for review or resolution.</div>
+            </div>
+
+            <div class="card">
+              <div class="card-label">Resolved This Week</div>
+              <div class="card-value" style="color: var(--success);">5</div>
+              <div class="card-subtext">Closed issues across active properties.</div>
+            </div>
+          </div>
+
+          <div class="split-grid">
+            <div class="section-card">
+              <div class="section-header">
+                <h2>Quick Actions</h2>
+                <p>Fast access to your most common admin tasks.</p>
+              </div>
+              <div class="section-body">
+                <div class="quick-actions">
+                  <button class="btn btn-primary" onclick="goToView('inspections-view')">Log Inspection</button>
+                  <button class="btn btn-secondary" onclick="goToView('properties-view')">Add Property</button>
+                  <button class="btn btn-secondary" onclick="goToView('evidence-view')">Upload Evidence</button>
+                  <button class="btn btn-secondary" onclick="goToView('guest-reports-view')">Review Reports</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="section-card">
+              <div class="section-header">
+                <h2>Recent Activity</h2>
+                <p>Latest operational updates from the system.</p>
+              </div>
+              <div class="section-body">
+                <div class="status-box">Hilton Downtown inspection saved.
+Oakwood Suites guest report marked Under Review.
+Westview Apartments evidence uploaded.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="section-card">
+            <div class="section-header">
+              <h2>Property Snapshot</h2>
+              <p>Overview of current property status and last inspection activity.</p>
+            </div>
+
+            <div class="table-wrap">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Property</th>
+                    <th>Status</th>
+                    <th>Last Inspection</th>
+                    <th>Guest Reports</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Hilton Downtown</td>
+                    <td><span class="status-pill status-verified">Verified</span></td>
+                    <td>Mar 28</td>
+                    <td>0</td>
+                    <td><button class="text-btn" onclick="goToView('properties-view')">Open</button></td>
+                  </tr>
+                  <tr>
+                    <td>Oakwood Suites</td>
+                    <td><span class="status-pill status-issues">Issues</span></td>
+                    <td>Mar 27</td>
+                    <td>2</td>
+                    <td><button class="text-btn" onclick="goToView('guest-reports-view')">Review</button></td>
+                  </tr>
+                  <tr>
+                    <td>Westview Apartments</td>
+                    <td><span class="status-pill status-verified">Verified</span></td>
+                    <td>Mar 20</td>
+                    <td>1</td>
+                    <td><button class="text-btn" onclick="goToView('properties-view')">Open</button></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section id="properties-view" class="view">
+          <div class="split-grid">
+            <div class="section-card">
+              <div class="section-header">
+                <h2>Create Property</h2>
+                <p>Add a new property to the Ready Mark system.</p>
+              </div>
+              <div class="section-body">
+                <div class="form-grid">
+                  <div>
+                    <label>Property Name</label>
+                    <input type="text" placeholder="e.g. Hilton Downtown" />
+                  </div>
+                  <div>
+                    <label>Property Slug</label>
+                    <input type="text" placeholder="Auto-generated slug" />
+                  </div>
+                  <div>
+                    <label>City</label>
+                    <input type="text" placeholder="e.g. St. Louis" />
+                  </div>
+                  <div>
+                    <label>State</label>
+                    <input type="text" placeholder="e.g. MO" />
+                  </div>
+                  <div class="full-width">
+                    <label>Property Type</label>
+                    <select>
+                      <option>Select property type</option>
+                      <option>Hotel</option>
+                      <option>Apartment</option>
+                      <option>Airbnb</option>
+                      <option>Office</option>
+                      <option>Medical</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div style="margin-top: 18px;">
+                  <button class="btn btn-primary">Create Property</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="section-card">
+              <div class="section-header">
+                <h2>System Status</h2>
+                <p>Property creation and sync messaging will appear here.</p>
+              </div>
+              <div class="section-body">
+                <div class="status-box">Ready to create a new property.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="section-card">
+            <div class="section-header">
+              <h2>Existing Properties</h2>
+              <p>Current portfolio being managed inside the system.</p>
+            </div>
+
+            <div class="table-wrap">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Property</th>
+                    <th>Type</th>
+                    <th>Location</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Hilton Downtown</td>
+                    <td>Hotel</td>
+                    <td>St. Louis, MO</td>
+                    <td><span class="status-pill status-verified">Active</span></td>
+                  </tr>
+                  <tr>
+                    <td>Oakwood Suites</td>
+                    <td>Apartment</td>
+                    <td>St. Louis, MO</td>
+                    <td><span class="status-pill status-verified">Active</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section id="inspections-view" class="view">
+          <div class="split-grid">
+            <div class="section-card">
+              <div class="section-header">
+                <h2>Log Inspection</h2>
+                <p>Create a new inspection record tied to a property and room.</p>
+              </div>
+              <div class="section-body">
+                <div class="form-grid">
+                  <div class="full-width">
+                    <label>Property</label>
+                    <select>
+                      <option>Select property</option>
+                      <option>Hilton Downtown</option>
+                      <option>Oakwood Suites</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label>Room Number</label>
+                    <input type="text" placeholder="e.g. 204" />
+                  </div>
+                  <div>
+                    <label>Inspector ID</label>
+                    <input type="text" placeholder="e.g. 4603" />
+                  </div>
+                  <div>
+                    <label>Inspection Date</label>
+                    <input type="datetime-local" />
+                  </div>
+                  <div>
+                    <label>Certification Level</label>
+                    <select>
+                      <option>Select level</option>
+                      <option>Verified Clean</option>
+                      <option>Needs Attention</option>
+                      <option>Not Clean</option>
+                      <option>Ready Mark Premier</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label>Score</label>
+                    <input type="number" placeholder="e.g. 96" />
+                  </div>
+                  <div class="full-width">
+                    <label>Notes</label>
+                    <textarea placeholder="Internal notes for this inspection."></textarea>
+                  </div>
+                </div>
+
+                <div style="margin-top: 18px;">
+                  <button class="btn btn-primary">Save Inspection</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="section-card">
+              <div class="section-header">
+                <h2>Inspection Status</h2>
+                <p>System response and verification output appear here.</p>
+              </div>
+              <div class="section-body">
+                <div class="status-box">Waiting for inspection entry.</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="guest-reports-view" class="view">
+          <div class="section-card">
+            <div class="section-header">
+              <h2>Guest Reports</h2>
+              <p>Track active issues, review details, and manage controlled follow-up.</p>
+            </div>
+
+            <div class="table-wrap">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Reference</th>
+                    <th>Property</th>
+                    <th>Room</th>
+                    <th>Status</th>
+                    <th>Reported</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>RM-RPT-20260404-1821</td>
+                    <td>Oakwood Suites</td>
+                    <td>118</td>
+                    <td><span class="status-pill status-new">New</span></td>
+                    <td>Apr 4</td>
+                    <td><button class="text-btn">Review</button></td>
+                  </tr>
+                  <tr>
+                    <td>RM-RPT-20260404-1940</td>
+                    <td>Westview Apartments</td>
+                    <td>204</td>
+                    <td><span class="status-pill status-issues">Under Review</span></td>
+                    <td>Apr 4</td>
+                    <td><button class="text-btn">Open</button></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section id="evidence-view" class="view">
+          <div class="split-grid">
+            <div class="section-card">
+              <div class="section-header">
+                <h2>Upload Evidence</h2>
+                <p>Attach inspection photo or supporting log to a verification record.</p>
+              </div>
+              <div class="section-body">
+                <div class="form-grid">
+                  <div class="full-width">
+                    <label>Verification ID</label>
+                    <input type="text" placeholder="Enter verification ID" />
+                  </div>
+                  <div>
+                    <label>Inspection Photo</label>
+                    <input type="file" />
+                  </div>
+                  <div>
+                    <label>Inspection Log</label>
+                    <input type="file" />
+                  </div>
+                </div>
+
+                <div class="helper">Save the inspection first, then upload evidence tied to the correct verification record.</div>
+
+                <div style="margin-top: 18px;">
+                  <button class="btn btn-primary">Upload Evidence</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="section-card">
+              <div class="section-header">
+                <h2>Upload Status</h2>
+                <p>Upload response and file confirmation appear here.</p>
+              </div>
+              <div class="section-body">
+                <div class="status-box">Ready to upload supporting evidence.</div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    function goToView(viewId) {
+      document.querySelectorAll(".view").forEach(view => {
+        view.classList.remove("active");
+      });
+
+      document.getElementById(viewId).classList.add("active");
+
+      document.querySelectorAll(".nav-btn").forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.viewTarget === viewId);
+      });
+    }
+
+    document.querySelectorAll(".nav-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        goToView(btn.dataset.viewTarget);
+      });
+    });
+  </script>
+</body>
+</html>
