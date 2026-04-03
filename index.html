@@ -889,6 +889,25 @@
   box-shadow:
     0 14px 40px rgba(0,0,0,0.06),
     0 0 0 1px rgba(212,175,55,0.2);
+
+  /* ===== STATUS REVEAL ===== */
+
+@keyframes pillReveal {
+  0% {
+    opacity: 0;
+    transform: translateY(10px) scale(0.96);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.status-wrap {
+  opacity: 0;
+  animation: pillReveal 0.5s ease-out forwards;
+  animation-delay: 0.55s;
+}  
 }  </style>
 </head>
 <body>
