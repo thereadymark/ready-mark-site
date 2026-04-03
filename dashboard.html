@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Client Portal | The Ready Mark</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600&family=Lato:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f7f7f5;
+      --panel: #ffffff;
+      --panel-soft: #fbfaf7;
+      --text: #111315;
+      --muted: #6d6a64;
+      --line: #e8e4dc;
+      --gold: #c7a257;
+      --gold-dark: #b08c42;
+      --success: #2f8f57;
+      --warning: #c98a2b;
+      --danger: #b44c4c;
+      --shadow: 0 12px 34px rgba(0, 0, 0, 0.05);
+      --radius: 18px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Lato", sans-serif;
+    }
+
+    body {
+      display: flex;
+    }
+
+    .app-shell {
+      display: flex;
+      width: 100%;
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      width: 260px;
+      background: #ffffff;
+      border-right: 1px solid var(--line);
+      padding: 28px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .brand {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding-bottom: 18px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .brand-title {
+      font-family: "Cinzel", serif;
+      font-size: 22px;
+      line-height: 1.1;
+      letter-spacing: 0.5px;
+    }
+
+    .brand-subtitle {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .nav {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .nav-btn {
+      width: 100%;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--text);
+      font-size: 15px;
+      font-family: "Lato", sans-serif;
+      text-align: left;
+      padding: 12px 14px;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: 0.2s ease;
+    }
+
+    .nav-btn:hover {
+      background: var(--panel-soft);
+      border-color: var(--line);
+    }
+
+    .nav-btn.active {
+      background: linear-gradient(180deg, #d8ba73, #b8934c);
+      color: #111315;
+      font-weight: 700;
+      border-color: transparent;
+    }
+
+    .sidebar-footer {
+      margin-top: auto;
+      padding-top: 18px;
+      border-top: 1px solid var(--line);
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    .topbar {
+      background: #ffffff;
+      border-bottom: 1px solid var(--line);
+      padding: 18px 28px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      position: sticky;
+      top: 0;
+      z-index: 5;
+    }
+
+    .topbar-left h1 {
+      margin: 0;
+      font-size: 24px;
+      font-family: "Cinzel", serif;
+      font-weight: 600;
+      line-height: 1.1;
+    }
+
+    .topbar-left p {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .user-chip {
+      display: inline-flex;
+      align-items: center;
+      padding: 10px 14px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--panel-soft);
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .btn {
+      min-height: 44px;
+      border: none;
+      border-radius: 12px;
+      padding: 11px 16px;
+      cursor: pointer;
+      font-family: "Lato", sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      transition: 0.2s ease;
+    }
+
+    .btn-primary {
+      background: linear-gradient(180deg, #d8ba73, #b8934c);
+      color: #111315;
+      box-shadow: 0 10px 20px rgba(199, 162, 87, 0.18);
+    }
+
+    .btn-primary:hover {
+      filter: brightness(1.02);
+    }
+
+    .content {
+      padding: 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .view {
+      display: none;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .view.active {
+      display: flex;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 22px;
+      box-shadow: var(--shadow);
+    }
+
+    .card-label {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+
+    .card-value {
+      font-size: 32px;
+      line-height: 1.1;
+      font-weight: 700;
+    }
+
+    .card-subtext {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .section-card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .section-header {
+      padding: 22px 22px 16px;
+      border-bottom: 1px solid var(--line);
+      background: #fff;
+    }
+
+    .section-header h2 {
+      margin: 0;
+      font-size: 20px;
+      font-family: "Cinzel", serif;
+      font-weight: 600;
+      line-height: 1.1;
+    }
+
+    .section-header p {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 760px;
+    }
+
+    .table th,
+    .table td {
+      text-align: left;
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--line);
+      font-size: 14px;
+      vertical-align: middle;
+    }
+
+    .table th {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--muted);
+      background: var(--panel-soft);
+    }
+
+    .table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .table tr:hover td {
+      background: #fcfbf8;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 30px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+      border: 1px solid transparent;
+    }
+
+    .status-verified {
+      background: rgba(47, 143, 87, 0.10);
+      color: var(--success);
+      border-color: rgba(47, 143, 87, 0.22);
+    }
+
+    .status-issues {
+      background: rgba(201, 138, 43, 0.10);
+      color: var(--warning);
+      border-color: rgba(201, 138, 43, 0.22);
+    }
+
+    .status-open {
+      background: rgba(180, 76, 76, 0.10);
+      color: var(--danger);
+      border-color: rgba(180, 76, 76, 0.22);
+    }
+
+    .status-progress {
+      background: rgba(201, 138, 43, 0.10);
+      color: var(--warning);
+      border-color: rgba(201, 138, 43, 0.22);
+    }
+
+    .status-resolved {
+      background: rgba(47, 143, 87, 0.10);
+      color: var(--success);
+      border-color: rgba(47, 143, 87, 0.22);
+    }
+
+    .text-btn {
+      background: none;
+      border: none;
+      color: var(--gold-dark);
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 14px;
+      font-family: "Lato", sans-serif;
+      padding: 0;
+    }
+
+    .text-btn:hover {
+      text-decoration: underline;
+    }
+
+    .property-hero {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 18px;
+      flex-wrap: wrap;
+    }
+
+    .property-hero h2 {
+      margin: 0;
+      font-size: 28px;
+      font-family: "Cinzel", serif;
+      line-height: 1.1;
+    }
+
+    .property-hero p {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .property-summary {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 18px;
+    }
+
+    .issue-list,
+    .history-list {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .issue-item,
+    .history-item {
+      padding: 18px 22px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .issue-item:last-child,
+    .history-item:last-child {
+      border-bottom: none;
+    }
+
+    .issue-title,
+    .history-title {
+      font-weight: 700;
+      margin-bottom: 8px;
+      font-size: 15px;
+    }
+
+    .issue-meta,
+    .history-meta {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .qr-box {
+      background: var(--panel-soft);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 18px;
+      text-align: center;
+    }
+
+    .qr-placeholder {
+      width: 130px;
+      height: 130px;
+      margin: 0 auto 14px;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background:
+        linear-gradient(45deg, #f3f1ea 25%, transparent 25%),
+        linear-gradient(-45deg, #f3f1ea 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #f3f1ea 75%),
+        linear-gradient(-45deg, transparent 75%, #f3f1ea 75%);
+      background-size: 18px 18px;
+      background-position: 0 0, 0 9px, 9px -9px, -9px 0px;
+    }
+
+    .qr-box p {
+      margin: 0 0 14px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .report-shell {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 18px;
+    }
+
+    .report-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .report-header h2 {
+      margin: 0;
+      font-family: "Cinzel", serif;
+      font-size: 28px;
+      line-height: 1.1;
+    }
+
+    .report-header p {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .report-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .report-block {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 22px;
+    }
+
+    .report-block.full {
+      grid-column: 1 / -1;
+    }
+
+    .report-block h3 {
+      margin: 0 0 12px;
+      font-size: 18px;
+      font-family: "Cinzel", serif;
+      line-height: 1.1;
+    }
+
+    .report-block p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.8;
+      font-size: 14px;
+    }
+
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: transparent;
+      border: none;
+      color: var(--gold-dark);
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+      padding: 0;
+      font-family: "Lato", sans-serif;
+    }
+
+    .back-btn:hover {
+      text-decoration: underline;
+    }
+
+    @media (max-width: 980px) {
+      .sidebar {
+        display: none;
+      }
+
+      .cards,
+      .property-summary,
+      .report-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 700px) {
+      .topbar {
+        padding: 18px 18px;
+      }
+
+      .content {
+        padding: 18px;
+      }
+
+      .topbar-right {
+        width: 100%;
+        justify-content: flex-start;
+      }
+
+      .user-chip {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .btn-primary {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-title">The Ready Mark</div>
+        <div class="brand-subtitle">Client Control Center</div>
+      </div>
+
+      <nav class="nav">
+        <button class="nav-btn active" data-view-target="dashboard-view">Dashboard</button>
+        <button class="nav-btn" data-view-target="property-view">Properties</button>
+        <button class="nav-btn" data-view-target="reports-view">Reports</button>
+      </nav>
+
+      <div class="sidebar-footer">
+        View inspection status, current issues, and completed reports for your properties.
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="topbar">
+        <div class="topbar-left">
+          <h1>Client Portal</h1>
+          <p>Read-only property visibility with controlled reporting access.</p>
+        </div>
+
+        <div class="topbar-right">
+          <div class="user-chip">client@email.com</div>
+          <button class="btn btn-primary">Request Inspection</button>
+        </div>
+      </div>
+
+      <div class="content">
+        <section id="dashboard-view" class="view active">
+          <div class="cards">
+            <div class="card">
+              <div class="card-label">Verified Properties</div>
+              <div class="card-value">3</div>
+              <div class="card-subtext">Currently certified and inspection-ready.</div>
+            </div>
+
+            <div class="card">
+              <div class="card-label">Active Issues</div>
+              <div class="card-value" style="color: var(--warning);">1</div>
+              <div class="card-subtext">Open items that are still being addressed.</div>
+            </div>
+
+            <div class="card">
+              <div class="card-label">Last Inspection</div>
+              <div class="card-value">Mar 28</div>
+              <div class="card-subtext">Hilton Downtown was the most recently inspected.</div>
+            </div>
+          </div>
+
+          <div class="section-card">
+            <div class="section-header">
+              <h2>Properties</h2>
+              <p>Select a property to view current issues, inspection history, and verification access.</p>
+            </div>
+
+            <div class="table-wrap">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Property</th>
+                    <th>Status</th>
+                    <th>Last Inspection</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Hilton Downtown</td>
+                    <td><span class="status-pill status-verified">Verified</span></td>
+                    <td>Mar 28</td>
+                    <td><button class="text-btn" onclick="openProperty('Hilton Downtown')">View</button></td>
+                  </tr>
+                  <tr>
+                    <td>Oakwood Suites</td>
+                    <td><span class="status-pill status-issues">Issues</span></td>
+                    <td>Mar 27</td>
+                    <td><button class="text-btn" onclick="openProperty('Oakwood Suites')">View</button></td>
+                  </tr>
+                  <tr>
+                    <td>Westview Apartments</td>
+                    <td><span class="status-pill status-verified">Verified</span></td>
+                    <td>Mar 20</td>
+                    <td><button class="text-btn" onclick="openProperty('Westview Apartments')">View</button></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section id="property-view" class="view">
+          <button class="back-btn" onclick="goToView('dashboard-view')">← Back to Dashboard</button>
+
+          <div class="property-hero">
+            <div>
+              <h2 id="property-name">Hilton Downtown</h2>
+              <p id="property-meta">Verified • Score: 96 • Last Inspected: March 28</p>
+            </div>
+
+            <button class="btn btn-primary">Request Inspection</button>
+          </div>
+
+          <div class="property-summary">
+            <div class="section-card">
+              <div class="section-header">
+                <h2>Active Issues</h2>
+                <p>Current issues tied to this property and their current resolution status.</p>
+              </div>
+
+              <div class="issue-list" id="issue-list">
+                <div class="issue-item">
+                  <div class="issue-title">Carpet stain — Room 204</div>
+                  <div class="issue-meta">
+                    Status: <span class="status-pill status-progress">In Progress</span><br>
+                    Reported: March 27
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="section-card">
+              <div class="section-header">
+                <h2>Verification Access</h2>
+                <p>Client-facing access to the most recent verification record.</p>
+              </div>
+
+              <div class="card" style="margin: 18px;">
+                <div class="qr-box">
+                  <div class="qr-placeholder"></div>
+                  <p>View the current room verification experience tied to the latest inspection.</p>
+                  <button class="btn btn-primary">Open Verification Page</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="section-card">
+            <div class="section-header">
+              <h2>Inspection History</h2>
+              <p>Historical inspection records for this property. Read-only for visibility and audit trail purposes.</p>
+            </div>
+
+            <div class="history-list" id="history-list">
+              <div class="history-item">
+                <div class="history-title">March 28 — Verified</div>
+                <div class="history-meta">Score: 96 • Inspector ID: 4603 • <button class="text-btn" onclick="openReport('March 28 Report')">View Report</button></div>
+              </div>
+              <div class="history-item">
+                <div class="history-title">March 15 — Minor Issues</div>
+                <div class="history-meta">Score: 88 • Inspector ID: 4603 • <button class="text-btn" onclick="openReport('March 15 Report')">View Report</button></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="reports-view" class="view">
+          <div class="section-card">
+            <div class="section-header">
+              <h2>Reports</h2>
+              <p>Review completed inspection reports across your portfolio.</p>
+            </div>
+
+            <div class="table-wrap">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Property</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                    <th>Report</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Hilton Downtown</td>
+                    <td>Mar 28</td>
+                    <td><span class="status-pill status-verified">Verified</span></td>
+                    <td><button class="text-btn" onclick="openReport('March 28 Report')">Open</button></td>
+                  </tr>
+                  <tr>
+                    <td>Oakwood Suites</td>
+                    <td>Mar 27</td>
+                    <td><span class="status-pill status-issues">Issues</span></td>
+                    <td><button class="text-btn" onclick="openReport('March 27 Report')">Open</button></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <section id="report-detail-view" class="view">
+          <button class="back-btn" onclick="goToView(lastNonReportView || 'reports-view')">← Back</button>
+
+          <div class="report-shell">
+            <div class="report-header">
+              <div>
+                <h2 id="report-title">Inspection Report</h2>
+                <p id="report-meta">Hilton Downtown • March 28 • Inspector ID 4603</p>
+              </div>
+
+              <span class="status-pill status-verified">Verified</span>
+            </div>
+
+            <div class="report-grid">
+              <div class="report-block">
+                <h3>Summary</h3>
+                <p>This inspection was completed successfully. No critical cleanliness issues were identified at the time of inspection.</p>
+              </div>
+
+              <div class="report-block">
+                <h3>Score</h3>
+                <p>96 / 100</p>
+              </div>
+
+              <div class="report-block full">
+                <h3>Issues / Notes</h3>
+                <p>No active issues remained at the time this report was finalized. Minor observations were documented internally for continued monitoring.</p>
+              </div>
+
+              <div class="report-block full">
+                <h3>Photo Evidence</h3>
+                <p>Inspection photos and supporting evidence would appear here in the live version.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    let lastNonReportView = "dashboard-view";
+
+    const propertyData = {
+      "Hilton Downtown": {
+        meta: "Verified • Score: 96 • Last Inspected: March 28",
+        issues: [
+          {
+            title: "Carpet stain — Room 204",
+            statusClass: "status-progress",
+            statusText: "In Progress",
+            reported: "March 27"
+          }
+        ],
+        history: [
+          {
+            title: "March 28 — Verified",
+            meta: "Score: 96 • Inspector ID: 4603",
+            reportTitle: "March 28 Report"
+          },
+          {
+            title: "March 15 — Minor Issues",
+            meta: "Score: 88 • Inspector ID: 4603",
+            reportTitle: "March 15 Report"
+          }
+        ]
+      },
+      "Oakwood Suites": {
+        meta: "Issues Found • Score: 84 • Last Inspected: March 27",
+        issues: [
+          {
+            title: "Bathroom sink leak — Room 118",
+            statusClass: "status-open",
+            statusText: "Open",
+            reported: "March 27"
+          },
+          {
+            title: "Dust accumulation — Room 120",
+            statusClass: "status-progress",
+            statusText: "In Progress",
+            reported: "March 27"
+          }
+        ],
+        history: [
+          {
+            title: "March 27 — Issues Found",
+            meta: "Score: 84 • Inspector ID: 4603",
+            reportTitle: "March 27 Report"
+          }
+        ]
+      },
+      "Westview Apartments": {
+        meta: "Verified • Score: 93 • Last Inspected: March 20",
+        issues: [],
+        history: [
+          {
+            title: "March 20 — Verified",
+            meta: "Score: 93 • Inspector ID: 4603",
+            reportTitle: "March 20 Report"
+          }
+        ]
+      }
+    };
+
+    function setActiveNav(targetView) {
+      document.querySelectorAll(".nav-btn").forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.viewTarget === targetView);
+      });
+    }
+
+    function goToView(viewId) {
+      document.querySelectorAll(".view").forEach(view => {
+        view.classList.remove("active");
+      });
+
+      document.getElementById(viewId).classList.add("active");
+
+      if (viewId !== "report-detail-view") {
+        lastNonReportView = viewId;
+      }
+
+      if (viewId === "dashboard-view" || viewId === "property-view" || viewId === "reports-view") {
+        setActiveNav(viewId);
+      }
+    }
+
+    function openProperty(propertyName) {
+      const property = propertyData[propertyName];
+      if (!property) return;
+
+      document.getElementById("property-name").textContent = propertyName;
+      document.getElementById("property-meta").textContent = property.meta;
+
+      const issueList = document.getElementById("issue-list");
+      if (property.issues.length) {
+        issueList.innerHTML = property.issues.map(issue => `
+          <div class="issue-item">
+            <div class="issue-title">${issue.title}</div>
+            <div class="issue-meta">
+              Status: <span class="status-pill ${issue.statusClass}">${issue.statusText}</span><br>
+              Reported: ${issue.reported}
+            </div>
+          </div>
+        `).join("");
+      } else {
+        issueList.innerHTML = `
+          <div class="issue-item">
+            <div class="issue-title">No active issues</div>
+            <div class="issue-meta">There are currently no open issues tied to this property.</div>
+          </div>
+        `;
+      }
+
+      const historyList = document.getElementById("history-list");
+      historyList.innerHTML = property.history.map(item => `
+        <div class="history-item">
+          <div class="history-title">${item.title}</div>
+          <div class="history-meta">${item.meta} • <button class="text-btn" onclick="openReport('${item.reportTitle}')">View Report</button></div>
+        </div>
+      `).join("");
+
+      goToView("property-view");
+    }
+
+    function openReport(reportTitle) {
+      document.getElementById("report-title").textContent = reportTitle;
+      document.getElementById("report-meta").textContent = "Hilton Downtown • March 28 • Inspector ID 4603";
+      goToView("report-detail-view");
+    }
+
+    document.querySelectorAll(".nav-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        goToView(btn.dataset.viewTarget);
+      });
+    });
+  </script>
+</body>
+</html>
