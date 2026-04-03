@@ -890,18 +890,28 @@
     0 14px 40px rgba(0,0,0,0.06),
     0 0 0 1px rgba(212,175,55,0.2);
 
-  /* ===== STATUS REVEAL ===== */
+ /* ===== STATUS REVEAL ===== */
 
 @keyframes pillReveal {
   0% {
     opacity: 0;
-    transform: translateY(10px) scale(0.96);
+    transform: translateY(18px) scale(0.94);
+    filter: blur(4px);
   }
   100% {
     opacity: 1;
     transform: translateY(0) scale(1);
+    filter: blur(0);
   }
 }
+
+.status-wrap {
+  opacity: 0;
+  transform: translateY(18px) scale(0.94);
+  filter: blur(4px);
+  animation: pillReveal 0.75s ease-out forwards;
+  animation-delay: 1s;
+}}
 
 .status-wrap {
   opacity: 0;
