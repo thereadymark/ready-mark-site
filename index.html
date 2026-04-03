@@ -823,7 +823,73 @@
         gap: 10px;
       }
     }
-  </style>
+    /* ===== ANIMATIONS ===== */
+
+@keyframes fadeLift {
+  0% {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes glowIn {
+  0% {
+    box-shadow: 0 0 0 rgba(212,175,55,0);
+  }
+  100% {
+    box-shadow:
+      0 25px 60px rgba(0,0,0,0.08),
+      0 0 0 1px rgba(212,175,55,0.2),
+      0 0 40px rgba(212,175,55,0.08);
+  }
+}
+
+@keyframes softPulse {
+  0%, 100% {
+    box-shadow: 0 0 14px rgba(79,143,99,0.12);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(79,143,99,0.18);
+  }
+}
+
+/* ===== APPLY ANIMATIONS ===== */
+
+.panel {
+  animation:
+    fadeLift 0.6s ease-out forwards,
+    glowIn 1.2s ease-out forwards;
+}
+
+.status-pill {
+  animation: softPulse 3s ease-in-out infinite;
+}
+
+/* ===== HOVER EFFECTS ===== */
+
+.crest {
+  transition: transform 0.3s ease, filter 0.3s ease;
+}
+
+.crest:hover {
+  transform: scale(1.04);
+  filter: drop-shadow(0 6px 18px rgba(0,0,0,0.15));
+}
+
+.card {
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 14px 40px rgba(0,0,0,0.06),
+    0 0 0 1px rgba(212,175,55,0.2);
+}  </style>
 </head>
 <body>
   <div id="app"></div>
