@@ -796,7 +796,30 @@ img.crest,
     drop-shadow(0 12px 22px rgba(199,162,87,0.18))
     drop-shadow(0 0 18px rgba(199,162,87,0.10));
 }
+/* === BRAND LOCKUP FIX === */
 
+.panel-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px; /* tighter spacing between crest + text */
+}
+
+.brand-lockup {
+  margin: 4px 0 8px !important;
+}
+
+.eyebrow {
+  font-size: 18px !important; /* was too small */
+  letter-spacing: 2.5px !important;
+  font-weight: 700;
+  color: var(--gold);
+}
+
+/* tighten crest spacing */
+.crest {
+  margin-bottom: 6px !important;
+}   
  </style>
 </head>
 <body>
