@@ -780,30 +780,23 @@
     0 0 30px rgba(199,162,87,0.18),
     0 0 60px rgba(199,162,87,0.08);
 }
-   /* === CREST SIZE EMERGENCY FIX === */
+/* === CREST PERFECT SIZE === */
 img.crest,
 .crest,
 .panel-header .crest {
   display: block !important;
-  width: 110px !important;
-  max-width: 110px !important;
-  min-width: 110px !important;
+  width: 140px !important;
+  max-width: 140px !important;
   height: auto !important;
-  max-height: 110px !important;
   object-fit: contain !important;
-  margin: 0 auto 14px !important;
+  margin: 0 auto 18px !important;
   position: relative !important;
   z-index: 3 !important;
+  filter:
+    drop-shadow(0 12px 22px rgba(199,162,87,0.18))
+    drop-shadow(0 0 18px rgba(199,162,87,0.10));
 }
 
-.panel-header {
-  overflow: hidden !important;
-}
-
-.panel-header img:not(.crest) {
-  max-width: 100% !important;
-  height: auto !important;
-}
  </style>
 </head>
 <body>
