@@ -910,10 +910,6 @@
   transform: translateY(18px) scale(0.94);
   filter: blur(4px);
 }
-
-.status-wrap.reveal-pill {
-  animation: pillReveal 0.75s ease-out forwards;
-}
   </style>
 </head>
 <body>
@@ -1332,8 +1328,8 @@
 
               <h1>Verification Record</h1>
 
-              <div class="status-wrap">
-                <div class="status-pill ${statusClass}">
+              <div class="status-wrap" id="status-wrap">
+              <div class="status-pill ${statusClass}">
                   ${escapeHtml(certificationLevel)}
                 </div>
               </div>
@@ -1508,13 +1504,30 @@
           </div>
         </div>
       `;
-const statusWrap = document.querySelector(".status-wrap");
+app.innerHTML = `
+  ...all the room page HTML...
+`;
+
+const statusWrap = document.getElementById("status-wrap");
+
 if (statusWrap) {
-  setTimeout(() => {
-    statusWrap.classList.add("reveal-pill");
-  }, 1000);
-}      
-      function renderGuestChip() {
+  statusWrap.style.opacity = "0";
+  statusWrap.style.transform = "translateY(18px) scale(0.94)";
+  statusWrap.style.filter = "blur(4px)";
+
+  requestAnimationFrame(() => {
+    setTimeout(() => {
+      statusWrap.style.transition =
+        "opacity 0.8s cubic-bezier(0.22,1,0.36,1), transform 0.8s cubic-bezier(0.22,1,0.36,1), filter 0.8s ease-out";
+
+      statusWrap.style.opacity = "1";
+      statusWrap.style.transform = "translateY(0) scale(1)";
+      statusWrap.style.filter = "blur(0)";
+    }, 1000);
+  });
+}
+
+function renderGuestChip() {     
         const wrap = document.getElementById("guest-auth-chip-wrap");
         if (!wrap) return;
 
