@@ -109,6 +109,7 @@ const expiresAt = new Date(now + 60 * 60 * 1000).toISOString();
     const resetLink = `https://verify.thereadymarkgroup.com/reset-password.html?token=${encodeURIComponent(resetToken)}`;
 
     await resend.emails.send({
+      headers: { "Content-Type": "text/html" },    
       from: `Ready Mark <${resendFromEmail}>`,
       to: normalizedEmail,
       subject: "Reset your Ready Mark password",
@@ -155,7 +156,7 @@ const expiresAt = new Date(now + 60 * 60 * 1000).toISOString();
 
     return res.status(200).json({
       success: true,
-      message: "If that email exists in our system, reset instructions have been sent."
+      message: "If an account exists for this email, a reset link has been sent."
     });
   } catch (error) {
     return res.status(500).json({
