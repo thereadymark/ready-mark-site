@@ -80,8 +80,8 @@ export default async function handler(req, res) {
     }
 
     const resetToken = generateResetToken();
-    const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString();
-
+    const now = Date.now();
+const expiresAt = new Date(now + 60 * 60 * 1000).toISOString();
     const patchRes = await fetch(
       `${supabaseUrl}/rest/v1/guest_users?id=eq.${encodeURIComponent(user.id)}`,
       {
