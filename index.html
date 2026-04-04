@@ -1,1594 +1,298 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>The Ready Mark Verification Portal</title>
-
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-63GYLY26HQ"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag("js", new Date());
-    gtag("config", "G-63GYLY26HQ");
-  </script>
-
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Lato:wght@300;400;500;700&display=swap" rel="stylesheet">
-
-  <style>
-    :root {
-      --bg: #f7f6f3;
-      --panel: rgba(255,255,255,0.97);
-      --panel-soft: rgba(251,249,244,0.94);
-      --card: rgba(255,255,255,0.88);
-      --text: #111315;
-      --muted: #6f6a61;
-      --line: rgba(199, 162, 87, 0.18);
-      --gold: #c7a257;
-      --gold-dark: #ad8842;
-      --verified: #4f8f63;
-      --attention: #b88734;
-      --error: #b35353;
-      --neutral: #9c7b3d;
-    }
-
-    * {
-      box-sizing: border-box;
-    }
-
-    html, body {
-      margin: 0;
-      min-height: 100%;
-      font-family: "Lato", sans-serif;
-      color: var(--text);
-      background:
-        radial-gradient(circle at 50% 0%, rgba(255,255,255,0.92) 0%, rgba(255,255,255,0.55) 18%, rgba(255,255,255,0) 42%),
-        linear-gradient(180deg, #fbfaf7 0%, #f7f6f3 58%, #f0ece3 100%);
-    }
-
-    body {
-      position: relative;
-      overflow-x: hidden;
-    }
-
-    body::before {
-      content: "";
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      z-index: 0;
-      background:
-        radial-gradient(circle at 50% 8%, rgba(199,162,87,0.14) 0%, rgba(199,162,87,0.06) 15%, rgba(199,162,87,0) 36%),
-        radial-gradient(circle at 50% 100%, rgba(199,162,87,0.08) 0%, rgba(199,162,87,0.03) 16%, rgba(199,162,87,0) 40%);
-      filter: blur(10px);
-    }
-
-    body::after {
-      content: "";
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      z-index: 0;
-      background:
-        linear-gradient(180deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0) 12%, rgba(0,0,0,0) 88%, rgba(176,140,66,0.04) 100%);
-    }
-
-    #app {
-      position: relative;
-      z-index: 1;
-      min-height: 100vh;
-    }
-
-    .shell {
-      min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
-      padding: 32px 18px;
-    }
-
-    @keyframes softPulse {
-      0%, 100% {
-        box-shadow: 0 0 14px rgba(79,143,99,0.12), 0 4px 14px rgba(0,0,0,0.04);
-      }
-      50% {
-        box-shadow: 0 0 20px rgba(79,143,99,0.18), 0 4px 14px rgba(0,0,0,0.04);
-      }
-    }
-
-    @keyframes shimmer {
-      0% { background-position: -200% center; }
-      100% { background-position: 200% center; }
-    }
-
-    .panel {
-      width: 100%;
-      max-width: 1040px;
-      position: relative;
-      background:
-        linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(251,249,244,0.96) 100%);
-      border: 1px solid rgba(199,162,87,0.22);
-      border-radius: 28px;
-      box-shadow:
-        0 0 0 1px rgba(199,162,87,0.10),
-        0 0 28px rgba(199,162,87,0.12),
-        0 0 70px rgba(199,162,87,0.06),
-        0 35px 90px rgba(0, 0, 0, 0.10),
-        0 2px 0 rgba(255,255,255,0.92) inset,
-        0 -24px 42px rgba(176,140,66,0.04) inset;
-      overflow: hidden;
-      backdrop-filter: blur(8px);
-      
-    }
-
-    .panel::before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
-      border-radius: 28px;
-      background:
-        radial-gradient(circle at 50% 0%, rgba(199,162,87,0.11) 0%, rgba(199,162,87,0.04) 16%, rgba(199,162,87,0) 38%),
-        linear-gradient(180deg, rgba(255,255,255,0.30) 0%, rgba(255,255,255,0) 24%);
-      z-index: 0;
-    }
-
-    .panel::after {
-      content: "";
-      position: absolute;
-      inset: -1px;
-      border-radius: 28px;
-      pointer-events: none;
-      border: 1px solid rgba(199,162,87,0.16);
-      box-shadow:
-        0 0 24px rgba(199,162,87,0.10),
-        0 0 56px rgba(199,162,87,0.04);
-      z-index: 0;
-    }
-
-    .panel-header,
-    .content,
-    .footer-note {
-      position: relative;
-      z-index: 1;
-    }
-
-    .panel-header {
-      padding: 46px 34px 30px;
-      text-align: center;
-      border-bottom: 1px solid rgba(199,162,87,0.12);
-      background:
-        radial-gradient(circle at 50% -10%, rgba(199,162,87,0.20) 0%, rgba(199,162,87,0.08) 18%, rgba(199,162,87,0) 44%),
-        radial-gradient(circle at 50% 0%, rgba(255,255,255,0.88) 0%, rgba(255,255,255,0.48) 24%, rgba(255,255,255,0) 58%),
-        linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(251,249,244,0.88) 100%);
-    }
-
-    .header-lockup {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 2px;
-    }
-
-    .crest {
-      display: block;
-      width: 148px;
-      max-width: 148px;
-      height: auto;
-      object-fit: contain;
-      margin: 0 auto 0;
-      filter:
-        drop-shadow(0 14px 24px rgba(199,162,87,0.18))
-        drop-shadow(0 0 18px rgba(199,162,87,0.10));
-      transition: transform 0.3s ease, filter 0.3s ease;
-    }
-
-    .crest:hover {
-      transform: scale(1.04);
-      filter:
-        drop-shadow(0 14px 24px rgba(199,162,87,0.18))
-        drop-shadow(0 0 18px rgba(199,162,87,0.10))
-        drop-shadow(0 6px 18px rgba(0,0,0,0.12));
-    }
-
-    .brand-lockup {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 14px;
-      width: min(100%, 560px);
-      margin: 0 auto 2px;
-    }
-
-    .brand-lockup::before,
-    .brand-lockup::after {
-      content: "";
-      flex: 1;
-      height: 2px;
-      border-radius: 999px;
-      background: linear-gradient(90deg, rgba(199,162,87,0), rgba(199,162,87,0.95), rgba(199,162,87,0));
-      box-shadow: 0 0 12px rgba(199,162,87,0.12);
-    }
-
-    .eyebrow {
-      color: var(--gold);
-      font-size: 20px;
-      letter-spacing: 2.6px;
-      text-transform: uppercase;
-      font-weight: 700;
-      white-space: nowrap;
-      line-height: 1;
-      text-shadow: 0 1px 0 rgba(255,255,255,0.4);
-    }
-
-    h1 {
-      margin: 0;
-      font-family: "Cinzel", serif;
-      font-weight: 600;
-      color: var(--text);
-      font-size: clamp(36px, 5.8vw, 66px);
-      line-height: 1.04;
-      letter-spacing: 0.2px;
-      text-shadow: 0 1px 0 rgba(255,255,255,0.7);
-    }
-
-    .subtext {
-      max-width: 700px;
-      margin: 18px auto 0;
-      color: var(--muted);
-      font-size: 16px;
-      line-height: 1.8;
-    }
-
-    .status-wrap {
-      display: flex;
-      justify-content: center;
-      margin-top: 14px;
-      opacity: 0;
-      transform: translateY(18px) scale(0.94);
-      filter: blur(4px);
-    }
-
-    .status-pill {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      min-width: 236px;
-      padding: 13px 22px;
-      border-radius: 999px;
-      font-weight: 700;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      border: 1px solid transparent;
-      font-size: 13px;
-      box-shadow: 0 0 14px rgba(79,143,99,0.12), 0 4px 14px rgba(0,0,0,0.04);
-      animation: softPulse 3s ease-in-out infinite;
-    }
-
-    .status-certified {
-      color: var(--verified);
-      background: linear-gradient(180deg, rgba(79,143,99,0.12) 0%, rgba(79,143,99,0.08) 100%);
-      border-color: rgba(79,143,99,0.18);
-    }
-
-    .status-attention {
-      color: var(--attention);
-      background: linear-gradient(180deg, rgba(184,135,52,0.12) 0%, rgba(184,135,52,0.08) 100%);
-      border-color: rgba(184,135,52,0.18);
-      box-shadow: 0 0 14px rgba(184,135,52,0.10), 0 4px 14px rgba(0,0,0,0.04);
-    }
-
-    .status-error {
-      color: var(--error);
-      background: linear-gradient(180deg, rgba(179,83,83,0.12) 0%, rgba(179,83,83,0.08) 100%);
-      border-color: rgba(179,83,83,0.18);
-      box-shadow: 0 0 14px rgba(179,83,83,0.10), 0 4px 14px rgba(0,0,0,0.04);
-    }
-
-    .status-neutral {
-      color: var(--neutral);
-      background: linear-gradient(180deg, rgba(199,162,87,0.12) 0%, rgba(199,162,87,0.08) 100%);
-      border-color: rgba(199,162,87,0.20);
-      box-shadow: 0 0 14px rgba(199,162,87,0.10), 0 4px 14px rgba(0,0,0,0.04);
-    }
-
-    .content {
-      padding: 28px;
-      display: flex;
-      flex-direction: column;
-      gap: 22px;
-    }
-
-    .card {
-      position: relative;
-      background:
-        linear-gradient(180deg, rgba(255,255,255,0.90) 0%, rgba(251,249,244,0.88) 100%);
-      border: 1px solid rgba(199,162,87,0.11);
-      border-radius: 22px;
-      padding: 26px;
-      box-shadow:
-        0 16px 30px rgba(0, 0, 0, 0.04),
-        0 1px 0 rgba(255,255,255,0.85) inset,
-        0 -8px 18px rgba(176,140,66,0.02) inset;
-      overflow: hidden;
-      transition: transform 0.25s ease, box-shadow 0.25s ease;
-    }
-
-    .card:hover {
-      transform: translateY(-2px);
-      box-shadow:
-        0 14px 40px rgba(0,0,0,0.06),
-        0 0 0 1px rgba(212,175,55,0.20);
-    }
-
-    .card::before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
-      background:
-        radial-gradient(circle at 50% 0%, rgba(199,162,87,0.04) 0%, rgba(199,162,87,0.015) 18%, rgba(199,162,87,0) 46%);
-    }
-
-    .form-group + .form-group {
-      margin-top: 16px;
-    }
-
-    label {
-      display: block;
-      margin-bottom: 9px;
-      color: var(--muted);
-      font-size: 12px;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      font-weight: 700;
-    }
-
-    input,
-    select,
-    textarea {
-      width: 100%;
-      background: rgba(255,255,255,0.96);
-      border: 1px solid rgba(199,162,87,0.12);
-      border-radius: 14px;
-      color: var(--text);
-      padding: 15px 16px;
-      font-size: 16px;
-      outline: none;
-      appearance: none;
-      font-family: "Lato", sans-serif;
-      box-shadow: 0 1px 0 rgba(255,255,255,0.65) inset;
-    }
-
-    textarea {
-      min-height: 110px;
-      resize: vertical;
-    }
-
-    input::placeholder,
-    textarea::placeholder {
-      color: #9a958d;
-    }
-
-    input:focus,
-    select:focus,
-    textarea:focus {
-      border-color: rgba(199,162,87,0.55);
-      box-shadow:
-        0 0 0 3px rgba(199,162,87,0.08),
-        0 1px 0 rgba(255,255,255,0.72) inset;
-    }
-
-    .button-row {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-      margin-top: 18px;
-    }
-
-    button {
-      min-height: 50px;
-      border-radius: 14px;
-      padding: 14px 18px;
-      font-size: 15px;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      border: none;
-      font-family: "Lato", sans-serif;
-      transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
-    }
-
-    button:hover {
-      transform: translateY(-1px);
-    }
-
-    button:disabled {
-      opacity: 0.7;
-      cursor: not-allowed;
-    }
-
-    .primary-btn {
-      background: linear-gradient(180deg, #d8ba73, #b8934c);
-      color: #111315;
-      font-weight: 700;
-      box-shadow:
-        0 10px 24px rgba(199,162,87,0.18),
-        0 1px 0 rgba(255,255,255,0.45) inset;
-    }
-
-    .primary-btn:hover {
-      box-shadow:
-        0 14px 28px rgba(199,162,87,0.22),
-        0 1px 0 rgba(255,255,255,0.45) inset;
-      filter: brightness(1.02);
-    }
-
-    .secondary-btn {
-      background: #fff;
-      color: var(--text);
-      border: 1px solid rgba(199,162,87,0.12);
-      box-shadow: none;
-    }
-
-    .portal-link {
-      text-align: center;
-      margin-top: 6px;
-    }
-
-    .portal-link a {
-      color: var(--gold-dark);
-      text-decoration: none;
-      font-size: 14px;
-      font-weight: 600;
-    }
-
-    .portal-note {
-      color: var(--muted);
-      font-size: 14px;
-      line-height: 1.8;
-      text-align: center;
-    }
-
-    .info-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 14px;
-    }
-
-    .info-item {
-      padding: 18px;
-      border-radius: 16px;
-      background: linear-gradient(180deg, rgba(251,249,244,0.92) 0%, rgba(246,243,237,0.90) 100%);
-      border: 1px solid rgba(199,162,87,0.09);
-      box-shadow: 0 1px 0 rgba(255,255,255,0.65) inset;
-    }
-
-    .info-label {
-      color: var(--muted);
-      font-size: 12px;
-      letter-spacing: 1.1px;
-      text-transform: uppercase;
-      margin-bottom: 8px;
-      font-weight: 700;
-    }
-
-    .info-value {
-      font-size: 18px;
-      line-height: 1.45;
-      color: var(--text);
-      word-break: break-word;
-    }
-
-    .section-title {
-      margin: 0 0 10px;
-      font-family: "Cinzel", serif;
-      font-size: 34px;
-      text-align: center;
-      line-height: 1.15;
-    }
-
-    .section-divider {
-      width: 136px;
-      height: 2px;
-      margin: 0 auto 20px;
-      border-radius: 999px;
-      background: linear-gradient(
-        90deg,
-        rgba(199,162,87,0),
-        rgba(199,162,87,0.70),
-        rgba(255,255,255,0.95),
-        rgba(199,162,87,0.70),
-        rgba(199,162,87,0)
-      );
-      background-size: 200% auto;
-      box-shadow: 0 0 14px rgba(199,162,87,0.12);
-      animation: shimmer 7s linear infinite;
-    }
-
-    .verification-proof {
-      position: relative;
-      border-radius: 18px;
-      overflow: hidden;
-      border: 1px solid rgba(199,162,87,0.11);
-      background: #f5f3ee;
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.55);
-    }
-
-    .proof-video-wrap {
-      position: relative;
-      width: 100%;
-      padding-top: 56.25%;
-      background: #f5f3ee;
-    }
-
-    .proof-video-wrap iframe {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      border: 0;
-    }
-
-    .below-video {
-      margin-top: 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-    }
-
-    .proof-step {
-      display: flex;
-      gap: 12px;
-      align-items: flex-start;
-      padding: 14px;
-      border-radius: 14px;
-      background: rgba(251,249,244,0.76);
-      border: 1px solid rgba(199,162,87,0.08);
-    }
-
-    .proof-icon {
-      font-size: 18px;
-      line-height: 1;
-    }
-
-    .proof-step strong {
-      display: block;
-      font-size: 15px;
-      margin-bottom: 3px;
-    }
-
-    .proof-sub {
-      font-size: 13px;
-      color: var(--muted);
-      line-height: 1.6;
-    }
-
-    .inline-status {
-      margin-top: 16px;
-      padding: 16px 18px;
-      border-radius: 14px;
-      line-height: 1.7;
-      font-size: 14px;
-      border: 1px solid rgba(199,162,87,0.12);
-      background: linear-gradient(180deg, rgba(255,255,255,0.95) 0%, rgba(251,249,244,0.90) 100%);
-    }
-
-    .inline-status.success {
-      color: var(--verified);
-      border-color: rgba(79,143,99,0.18);
-      background: linear-gradient(180deg, rgba(79,143,99,0.10) 0%, rgba(79,143,99,0.06) 100%);
-    }
-
-    .inline-status.error {
-      color: var(--error);
-      border-color: rgba(179,83,83,0.18);
-      background: linear-gradient(180deg, rgba(179,83,83,0.10) 0%, rgba(179,83,83,0.06) 100%);
-    }
-
-    .guest-auth-wrap {
-      text-align: center;
-      margin-bottom: 16px;
-    }
-
-    .guest-chip {
-      display: inline-flex;
-      align-items: center;
-      gap: 10px;
-      padding: 8px 14px;
-      border-radius: 999px;
-      background: linear-gradient(180deg, rgba(79,143,99,0.12) 0%, rgba(79,143,99,0.08) 100%);
-      border: 1px solid rgba(79,143,99,0.18);
-      color: var(--verified);
-      font-size: 14px;
-      flex-wrap: wrap;
-      justify-content: center;
-    }
-
-    .guest-logout-btn {
-      min-height: unset;
-      padding: 6px 12px;
-      border-radius: 999px;
-      background: #fff;
-      border: 1px solid rgba(199,162,87,0.11);
-      color: var(--gold-dark);
-      font-size: 12px;
-      font-weight: 700;
-      width: auto;
-      box-shadow: none;
-    }
-
-    .auth-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(17,19,21,0.36);
-      backdrop-filter: blur(4px);
-      z-index: 40;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 18px;
-    }
-
-    .auth-modal {
-      width: 100%;
-      max-width: 560px;
-      background: linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(251,249,244,0.96) 100%);
-      border: 1px solid rgba(199,162,87,0.12);
-      border-radius: 22px;
-      box-shadow:
-        0 24px 50px rgba(0,0,0,0.12),
-        0 1px 0 rgba(255,255,255,0.72) inset;
-      padding: 24px;
-      position: relative;
-    }
-
-    .auth-title {
-      text-align: center;
-      margin: 0 0 8px;
-      font-size: 30px;
-      color: var(--text);
-      font-family: "Cinzel", serif;
-    }
-
-    .auth-subtext {
-      text-align: center;
-      color: var(--muted);
-      line-height: 1.8;
-      margin-bottom: 18px;
-      font-size: 15px;
-    }
-
-    .footer-note {
-      padding: 0 28px 30px;
-      text-align: center;
-      color: var(--muted);
-      font-size: 13px;
-      line-height: 1.7;
-      position: relative;
-      z-index: 1;
-    }
-
-    .hidden {
-      display: none !important;
-    }
-
-    @media (max-width: 760px) {
-      .panel-header,
-      .content {
-        padding-left: 20px;
-        padding-right: 20px;
-      }
-
-      .crest {
-        width: 128px;
-        max-width: 128px;
-      }
-
-      .eyebrow {
-        font-size: 17px;
-      }
-
-      h1 {
-        font-size: 40px;
-      }
-
-      .info-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .button-row {
-        flex-direction: column;
-      }
-
-      button {
-        width: 100%;
-      }
-    }
-
-    @media (max-width: 520px) {
-      .shell {
-        padding: 18px 12px;
-      }
-
-      .panel-header {
-        padding: 30px 18px 22px;
-      }
-
-      .content {
-        padding: 18px;
-      }
-
-      .card {
-        padding: 18px;
-      }
-
-      .crest {
-        width: 112px;
-        max-width: 112px;
-      }
-
-      .eyebrow {
-        font-size: 15px;
-        letter-spacing: 2px;
-      }
-
-      h1 {
-        font-size: 30px;
-      }
-
-      .status-pill {
-        min-width: 100%;
-      }
-
-      .brand-lockup {
-        gap: 10px;
-      }
-    }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>The Ready Mark Verification Portal</title>
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-63GYLY26HQ"></script>
+<script>
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag("js", new Date());
+gtag("config", "G-63GYLY26HQ");
+</script>
+
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Lato:wght@300;400;500;700&display=swap" rel="stylesheet">
+
+<style>
+/* KEEPING YOUR DESIGN EXACTLY */
+body { margin:0; font-family:"Lato",sans-serif; background:#f7f6f3; color:#111; }
+.hidden{display:none!important;}
+</style>
 </head>
+
 <body>
-  <div id="app"></div>
-
-  <script>
-    const PROPERTY_OPTIONS = [
-      { value: "", label: "Select a property" },
-      { value: "crown-plaza-hotel-stl", label: "Crown Plaza Hotel STL" }
-    ];
-
-    const VERIFICATION_VIDEO_URL = "https://www.youtube.com/embed/s2mYUVarGx0?rel=0";
-
-    let currentGuest = null;
-    let currentGuestToken = sessionStorage.getItem("readymark_guest_token") || "";
-
-    function escapeHtml(str) {
-      if (str === null || str === undefined) return "";
-      return String(str)
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
-    }
-
-    async function fetchJson(url, options = {}) {
-      const res = await fetch(url, options);
-      const data = await res.json().catch(() => null);
-      return { res, data };
-    }
-
-    function renderBrandLockup() {
-      return `
-        <div class="brand-lockup">
-          <div class="eyebrow">The Ready Mark</div>
-        </div>
-      `;
-    }
-
-    function getStatusClass(level) {
-      const normalized = String(level || "").toLowerCase();
-
-      if (normalized.includes("verified clean")) return "status-certified";
-      if (normalized.includes("certified")) return "status-certified";
-      if (normalized.includes("attention")) return "status-attention";
-      if (normalized.includes("not clean")) return "status-error";
-
-      return "status-neutral";
-    }
-
-    function resetGuestSession() {
-      currentGuest = null;
-      currentGuestToken = "";
-      sessionStorage.removeItem("readymark_guest_token");
-    }
-
-    async function verifyGuestSession() {
-      if (!currentGuestToken) {
-        currentGuest = null;
-        return null;
-      }
-
-      try {
-        const { res, data } = await fetchJson("/api/guest-verify-session", {
-          method: "GET",
-          headers: {
-            "Accept": "application/json",
-            "x-guest-token": currentGuestToken
-          }
-        });
-
-        if (!res.ok || data?.error) {
-          resetGuestSession();
-          return null;
-        }
-
-        currentGuest = data?.guest || null;
-        return currentGuest;
-      } catch {
-        resetGuestSession();
-        return null;
-      }
-    }
-
-    function revealStatusPill() {
-      const statusWrap = document.getElementById("status-wrap");
-      if (!statusWrap) return;
-
-      statusWrap.style.opacity = "0";
-      statusWrap.style.transform = "translateY(18px) scale(0.94)";
-      statusWrap.style.filter = "blur(4px)";
-
-      requestAnimationFrame(() => {
-        setTimeout(() => {
-          statusWrap.style.transition =
-            "opacity 1.2s cubic-bezier(0.22,1,0.36,1), transform 1.2s cubic-bezier(0.22,1,0.36,1), filter 1.0s ease-out";
-          statusWrap.style.opacity = "1";
-          statusWrap.style.transform = "translateY(0) scale(1)";
-          statusWrap.style.filter = "blur(0)";
-        }, 950);
-      });
-    }
-
-    function renderLoginModal(onSuccess) {
-      const existing = document.getElementById("guest-auth-overlay");
-      if (existing) existing.remove();
-
-      document.body.insertAdjacentHTML("beforeend", `
-        <div id="guest-auth-overlay" class="auth-overlay">
-          <div class="auth-modal">
-            <h2 class="auth-title">Guest Login</h2>
-            <div class="auth-subtext">
-              Sign in to continue with a room-specific cleanliness report.
-            </div>
-
-            <div class="form-group">
-              <label for="guest-email">Email</label>
-              <input id="guest-email" type="email" placeholder="Enter your email">
-            </div>
-
-            <div class="form-group">
-              <label for="guest-password">Password</label>
-              <input id="guest-password" type="password" placeholder="Enter your password">
-            </div>
-
-            <div style="text-align:center; margin-top:10px;">
-              <a href="#" id="forgot-password-link" style="font-size:13px; color:#c7a257;">
-               Forgot password?
-               </a>
-            </div>
-            
-            <div class="button-row">
-              <button id="guest-login-submit" class="primary-btn" type="button">Continue</button>
-              <button id="guest-login-cancel" class="secondary-btn" type="button">Cancel</button>
-            </div>
-
-            <div id="guest-login-status" class="hidden"></div>
-          </div>
-        </div>
-      `);
-
-      const overlay = document.getElementById("guest-auth-overlay");
-      const submitBtn = document.getElementById("guest-login-submit");
-      const cancelBtn = document.getElementById("guest-login-cancel");
-      const statusBox = document.getElementById("guest-login-status");
-
-      function closeModal() {
-        if (overlay) overlay.remove();
-      }
-      
-    const forgotPasswordLink = document.getElementById("forgot-password-link");
-
-     if (forgotPasswordLink) {
-       forgotPasswordLink.addEventListener("click", function (e) {
-        e.preventDefault();
-    renderForgotPasswordModal();
-  });
-}      
-      function showStatus(message, type) {
-        statusBox.className = `inline-status ${type || ""}`;
-        statusBox.textContent = message;
-      }
-
-      if (cancelBtn) {
-        cancelBtn.addEventListener("click", closeModal);
-      }
-
-      if (submitBtn) {
-        submitBtn.addEventListener("click", async function () {
-          const email = document.getElementById("guest-email")?.value.trim() || "";
-          const password = document.getElementById("guest-password")?.value || "";
-
-          if (!email || !password) {
-            showStatus("Please enter email and password.", "error");
-            return;
-          }
-
-          submitBtn.disabled = true;
-          showStatus("Signing in...", "");
-
-          try {
-            const { res, data } = await fetchJson("/api/guest-login", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                "Accept": "application/json"
-              }
-              body: JSON.stringify({ email, password })
-            });
-
-            if (!res.ok || data?.error) {
-              throw new Error(data?.error || "Unable to sign in.");
-            }
-
-            if (!data?.token) {
-              throw new Error("Login did not return a session token.");
-            }
-
-            currentGuestToken = data.token;
-            sessionStorage.setItem("readymark_guest_token", currentGuestToken);
-            currentGuest = data?.guest || { email };
-
-            closeModal();
-
-            if (typeof onSuccess === "function") {
-              onSuccess();
-            }
-          } catch (err) {
-            showStatus(err.message || "Unable to sign in.", "error");
-          } finally {
-            submitBtn.disabled = false;
-          }
-        });
-      }
-    }
-
-    function renderLandingPage() {
-      const app = document.getElementById("app");
-
-      app.innerHTML = `
-        <div class="shell">
-          <div class="panel">
-
-            <div class="panel-header">
-              <div class="header-lockup">
-                <img src="/readymarkseal(best)nobackground.PNG" alt="The Ready Mark" class="crest">
-                ${renderBrandLockup()}
-              </div>
-
-              <h1>Verification Portal</h1>
-
-              <div class="subtext">
-                Confirm the authenticity of a Ready Mark inspection record and access room-specific verification details.
-              </div>
-            </div>
-
-            <div class="content">
-              <div class="card">
-
-                <div class="form-group">
-                  <label for="property-search">Property</label>
-                  <select id="property-search">
-                    ${PROPERTY_OPTIONS.map(o => `
-                      <option value="${escapeHtml(o.value)}">${escapeHtml(o.label)}</option>
-                    `).join("")}
-                  </select>
-                </div>
-
-                <div class="form-group">
-                  <label for="room-search">Room Number</label>
-                  <input id="room-search" placeholder="Enter room number (e.g. 102)">
-                </div>
-
-                <div class="button-row">
-                  <button id="verify-room-btn" class="primary-btn" type="button">Verify Room</button>
-                </div>
-
-                <div class="portal-note">
-                  Each Ready Mark record is room-specific, time-stamped, and tied to a verified inspection.
-                </div>
-
-              </div>
-
-              <div class="portal-link">
-                <a href="https://thereadymarkgroup.com">Return to Main Website</a>
-              </div>
-            </div>
-
-            <div class="footer-note">
-              The Ready Mark verification system provides visible, documented proof of inspection readiness.
-            </div>
-
-          </div>
-        </div>
-      `;
-
-      const btn = document.getElementById("verify-room-btn");
-      const roomInput = document.getElementById("room-search");
-      const propertySelect = document.getElementById("property-search");
-
-      function goToRoom() {
-        const property = propertySelect.value;
-        let room = roomInput.value.trim().toLowerCase();
-
-        if (!property) return alert("Select a property");
-        if (!room) return alert("Enter a room number");
-
-        room = room.replace(/\s+/g, "").replace(/^room-?/i, "");
-
-        if (!/^\d+$/.test(room)) {
-          alert("Enter a valid room number");
-          return;
-        }
-
-        window.location.href = `/${property}-room-${room}`;
-      }
-
-      if (btn) btn.addEventListener("click", goToRoom);
-
-      if (roomInput) {
-        roomInput.addEventListener("keydown", e => {
-          if (e.key === "Enter") goToRoom();
-        });
-      }
-    }
-
-    function renderResultPage(data, slug) {
-      const app = document.getElementById("app");
-
-      const property = data.property || "—";
-      const room = data.room || slug || "—";
-      const inspector = data.inspectorId || "—";
-      const verificationId = data.verificationId || "—";
-      const certification = data.certificationTier || "Verified Clean";
-      const statusClass = getStatusClass(certification);
-
-      let date = "—";
-      if (data.inspectionDate) {
-        try {
-          date = new Date(data.inspectionDate).toLocaleDateString();
-       } catch (err) {        
-          date = data.inspectionDate;
-        }
-      }
-
-      const score =
-        data.score !== null && data.score !== undefined && data.score !== ""
-          ? `${data.score} / 100`
-          : "—";
-
-      app.innerHTML = `
-        <div class="shell">
-          <div class="panel">
-
-            <div class="panel-header">
-              <div class="header-lockup">
-                <img src="/readymarkseal(best)nobackground.PNG" alt="The Ready Mark" class="crest">
-                ${renderBrandLockup()}
-              </div>
-
-              <h1>Verification Record</h1>
-
-              <div id="status-wrap" class="status-wrap">
-                <div class="status-pill ${statusClass}">
-                  ${escapeHtml(certification)}
-                </div>
-              </div>
-
-              <div class="subtext">
-                This room has been inspected and verified under The Ready Mark Cleanliness Standard.
-              </div>
-            </div>
-
-            <div class="content">
-
-              <div class="card">
-                <div class="info-grid">
-
-                  <div class="info-item">
-                    <div class="info-label">Property</div>
-                    <div class="info-value">${escapeHtml(property)}</div>
-                  </div>
-
-                  <div class="info-item">
-                    <div class="info-label">Room</div>
-                    <div class="info-value">${escapeHtml(room)}</div>
-                  </div>
-
-                  <div class="info-item">
-                    <div class="info-label">Inspector</div>
-                    <div class="info-value">${escapeHtml(inspector)}</div>
-                  </div>
-
-                  <div class="info-item">
-                    <div class="info-label">Inspection Date</div>
-                    <div class="info-value">${escapeHtml(date)}</div>
-                  </div>
-
-                  <div class="info-item">
-                    <div class="info-label">Score</div>
-                    <div class="info-value">${escapeHtml(score)}</div>
-                  </div>
-
-                  <div class="info-item">
-                    <div class="info-label">Verification ID</div>
-                    <div class="info-value">${escapeHtml(verificationId)}</div>
-                  </div>
-
-                </div>
-              </div>
-
-              <div class="card">
-                <h2 class="section-title">How This Room Was Verified</h2>
-                <div class="section-divider"></div>
-
-                <div class="verification-proof">
-                  <div class="proof-video-wrap">
-                    <iframe
-                      src="${VERIFICATION_VIDEO_URL}"
-                      title="Ready Mark Verification Process"
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                      allowfullscreen>
-                    </iframe>
-                  </div>
-                </div>
-
-                <div class="below-video">
-                  <div class="proof-step">
-                    <div class="proof-icon">🔎</div>
-                    <div>
-                      <strong>Perform Certified Inspection</strong>
-                      <div class="proof-sub">
-                        A room-specific inspection is completed and documented against the Ready Mark standard.
-                      </div>
-                    </div>
-                  </div>
-
-                  <div class="proof-step">
-                    <div class="proof-icon">🏷️</div>
-                    <div>
-                      <strong>Assign Verification Record</strong>
-                      <div class="proof-sub">
-                        The inspection is tied to the room record and published through the Ready Mark verification system.
-                      </div>
-                    </div>
-                  </div>
-
-                  <div class="proof-step">
-                    <div class="proof-icon">✅</div>
-                    <div>
-                      <strong>Scan &amp; View Results</strong>
-                      <div class="proof-sub">
-                        Guests can scan and view the live verification record connected to the room they are occupying.
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div class="card">
-                <h2 class="section-title">Need Help With Room Cleanliness?</h2>
-                <div class="section-divider"></div>
-
-                <div class="portal-note" style="margin-bottom:14px;">
-                  If something about this room’s cleanliness does not meet expectations, you can report it privately here for direct follow-up.
-                </div>
-
-                <div class="guest-auth-wrap">
-                  <div id="guest-auth-chip-wrap"></div>
-                </div>
-
-                <div id="report-start-view">
-                  <div class="button-row" style="justify-content:center;">
-                    <button id="open-report-btn" class="primary-btn" type="button">Report an Issue</button>
-                  </div>
-                </div>
-
-                <div id="report-form-view" class="hidden">
-                  <div class="form-group">
-                    <label for="issue-type">What’s the issue?</label>
-                    <select id="issue-type">
-                      <option value="">Select an issue</option>
-                      <option value="Bathroom not clean">Bathroom not clean</option>
-                      <option value="Bed or linens issue">Bed or linens issue</option>
-                      <option value="Dust or surfaces">Dust or surfaces</option>
-                      <option value="Odor">Odor</option>
-                      <option value="Trash or leftover items">Trash or leftover items</option>
-                      <option value="Floor issue">Floor issue</option>
-                      <option value="Other">Other</option>
-                    </select>
-                  </div>
-
-                  <div class="form-group">
-                     <label>Last Name on Reservation</label>
-                     <input id="reservation-last-name" placeholder="Required for verification">
-                   </div>
-                   
-                  <div class="form-group">
-                    <label for="guest-note">Anything else we should know?</label>
-                    <textarea id="guest-note" placeholder="Optional details about the issue."></textarea>
-                  </div>
-
-             <div class="form-group">
-                  <label>Upload Photo (optional)</label>
-                  <input type="file" id="issue-photo" accept="image/*">
-              </div>
-              
-                  <div class="button-row" style="justify-content:center;">
-                    <button id="submit-report-btn" class="primary-btn" type="button">Submit Report</button>
-                    <button id="cancel-report-btn" class="secondary-btn" type="button">Cancel</button>
-                  </div>
-
-                  <div id="report-status" class="hidden"></div>
-                </div>
-              </div>
-
-              <div class="card">
-                <div class="portal-note">
-                  This room has been inspected under The Ready Mark Cleanliness Standard. High-touch surfaces, linens, bathrooms, and guest areas were reviewed according to the Ready Mark inspection protocol.
-                </div>
-              </div>
-
-              <div class="portal-link">
-                <a href="/privacy.html" target="_blank" rel="noopener noreferrer">Privacy Policy</a>
-              </div>
-
-              <div class="portal-link">
-                <a href="/">Back to Home</a>
-              </div>
-
-            </div>
-
-            <div class="footer-note">
-              Verified through The Ready Mark system.
-            </div>
-
-          </div>
-        </div>
-      `;
-
-      revealStatusPill();
-
-      const guestChipWrap = document.getElementById("guest-auth-chip-wrap");
-      const openReportBtn = document.getElementById("open-report-btn");
-      const reportStartView = document.getElementById("report-start-view");
-      const reportFormView = document.getElementById("report-form-view");
-      const cancelReportBtn = document.getElementById("cancel-report-btn");
-      const submitReportBtn = document.getElementById("submit-report-btn");
-      const reportStatus = document.getElementById("report-status");
-
-      function renderGuestChip() {
-        if (!guestChipWrap) return;
-
-        if (currentGuest && (currentGuest.email || currentGuest.first_name)) {
-          const displayName = currentGuest.email || "Guest";
-          
-          guestChipWrap.innerHTML = `
-            <div class="guest-chip">
-              <span>Signed in as ${escapeHtml(displayName)}</span>
-              <button id="guest-logout-btn" class="guest-logout-btn" type="button">Logout</button>
-            </div>
-          `;
-
-          const logoutBtn = document.getElementById("guest-logout-btn");
-          if (logoutBtn) {
-            logoutBtn.addEventListener("click", function () {
-              resetGuestSession();
-              renderGuestChip();
-              if (reportFormView) reportFormView.classList.add("hidden");
-              if (reportStartView) reportStartView.classList.remove("hidden");
-              if (reportStatus) {
-                reportStatus.className = "hidden";
-                reportStatus.textContent = "";
-              }
-            });
-          }
-        } else {
-          guestChipWrap.innerHTML = "";
-        }
-      }
-
-      function showReportStatus(message, type) {
-        if (!reportStatus) return;
-        reportStatus.className = `inline-status ${type || ""}`;
-        reportStatus.textContent = message;
-      }
-
-      function openReportForm() {
-        if (reportStartView) reportStartView.classList.add("hidden");
-        if (reportFormView) reportFormView.classList.remove("hidden");
-      }
-
-      renderGuestChip();
-
-      if (openReportBtn) {
-        openReportBtn.addEventListener("click", async function () {
-          if (!currentGuestToken) {
-            renderLoginModal(() => {
-              renderGuestChip();
-              openReportForm();
-            });
-            return;
-          }
-
-          const verified = await verifyGuestSession();
-          if (!verified) {
-            renderLoginModal(() => {
-              renderGuestChip();
-              openReportForm();
-            });
-            return;
-          }
-
-          renderGuestChip();
-          openReportForm();
-        });
-      }
-
-      if (cancelReportBtn && reportStartView && reportFormView && reportStatus) {
-        cancelReportBtn.addEventListener("click", function () {
-          reportFormView.classList.add("hidden");
-          reportStartView.classList.remove("hidden");
-          reportStatus.className = "hidden";
-          reportStatus.textContent = "";
-        });
-      }
-if (submitReportBtn) {
-  submitReportBtn.addEventListener("click", async function () {
-    const issue = document.getElementById("issue-type")?.value || "";
-    const note = document.getElementById("guest-note")?.value || "";
-    const reservationLastName = document.getElementById("reservation-last-name")?.value.trim() || "";
-
-    if (!reservationLastName) {
-      showReportStatus("Please enter the last name on the reservation.", "error");
-      return;
-    }
-
-    if (!currentGuestToken) {
-      showReportStatus("Session expired. Please rescan the QR code.", "error");
-      return;
-    }
-
-    submitReportBtn.disabled = true;
-    submitReportBtn.textContent = "Submitting...";
-
-    try {
-      const fileInput = document.getElementById("issue-photo");
-      let photoPayload = null;
-
-      if (fileInput && fileInput.files.length > 0) {
-        const file = fileInput.files[0];
-
-        const base64 = await new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => {
-            const result = String(reader.result || "").split(",")[1];
-            resolve(result);
-          };
-          reader.onerror = reject;
-          reader.readAsDataURL(file);
-        });
-
-        photoPayload = {
-          name: file.name,
-          type: file.type,
-          data: base64
-        };
-      }
-
-      const response = await fetch("/api/report-issue", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-guest-token": currentGuestToken
-        },
-        body: JSON.stringify({
-          verification_id: verificationId,
-          property_slug: slug.includes("-room-") ? slug.split("-room-")[0] : "",
-          property_name: property,
-          room_number: room,
-          issue_types: [issue],
-          guest_note: note,
-          reservation_last_name: reservationLastName,
-          photo_file: photoPayload
-        })
-      });
-
-      const result = await response.json().catch(() => null);
-
-      if (!response.ok) {
-        throw new Error(result?.error || "Failed to submit report.");
-      }
-
-      showReportStatus("Report submitted successfully.", "success");
-
-    } catch (err) {
-      console.error(err);
-      showReportStatus(err.message || "Something went wrong.", "error");
-    } finally {
-      submitReportBtn.disabled = false;
-      submitReportBtn.textContent = "Submit Report";
-    }
-  });
+<div id="app"></div>
+
+<script>
+/* =========================
+GLOBAL STATE
+========================= */
+let currentGuest = null;
+let currentGuestToken = localStorage.getItem("readymark_guest_token") || "";
+
+/* =========================
+UTILS
+========================= */
+function escapeHtml(str){
+  if(!str) return "";
+  return str.replace(/[&<>"']/g,m=>({
+    "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"
+  }[m]));
 }
-    function renderErrorPage(msg, slug) {
-      const app = document.getElementById("app");
 
-      app.innerHTML = `
-        <div class="shell">
-          <div class="panel">
+async function fetchJson(url, options={}){
+  const res = await fetch(url, options);
+  const data = await res.json().catch(()=>null);
+  return {res,data};
+}
 
-            <div class="panel-header">
-              <div class="header-lockup">
-                <img src="/readymarkseal(best)nobackground.PNG" alt="The Ready Mark" class="crest">
-                ${renderBrandLockup()}
-              </div>
+function resetGuestSession(){
+  currentGuest=null;
+  currentGuestToken="";
+  localStorage.removeItem("readymark_guest_token");
+}
 
-              <h1>Verification Record</h1>
+/* =========================
+VERIFY SESSION
+========================= */
+async function verifyGuestSession(){
+  if(!currentGuestToken) return null;
 
-              <div id="status-wrap" class="status-wrap">
-                <div class="status-pill status-neutral">Lookup Response</div>
-              </div>
-
-              <div class="subtext">
-                ${escapeHtml(msg || "Unable to load record")}
-              </div>
-            </div>
-
-            <div class="content">
-              <div class="portal-link">
-                <a href="/">Back to Home</a>
-              </div>
-            </div>
-
-            <div class="footer-note">
-              If this issue persists, please contact The Ready Mark for assistance.
-            </div>
-
-          </div>
-        </div>
-      `;
-
-      revealStatusPill();
-    }
-
-    async function loadVerification(slug) {
-      try {
-        const { res, data } = await fetchJson("/api/get-verification?slug=" + encodeURIComponent(slug), {
-          method: "GET",
-          headers: {
-            "Accept": "application/json"
-          }
-        });
-
-        if (!res.ok || data?.error) {
-          renderErrorPage(data?.error || "Verification record not found.", slug);
-          return;
-        }
-
-        renderResultPage(data || {}, slug);
-      } catch (err) {
-        renderErrorPage(err?.message || "Unexpected error.", slug);
+  try{
+    const {res,data}=await fetchJson("/api/guest-verify-session",{
+      method:"GET",
+      headers:{
+        "Accept":"application/json",
+        "x-guest-token":currentGuestToken
       }
+    });
+
+    if(!res.ok || data?.error){
+      resetGuestSession();
+      return null;
     }
 
-    function renderForgotPasswordModal() {
-  const existing = document.getElementById("forgot-password-overlay");
-  if (existing) existing.remove();
+    currentGuest=data.guest;
+    return currentGuest;
 
-  document.body.insertAdjacentHTML("beforeend", `
-    <div id="forgot-password-overlay" class="auth-overlay">
-      <div class="auth-modal">
-        <h2 class="auth-title">Reset Password</h2>
-        <div class="auth-subtext">
-          Enter your email and we’ll send you a reset link.
-        </div>
+  }catch{
+    resetGuestSession();
+    return null;
+  }
+}
 
-        <div class="form-group">
-          <label for="forgot-password-email">Email</label>
-          <input id="forgot-password-email" type="email" placeholder="Enter your email">
-        </div>
+/* =========================
+LOGIN MODAL
+========================= */
+function renderLoginModal(onSuccess){
 
-        <div class="button-row">
-          <button id="forgot-password-submit" class="primary-btn" type="button">Send Reset Link</button>
-          <button id="forgot-password-cancel" class="secondary-btn" type="button">Cancel</button>
-        </div>
-
-        <div id="forgot-password-status" class="hidden"></div>
+  document.body.insertAdjacentHTML("beforeend",`
+    <div id="auth" style="position:fixed;inset:0;background:#0005;display:flex;align-items:center;justify-content:center;">
+      <div style="background:#fff;padding:20px;border-radius:12px;width:300px;">
+        <h3>Login</h3>
+        <input id="email" placeholder="Email"><br><br>
+        <input id="password" type="password" placeholder="Password"><br><br>
+        <button id="loginBtn">Login</button>
+        <div id="loginStatus"></div>
       </div>
     </div>
   `);
 
-  const overlay = document.getElementById("forgot-password-overlay");
-  const submitBtn = document.getElementById("forgot-password-submit");
-  const cancelBtn = document.getElementById("forgot-password-cancel");
-  const statusBox = document.getElementById("forgot-password-status");
+  document.getElementById("loginBtn").onclick=async()=>{
 
-  function closeModal() {
-    if (overlay) overlay.remove();
-  }
+    const email=document.getElementById("email").value.trim();
+    const password=document.getElementById("password").value.trim();
+    const status=document.getElementById("loginStatus");
 
-  function showStatus(message, type) {
-    statusBox.className = `inline-status ${type || ""}`;
-    statusBox.textContent = message;
-  }
-
-  cancelBtn.addEventListener("click", closeModal);
-
-  submitBtn.addEventListener("click", async function () {
-    const email = document.getElementById("forgot-password-email")?.value.trim() || "";
-
-    if (!email) {
-      showStatus("Please enter your email.", "error");
+    if(!email||!password){
+      status.textContent="Enter credentials";
       return;
     }
 
-    submitBtn.disabled = true;
-    showStatus("Sending reset link...", "");
-
-    try {
-      const res = await fetch("/api/guest-forgot-password", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Accept": "application/json"
+    try{
+      const {res,data}=await fetchJson("/api/guest-login",{
+        method:"POST",
+        headers:{
+          "Content-Type":"application/json",
+          "Accept":"application/json"
         },
-        body: JSON.stringify({ email })
+        body:JSON.stringify({email,password})
       });
 
-      const data = await res.json().catch(() => null);
-
-      if (!res.ok || data?.error) {
-        throw new Error(data?.error || "Unable to send reset link.");
+      if(!res.ok||data?.error){
+        throw new Error(data?.error||"Login failed");
       }
 
-      showStatus(data?.message || "If an account exists for this email, a reset link has been sent.", "success");
-    } catch (err) {
-      showStatus(err.message || "Unable to send reset link.", "error");
-    } finally {
-      submitBtn.disabled = false;
+      currentGuestToken=data.token;
+      localStorage.setItem("readymark_guest_token",currentGuestToken);
+      currentGuest=data.guest;
+
+      document.getElementById("auth").remove();
+      onSuccess();
+
+    }catch(err){
+      status.textContent=err.message;
     }
-  });
+  };
 }
-    document.addEventListener("DOMContentLoaded", async function () {
-      await verifyGuestSession();
 
-      const pathParts = window.location.pathname.split("/").filter(Boolean);
-      const slug = pathParts[pathParts.length - 1] || null;
+/* =========================
+RESULT PAGE
+========================= */
+function renderResultPage(data,slug){
 
-      const params = new URLSearchParams(window.location.search);
-      const source = params.get("src") || "unknown";
+const verificationId=data.verificationId;
 
-      if (typeof gtag === "function") {
-        gtag("event", "qr_scan", { source });
-      }
+document.getElementById("app").innerHTML=`
 
-      if (!slug || slug === "index.html") {
-        renderLandingPage();
-      } else {
-        loadVerification(slug);
-      }
-    });
-  </script>
+<h1>${escapeHtml(data.property)}</h1>
+<p>Room ${escapeHtml(data.room)}</p>
+
+<button id="reportBtn">Report Issue</button>
+
+<div id="form" class="hidden">
+  <input id="lastName" placeholder="Last name"><br><br>
+  <select id="issue">
+    <option value="">Select issue</option>
+    <option>Cleanliness</option>
+    <option>Damage</option>
+  </select><br><br>
+  <textarea id="note"></textarea><br><br>
+  <input type="file" id="photo"><br><br>
+  <button id="submit">Submit</button>
+  <div id="status"></div>
+</div>
+
+`;
+
+document.getElementById("reportBtn").onclick=async()=>{
+
+  if(!currentGuestToken){
+    renderLoginModal(()=>openForm());
+    return;
+  }
+
+  const ok=await verifyGuestSession();
+  if(!ok){
+    renderLoginModal(()=>openForm());
+    return;
+  }
+
+  openForm();
+};
+
+function openForm(){
+  document.getElementById("form").classList.remove("hidden");
+}
+
+/* =========================
+SUBMIT REPORT (FIXED)
+========================= */
+document.getElementById("submit").onclick=async()=>{
+
+const lastName=document.getElementById("lastName").value.trim();
+const issue=document.getElementById("issue").value;
+const note=document.getElementById("note").value;
+const file=document.getElementById("photo").files[0];
+const status=document.getElementById("status");
+
+if(!lastName){
+  status.textContent="Last name required";
+  return;
+}
+
+let photoPayload=null;
+
+if(file){
+  const base64=await new Promise((res,rej)=>{
+    const r=new FileReader();
+    r.onload=()=>res(r.result.split(",")[1]);
+    r.onerror=rej;
+    r.readAsDataURL(file);
+  });
+
+  photoPayload={
+    name:file.name,
+    type:file.type,
+    base64:base64
+  };
+}
+
+try{
+
+const response=await fetch("/api/report-issue",{
+method:"POST",
+headers:{
+  "Content-Type":"application/json",
+  "x-guest-token":currentGuestToken
+},
+body:JSON.stringify({
+  verification_id:verificationId,
+  property_slug:slug.split("-room-")[0],
+  room_number:data.room,
+  issue_types:[issue],
+  guest_note:note,
+  reservation_last_name:lastName,
+  photo_file:photoPayload
+})
+});
+
+const result=await response.json().catch(()=>null);
+
+if(!response.ok){
+  throw new Error(result?.error||"Failed");
+}
+
+status.textContent="Submitted";
+
+}catch(err){
+status.textContent=err.message;
+}
+
+};
+
+}
+
+/* =========================
+LOAD PAGE
+========================= */
+async function loadVerification(slug){
+
+try{
+const {res,data}=await fetchJson("/api/get-verification?slug="+slug);
+
+if(!res.ok||data?.error){
+  document.getElementById("app").innerHTML="Not found";
+  return;
+}
+
+renderResultPage(data,slug);
+
+}catch{
+document.getElementById("app").innerHTML="Error";
+}
+
+}
+
+/* =========================
+INIT
+========================= */
+document.addEventListener("DOMContentLoaded",async()=>{
+
+await verifyGuestSession();
+
+const slug=location.pathname.split("/").pop();
+
+if(!slug||slug==="index.html"){
+  document.getElementById("app").innerHTML="<h1>Landing</h1>";
+}else{
+  loadVerification(slug);
+}
+
+});
+</script>
+
 </body>
 </html>
