@@ -992,11 +992,50 @@ if (cancelReportBtn && reportStartView && reportFormView) {
 }
 
 if (submitReportBtn) {
-  submitReportBtn.addEventListener("click", function () {
-    alert("Report flow shell is working. Submission wiring is next.");
-  });
-}
+  submitReportBtn.addEventListener("click", async function () {
+    const issue = document.getElementById("issue-type")?.value;
+    const note = document.getElementById("guest-note")?.value;
+
+    if (!issue) {
+      alert("Please select an issue");
+      return;
     }
+
+    submitReportBtn.disabled = true;
+    submitReportBtn.textContent = "Submitting...";
+
+    try {
+      const response = await fetch("/api/report-issue", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          slug: slug,
+          issue: issue,
+          note: note || ""
+        })
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result?.error || "Failed to submit report");
+      }
+
+      reportFormView.innerHTML = `
+        <div style="text-align:center;color:var(--verified);font-weight:600;">
+          Report submitted successfully.
+        </div>
+      `;
+
+    } catch (err) {
+      alert(err.message || "Something went wrong");
+      submitReportBtn.disabled = false;
+      submitReportBtn.textContent = "Submit Report";
+    }
+  });
+}    
     function renderErrorPage(msg, slug) {
       const app = document.getElementById("app");
 
