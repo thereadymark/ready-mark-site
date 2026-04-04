@@ -919,14 +919,32 @@
     </div>
   </div>
 
-  <div id="report-form-view" class="hidden">
-    <div style="margin-top:16px;color:var(--muted);text-align:center;">
-      Guest reporting form coming next.
-    </div>
+  
+<div id="report-form-view" class="hidden">
+  <div class="form-group">
+    <label>What’s the issue?</label>
+    <select id="issue-type">
+      <option value="">Select an issue</option>
+      <option value="Bathroom not clean">Bathroom not clean</option>
+      <option value="Bed or linens issue">Bed or linens issue</option>
+      <option value="Dust or surfaces">Dust or surfaces</option>
+      <option value="Odor">Odor</option>
+      <option value="Trash or leftover items">Trash or leftover items</option>
+      <option value="Floor issue">Floor issue</option>
+      <option value="Other">Other</option>
+    </select>
   </div>
-</div>
 
-<div class="card">
+  <div class="form-group">
+    <label for="guest-note">Anything else we should know?</label>
+    <input id="guest-note" placeholder="Optional details about the issue.">
+  </div>
+
+  <div class="button-row" style="justify-content:center;">
+    <button id="submit-report-btn" class="primary-btn" type="button">Submit Report</button>
+    <button id="cancel-report-btn" class="primary-btn" type="button" style="background:#fff;color:var(--text);border:1px solid rgba(199,162,87,0.12);box-shadow:none;">Cancel</button>
+  </div>
+</div><div class="card">
   <div class="portal-note">
     This room has been inspected under The Ready Mark Cleanliness Standard. High-touch surfaces, linens, bathrooms, and guest areas were reviewed according to the Ready Mark inspection protocol.
   </div>
@@ -951,8 +969,32 @@
       `;
 
       revealStatusPill();
-    }
+      const openReportBtn = document.getElementById("open-report-btn");
+const reportStartView = document.getElementById("report-start-view");
+const reportFormView = document.getElementById("report-form-view");
 
+if (openReportBtn && reportStartView && reportFormView) {
+  openReportBtn.addEventListener("click", function () {
+    reportStartView.classList.add("hidden");
+    reportFormView.classList.remove("hidden");
+  });
+}    
+    const cancelReportBtn = document.getElementById("cancel-report-btn");
+const submitReportBtn = document.getElementById("submit-report-btn");
+
+if (cancelReportBtn && reportStartView && reportFormView) {
+  cancelReportBtn.addEventListener("click", function () {
+    reportFormView.classList.add("hidden");
+    reportStartView.classList.remove("hidden");
+  });
+}
+
+if (submitReportBtn) {
+  submitReportBtn.addEventListener("click", function () {
+    alert("Report flow shell is working. Submission wiring is next.");
+  });
+}
+    }
     function renderErrorPage(msg, slug) {
       const app = document.getElementById("app");
 
