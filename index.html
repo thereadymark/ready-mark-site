@@ -1353,109 +1353,84 @@
           reportStatus.textContent = "";
         });
       }
+if (submitReportBtn) {
+  submitReportBtn.addEventListener("click", async function () {
+    const issue = document.getElementById("issue-type")?.value || "";
+    const note = document.getElementById("guest-note")?.value || "";
+    const reservationLastName = document.getElementById("reservation-last-name")?.value.trim() || "";
 
-      if (submitReportBtn) {
-        submitReportBtn.addEventListener("click", async function () {
-          const issue = document.getElementById("issue-type")?.value || "";
-          const note = document.getElementById("guest-note")?.value || "";
-          const reservationLastName = document.getElementById("reservation-last-name")?.value.trim() || "";
-
-       if (!reservationLastName) {
-        showStatus("Please enter the last name on the reservation.", "error");
-          return;
-}
-          if (!currentGuestToken) {
-            renderLoginModal(() => {
-              renderGuestChip();
-              openReportForm();
-            });
-            return;
-          }
-
-          const verified = await verifyGuestSession();
-          if (!verified) {
-            renderLoginModal(() => {
-              renderGuestChip();
-              openReportForm();
-            });
-            return;
-          }
-
-          if (!issue) {
-            showReportStatus("Please select an issue.", "error");
-            return;
-          }
-
-          submitReportBtn.disabled = true;
-          submitReportBtn.textContent = "Submitting...";
-          showReportStatus("Submitting report...", "");
-
-          const fileInput = document.getElementById("issue-photo");
-let photoPayload = null;
-
-if (fileInput && fileInput.files.length > 0) {
-  const file = fileInput.files[0];
-
-  const base64 = await new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      const result = String(reader.result || "").split(",")[1];
-      resolve(result);
-    };
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-
-  photoPayload = {
-    name: file.name,
-    type: file.type,
-    base64
-  };
-}
-          try {
-            const response = await fetch("/api/report-issue", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                "x-guest-token": currentGuestToken
-              },
-              body: JSON.stringify({
-              verification_id: verificationId,
-              property_slug: slug.includes("-room-") ? slug.split("-room-")[0] : "",
-              property_name: property,
-              room_number: room,
-              issue_types: [issue],
-              guest_note: note,
-              photo_file: photoPayload
-             })             
-            });
-
-            const result = await response.json().catch(() => null);
-
-            if (!response.ok) {
-              throw new Error(result?.error || "Failed to submit report.");
-            }
-
-            const ref = result?.reference_number ? ` Reference: ${result.reference_number}` : "";
-            showReportStatus(`Report submitted successfully.${ref}`, "success");
-
-            const issueField = document.getElementById("issue-type");
-            const noteField = document.getElementById("guest-note");
-            if (issueField) issueField.value = "";
-            if (noteField) noteField.value = "";
-
-            if (reportFormView) reportFormView.classList.add("hidden");
-            if (reportStartView) reportStartView.classList.remove("hidden");
-          } catch (err) {
-            showReportStatus(err.message || "Something went wrong.", "error");
-          } finally {
-            submitReportBtn.disabled = false;
-            submitReportBtn.textContent = "Submit Report";
-          }
-        });
-      }
+    if (!reservationLastName) {
+      showReportStatus("Please enter the last name on the reservation.", "error");
+      return;
     }
 
+    if (!currentGuestToken) {
+      showReportStatus("Session expired. Please rescan the QR code.", "error");
+      return;
+    }
+
+    submitReportBtn.disabled = true;
+    submitReportBtn.textContent = "Submitting...";
+
+    try {
+      const fileInput = document.getElementById("issue-photo");
+      let photoPayload = null;
+
+      if (fileInput && fileInput.files.length > 0) {
+        const file = fileInput.files[0];
+
+        const base64 = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => {
+            const result = String(reader.result || "").split(",")[1];
+            resolve(result);
+          };
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+
+        photoPayload = {
+          name: file.name,
+          type: file.type,
+          data: base64
+        };
+      }
+
+      const response = await fetch("/api/report-issue", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-guest-token": currentGuestToken
+        },
+        body: JSON.stringify({
+          verification_id: verificationId,
+          property_slug: slug.includes("-room-") ? slug.split("-room-")[0] : "",
+          property_name: property,
+          room_number: room,
+          issue_types: [issue],
+          guest_note: note,
+          reservation_last_name: reservationLastName,
+          photo_file: photoPayload
+        })
+      });
+
+      const result = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        throw new Error(result?.error || "Failed to submit report.");
+      }
+
+      showReportStatus("Report submitted successfully.", "success");
+
+    } catch (err) {
+      console.error(err);
+      showReportStatus(err.message || "Something went wrong.", "error");
+    } finally {
+      submitReportBtn.disabled = false;
+      submitReportBtn.textContent = "Submit Report";
+    }
+  });
+}
     function renderErrorPage(msg, slug) {
       const app = document.getElementById("app");
 
