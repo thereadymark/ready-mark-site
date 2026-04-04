@@ -1067,7 +1067,7 @@
       if (data.inspectionDate) {
         try {
           date = new Date(data.inspectionDate).toLocaleDateString();
-        } catch {
+       } catch (err) {        
           date = data.inspectionDate;
         }
       }
