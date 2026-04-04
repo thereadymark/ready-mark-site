@@ -114,92 +114,122 @@ const expiresAt = new Date(now + 60 * 60 * 1000).toISOString();
       to: normalizedEmail,
       subject: "Reset your Ready Mark password",
       html: `
-  <div style="margin:0; padding:0; background:#f7f6f3;">
-    <table width="100%" cellpadding="0" cellspacing="0" style="background:#f7f6f3; padding:40px 16px;">
-      <tr>
-        <td align="center">
+<div style="margin:0;padding:0;background:#f7f6f3;font-family:Georgia,serif;color:#111315;">
+  <div style="max-width:720px;margin:0 auto;padding:36px 20px;">
+    <div style="
+      background:linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(251,249,244,0.96) 100%);
+      border:1px solid rgba(199,162,87,0.25);
+      border-radius:22px;
+      overflow:hidden;
+      box-shadow:
+        0 0 0 1px rgba(199,162,87,0.08),
+        0 12px 32px rgba(0,0,0,0.08),
+        0 2px 0 rgba(255,255,255,0.85) inset;
+    ">
 
-          <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px; background:#ffffff; border-radius:18px; border:1px solid rgba(199,162,87,0.25); box-shadow:0 10px 30px rgba(0,0,0,0.08); padding:32px;">
+      <div style="
+        padding:34px 30px 24px;
+        text-align:center;
+        border-bottom:1px solid rgba(199,162,87,0.18);
+        background:
+          radial-gradient(circle at 50% -10%, rgba(199,162,87,0.16) 0%, rgba(199,162,87,0.06) 18%, rgba(199,162,87,0) 44%),
+          linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(251,249,244,0.90) 100%);
+      ">
+        <img
+          src="https://verify.thereadymarkgroup.com/readymarkseal(best)nobackground.PNG"
+          alt="The Ready Mark"
+          style="width:90px;margin-bottom:12px;display:block;margin-left:auto;margin-right:auto;"
+        />
 
-            <!-- LOGO -->
-            <tr>
-              <td align="center" style="padding-bottom:10px;">
-                <img src="https://verify.thereadymarkgroup.com/readymarkseal(best)nobackground.PNG" width="80" style="display:block;" />
-              </td>
-            </tr>
+        <div style="
+          color:#c7a257;
+          font-size:13px;
+          letter-spacing:3px;
+          text-transform:uppercase;
+          font-weight:700;
+          margin-bottom:8px;
+        ">
+          The Ready Mark
+        </div>
 
-            <!-- BRAND -->
-            <tr>
-              <td align="center" style="font-family:Georgia, serif; font-size:22px; color:#111315; letter-spacing:1px;">
-                The Ready Mark
-              </td>
-            </tr>
+        <h1 style="
+          margin:10px 0 6px;
+          font-size:32px;
+          line-height:1.15;
+          color:#111315;
+          font-weight:600;
+        ">
+          Password Reset
+        </h1>
 
-            <!-- DIVIDER -->
-            <tr>
-              <td align="center" style="padding:14px 0;">
-                <div style="width:120px; height:2px; background:linear-gradient(90deg, transparent, #c7a257, transparent);"></div>
-              </td>
-            </tr>
+        <p style="
+          margin:0;
+          color:#6f6a61;
+          font-size:15px;
+          line-height:1.75;
+          max-width:540px;
+          margin-left:auto;
+          margin-right:auto;
+        ">
+          We received a request to reset your Ready Mark password.
+        </p>
+      </div>
 
-            <!-- TITLE -->
-            <tr>
-              <td align="center" style="font-family:Georgia, serif; font-size:24px; color:#111315; padding-bottom:10px;">
-                Password Reset
-              </td>
-            </tr>
+      <div style="padding:26px 30px;text-align:center;">
+        <div style="
+          margin:0 auto 22px;
+          max-width:460px;
+          padding:18px;
+          border-radius:14px;
+          background:#fbfaf7;
+          border:1px solid rgba(199,162,87,0.15);
+        ">
+          <div style="
+            font-size:16px;
+            line-height:1.7;
+            color:#111315;
+          ">
+            Click the button below to securely create a new password for your account.
+          </div>
+        </div>
 
-            <!-- TEXT -->
-            <tr>
-              <td align="center" style="font-family:Arial, sans-serif; font-size:15px; color:#6f6a61; line-height:1.7; padding-bottom:18px;">
-                We received a request to reset your Ready Mark password.
-              </td>
-            </tr>
+        <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="margin:0 auto 20px;">
+          <tr>
+            <td align="center" bgcolor="#c7a257" style="border-radius:12px;">
+              <a
+                href="${resetLink}"
+                style="
+                  display:inline-block;
+                  padding:14px 28px;
+                  font-size:16px;
+                  font-weight:700;
+                  font-family:Arial, sans-serif;
+                  color:#111315;
+                  text-decoration:none;
+                  background:#c7a257;
+                  border-radius:12px;
+                "
+              >
+                Reset Password
+              </a>
+            </td>
+          </tr>
+        </table>
 
-            <tr>
-              <td align="center" style="font-family:Arial, sans-serif; font-size:15px; color:#6f6a61; line-height:1.7; padding-bottom:26px;">
-                Click below to create a new password.
-              </td>
-            </tr>
+        <div style="
+          margin-top:8px;
+          font-size:13px;
+          color:#958d82;
+          line-height:1.7;
+        ">
+          This link expires in 1 hour for security purposes.
+        </div>
+      </div>
 
-            <!-- BUTTON -->
-            <tr>
-              <td align="center">
-                <table cellpadding="0" cellspacing="0">
-                  <tr>
-                    <td align="center" style="border-radius:10px; background:#c7a257;">
-                      <a href="${resetLink}" style="
-                        display:inline-block;
-                        padding:14px 28px;
-                        font-size:16px;
-                        font-weight:700;
-                        color:#111315;
-                        text-decoration:none;
-                        border-radius:10px;
-                        font-family:Arial, sans-serif;
-                      ">
-                        Reset Password
-                      </a>
-                    </td>
-                  </tr>
-                </table>
-              </td>
-            </tr>
-
-            <!-- FOOTER -->
-            <tr>
-              <td align="center" style="padding-top:26px; font-size:13px; color:#9a958d; font-family:Arial, sans-serif;">
-                This link expires in 1 hour.
-              </td>
-            </tr>
-
-          </table>
-
-        </td>
-      </tr>
-    </table>
+    </div>
   </div>
-`
+</div>
+`   
     });
 
     return res.status(200).json({
