@@ -958,11 +958,16 @@
             </div>
 
             <div style="text-align:center; margin-top:10px;">
-              <a href="#" id="forgot-password-link" style="font-size:13px; color:#c7a257;">
-                Forgot password?
-              </a>
-            </div>
+  <a href="#" id="forgot-password-link" style="font-size:13px; color:#c7a257;">
+    Forgot password?
+  </a>
 
+  <div style="margin-top:8px;"></div>
+
+  <a href="#" id="signup-link" style="font-size:13px; color:#c7a257;">
+    Create account
+  </a>
+</div>
             <div class="button-row">
               <button id="guest-login-submit" class="primary-btn" type="button">Continue</button>
               <button id="guest-login-cancel" class="secondary-btn" type="button">Cancel</button>
@@ -978,7 +983,8 @@
       const cancelBtn = document.getElementById("guest-login-cancel");
       const statusBox = document.getElementById("guest-login-status");
       const forgotPasswordLink = document.getElementById("forgot-password-link");
-
+      const signupLink = document.getElementById("signup-link");
+      
       function closeModal() {
         if (overlay) overlay.remove();
       }
@@ -995,6 +1001,12 @@
         });
       }
 
+      if (signupLink) {
+  signupLink.addEventListener("click", function (e) {
+    e.preventDefault();
+    alert("Signup flow not connected yet");
+  });
+}      
       if (cancelBtn) {
         cancelBtn.addEventListener("click", closeModal);
       }
