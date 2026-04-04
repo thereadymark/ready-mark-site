@@ -73,7 +73,7 @@ async function sendVerificationEmail(resend, email, code) {
         color:#111315;
         max-width:240px;
       ">
-        ${verificationCode}
+        ${code}
       </div>
 
       <!-- FOOTER -->
