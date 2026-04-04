@@ -87,19 +87,6 @@
       padding: 32px 18px;
     }
 
-
-    @keyframes glowIn {
-      0% {
-        box-shadow: 0 0 0 rgba(212,175,55,0);
-      }
-      100% {
-        box-shadow:
-          0 35px 90px rgba(0, 0, 0, 0.10),
-          0 0 0 1px rgba(212,175,55,0.14),
-          0 0 40px rgba(212,175,55,0.08);
-      }
-    }
-
     @keyframes softPulse {
       0%, 100% {
         box-shadow: 0 0 14px rgba(79,143,99,0.12), 0 4px 14px rgba(0,0,0,0.04);
@@ -131,7 +118,7 @@
         0 -24px 42px rgba(176,140,66,0.04) inset;
       overflow: hidden;
       backdrop-filter: blur(8px);
-      animation: glowIn 1.2s ease-out forwards;
+      
     }
 
     .panel::before {
