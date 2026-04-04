@@ -872,6 +872,12 @@
               <input id="guest-password" type="password" placeholder="Enter your password">
             </div>
 
+            <div style="text-align:center; margin-top:10px;">
+              <a href="#" id="forgot-password-link" style="font-size:13px; color:#c7a257;">
+               Forgot password?
+               </a>
+            </div>
+            
             <div class="button-row">
               <button id="guest-login-submit" class="primary-btn" type="button">Continue</button>
               <button id="guest-login-cancel" class="secondary-btn" type="button">Cancel</button>
@@ -890,7 +896,15 @@
       function closeModal() {
         if (overlay) overlay.remove();
       }
+      
+    const forgotPasswordLink = document.getElementById("forgot-password-link");
 
+     if (forgotPasswordLink) {
+       forgotPasswordLink.addEventListener("click", function (e) {
+        e.preventDefault();
+    renderForgotPasswordModal();
+  });
+}      
       function showStatus(message, type) {
         statusBox.className = `inline-status ${type || ""}`;
         statusBox.textContent = message;
@@ -1206,10 +1220,20 @@
                   </div>
 
                   <div class="form-group">
+                     <label>Last Name on Reservation</label>
+                     <input id="reservation-last-name" placeholder="Required for verification">
+                   </div>
+                   
+                  <div class="form-group">
                     <label for="guest-note">Anything else we should know?</label>
                     <textarea id="guest-note" placeholder="Optional details about the issue."></textarea>
                   </div>
 
+             <div class="form-group">
+                  <label>Upload Photo (optional)</label>
+                  <input type="file" id="issue-photo" accept="image/*">
+              </div>
+              
                   <div class="button-row" style="justify-content:center;">
                     <button id="submit-report-btn" class="primary-btn" type="button">Submit Report</button>
                     <button id="cancel-report-btn" class="secondary-btn" type="button">Cancel</button>
@@ -1257,11 +1281,8 @@
         if (!guestChipWrap) return;
 
         if (currentGuest && (currentGuest.email || currentGuest.first_name)) {
-          const displayName =
-            `${currentGuest.first_name || ""} ${currentGuest.last_name || ""}`.trim() ||
-            currentGuest.email ||
-            "Guest";
-
+          const displayName = currentGuest.email || "Guest";
+          
           guestChipWrap.innerHTML = `
             <div class="guest-chip">
               <span>Signed in as ${escapeHtml(displayName)}</span>
@@ -1337,7 +1358,12 @@
         submitReportBtn.addEventListener("click", async function () {
           const issue = document.getElementById("issue-type")?.value || "";
           const note = document.getElementById("guest-note")?.value || "";
+          const reservationLastName = document.getElementById("reservation-last-name")?.value.trim() || "";
 
+       if (!reservationLastName) {
+        showReportStatus("Please enter the last name on the reservation.", "error");
+          return;
+}
           if (!currentGuestToken) {
             renderLoginModal(() => {
               renderGuestChip();
@@ -1364,6 +1390,28 @@
           submitReportBtn.textContent = "Submitting...";
           showReportStatus("Submitting report...", "");
 
+          const fileInput = document.getElementById("issue-photo");
+let photoPayload = null;
+
+if (fileInput && fileInput.files.length > 0) {
+  const file = fileInput.files[0];
+
+  const base64 = await new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = String(reader.result || "").split(",")[1];
+      resolve(result);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+
+  photoPayload = {
+    name: file.name,
+    type: file.type,
+    base64
+  };
+}
           try {
             const response = await fetch("/api/report-issue", {
               method: "POST",
@@ -1372,10 +1420,15 @@
                 "x-guest-token": currentGuestToken
               },
               body: JSON.stringify({
-                slug: slug,
-                issue: issue,
-                note: note
-              })
+              verification_id: verificationId,
+              property_slug: slug.includes("-room-") ? slug.split("-room-")[0] : "",
+              property_name: property,
+              room_number: room,
+              issue_types: [issue],
+              guest_note: note,
+              photo_file: photoPayload
+             })             
+            });
             });
 
             const result = await response.json().catch(() => null);
@@ -1465,6 +1518,84 @@
       }
     }
 
+    function renderForgotPasswordModal() {
+  const existing = document.getElementById("forgot-password-overlay");
+  if (existing) existing.remove();
+
+  document.body.insertAdjacentHTML("beforeend", `
+    <div id="forgot-password-overlay" class="auth-overlay">
+      <div class="auth-modal">
+        <h2 class="auth-title">Reset Password</h2>
+        <div class="auth-subtext">
+          Enter your email and we’ll send you a reset link.
+        </div>
+
+        <div class="form-group">
+          <label for="forgot-password-email">Email</label>
+          <input id="forgot-password-email" type="email" placeholder="Enter your email">
+        </div>
+
+        <div class="button-row">
+          <button id="forgot-password-submit" class="primary-btn" type="button">Send Reset Link</button>
+          <button id="forgot-password-cancel" class="secondary-btn" type="button">Cancel</button>
+        </div>
+
+        <div id="forgot-password-status" class="hidden"></div>
+      </div>
+    </div>
+  `);
+
+  const overlay = document.getElementById("forgot-password-overlay");
+  const submitBtn = document.getElementById("forgot-password-submit");
+  const cancelBtn = document.getElementById("forgot-password-cancel");
+  const statusBox = document.getElementById("forgot-password-status");
+
+  function closeModal() {
+    if (overlay) overlay.remove();
+  }
+
+  function showStatus(message, type) {
+    statusBox.className = `inline-status ${type || ""}`;
+    statusBox.textContent = message;
+  }
+
+  cancelBtn.addEventListener("click", closeModal);
+
+  submitBtn.addEventListener("click", async function () {
+    const email = document.getElementById("forgot-password-email")?.value.trim() || "";
+
+    if (!email) {
+      showStatus("Please enter your email.", "error");
+      return;
+    }
+
+    submitBtn.disabled = true;
+    showStatus("Sending reset link...", "");
+
+    try {
+      const res = await fetch("/api/guest-forgot-password", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+        },
+        body: JSON.stringify({ email })
+      });
+
+      const data = await res.json().catch(() => null);
+
+      if (!res.ok || data?.error) {
+        throw new Error(data?.error || "Unable to send reset link.");
+      }
+
+      showStatus(data?.message || "If an account exists for this email, a reset link has been sent.", "success");
+    } catch (err) {
+      showStatus(err.message || "Unable to send reset link.", "error");
+    } finally {
+      submitBtn.disabled = false;
+    }
+  });
+}
     document.addEventListener("DOMContentLoaded", async function () {
       await verifyGuestSession();
 
