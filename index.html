@@ -1004,9 +1004,39 @@
       if (signupLink) {
   signupLink.addEventListener("click", function (e) {
     e.preventDefault();
-    alert("Signup flow not connected yet");
+
+    // Change title
+    document.querySelector("#guest-auth-overlay h2").textContent = "Create Account";
+
+    // Inject extra fields if not already added
+    if (!document.getElementById("signup-extra-fields")) {
+      const form = document.querySelector("#guest-auth-overlay .form-body");
+
+      const extra = document.createElement("div");
+      extra.id = "signup-extra-fields";
+      extra.innerHTML = `
+        <div class="form-group">
+          <label>First Name</label>
+          <input id="signup-first-name" type="text" placeholder="Enter your first name">
+        </div>
+
+        <div class="form-group">
+          <label>Last Name</label>
+          <input id="signup-last-name" type="text" placeholder="Enter your last name">
+        </div>
+      `;
+
+      form.insertBefore(extra, form.firstChild);
+    }
+
+    // Change button text
+    const submitBtn = document.getElementById("guest-login-submit");
+    submitBtn.textContent = "Create Account";
+
+    // Mark mode
+    submitBtn.setAttribute("data-mode", "signup");
   });
-}      
+}
       if (cancelBtn) {
         cancelBtn.addEventListener("click", closeModal);
       }
@@ -1016,6 +1046,42 @@
           const email = document.getElementById("guest-email")?.value.trim() || "";
           const password = document.getElementById("guest-password")?.value || "";
 
+          const mode = submitBtn.getAttribute("data-mode");
+
+if (mode === "signup") {
+
+  const firstName = document.getElementById("signup-first-name")?.value;
+  const lastName = document.getElementById("signup-last-name")?.value;
+
+  if (!firstName || !lastName || !email || !password) {
+    showStatus("Please complete all fields.", "error");
+    return;
+  }
+
+  const res = await fetch("/api/guest-signup", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      first_name: firstName,
+      last_name: lastName,
+      email,
+      password
+    })
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    showStatus(data.error || "Signup failed", "error");
+    return;
+  }
+
+  showStatus("Verification code sent to your email.", "success");
+
+  return; // 🚨 THIS STOPS LOGIN FROM RUNNING
+}          
           if (!email || !password) {
             showStatus("Please enter email and password.", "error");
             return;
