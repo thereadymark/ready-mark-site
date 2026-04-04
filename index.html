@@ -909,9 +909,11 @@
   opacity: 0;
   transform: translateY(18px) scale(0.94);
   filter: blur(4px);
+}
+
+.status-wrap.reveal-pill {
   animation: pillReveal 0.75s ease-out forwards;
-  animation-delay: 3s;
-} 
+}
   </style>
 </head>
 <body>
@@ -1506,7 +1508,12 @@
           </div>
         </div>
       `;
-
+const statusWrap = document.querySelector(".status-wrap");
+if (statusWrap) {
+  setTimeout(() => {
+    statusWrap.classList.add("reveal-pill");
+  }, 1000);
+}      
       function renderGuestChip() {
         const wrap = document.getElementById("guest-auth-chip-wrap");
         if (!wrap) return;
