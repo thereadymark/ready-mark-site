@@ -13,67 +13,84 @@ async function sendVerificationEmail(resend, email, code) {
   const fromEmail = process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev";
 
   const emailHtml = `
-  <div style="margin:0;padding:0;background:#f6f3ed;font-family:Georgia,serif;color:#1b1b1b;">
-    <div style="max-width:720px;margin:0 auto;padding:36px 20px;">
-      <div style="background:#ffffff;border:1px solid #dcc38a;border-radius:24px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,0.08);">
+<div style="margin:0;padding:0;background:#f7f6f3;font-family:Georgia,serif;">
+  <div style="max-width:640px;margin:0 auto;padding:40px 16px;">
 
-        <div style="padding:36px 30px 26px;text-align:center;border-bottom:1px solid rgba(220,195,138,0.45);">
-          <img
-            src="https://verify.thereadymarkgroup.com/readymarkseal(best)nobackground.PNG"
-            alt="The Ready Mark"
-            style="width:92px;display:block;margin:0 auto 16px;"
-          />
+    <div style="
+      background:#ffffff;
+      border:1px solid rgba(199,162,87,0.25);
+      border-radius:20px;
+      padding:32px;
+      box-shadow:0 10px 30px rgba(0,0,0,0.08);
+      text-align:center;
+    ">
 
-          <div style="color:#9f7d33;font-size:13px;letter-spacing:4px;text-transform:uppercase;font-weight:700;margin-bottom:14px;">
-            The Ready Mark
-          </div>
+      <!-- LOGO -->
+      <img src="https://verify.thereadymarkgroup.com/readymarkseal(best)nobackground.PNG"
+           style="width:80px;margin-bottom:12px;" />
 
-          <h1 style="margin:0;font-size:44px;line-height:1.08;color:#1c1c1c;font-weight:700;">
-            Secure Verification
-          </h1>
-
-          <p style="max-width:540px;margin:18px auto 0;color:#5e584d;font-size:17px;line-height:1.75;">
-            Use the secure code below to continue your verification.
-          </p>
-        </div>
-
-        <div style="padding:28px 24px 18px;">
-          <div style="display:grid;grid-template-columns:1fr;gap:16px;max-width:560px;margin:0 auto;">
-
-            <div style="background:#fbf9f4;border:1px solid rgba(220,195,138,0.55);border-radius:18px;padding:22px 18px 20px;text-align:center;">
-              <div style="color:#9f7d33;font-size:12px;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;">
-                Verification Code
-              </div>
-              <div style="color:#1c1c1c;font-size:40px;line-height:1.2;font-weight:700;letter-spacing:10px;">
-                ${code}
-              </div>
-            </div>
-
-            <div style="background:#fbf9f4;border:1px solid rgba(220,195,138,0.55);border-radius:18px;padding:18px 18px 16px;text-align:center;">
-              <div style="color:#2b2b2b;font-size:16px;line-height:1.8;">
-                This code expires in 10 minutes.
-              </div>
-            </div>
-
-          </div>
-
-          <div style="padding:24px 6px 8px;text-align:center;">
-            <p style="margin:0;color:#676052;font-size:15px;line-height:1.8;">
-              If you did not request this verification, you can safely ignore this email.
-            </p>
-          </div>
-        </div>
-
-        <div style="padding:0 30px 26px;text-align:center;">
-          <div style="color:#8a7b5b;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;">
-            The Ready Mark · Cleanliness Certification System
-          </div>
-        </div>
+      <!-- BRAND -->
+      <div style="
+        color:#c7a257;
+        font-size:13px;
+        letter-spacing:3px;
+        text-transform:uppercase;
+        font-weight:700;
+        margin-bottom:6px;
+      ">
+        The Ready Mark
       </div>
-    </div>
-  </div>
-  `;
 
+      <!-- TITLE -->
+      <h1 style="
+        margin:8px 0 12px;
+        font-size:26px;
+        color:#111315;
+      ">
+        Verify Your Email
+      </h1>
+
+      <!-- TEXT -->
+      <p style="
+        font-size:15px;
+        color:#6f6a61;
+        line-height:1.7;
+        margin-bottom:22px;
+      ">
+        Use the verification code below to complete your account setup.
+      </p>
+
+      <!-- CODE BOX -->
+      <div style="
+        margin:20px auto;
+        padding:18px;
+        border-radius:14px;
+        background:#fbfaf7;
+        border:1px solid rgba(199,162,87,0.20);
+        font-size:26px;
+        letter-spacing:6px;
+        font-weight:700;
+        color:#111315;
+        max-width:240px;
+      ">
+        ${verificationCode}
+      </div>
+
+      <!-- FOOTER -->
+      <p style="
+        margin-top:18px;
+        font-size:13px;
+        color:#9a958d;
+        line-height:1.7;
+      ">
+        This code will expire shortly. Do not share it with anyone.
+      </p>
+
+    </div>
+
+  </div>
+</div>
+`;
   await resend.emails.send({
     from: `Ready Mark <${fromEmail}>`,
     to: email,
