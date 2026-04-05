@@ -929,237 +929,228 @@
     </main>
   </div>
 
- <script>
-  const API = {
-    adminLogin: "/api/admin-login",
-    verifyAdminToken: "/api/admin-verify",
-    adminData: "/api/admin-data",
-    createProperty: "/api/create-property",
-    saveInspection: "/api/save-inspection",
-    uploadEvidence: "/api/save-evidence"
-  };
+<script>
+const API = {
+  adminLogin: "/api/admin-login",
+  verifyAdminToken: "/api/admin-verify",
+  adminData: "/api/admin-data",
+  createProperty: "/api/create-property",
+  saveInspection: "/api/save-inspection",
+  uploadEvidence: "/api/save-evidence"
+};
 
-  const STORAGE_KEYS = {
-    adminToken: "rm_admin_token"
-  };
+const STORAGE_KEY = "rm_admin_token";
 
-  const state = {
-    adminToken: "",
-    properties: [],
-    guestReports: [],
-    lastInspectionResult: null
-  };
+let adminToken = "";
 
-  const els = {
-    authOverlay: document.getElementById("auth-overlay"),
-    authError: document.getElementById("auth-error"),
-    adminPasswordInput: document.getElementById("admin-password-input"),
-    adminLoginBtn: document.getElementById("admin-login-btn"),
-    adminLogoutBtn: document.getElementById("admin-logout-btn"),
+/* =========================
+   INIT (THIS FIXES REFRESH LOOP)
+========================= */
+window.addEventListener("DOMContentLoaded", async () => {
+  const saved = sessionStorage.getItem(STORAGE_KEY);
 
-    propertyNameInput: document.getElementById("property-name-input"),
-    propertySlugInput: document.getElementById("property-slug-input"),
-    propertyCityInput: document.getElementById("property-city-input"),
-    propertyStateInput: document.getElementById("property-state-input"),
-    propertyTypeInput: document.getElementById("property-type-input"),
-    createPropertyForm: document.getElementById("create-property-form"),
-    createPropertyBtn: document.getElementById("create-property-btn"),
-    propertyStatusBox: document.getElementById("property-status-box"),
-
-    inspectionPropertySelect: document.getElementById("inspection-property-select"),
-    inspectionRoomNumber: document.getElementById("inspection-room-number"),
-    inspectionInspectorId: document.getElementById("inspection-inspector-id"),
-    inspectionDate: document.getElementById("inspection-date"),
-    inspectionCertificationTier: document.getElementById("inspection-certification-tier"),
-    inspectionScore: document.getElementById("inspection-score"),
-    inspectionVerificationId: document.getElementById("inspection-verification-id"),
-    inspectionNotes: document.getElementById("inspection-notes"),
-    saveInspectionForm: document.getElementById("save-inspection-form"),
-    saveInspectionBtn: document.getElementById("save-inspection-btn"),
-    inspectionStatusBox: document.getElementById("inspection-status-box"),
-
-    uploadEvidenceForm: document.getElementById("upload-evidence-form"),
-    evidenceVerificationId: document.getElementById("evidence-verification-id"),
-    evidencePhotoFile: document.getElementById("evidence-photo-file"),
-    evidenceLogFile: document.getElementById("evidence-log-file"),
-    uploadEvidenceBtn: document.getElementById("upload-evidence-btn"),
-    evidenceStatusBox: document.getElementById("evidence-status-box")
-  };
-
-  function setStatusBox(el, msg) {
-    if (el) el.textContent = msg;
-  }
-
-  function slugify(value) {
-    return String(value || "")
-      .trim()
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-+|-+$/g, "");
-  }
-
-  function generateVerificationId() {
-    const now = new Date();
-    return `RM-${now.getFullYear()}${String(now.getMonth()+1).padStart(2,"0")}${String(now.getDate()).padStart(2,"0")}-${Date.now()}`;
-  }
-
-  async function apiFetch(url, options = {}) {
-    const headers = new Headers(options.headers || {});
-    headers.set("Content-Type", "application/json");
-
-    if (state.adminToken) {
-      headers.set("x-admin-token", state.adminToken);
-    }
-
-    const res = await fetch(url, { ...options, headers });
-    const data = await res.json().catch(()=>null);
-
-    if (!res.ok) throw new Error(data?.error || "Request failed");
-    return data;
-  }
-
-  async function loginAdmin() {
-    const password = els.adminPasswordInput.value.trim();
-    if (!password) return;
+  if (saved) {
+    adminToken = saved;
 
     try {
-      const res = await fetch(API.adminLogin, {
-        method: "POST",
-        headers: {"Content-Type":"application/json"},
-        body: JSON.stringify({ password })
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) throw new Error(data.error);
-
-      state.adminToken = data.token;
-      sessionStorage.setItem(STORAGE_KEYS.adminToken, data.token);
-
-      els.authOverlay.style.display = "none";
-
-      await refreshAdminData();
-
-    } catch (e) {
-      els.authError.textContent = e.message;
+      await apiFetch(API.verifyAdminToken, { method: "GET" });
+      document.getElementById("auth-overlay").style.display = "none";
+      await loadDashboard();
+    } catch {
+      sessionStorage.removeItem(STORAGE_KEY);
+      showLogin();
     }
+  } else {
+    showLogin();
+  }
+});
+
+function showLogin() {
+  document.getElementById("auth-overlay").style.display = "flex";
+}
+
+/* =========================
+   CORE FETCH
+========================= */
+async function apiFetch(url, options = {}) {
+  const headers = new Headers(options.headers || {});
+  headers.set("Content-Type", "application/json");
+
+  if (adminToken) {
+    headers.set("x-admin-token", adminToken);
   }
 
-  async function refreshAdminData() {
-    const data = await apiFetch(API.adminData, { method: "GET" });
-    state.properties = data.properties || [];
+  const res = await fetch(url, { ...options, headers });
+  const data = await res.json().catch(()=>null);
 
-    els.inspectionPropertySelect.innerHTML =
-      `<option value="">Select property</option>` +
-      state.properties.map(p =>
-        `<option value="${p.property_slug}">${p.property_name}</option>`
-      ).join("");
+  if (!res.ok) {
+    throw new Error(data?.error || "Request failed");
   }
 
-  async function handleCreateProperty(e) {
-    e.preventDefault();
+  return data;
+}
 
-    const payload = {
-      property_name: els.propertyNameInput.value,
-      property_slug: slugify(els.propertySlugInput.value),
-      city: els.propertyCityInput.value,
-      state: els.propertyStateInput.value,
-      property_type: els.propertyTypeInput.value
-    };
+/* =========================
+   LOGIN
+========================= */
+async function loginAdmin() {
+  const password = document.getElementById("admin-password-input").value.trim();
 
-    try {
-      await apiFetch(API.createProperty, {
-        method: "POST",
-        body: JSON.stringify(payload)
-      });
+  if (!password) return;
 
-      setStatusBox(els.propertyStatusBox, "Property created ✅");
-      els.createPropertyForm.reset();
-      await refreshAdminData();
-
-    } catch (e) {
-      setStatusBox(els.propertyStatusBox, e.message);
-    }
-  }
-
-  async function handleSaveInspection(e) {
-    e.preventDefault();
-
-    const payload = {
-      property_slug: els.inspectionPropertySelect.value,
-      room_number: els.inspectionRoomNumber.value,
-      inspector_id: els.inspectionInspectorId.value,
-      inspection_date: els.inspectionDate.value,
-      certification_tier: els.inspectionCertificationTier.value,
-      score: Number(els.inspectionScore.value),
-      verification_id: els.inspectionVerificationId.value || generateVerificationId(),
-      notes: els.inspectionNotes.value
-    };
-
-    try {
-      const data = await apiFetch(API.saveInspection, {
-        method: "POST",
-        body: JSON.stringify(payload)
-      });
-
-      els.inspectionVerificationId.value = data.verification_id;
-
-      setStatusBox(els.inspectionStatusBox,
-        `Saved ✅\nVerification: ${data.verification_id}`
-      );
-
-    } catch (e) {
-      setStatusBox(els.inspectionStatusBox, e.message);
-    }
-  }
-
-  function fileToBase64(file) {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => {
-        resolve({
-          name: file.name,
-          type: file.type,
-          base64: reader.result.split(",")[1]
-        });
-      };
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
+  try {
+    const res = await fetch(API.adminLogin, {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({ password })
     });
+
+    const data = await res.json();
+
+    if (!res.ok) throw new Error(data.error);
+
+    adminToken = data.token;
+    sessionStorage.setItem(STORAGE_KEY, data.token);
+
+    document.getElementById("auth-overlay").style.display = "none";
+
+    await loadDashboard();
+
+  } catch (e) {
+    document.getElementById("auth-error").textContent = e.message;
   }
+}
 
-  async function handleUploadEvidence(e) {
-    e.preventDefault();
+/* =========================
+   LOAD DATA (THIS FIXES "NOTHING WORKS")
+========================= */
+async function loadDashboard() {
+  const data = await apiFetch(API.adminData, { method: "GET" });
 
-    try {
-      const photo = els.evidencePhotoFile.files[0];
-      const log = els.evidenceLogFile.files[0];
+  const select = document.getElementById("inspection-property-select");
 
-      const payload = {
-        verification_id: els.evidenceVerificationId.value,
-        photo_file: photo ? await fileToBase64(photo) : null,
-        log_file: log ? await fileToBase64(log) : null
-      };
+  select.innerHTML =
+    `<option value="">Select property</option>` +
+    (data.properties || []).map(p =>
+      `<option value="${p.property_slug}">${p.property_name}</option>`
+    ).join("");
+}
 
-      const data = await apiFetch(API.uploadEvidence, {
-        method: "POST",
-        body: JSON.stringify(payload)
+/* =========================
+   CREATE PROPERTY
+========================= */
+async function createProperty(e) {
+  e.preventDefault();
+
+  const payload = {
+    property_name: document.getElementById("property-name-input").value,
+    property_slug: document.getElementById("property-slug-input").value,
+    city: document.getElementById("property-city-input").value,
+    state: document.getElementById("property-state-input").value,
+    property_type: document.getElementById("property-type-input").value
+  };
+
+  try {
+    await apiFetch(API.createProperty, {
+      method: "POST",
+      body: JSON.stringify(payload)
+    });
+
+    alert("Property created ✅");
+    await loadDashboard();
+
+  } catch (e) {
+    alert(e.message);
+  }
+}
+
+/* =========================
+   SAVE INSPECTION
+========================= */
+async function saveInspection(e) {
+  e.preventDefault();
+
+  const payload = {
+    property_slug: document.getElementById("inspection-property-select").value,
+    room_number: document.getElementById("inspection-room-number").value,
+    inspector_id: document.getElementById("inspection-inspector-id").value,
+    inspection_date: document.getElementById("inspection-date").value,
+    certification_tier: document.getElementById("inspection-certification-tier").value,
+    score: Number(document.getElementById("inspection-score").value),
+    verification_id: document.getElementById("inspection-verification-id").value,
+    notes: document.getElementById("inspection-notes").value
+  };
+
+  try {
+    const data = await apiFetch(API.saveInspection, {
+      method: "POST",
+      body: JSON.stringify(payload)
+    });
+
+    document.getElementById("inspection-verification-id").value = data.verification_id;
+
+    alert("Inspection saved ✅");
+
+  } catch (e) {
+    alert(e.message);
+  }
+}
+
+/* =========================
+   FILE → BASE64
+========================= */
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      resolve({
+        name: file.name,
+        type: file.type,
+        base64: reader.result.split(",")[1]
       });
+    };
 
-      setStatusBox(els.evidenceStatusBox,
-        `Uploaded ✅\n${data.verification_id}`
-      );
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
 
-    } catch (e) {
-      setStatusBox(els.evidenceStatusBox, e.message);
-    }
+/* =========================
+   UPLOAD EVIDENCE
+========================= */
+async function uploadEvidence(e) {
+  e.preventDefault();
+
+  const photo = document.getElementById("evidence-photo-file").files[0];
+  const log = document.getElementById("evidence-log-file").files[0];
+
+  try {
+    const payload = {
+      verification_id: document.getElementById("evidence-verification-id").value,
+      photo_file: photo ? await fileToBase64(photo) : null,
+      log_file: log ? await fileToBase64(log) : null
+    };
+
+    await apiFetch(API.uploadEvidence, {
+      method: "POST",
+      body: JSON.stringify(payload)
+    });
+
+    alert("Evidence uploaded ✅");
+
+  } catch (e) {
+    alert(e.message);
   }
+}
 
-  document.getElementById("admin-login-btn").onclick = loginAdmin;
-  document.getElementById("create-property-form").onsubmit = handleCreateProperty;
-  document.getElementById("save-inspection-form").onsubmit = handleSaveInspection;
-  document.getElementById("upload-evidence-form").onsubmit = handleUploadEvidence;
-
+/* =========================
+   EVENT HOOKS
+========================= */
+document.getElementById("admin-login-btn").onclick = loginAdmin;
+document.getElementById("create-property-form").onsubmit = createProperty;
+document.getElementById("save-inspection-form").onsubmit = saveInspection;
+document.getElementById("upload-evidence-form").onsubmit = uploadEvidence;
 </script>
 </body>
 </html>
