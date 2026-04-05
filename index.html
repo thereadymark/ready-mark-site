@@ -1070,8 +1070,7 @@ if (mode === "signup") {
       password
     })
   });
-
-  const data = await res.json();
+ const data = await res.json().catch(() => null);
 
   if (!res.ok) {
     showStatus(data.error || "Signup failed", "error");
