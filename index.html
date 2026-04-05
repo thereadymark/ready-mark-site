@@ -936,197 +936,239 @@
       }
     }
 
-    function renderLoginModal(onSuccess) {
-      const existing = document.getElementById("guest-auth-overlay");
-      if (existing) existing.remove();
+ function renderLoginModal(onSuccess) {
+  const existing = document.getElementById("guest-auth-overlay");
+  if (existing) existing.remove();
 
-      document.body.insertAdjacentHTML("beforeend", `
-        <div id="guest-auth-overlay" class="auth-overlay">
-          <div class="auth-modal">
-            <h2 class="auth-title">Guest Login</h2>
-            <div class="auth-subtext">
-              Sign in to continue with a room-specific cleanliness report.
-            </div>
-
-            <div class="form-group">
-              <label for="guest-email">Email</label>
-              <input id="guest-email" type="email" placeholder="Enter your email">
-            </div>
-
-            <div class="form-group">
-              <label for="guest-password">Password</label>
-              <input id="guest-password" type="password" placeholder="Enter your password">
-            </div>
-
-            <div style="text-align:center; margin-top:10px;">
-  <a href="#" id="forgot-password-link" style="font-size:13px; color:#c7a257;">
-    Forgot password?
-  </a>
-
-  <div style="margin-top:8px;"></div>
-
-  <a href="#" id="signup-link" style="font-size:13px; color:#c7a257;">
-    Create account
-  </a>
-</div>
-            <div class="button-row">
-              <button id="guest-login-submit" class="primary-btn" type="button">Continue</button>
-              <button id="guest-login-cancel" class="secondary-btn" type="button">Cancel</button>
-            </div>
-
-            <div id="guest-login-status" class="hidden"></div>
-          </div>
+  document.body.insertAdjacentHTML("beforeend", `
+    <div id="guest-auth-overlay" class="auth-overlay">
+      <div class="auth-modal">
+        <h2 class="auth-title">Guest Login</h2>
+        <div class="auth-subtext">
+          Sign in to continue with a room-specific cleanliness report.
         </div>
-      `);
 
-      const overlay = document.getElementById("guest-auth-overlay");
-      const submitBtn = document.getElementById("guest-login-submit");
-      const cancelBtn = document.getElementById("guest-login-cancel");
-      const statusBox = document.getElementById("guest-login-status");
-      const forgotPasswordLink = document.getElementById("forgot-password-link");
-      const signupLink = document.getElementById("signup-link");
-      
-      function closeModal() {
-        if (overlay) overlay.remove();
-      }
-
-      function showStatus(message, type) {
-        statusBox.className = `inline-status ${type || ""}`;
-        statusBox.textContent = message;
-      }
-
-      if (forgotPasswordLink) {
-        forgotPasswordLink.addEventListener("click", function (e) {
-          e.preventDefault();
-          renderForgotPasswordModal();
-        });
-      }
-
-      if (signupLink) {
-  
-   signupLink.addEventListener("click", function (e) {
-  e.preventDefault();
-  renderSignupModal();
-});
-      }
-    if (!document.getElementById("signup-extra-fields")) {
-      const form = document.querySelector("#guest-auth-overlay .form-body");
-
-      const extra = document.createElement("div");
-      extra.id = "signup-extra-fields";
-      extra.innerHTML = `
         <div class="form-group">
-          <label>First Name</label>
+          <label for="guest-email">Email</label>
+          <input id="guest-email" type="email" placeholder="Enter your email">
+        </div>
+
+        <div class="form-group">
+          <label for="guest-password">Password</label>
+          <input id="guest-password" type="password" placeholder="Enter your password">
+        </div>
+
+        <div style="text-align:center; margin-top:10px;">
+          <a href="#" id="forgot-password-link" style="font-size:13px; color:#c7a257;">
+            Forgot password?
+          </a>
+          <div style="margin-top:8px;"></div>
+          <a href="#" id="signup-link" style="font-size:13px; color:#c7a257;">
+            Create account
+          </a>
+        </div>
+
+        <div class="button-row">
+          <button id="guest-login-submit" class="primary-btn" type="button">Continue</button>
+          <button id="guest-login-cancel" class="secondary-btn" type="button">Cancel</button>
+        </div>
+
+        <div id="guest-login-status" class="hidden"></div>
+      </div>
+    </div>
+  `);
+
+  const overlay = document.getElementById("guest-auth-overlay");
+  const submitBtn = document.getElementById("guest-login-submit");
+  const cancelBtn = document.getElementById("guest-login-cancel");
+  const statusBox = document.getElementById("guest-login-status");
+  const forgotPasswordLink = document.getElementById("forgot-password-link");
+  const signupLink = document.getElementById("signup-link");
+
+  function closeModal() {
+    if (overlay) overlay.remove();
+  }
+
+  function showStatus(message, type) {
+    statusBox.className = `inline-status ${type || ""}`;
+    statusBox.textContent = message;
+  }
+
+  if (forgotPasswordLink) {
+    forgotPasswordLink.addEventListener("click", function (e) {
+      e.preventDefault();
+      closeModal();
+      renderForgotPasswordModal();
+    });
+  }
+
+  if (signupLink) {
+    signupLink.addEventListener("click", function (e) {
+      e.preventDefault();
+      closeModal();
+      renderSignupModal();
+    });
+  }
+
+  if (cancelBtn) {
+    cancelBtn.addEventListener("click", closeModal);
+  }
+
+  if (submitBtn) {
+    submitBtn.addEventListener("click", async function () {
+      const email = document.getElementById("guest-email")?.value.trim() || "";
+      const password = document.getElementById("guest-password")?.value || "";
+
+      if (!email || !password) {
+        showStatus("Please enter email and password.", "error");
+        return;
+      }
+
+      submitBtn.disabled = true;
+      showStatus("Signing in...", "");
+
+      try {
+        const { res, data } = await fetchJson("/api/guest-login", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json"
+          },
+          body: JSON.stringify({ email, password })
+        });
+
+        if (!res.ok || data?.error) {
+          throw new Error(data?.error || "Unable to sign in.");
+        }
+
+        const token = data?.token || data?.session_token;
+        if (!token) {
+          throw new Error("Login did not return a session token.");
+        }
+
+        currentGuestToken = token;
+        sessionStorage.setItem("readymark_guest_token", currentGuestToken);
+        currentGuest = data?.guest || data?.user || { email };
+
+        closeModal();
+
+        if (typeof onSuccess === "function") {
+          onSuccess();
+        }
+      } catch (err) {
+        showStatus(err.message || "Unable to sign in.", "error");
+      } finally {
+        submitBtn.disabled = false;
+      }
+    });
+  }
+}    
+
+    function renderSignupModal() {
+  const existing = document.getElementById("signup-overlay");
+  if (existing) existing.remove();
+
+  document.body.insertAdjacentHTML("beforeend", `
+    <div id="signup-overlay" class="auth-overlay">
+      <div class="auth-modal">
+        <h2 class="auth-title">Create Account</h2>
+        <div class="auth-subtext">
+          Create your account to continue with a room-specific cleanliness report.
+        </div>
+
+        <div class="form-group">
+          <label for="signup-first-name">First Name</label>
           <input id="signup-first-name" type="text" placeholder="Enter your first name">
         </div>
 
         <div class="form-group">
-          <label>Last Name</label>
+          <label for="signup-last-name">Last Name</label>
           <input id="signup-last-name" type="text" placeholder="Enter your last name">
         </div>
-      `;
 
-      form.insertBefore(extra, form.firstChild);
-    }
+        <div class="form-group">
+          <label for="signup-email">Email</label>
+          <input id="signup-email" type="email" placeholder="Enter your email">
+        </div>
 
-    // Change button text
-    const submitBtn = document.getElementById("guest-login-submit");
-    submitBtn.textContent = "Create Account";
+        <div class="form-group">
+          <label for="signup-password">Password</label>
+          <input id="signup-password" type="password" placeholder="Create a password">
+        </div>
 
-    // Mark mode
-    authMode = "signup";
-  });
-}
-      if (cancelBtn) {
-        cancelBtn.addEventListener("click", closeModal);
+        <div class="button-row">
+          <button id="signup-submit" class="primary-btn" type="button">Create Account</button>
+          <button id="signup-cancel" class="secondary-btn" type="button">Cancel</button>
+        </div>
+
+        <div id="signup-status" class="hidden"></div>
+      </div>
+    </div>
+  `);
+
+  const overlay = document.getElementById("signup-overlay");
+  const submitBtn = document.getElementById("signup-submit");
+  const cancelBtn = document.getElementById("signup-cancel");
+  const statusBox = document.getElementById("signup-status");
+
+  function closeModal() {
+    if (overlay) overlay.remove();
+  }
+
+  function showStatus(message, type) {
+    statusBox.className = `inline-status ${type || ""}`;
+    statusBox.textContent = message;
+  }
+
+  if (cancelBtn) {
+    cancelBtn.addEventListener("click", closeModal);
+  }
+
+  if (submitBtn) {
+    submitBtn.addEventListener("click", async function () {
+      const firstName = document.getElementById("signup-first-name")?.value.trim() || "";
+      const lastName = document.getElementById("signup-last-name")?.value.trim() || "";
+      const email = document.getElementById("signup-email")?.value.trim() || "";
+      const password = document.getElementById("signup-password")?.value || "";
+
+      if (!firstName || !lastName || !email || !password) {
+        showStatus("Please complete all fields.", "error");
+        return;
       }
 
-      if (submitBtn) {
-        submitBtn.addEventListener("click", async function () {
-          const email = document.getElementById("guest-email")?.value.trim() || "";
-          const password = document.getElementById("guest-password")?.value || "";
+      submitBtn.disabled = true;
+      showStatus("Creating account...", "");
 
-          const mode = authMode;          
-          showStatus("Mode: " + mode, "");
-          
-if (mode === "signup") {
-
-  const firstName = document.getElementById("signup-first-name")?.value;
-  const lastName = document.getElementById("signup-last-name")?.value;
-
-  if (!firstName || !lastName || !email || !password) {
-    showStatus("Please complete all fields.", "error");
-    return;
-  }
-
-  const res = await fetch("/api/guest-signup", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      first_name: firstName,
-      last_name: lastName,
-      email,
-      password
-    })
-  });
- const data = await res.json().catch(() => null);
-
-  if (!res.ok) {
-    showStatus(data.error || "Signup failed", "error");
-    return;
-  }
-
-  showStatus("Verification code sent to your email.", "success");
-
-  return; // 🚨 THIS STOPS LOGIN FROM RUNNING
-}          
-          if (!email || !password) {
-            showStatus("Please enter email and password.", "error");
-            return;
-          }
-
-          submitBtn.disabled = true;
-          showStatus("Signing in...", "");
-
-          try {
-            const { res, data } = await fetchJson("/api/guest-login", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                "Accept": "application/json"
-              },
-              body: JSON.stringify({ email, password })
-            });
-
-            if (!res.ok || data?.error) {
-              throw new Error(data?.error || "Unable to sign in.");
-            }
-
-            const token = data?.token || data?.session_token;
-            if (!token) {
-              throw new Error("Login did not return a session token.");
-            }
-
-            currentGuestToken = token;
-            sessionStorage.setItem("readymark_guest_token", currentGuestToken);
-            currentGuest = data?.guest || data?.user || { email };
-
-            closeModal();
-
-            if (typeof onSuccess === "function") {
-              onSuccess();
-            }
-          } catch (err) {
-            showStatus(err.message || "Unable to sign in.", "error");
-          } finally {
-            submitBtn.disabled = false;
-          }
+      try {
+        const res = await fetch("/api/guest-signup", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json"
+          },
+          body: JSON.stringify({
+            first_name: firstName,
+            last_name: lastName,
+            email,
+            password
+          })
         });
-      }
-    }
 
+        const data = await res.json().catch(() => null);
+
+        if (!res.ok || data?.error) {
+          throw new Error(data?.error || "Signup failed");
+        }
+
+        showStatus("Verification code sent to your email.", "success");
+      } catch (err) {
+        showStatus(err.message || "Signup failed", "error");
+      } finally {
+        submitBtn.disabled = false;
+      }
+    });
+  }
+}    
     function renderLandingPage() {
       const app = document.getElementById("app");
 
