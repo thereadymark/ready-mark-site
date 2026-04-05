@@ -22,9 +22,7 @@
       --radius: 18px;
     }
 
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     html, body {
       margin: 0;
@@ -34,9 +32,7 @@
       font-family: "Lato", sans-serif;
     }
 
-    body {
-      display: flex;
-    }
+    body { display: flex; }
 
     .app-shell {
       display: flex;
@@ -193,12 +189,6 @@
       border: 1px solid var(--line);
     }
 
-    .btn-danger {
-      background: #fff;
-      color: var(--danger);
-      border: 1px solid rgba(180, 76, 76, 0.25);
-    }
-
     .content {
       padding: 28px;
       display: flex;
@@ -280,9 +270,7 @@
       line-height: 1.6;
     }
 
-    .section-body {
-      padding: 22px;
-    }
+    .section-body { padding: 22px; }
 
     .quick-actions {
       display: flex;
@@ -290,9 +278,7 @@
       flex-wrap: wrap;
     }
 
-    .table-wrap {
-      overflow-x: auto;
-    }
+    .table-wrap { overflow-x: auto; }
 
     .table {
       width: 100%;
@@ -317,13 +303,9 @@
       background: var(--panel-soft);
     }
 
-    .table tr:last-child td {
-      border-bottom: none;
-    }
+    .table tr:last-child td { border-bottom: none; }
 
-    .table tr:hover td {
-      background: #fcfbf8;
-    }
+    .table tr:hover td { background: #fcfbf8; }
 
     .status-pill {
       display: inline-flex;
@@ -337,7 +319,6 @@
       letter-spacing: 0.4px;
       text-transform: uppercase;
       border: 1px solid transparent;
-      white-space: nowrap;
     }
 
     .status-verified {
@@ -369,9 +350,7 @@
       padding: 0;
     }
 
-    .text-btn:hover {
-      text-decoration: underline;
-    }
+    .text-btn:hover { text-decoration: underline; }
 
     .split-grid {
       display: grid;
@@ -385,9 +364,7 @@
       gap: 16px;
     }
 
-    .full-width {
-      grid-column: 1 / -1;
-    }
+    .full-width { grid-column: 1 / -1; }
 
     label {
       display: block;
@@ -442,10 +419,6 @@
       white-space: pre-wrap;
     }
 
-    .hidden {
-      display: none !important;
-    }
-
     .auth-overlay {
       position: fixed;
       inset: 0;
@@ -486,9 +459,7 @@
       line-height: 1.6;
     }
 
-    .auth-card-body {
-      padding: 24px;
-    }
+    .auth-card-body { padding: 24px; }
 
     .auth-actions {
       display: flex;
@@ -504,62 +475,31 @@
       min-height: 21px;
     }
 
-    .inline-row {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-      align-items: center;
-    }
-
-    .small-muted {
-      color: var(--muted);
-      font-size: 13px;
-      line-height: 1.6;
-    }
+    .hidden { display: none !important; }
 
     @media (max-width: 1100px) {
-      .cards {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-
+      .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .split-grid,
-      .form-grid {
-        grid-template-columns: 1fr;
-      }
+      .form-grid { grid-template-columns: 1fr; }
     }
 
     @media (max-width: 980px) {
-      .sidebar {
-        display: none;
-      }
+      .sidebar { display: none; }
     }
 
     @media (max-width: 700px) {
-      .topbar {
-        padding: 18px;
-      }
-
-      .content {
-        padding: 18px;
-      }
-
-      .cards {
-        grid-template-columns: 1fr;
-      }
-
+      .topbar { padding: 18px; }
+      .content { padding: 18px; }
+      .cards { grid-template-columns: 1fr; }
       .topbar-right {
         width: 100%;
         justify-content: flex-start;
       }
-
       .user-chip {
         width: 100%;
         justify-content: center;
       }
-
-      .auth-actions {
-        flex-direction: column;
-      }
+      .auth-actions { flex-direction: column; }
     }
   </style>
 </head>
@@ -609,9 +549,8 @@
         </div>
 
         <div class="topbar-right">
-          <div id="admin-user-chip" class="user-chip">admin@thereadymarkgroup.com</div>
+          <div class="user-chip">admin@thereadymarkgroup.com</div>
           <button id="topbar-new-inspection-btn" class="btn btn-primary" type="button">New Inspection</button>
-          <button id="admin-logout-btn" class="btn btn-secondary" type="button">Log Out</button>
         </div>
       </div>
 
@@ -625,9 +564,9 @@
             </div>
 
             <div class="card">
-              <div class="card-label">Inspections This Week</div>
+              <div class="card-label">Inspections This Session</div>
               <div id="dashboard-inspections-week-count" class="card-value">0</div>
-              <div class="card-subtext">Completed and logged into the system.</div>
+              <div class="card-subtext">Saved during this admin session.</div>
             </div>
 
             <div class="card">
@@ -637,9 +576,9 @@
             </div>
 
             <div class="card">
-              <div class="card-label">Resolved This Week</div>
+              <div class="card-label">Resolved Reports</div>
               <div id="dashboard-resolved-week-count" class="card-value" style="color: var(--success);">0</div>
-              <div class="card-subtext">Closed issues across active properties.</div>
+              <div class="card-subtext">Closed reports currently returned.</div>
             </div>
           </div>
 
@@ -665,7 +604,7 @@
                 <p>Latest operational updates from the system.</p>
               </div>
               <div class="section-body">
-                <div id="dashboard-recent-activity" class="status-box">Loading recent activity...</div>
+                <div id="dashboard-recent-activity" class="status-box">Ready.</div>
               </div>
             </div>
           </div>
@@ -673,7 +612,7 @@
           <div class="section-card">
             <div class="section-header">
               <h2>Property Snapshot</h2>
-              <p>Overview of current property status and last inspection activity.</p>
+              <p>Overview of current property status and guest report activity.</p>
             </div>
 
             <div class="table-wrap">
@@ -682,15 +621,13 @@
                   <tr>
                     <th>Property</th>
                     <th>Status</th>
-                    <th>Last Inspection</th>
+                    <th>Slug</th>
                     <th>Guest Reports</th>
                     <th>Action</th>
                   </tr>
                 </thead>
                 <tbody id="dashboard-property-snapshot-body">
-                  <tr>
-                    <td colspan="5">Loading property snapshot...</td>
-                  </tr>
+                  <tr><td colspan="5">Loading...</td></tr>
                 </tbody>
               </table>
             </div>
@@ -771,9 +708,7 @@
                   </tr>
                 </thead>
                 <tbody id="existing-properties-body">
-                  <tr>
-                    <td colspan="4">Loading properties...</td>
-                  </tr>
+                  <tr><td colspan="4">Loading...</td></tr>
                 </tbody>
               </table>
             </div>
@@ -820,7 +755,7 @@
                     </div>
                     <div>
                       <label for="inspection-score">Score</label>
-                      <input id="inspection-score" type="number" min="0" max="100" placeholder="e.g. 96" />
+                      <input id="inspection-score" type="number" placeholder="e.g. 96" />
                     </div>
                     <div>
                       <label for="inspection-verification-id">Verification ID</label>
@@ -832,7 +767,7 @@
                     </div>
                   </div>
 
-                  <div style="margin-top: 18px;" class="inline-row">
+                  <div style="margin-top: 18px;" class="quick-actions">
                     <button id="save-inspection-btn" class="btn btn-primary" type="submit">Save Inspection</button>
                     <button id="generate-verification-id-btn" class="btn btn-secondary" type="button">Generate ID</button>
                   </div>
@@ -872,9 +807,7 @@
                   </tr>
                 </thead>
                 <tbody id="guest-reports-body">
-                  <tr>
-                    <td colspan="6">Loading guest reports...</td>
-                  </tr>
+                  <tr><td colspan="6">Loading...</td></tr>
                 </tbody>
               </table>
             </div>
@@ -897,11 +830,11 @@
                     </div>
                     <div>
                       <label for="evidence-photo-file">Inspection Photo</label>
-                      <input id="evidence-photo-file" type="file" accept=".jpg,.jpeg,.png,.webp,.heic,.heif,image/*" />
+                      <input id="evidence-photo-file" type="file" />
                     </div>
                     <div>
                       <label for="evidence-log-file">Inspection Log</label>
-                      <input id="evidence-log-file" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp,.heic,.heif,image/*,application/pdf" />
+                      <input id="evidence-log-file" type="file" />
                     </div>
                   </div>
 
@@ -929,228 +862,473 @@
     </main>
   </div>
 
-<script>
-const API = {
-  adminLogin: "/api/admin-login",
-  verifyAdminToken: "/api/admin-verify",
-  adminData: "/api/admin-data",
-  createProperty: "/api/create-property",
-  saveInspection: "/api/save-inspection",
-  uploadEvidence: "/api/save-evidence"
-};
+  <script>
+    const API = {
+      adminLogin: "/api/admin-login",
+      verifyAdminToken: "/api/admin-verify",
+      adminData: "/api/admin-data",
+      createProperty: "/api/create-property",
+      saveInspection: "/api/save-inspection",
+      uploadEvidence: "/api/save-evidence"
+    };
 
-const STORAGE_KEY = "rm_admin_token";
+    const STORAGE_KEY = "rm_admin_token";
 
-let adminToken = "";
+    const state = {
+      adminToken: "",
+      properties: [],
+      guestReports: [],
+      lastInspectionResult: null
+    };
 
-/* =========================
-   INIT (THIS FIXES REFRESH LOOP)
-========================= */
-window.addEventListener("DOMContentLoaded", async () => {
-  const saved = sessionStorage.getItem(STORAGE_KEY);
+    function goToView(viewId) {
+      document.querySelectorAll(".view").forEach(view => view.classList.remove("active"));
+      const activeView = document.getElementById(viewId);
+      if (activeView) activeView.classList.add("active");
 
-  if (saved) {
-    adminToken = saved;
-
-    try {
-      await apiFetch(API.verifyAdminToken, { method: "GET" });
-      document.getElementById("auth-overlay").style.display = "none";
-      await loadDashboard();
-    } catch {
-      sessionStorage.removeItem(STORAGE_KEY);
-      showLogin();
-    }
-  } else {
-    showLogin();
-  }
-});
-
-function showLogin() {
-  document.getElementById("auth-overlay").style.display = "flex";
-}
-
-/* =========================
-   CORE FETCH
-========================= */
-async function apiFetch(url, options = {}) {
-  const headers = new Headers(options.headers || {});
-  headers.set("Content-Type", "application/json");
-
-  if (adminToken) {
-    headers.set("x-admin-token", adminToken);
-  }
-
-  const res = await fetch(url, { ...options, headers });
-  const data = await res.json().catch(()=>null);
-
-  if (!res.ok) {
-    throw new Error(data?.error || "Request failed");
-  }
-
-  return data;
-}
-
-/* =========================
-   LOGIN
-========================= */
-async function loginAdmin() {
-  const password = document.getElementById("admin-password-input").value.trim();
-
-  if (!password) return;
-
-  try {
-    const res = await fetch(API.adminLogin, {
-      method: "POST",
-      headers: {"Content-Type":"application/json"},
-      body: JSON.stringify({ password })
-    });
-
-    const data = await res.json();
-
-    if (!res.ok) throw new Error(data.error);
-
-    adminToken = data.token;
-    sessionStorage.setItem(STORAGE_KEY, data.token);
-
-    document.getElementById("auth-overlay").style.display = "none";
-
-    await loadDashboard();
-
-  } catch (e) {
-    document.getElementById("auth-error").textContent = e.message;
-  }
-}
-
-/* =========================
-   LOAD DATA (THIS FIXES "NOTHING WORKS")
-========================= */
-async function loadDashboard() {
-  const data = await apiFetch(API.adminData, { method: "GET" });
-
-  const select = document.getElementById("inspection-property-select");
-
-  select.innerHTML =
-    `<option value="">Select property</option>` +
-    (data.properties || []).map(p =>
-      `<option value="${p.property_slug}">${p.property_name}</option>`
-    ).join("");
-}
-
-/* =========================
-   CREATE PROPERTY
-========================= */
-async function createProperty(e) {
-  e.preventDefault();
-
-  const payload = {
-    property_name: document.getElementById("property-name-input").value,
-    property_slug: document.getElementById("property-slug-input").value,
-    city: document.getElementById("property-city-input").value,
-    state: document.getElementById("property-state-input").value,
-    property_type: document.getElementById("property-type-input").value
-  };
-
-  try {
-    await apiFetch(API.createProperty, {
-      method: "POST",
-      body: JSON.stringify(payload)
-    });
-
-    alert("Property created ✅");
-    await loadDashboard();
-
-  } catch (e) {
-    alert(e.message);
-  }
-}
-
-/* =========================
-   SAVE INSPECTION
-========================= */
-async function saveInspection(e) {
-  e.preventDefault();
-
-  const payload = {
-    property_slug: document.getElementById("inspection-property-select").value,
-    room_number: document.getElementById("inspection-room-number").value,
-    inspector_id: document.getElementById("inspection-inspector-id").value,
-    inspection_date: document.getElementById("inspection-date").value,
-    certification_tier: document.getElementById("inspection-certification-tier").value,
-    score: Number(document.getElementById("inspection-score").value),
-    verification_id: document.getElementById("inspection-verification-id").value,
-    notes: document.getElementById("inspection-notes").value
-  };
-
-  try {
-    const data = await apiFetch(API.saveInspection, {
-      method: "POST",
-      body: JSON.stringify(payload)
-    });
-
-    document.getElementById("inspection-verification-id").value = data.verification_id;
-
-    alert("Inspection saved ✅");
-
-  } catch (e) {
-    alert(e.message);
-  }
-}
-
-/* =========================
-   FILE → BASE64
-========================= */
-function fileToBase64(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-
-    reader.onload = () => {
-      resolve({
-        name: file.name,
-        type: file.type,
-        base64: reader.result.split(",")[1]
+      document.querySelectorAll(".nav-btn").forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.viewTarget === viewId);
       });
-    };
+    }
 
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-}
+    window.goToView = goToView;
 
-/* =========================
-   UPLOAD EVIDENCE
-========================= */
-async function uploadEvidence(e) {
-  e.preventDefault();
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
 
-  const photo = document.getElementById("evidence-photo-file").files[0];
-  const log = document.getElementById("evidence-log-file").files[0];
+    function slugify(value) {
+      return String(value || "")
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "")
+        .replace(/-+/g, "-");
+    }
 
-  try {
-    const payload = {
-      verification_id: document.getElementById("evidence-verification-id").value,
-      photo_file: photo ? await fileToBase64(photo) : null,
-      log_file: log ? await fileToBase64(log) : null
-    };
+    function pad(num) {
+      return String(num).padStart(2, "0");
+    }
 
-    await apiFetch(API.uploadEvidence, {
-      method: "POST",
-      body: JSON.stringify(payload)
-    });
+    function generateVerificationId() {
+      const now = new Date();
+      return `RM-${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+    }
 
-    alert("Evidence uploaded ✅");
+    function formatDate(value) {
+      if (!value) return "—";
+      const d = new Date(value);
+      if (Number.isNaN(d.getTime())) return "—";
+      return d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+    }
 
-  } catch (e) {
-    alert(e.message);
-  }
-}
+    function setStatusBox(id, message) {
+      const el = document.getElementById(id);
+      if (el) el.textContent = message;
+    }
 
-/* =========================
-   EVENT HOOKS
-========================= */
-document.getElementById("admin-login-btn").onclick = loginAdmin;
-document.getElementById("create-property-form").onsubmit = createProperty;
-document.getElementById("save-inspection-form").onsubmit = saveInspection;
-document.getElementById("upload-evidence-form").onsubmit = uploadEvidence;
-</script>
+    function getStatusPillClass(statusText) {
+      const normalized = String(statusText || "").toLowerCase();
+      if (normalized.includes("resolved") || normalized.includes("verified") || normalized.includes("active")) return "status-verified";
+      if (normalized.includes("review") || normalized.includes("issues") || normalized.includes("attention")) return "status-issues";
+      return "status-new";
+    }
+
+    async function apiFetch(url, options = {}) {
+      const headers = new Headers(options.headers || {});
+      if (!(options.body instanceof FormData)) {
+        headers.set("Content-Type", "application/json");
+      }
+      if (state.adminToken) {
+        headers.set("x-admin-token", state.adminToken);
+      }
+
+      const response = await fetch(url, { ...options, headers });
+      const data = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        throw new Error(data?.error || data?.details || `Request failed: ${response.status}`);
+      }
+
+      return data;
+    }
+
+    async function fileToBase64(file) {
+      if (!file) return null;
+
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const result = String(reader.result || "");
+          resolve({
+            name: file.name,
+            type: file.type,
+            base64: result.split(",")[1]
+          });
+        };
+        reader.onerror = () => reject(new Error(`Failed to read ${file.name}`));
+        reader.readAsDataURL(file);
+      });
+    }
+
+    async function loginAdmin() {
+      const passwordInput = document.getElementById("admin-password-input");
+      const errorBox = document.getElementById("auth-error");
+      const overlay = document.getElementById("auth-overlay");
+      const password = passwordInput.value.trim();
+
+      errorBox.textContent = "";
+
+      if (!password) {
+        errorBox.textContent = "Enter your admin password.";
+        return;
+      }
+
+      try {
+        const response = await fetch(API.adminLogin, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ password })
+        });
+
+        const data = await response.json().catch(() => ({}));
+
+        if (!response.ok) {
+          throw new Error(data?.error || "Login failed.");
+        }
+
+        if (!data?.token) {
+          throw new Error("No admin token returned.");
+        }
+
+        state.adminToken = data.token;
+        sessionStorage.setItem(STORAGE_KEY, data.token);
+
+        await apiFetch(API.verifyAdminToken, { method: "GET" });
+
+        overlay.classList.add("hidden");
+        passwordInput.value = "";
+
+        await refreshAdminData();
+      } catch (error) {
+        errorBox.textContent = error.message || "Login failed.";
+      }
+    }
+
+    async function refreshAdminData() {
+      const data = await apiFetch(API.adminData, { method: "GET" });
+      state.properties = Array.isArray(data?.properties) ? data.properties : [];
+      state.guestReports = Array.isArray(data?.guest_reports) ? data.guest_reports : [];
+
+      renderProperties();
+      renderInspectionProperties();
+      renderGuestReports();
+      renderDashboard();
+    }
+
+    function renderProperties() {
+      const tbody = document.getElementById("existing-properties-body");
+
+      if (!state.properties.length) {
+        tbody.innerHTML = `<tr><td colspan="4">No properties found yet.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = state.properties.map(property => `
+        <tr>
+          <td>${escapeHtml(property.property_name)}</td>
+          <td>${escapeHtml(property.property_type || "—")}</td>
+          <td>${escapeHtml([property.city, property.state].filter(Boolean).join(", ") || "—")}</td>
+          <td><span class="status-pill status-verified">Active</span></td>
+        </tr>
+      `).join("");
+    }
+
+    function renderInspectionProperties() {
+      const select = document.getElementById("inspection-property-select");
+      select.innerHTML = `<option value="">Select property</option>` + state.properties.map(property => `
+        <option value="${escapeHtml(property.property_slug)}">${escapeHtml(property.property_name)}</option>
+      `).join("");
+    }
+
+    function renderGuestReports() {
+      const tbody = document.getElementById("guest-reports-body");
+
+      if (!state.guestReports.length) {
+        tbody.innerHTML = `<tr><td colspan="6">No guest reports found.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = state.guestReports.map(report => `
+        <tr>
+          <td>${escapeHtml(report.confirmation_number || report.verification_id || report.id || "—")}</td>
+          <td>${escapeHtml(report.property_name || report.property_slug || "—")}</td>
+          <td>${escapeHtml(report.room_number || "—")}</td>
+          <td><span class="status-pill ${getStatusPillClass(report.status)}">${escapeHtml(report.status || "New")}</span></td>
+          <td>${escapeHtml(formatDate(report.reported_at))}</td>
+          <td>
+            ${report.photo_url
+              ? `<a class="text-btn" href="${escapeHtml(report.photo_url)}" target="_blank" rel="noopener noreferrer">Open</a>`
+              : `<span style="color: var(--muted);">No photo</span>`
+            }
+          </td>
+        </tr>
+      `).join("");
+    }
+
+    function renderDashboard() {
+      document.getElementById("dashboard-properties-count").textContent = String(state.properties.length);
+
+      const openReports = state.guestReports.filter(report => {
+        const status = String(report.status || "").toLowerCase();
+        return status !== "resolved" && status !== "closed";
+      }).length;
+
+      const resolvedReports = state.guestReports.filter(report => {
+        const status = String(report.status || "").toLowerCase();
+        return status === "resolved" || status === "closed";
+      }).length;
+
+      document.getElementById("dashboard-open-reports-count").textContent = String(openReports);
+      document.getElementById("dashboard-resolved-week-count").textContent = String(resolvedReports);
+      document.getElementById("dashboard-inspections-week-count").textContent = state.lastInspectionResult ? "1" : "0";
+
+      const recentLines = [];
+      if (state.lastInspectionResult) {
+        recentLines.push(`${state.lastInspectionResult.property_name} inspection saved.`);
+        recentLines.push(`Verification ID: ${state.lastInspectionResult.verification_id}`);
+      }
+      state.guestReports.slice(0, 3).forEach(report => {
+        recentLines.push(`${report.property_name || report.property_slug || "Property"} report for room ${report.room_number || "—"} is ${report.status || "New"}.`);
+      });
+
+      document.getElementById("dashboard-recent-activity").textContent = recentLines.length ? recentLines.join("\n") : "No recent activity yet.";
+
+      const reportCountMap = {};
+      state.guestReports.forEach(report => {
+        const key = report.property_slug || "";
+        reportCountMap[key] = (reportCountMap[key] || 0) + 1;
+      });
+
+      const snapshotBody = document.getElementById("dashboard-property-snapshot-body");
+      if (!state.properties.length) {
+        snapshotBody.innerHTML = `<tr><td colspan="5">No properties available.</td></tr>`;
+        return;
+      }
+
+      snapshotBody.innerHTML = state.properties.map(property => {
+        const reportCount = reportCountMap[property.property_slug] || 0;
+        const hasIssues = reportCount > 0;
+        return `
+          <tr>
+            <td>${escapeHtml(property.property_name)}</td>
+            <td><span class="status-pill ${hasIssues ? "status-issues" : "status-verified"}">${hasIssues ? "Issues" : "Verified"}</span></td>
+            <td>${escapeHtml(property.property_slug)}</td>
+            <td>${escapeHtml(String(reportCount))}</td>
+            <td><button class="text-btn" type="button" onclick="goToView('properties-view')">Open</button></td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    async function handleCreateProperty(event) {
+      event.preventDefault();
+
+      const name = document.getElementById("property-name-input").value.trim();
+      const slugInput = document.getElementById("property-slug-input").value.trim();
+      const city = document.getElementById("property-city-input").value.trim();
+      const stateValue = document.getElementById("property-state-input").value.trim();
+      const type = document.getElementById("property-type-input").value.trim();
+
+      const slug = slugInput || slugify(name);
+
+      if (!name || !slug || !city || !stateValue || !type) {
+        setStatusBox("property-status-box", "Fill out property name, slug, city, state, and property type.");
+        return;
+      }
+
+      try {
+        const data = await apiFetch(API.createProperty, {
+          method: "POST",
+          body: JSON.stringify({
+            property_name: name,
+            property_slug: slug,
+            city,
+            state: stateValue,
+            property_type: type
+          })
+        });
+
+        setStatusBox("property-status-box", `Property created successfully.\nName: ${data.property?.property_name || name}\nSlug: ${data.property?.property_slug || slug}`);
+        document.getElementById("create-property-form").reset();
+        await refreshAdminData();
+      } catch (error) {
+        setStatusBox("property-status-box", `Property creation failed.\n${error.message}`);
+      }
+    }
+
+    async function handleSaveInspection(event) {
+      event.preventDefault();
+
+      const propertySlug = document.getElementById("inspection-property-select").value.trim();
+      const roomNumber = document.getElementById("inspection-room-number").value.trim();
+      const inspectorId = document.getElementById("inspection-inspector-id").value.trim();
+      const inspectionDate = document.getElementById("inspection-date").value.trim();
+      const certificationTier = document.getElementById("inspection-certification-tier").value.trim();
+      const scoreValue = document.getElementById("inspection-score").value.trim();
+      const verificationInput = document.getElementById("inspection-verification-id");
+      const notes = document.getElementById("inspection-notes").value.trim();
+
+      const verificationId = verificationInput.value.trim() || generateVerificationId();
+      verificationInput.value = verificationId;
+
+      if (!propertySlug || !roomNumber || !inspectorId || !inspectionDate || !certificationTier) {
+        setStatusBox("inspection-status-box", "Fill out property, room number, inspector ID, inspection date, and certification level.");
+        return;
+      }
+
+      try {
+        const data = await apiFetch(API.saveInspection, {
+          method: "POST",
+          body: JSON.stringify({
+            property_slug: propertySlug,
+            room_number: roomNumber,
+            inspector_id: inspectorId,
+            inspection_date: inspectionDate,
+            certification_tier: certificationTier,
+            score: scoreValue ? Number(scoreValue) : null,
+            verification_id: verificationId,
+            notes: notes || null
+          })
+        });
+
+        state.lastInspectionResult = data;
+        document.getElementById("evidence-verification-id").value = verificationId;
+
+        setStatusBox(
+          "inspection-status-box",
+          `Inspection saved successfully.\nProperty: ${data.property_name}\nRoom: ${data.room_number}\nVerification ID: ${data.verification_id}\nPublic URL: ${data.public_url}`
+        );
+
+        renderDashboard();
+      } catch (error) {
+        setStatusBox("inspection-status-box", `Inspection save failed.\n${error.message}`);
+      }
+    }
+
+    async function handleUploadEvidence(event) {
+      event.preventDefault();
+
+      const verificationId = document.getElementById("evidence-verification-id").value.trim();
+      const photoFile = document.getElementById("evidence-photo-file").files[0] || null;
+      const logFile = document.getElementById("evidence-log-file").files[0] || null;
+
+      if (!verificationId) {
+        setStatusBox("evidence-status-box", "Enter a verification ID.");
+        return;
+      }
+
+      if (!photoFile && !logFile) {
+        setStatusBox("evidence-status-box", "Select at least one file to upload.");
+        return;
+      }
+
+      try {
+        const photoPayload = await fileToBase64(photoFile);
+        const logPayload = await fileToBase64(logFile);
+
+        const data = await apiFetch(API.uploadEvidence, {
+          method: "POST",
+          body: JSON.stringify({
+            verification_id: verificationId,
+            photo_file: photoPayload,
+            log_file: logPayload
+          })
+        });
+
+        setStatusBox(
+          "evidence-status-box",
+          `Evidence uploaded successfully.\nVerification ID: ${data.verification_id}\nPhoto Path: ${data.photo_path || "None"}\nLog Path: ${data.log_file_path || "None"}`
+        );
+      } catch (error) {
+        setStatusBox("evidence-status-box", `Evidence upload failed.\n${error.message}`);
+      }
+    }
+
+    function wireEvents() {
+      document.querySelectorAll(".nav-btn").forEach(btn => {
+        btn.addEventListener("click", () => goToView(btn.dataset.viewTarget));
+      });
+
+      document.getElementById("topbar-new-inspection-btn").addEventListener("click", () => {
+        goToView("inspections-view");
+      });
+
+      document.getElementById("admin-login-btn").addEventListener("click", loginAdmin);
+      document.getElementById("admin-password-input").addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          loginAdmin();
+        }
+      });
+
+      document.getElementById("property-name-input").addEventListener("input", () => {
+        const slugInput = document.getElementById("property-slug-input");
+        if (!slugInput.dataset.touched) {
+          slugInput.value = slugify(document.getElementById("property-name-input").value);
+        }
+      });
+
+      document.getElementById("property-slug-input").addEventListener("input", () => {
+        document.getElementById("property-slug-input").dataset.touched = "true";
+      });
+
+      document.getElementById("generate-verification-id-btn").addEventListener("click", () => {
+        document.getElementById("inspection-verification-id").value = generateVerificationId();
+      });
+
+      document.getElementById("create-property-form").addEventListener("submit", handleCreateProperty);
+      document.getElementById("save-inspection-form").addEventListener("submit", handleSaveInspection);
+      document.getElementById("upload-evidence-form").addEventListener("submit", handleUploadEvidence);
+    }
+
+    async function boot() {
+      wireEvents();
+
+      const inspectionDateInput = document.getElementById("inspection-date");
+      const verificationIdInput = document.getElementById("inspection-verification-id");
+
+      if (!inspectionDateInput.value) {
+        const now = new Date();
+        const local = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+        inspectionDateInput.value = local;
+      }
+
+      if (!verificationIdInput.value) {
+        verificationIdInput.value = generateVerificationId();
+      }
+
+      const savedToken = sessionStorage.getItem(STORAGE_KEY);
+      if (!savedToken) return;
+
+      state.adminToken = savedToken;
+
+      try {
+        await apiFetch(API.verifyAdminToken, { method: "GET" });
+        document.getElementById("auth-overlay").classList.add("hidden");
+        await refreshAdminData();
+      } catch {
+        state.adminToken = "";
+        sessionStorage.removeItem(STORAGE_KEY);
+      }
+    }
+
+    boot();
+  </script>
 </body>
 </html>
