@@ -1047,7 +1047,8 @@
           const password = document.getElementById("guest-password")?.value || "";
 
           const mode = submitBtn.getAttribute("data-mode");
-
+          showStatus("Mode: " + mode, "");
+          
 if (mode === "signup") {
 
   const firstName = document.getElementById("signup-first-name")?.value;
