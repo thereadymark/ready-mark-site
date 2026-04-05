@@ -193,6 +193,12 @@
       border: 1px solid var(--line);
     }
 
+    .btn-danger {
+      background: #fff;
+      color: var(--danger);
+      border: 1px solid rgba(180, 76, 76, 0.25);
+    }
+
     .content {
       padding: 28px;
       display: flex;
@@ -331,6 +337,7 @@
       letter-spacing: 0.4px;
       text-transform: uppercase;
       border: 1px solid transparent;
+      white-space: nowrap;
     }
 
     .status-verified {
@@ -435,6 +442,81 @@
       white-space: pre-wrap;
     }
 
+    .hidden {
+      display: none !important;
+    }
+
+    .auth-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(17, 19, 21, 0.55);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      z-index: 9999;
+    }
+
+    .auth-card {
+      width: 100%;
+      max-width: 460px;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18);
+      overflow: hidden;
+    }
+
+    .auth-card-header {
+      padding: 24px 24px 16px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .auth-card-header h2 {
+      margin: 0;
+      font-family: "Cinzel", serif;
+      font-size: 24px;
+      line-height: 1.1;
+    }
+
+    .auth-card-header p {
+      margin: 10px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .auth-card-body {
+      padding: 24px;
+    }
+
+    .auth-actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 18px;
+    }
+
+    .auth-error {
+      margin-top: 12px;
+      color: var(--danger);
+      font-size: 14px;
+      line-height: 1.5;
+      min-height: 21px;
+    }
+
+    .inline-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .small-muted {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
     @media (max-width: 1100px) {
       .cards {
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -474,10 +556,31 @@
         width: 100%;
         justify-content: center;
       }
+
+      .auth-actions {
+        flex-direction: column;
+      }
     }
   </style>
 </head>
 <body>
+  <div id="auth-overlay" class="auth-overlay">
+    <div class="auth-card">
+      <div class="auth-card-header">
+        <h2>Admin Access</h2>
+        <p>Enter your admin password to access the Ready Mark control center.</p>
+      </div>
+      <div class="auth-card-body">
+        <label for="admin-password-input">Admin Password</label>
+        <input id="admin-password-input" type="password" placeholder="Enter admin password" autocomplete="current-password" />
+        <div class="auth-actions">
+          <button id="admin-login-btn" class="btn btn-primary" type="button">Enter Portal</button>
+        </div>
+        <div id="auth-error" class="auth-error"></div>
+      </div>
+    </div>
+  </div>
+
   <div class="app-shell">
     <aside class="sidebar">
       <div class="brand">
@@ -506,8 +609,9 @@
         </div>
 
         <div class="topbar-right">
-          <div class="user-chip">admin@thereadymarkgroup.com</div>
-          <button class="btn btn-primary">New Inspection</button>
+          <div id="admin-user-chip" class="user-chip">admin@thereadymarkgroup.com</div>
+          <button id="topbar-new-inspection-btn" class="btn btn-primary" type="button">New Inspection</button>
+          <button id="admin-logout-btn" class="btn btn-secondary" type="button">Log Out</button>
         </div>
       </div>
 
@@ -516,25 +620,25 @@
           <div class="cards">
             <div class="card">
               <div class="card-label">Properties</div>
-              <div class="card-value">12</div>
+              <div id="dashboard-properties-count" class="card-value">0</div>
               <div class="card-subtext">Tracked across current client portfolio.</div>
             </div>
 
             <div class="card">
               <div class="card-label">Inspections This Week</div>
-              <div class="card-value">8</div>
+              <div id="dashboard-inspections-week-count" class="card-value">0</div>
               <div class="card-subtext">Completed and logged into the system.</div>
             </div>
 
             <div class="card">
               <div class="card-label">Open Guest Reports</div>
-              <div class="card-value" style="color: var(--warning);">3</div>
+              <div id="dashboard-open-reports-count" class="card-value" style="color: var(--warning);">0</div>
               <div class="card-subtext">Waiting for review or resolution.</div>
             </div>
 
             <div class="card">
               <div class="card-label">Resolved This Week</div>
-              <div class="card-value" style="color: var(--success);">5</div>
+              <div id="dashboard-resolved-week-count" class="card-value" style="color: var(--success);">0</div>
               <div class="card-subtext">Closed issues across active properties.</div>
             </div>
           </div>
@@ -547,10 +651,10 @@
               </div>
               <div class="section-body">
                 <div class="quick-actions">
-                  <button class="btn btn-primary" onclick="goToView('inspections-view')">Log Inspection</button>
-                  <button class="btn btn-secondary" onclick="goToView('properties-view')">Add Property</button>
-                  <button class="btn btn-secondary" onclick="goToView('evidence-view')">Upload Evidence</button>
-                  <button class="btn btn-secondary" onclick="goToView('guest-reports-view')">Review Reports</button>
+                  <button class="btn btn-primary" type="button" onclick="goToView('inspections-view')">Log Inspection</button>
+                  <button class="btn btn-secondary" type="button" onclick="goToView('properties-view')">Add Property</button>
+                  <button class="btn btn-secondary" type="button" onclick="goToView('evidence-view')">Upload Evidence</button>
+                  <button class="btn btn-secondary" type="button" onclick="goToView('guest-reports-view')">Review Reports</button>
                 </div>
               </div>
             </div>
@@ -561,9 +665,7 @@
                 <p>Latest operational updates from the system.</p>
               </div>
               <div class="section-body">
-                <div class="status-box">Hilton Downtown inspection saved.
-Oakwood Suites guest report marked Under Review.
-Westview Apartments evidence uploaded.</div>
+                <div id="dashboard-recent-activity" class="status-box">Loading recent activity...</div>
               </div>
             </div>
           </div>
@@ -585,27 +687,9 @@ Westview Apartments evidence uploaded.</div>
                     <th>Action</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody id="dashboard-property-snapshot-body">
                   <tr>
-                    <td>Hilton Downtown</td>
-                    <td><span class="status-pill status-verified">Verified</span></td>
-                    <td>Mar 28</td>
-                    <td>0</td>
-                    <td><button class="text-btn" onclick="goToView('properties-view')">Open</button></td>
-                  </tr>
-                  <tr>
-                    <td>Oakwood Suites</td>
-                    <td><span class="status-pill status-issues">Issues</span></td>
-                    <td>Mar 27</td>
-                    <td>2</td>
-                    <td><button class="text-btn" onclick="goToView('guest-reports-view')">Review</button></td>
-                  </tr>
-                  <tr>
-                    <td>Westview Apartments</td>
-                    <td><span class="status-pill status-verified">Verified</span></td>
-                    <td>Mar 20</td>
-                    <td>1</td>
-                    <td><button class="text-btn" onclick="goToView('properties-view')">Open</button></td>
+                    <td colspan="5">Loading property snapshot...</td>
                   </tr>
                 </tbody>
               </table>
@@ -621,39 +705,41 @@ Westview Apartments evidence uploaded.</div>
                 <p>Add a new property to the Ready Mark system.</p>
               </div>
               <div class="section-body">
-                <div class="form-grid">
-                  <div>
-                    <label>Property Name</label>
-                    <input type="text" placeholder="e.g. Hilton Downtown" />
+                <form id="create-property-form">
+                  <div class="form-grid">
+                    <div>
+                      <label for="property-name-input">Property Name</label>
+                      <input id="property-name-input" type="text" placeholder="e.g. Hilton Downtown" />
+                    </div>
+                    <div>
+                      <label for="property-slug-input">Property Slug</label>
+                      <input id="property-slug-input" type="text" placeholder="Auto-generated slug" />
+                    </div>
+                    <div>
+                      <label for="property-city-input">City</label>
+                      <input id="property-city-input" type="text" placeholder="e.g. St. Louis" />
+                    </div>
+                    <div>
+                      <label for="property-state-input">State</label>
+                      <input id="property-state-input" type="text" placeholder="e.g. MO" />
+                    </div>
+                    <div class="full-width">
+                      <label for="property-type-input">Property Type</label>
+                      <select id="property-type-input">
+                        <option value="">Select property type</option>
+                        <option>Hotel</option>
+                        <option>Apartment</option>
+                        <option>Airbnb</option>
+                        <option>Office</option>
+                        <option>Medical</option>
+                      </select>
+                    </div>
                   </div>
-                  <div>
-                    <label>Property Slug</label>
-                    <input type="text" placeholder="Auto-generated slug" />
-                  </div>
-                  <div>
-                    <label>City</label>
-                    <input type="text" placeholder="e.g. St. Louis" />
-                  </div>
-                  <div>
-                    <label>State</label>
-                    <input type="text" placeholder="e.g. MO" />
-                  </div>
-                  <div class="full-width">
-                    <label>Property Type</label>
-                    <select>
-                      <option>Select property type</option>
-                      <option>Hotel</option>
-                      <option>Apartment</option>
-                      <option>Airbnb</option>
-                      <option>Office</option>
-                      <option>Medical</option>
-                    </select>
-                  </div>
-                </div>
 
-                <div style="margin-top: 18px;">
-                  <button class="btn btn-primary">Create Property</button>
-                </div>
+                  <div style="margin-top: 18px;">
+                    <button id="create-property-btn" class="btn btn-primary" type="submit">Create Property</button>
+                  </div>
+                </form>
               </div>
             </div>
 
@@ -663,7 +749,7 @@ Westview Apartments evidence uploaded.</div>
                 <p>Property creation and sync messaging will appear here.</p>
               </div>
               <div class="section-body">
-                <div class="status-box">Ready to create a new property.</div>
+                <div id="property-status-box" class="status-box">Ready to create a new property.</div>
               </div>
             </div>
           </div>
@@ -684,18 +770,9 @@ Westview Apartments evidence uploaded.</div>
                     <th>Status</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody id="existing-properties-body">
                   <tr>
-                    <td>Hilton Downtown</td>
-                    <td>Hotel</td>
-                    <td>St. Louis, MO</td>
-                    <td><span class="status-pill status-verified">Active</span></td>
-                  </tr>
-                  <tr>
-                    <td>Oakwood Suites</td>
-                    <td>Apartment</td>
-                    <td>St. Louis, MO</td>
-                    <td><span class="status-pill status-verified">Active</span></td>
+                    <td colspan="4">Loading properties...</td>
                   </tr>
                 </tbody>
               </table>
@@ -711,50 +788,55 @@ Westview Apartments evidence uploaded.</div>
                 <p>Create a new inspection record tied to a property and room.</p>
               </div>
               <div class="section-body">
-                <div class="form-grid">
-                  <div class="full-width">
-                    <label>Property</label>
-                    <select>
-                      <option>Select property</option>
-                      <option>Hilton Downtown</option>
-                      <option>Oakwood Suites</option>
-                    </select>
+                <form id="save-inspection-form">
+                  <div class="form-grid">
+                    <div class="full-width">
+                      <label for="inspection-property-select">Property</label>
+                      <select id="inspection-property-select">
+                        <option value="">Select property</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label for="inspection-room-number">Room Number</label>
+                      <input id="inspection-room-number" type="text" placeholder="e.g. 204" />
+                    </div>
+                    <div>
+                      <label for="inspection-inspector-id">Inspector ID</label>
+                      <input id="inspection-inspector-id" type="text" placeholder="e.g. 4603" />
+                    </div>
+                    <div>
+                      <label for="inspection-date">Inspection Date</label>
+                      <input id="inspection-date" type="datetime-local" />
+                    </div>
+                    <div>
+                      <label for="inspection-certification-tier">Certification Level</label>
+                      <select id="inspection-certification-tier">
+                        <option value="">Select level</option>
+                        <option>Verified Clean</option>
+                        <option>Needs Attention</option>
+                        <option>Not Clean</option>
+                        <option>Ready Mark Premier</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label for="inspection-score">Score</label>
+                      <input id="inspection-score" type="number" min="0" max="100" placeholder="e.g. 96" />
+                    </div>
+                    <div>
+                      <label for="inspection-verification-id">Verification ID</label>
+                      <input id="inspection-verification-id" type="text" placeholder="Auto-generated" />
+                    </div>
+                    <div class="full-width">
+                      <label for="inspection-notes">Notes</label>
+                      <textarea id="inspection-notes" placeholder="Internal notes for this inspection."></textarea>
+                    </div>
                   </div>
-                  <div>
-                    <label>Room Number</label>
-                    <input type="text" placeholder="e.g. 204" />
-                  </div>
-                  <div>
-                    <label>Inspector ID</label>
-                    <input type="text" placeholder="e.g. 4603" />
-                  </div>
-                  <div>
-                    <label>Inspection Date</label>
-                    <input type="datetime-local" />
-                  </div>
-                  <div>
-                    <label>Certification Level</label>
-                    <select>
-                      <option>Select level</option>
-                      <option>Verified Clean</option>
-                      <option>Needs Attention</option>
-                      <option>Not Clean</option>
-                      <option>Ready Mark Premier</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label>Score</label>
-                    <input type="number" placeholder="e.g. 96" />
-                  </div>
-                  <div class="full-width">
-                    <label>Notes</label>
-                    <textarea placeholder="Internal notes for this inspection."></textarea>
-                  </div>
-                </div>
 
-                <div style="margin-top: 18px;">
-                  <button class="btn btn-primary">Save Inspection</button>
-                </div>
+                  <div style="margin-top: 18px;" class="inline-row">
+                    <button id="save-inspection-btn" class="btn btn-primary" type="submit">Save Inspection</button>
+                    <button id="generate-verification-id-btn" class="btn btn-secondary" type="button">Generate ID</button>
+                  </div>
+                </form>
               </div>
             </div>
 
@@ -764,7 +846,7 @@ Westview Apartments evidence uploaded.</div>
                 <p>System response and verification output appear here.</p>
               </div>
               <div class="section-body">
-                <div class="status-box">Waiting for inspection entry.</div>
+                <div id="inspection-status-box" class="status-box">Waiting for inspection entry.</div>
               </div>
             </div>
           </div>
@@ -789,22 +871,9 @@ Westview Apartments evidence uploaded.</div>
                     <th>Action</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody id="guest-reports-body">
                   <tr>
-                    <td>RM-RPT-20260404-1821</td>
-                    <td>Oakwood Suites</td>
-                    <td>118</td>
-                    <td><span class="status-pill status-new">New</span></td>
-                    <td>Apr 4</td>
-                    <td><button class="text-btn">Review</button></td>
-                  </tr>
-                  <tr>
-                    <td>RM-RPT-20260404-1940</td>
-                    <td>Westview Apartments</td>
-                    <td>204</td>
-                    <td><span class="status-pill status-issues">Under Review</span></td>
-                    <td>Apr 4</td>
-                    <td><button class="text-btn">Open</button></td>
+                    <td colspan="6">Loading guest reports...</td>
                   </tr>
                 </tbody>
               </table>
@@ -820,26 +889,28 @@ Westview Apartments evidence uploaded.</div>
                 <p>Attach inspection photo or supporting log to a verification record.</p>
               </div>
               <div class="section-body">
-                <div class="form-grid">
-                  <div class="full-width">
-                    <label>Verification ID</label>
-                    <input type="text" placeholder="Enter verification ID" />
+                <form id="upload-evidence-form">
+                  <div class="form-grid">
+                    <div class="full-width">
+                      <label for="evidence-verification-id">Verification ID</label>
+                      <input id="evidence-verification-id" type="text" placeholder="Enter verification ID" />
+                    </div>
+                    <div>
+                      <label for="evidence-photo-file">Inspection Photo</label>
+                      <input id="evidence-photo-file" type="file" accept=".jpg,.jpeg,.png,.webp,.heic,.heif,image/*" />
+                    </div>
+                    <div>
+                      <label for="evidence-log-file">Inspection Log</label>
+                      <input id="evidence-log-file" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp,.heic,.heif,image/*,application/pdf" />
+                    </div>
                   </div>
-                  <div>
-                    <label>Inspection Photo</label>
-                    <input type="file" />
-                  </div>
-                  <div>
-                    <label>Inspection Log</label>
-                    <input type="file" />
-                  </div>
-                </div>
 
-                <div class="helper">Save the inspection first, then upload evidence tied to the correct verification record.</div>
+                  <div class="helper">Save the inspection first, then upload evidence tied to the correct verification record.</div>
 
-                <div style="margin-top: 18px;">
-                  <button class="btn btn-primary">Upload Evidence</button>
-                </div>
+                  <div style="margin-top: 18px;">
+                    <button id="upload-evidence-btn" class="btn btn-primary" type="submit">Upload Evidence</button>
+                  </div>
+                </form>
               </div>
             </div>
 
@@ -849,7 +920,7 @@ Westview Apartments evidence uploaded.</div>
                 <p>Upload response and file confirmation appear here.</p>
               </div>
               <div class="section-body">
-                <div class="status-box">Ready to upload supporting evidence.</div>
+                <div id="evidence-status-box" class="status-box">Ready to upload supporting evidence.</div>
               </div>
             </div>
           </div>
@@ -858,24 +929,237 @@ Westview Apartments evidence uploaded.</div>
     </main>
   </div>
 
-  <script>
-    function goToView(viewId) {
-      document.querySelectorAll(".view").forEach(view => {
-        view.classList.remove("active");
-      });
+ <script>
+  const API = {
+    adminLogin: "/api/admin-login",
+    verifyAdminToken: "/api/admin-verify",
+    adminData: "/api/admin-data",
+    createProperty: "/api/create-property",
+    saveInspection: "/api/save-inspection",
+    uploadEvidence: "/api/save-evidence"
+  };
 
-      document.getElementById(viewId).classList.add("active");
+  const STORAGE_KEYS = {
+    adminToken: "rm_admin_token"
+  };
 
-      document.querySelectorAll(".nav-btn").forEach(btn => {
-        btn.classList.toggle("active", btn.dataset.viewTarget === viewId);
-      });
+  const state = {
+    adminToken: "",
+    properties: [],
+    guestReports: [],
+    lastInspectionResult: null
+  };
+
+  const els = {
+    authOverlay: document.getElementById("auth-overlay"),
+    authError: document.getElementById("auth-error"),
+    adminPasswordInput: document.getElementById("admin-password-input"),
+    adminLoginBtn: document.getElementById("admin-login-btn"),
+    adminLogoutBtn: document.getElementById("admin-logout-btn"),
+
+    propertyNameInput: document.getElementById("property-name-input"),
+    propertySlugInput: document.getElementById("property-slug-input"),
+    propertyCityInput: document.getElementById("property-city-input"),
+    propertyStateInput: document.getElementById("property-state-input"),
+    propertyTypeInput: document.getElementById("property-type-input"),
+    createPropertyForm: document.getElementById("create-property-form"),
+    createPropertyBtn: document.getElementById("create-property-btn"),
+    propertyStatusBox: document.getElementById("property-status-box"),
+
+    inspectionPropertySelect: document.getElementById("inspection-property-select"),
+    inspectionRoomNumber: document.getElementById("inspection-room-number"),
+    inspectionInspectorId: document.getElementById("inspection-inspector-id"),
+    inspectionDate: document.getElementById("inspection-date"),
+    inspectionCertificationTier: document.getElementById("inspection-certification-tier"),
+    inspectionScore: document.getElementById("inspection-score"),
+    inspectionVerificationId: document.getElementById("inspection-verification-id"),
+    inspectionNotes: document.getElementById("inspection-notes"),
+    saveInspectionForm: document.getElementById("save-inspection-form"),
+    saveInspectionBtn: document.getElementById("save-inspection-btn"),
+    inspectionStatusBox: document.getElementById("inspection-status-box"),
+
+    uploadEvidenceForm: document.getElementById("upload-evidence-form"),
+    evidenceVerificationId: document.getElementById("evidence-verification-id"),
+    evidencePhotoFile: document.getElementById("evidence-photo-file"),
+    evidenceLogFile: document.getElementById("evidence-log-file"),
+    uploadEvidenceBtn: document.getElementById("upload-evidence-btn"),
+    evidenceStatusBox: document.getElementById("evidence-status-box")
+  };
+
+  function setStatusBox(el, msg) {
+    if (el) el.textContent = msg;
+  }
+
+  function slugify(value) {
+    return String(value || "")
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "");
+  }
+
+  function generateVerificationId() {
+    const now = new Date();
+    return `RM-${now.getFullYear()}${String(now.getMonth()+1).padStart(2,"0")}${String(now.getDate()).padStart(2,"0")}-${Date.now()}`;
+  }
+
+  async function apiFetch(url, options = {}) {
+    const headers = new Headers(options.headers || {});
+    headers.set("Content-Type", "application/json");
+
+    if (state.adminToken) {
+      headers.set("x-admin-token", state.adminToken);
     }
 
-    document.querySelectorAll(".nav-btn").forEach(btn => {
-      btn.addEventListener("click", () => {
-        goToView(btn.dataset.viewTarget);
+    const res = await fetch(url, { ...options, headers });
+    const data = await res.json().catch(()=>null);
+
+    if (!res.ok) throw new Error(data?.error || "Request failed");
+    return data;
+  }
+
+  async function loginAdmin() {
+    const password = els.adminPasswordInput.value.trim();
+    if (!password) return;
+
+    try {
+      const res = await fetch(API.adminLogin, {
+        method: "POST",
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify({ password })
       });
+
+      const data = await res.json();
+
+      if (!res.ok) throw new Error(data.error);
+
+      state.adminToken = data.token;
+      sessionStorage.setItem(STORAGE_KEYS.adminToken, data.token);
+
+      els.authOverlay.style.display = "none";
+
+      await refreshAdminData();
+
+    } catch (e) {
+      els.authError.textContent = e.message;
+    }
+  }
+
+  async function refreshAdminData() {
+    const data = await apiFetch(API.adminData, { method: "GET" });
+    state.properties = data.properties || [];
+
+    els.inspectionPropertySelect.innerHTML =
+      `<option value="">Select property</option>` +
+      state.properties.map(p =>
+        `<option value="${p.property_slug}">${p.property_name}</option>`
+      ).join("");
+  }
+
+  async function handleCreateProperty(e) {
+    e.preventDefault();
+
+    const payload = {
+      property_name: els.propertyNameInput.value,
+      property_slug: slugify(els.propertySlugInput.value),
+      city: els.propertyCityInput.value,
+      state: els.propertyStateInput.value,
+      property_type: els.propertyTypeInput.value
+    };
+
+    try {
+      await apiFetch(API.createProperty, {
+        method: "POST",
+        body: JSON.stringify(payload)
+      });
+
+      setStatusBox(els.propertyStatusBox, "Property created ✅");
+      els.createPropertyForm.reset();
+      await refreshAdminData();
+
+    } catch (e) {
+      setStatusBox(els.propertyStatusBox, e.message);
+    }
+  }
+
+  async function handleSaveInspection(e) {
+    e.preventDefault();
+
+    const payload = {
+      property_slug: els.inspectionPropertySelect.value,
+      room_number: els.inspectionRoomNumber.value,
+      inspector_id: els.inspectionInspectorId.value,
+      inspection_date: els.inspectionDate.value,
+      certification_tier: els.inspectionCertificationTier.value,
+      score: Number(els.inspectionScore.value),
+      verification_id: els.inspectionVerificationId.value || generateVerificationId(),
+      notes: els.inspectionNotes.value
+    };
+
+    try {
+      const data = await apiFetch(API.saveInspection, {
+        method: "POST",
+        body: JSON.stringify(payload)
+      });
+
+      els.inspectionVerificationId.value = data.verification_id;
+
+      setStatusBox(els.inspectionStatusBox,
+        `Saved ✅\nVerification: ${data.verification_id}`
+      );
+
+    } catch (e) {
+      setStatusBox(els.inspectionStatusBox, e.message);
+    }
+  }
+
+  function fileToBase64(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        resolve({
+          name: file.name,
+          type: file.type,
+          base64: reader.result.split(",")[1]
+        });
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
     });
-  </script>
+  }
+
+  async function handleUploadEvidence(e) {
+    e.preventDefault();
+
+    try {
+      const photo = els.evidencePhotoFile.files[0];
+      const log = els.evidenceLogFile.files[0];
+
+      const payload = {
+        verification_id: els.evidenceVerificationId.value,
+        photo_file: photo ? await fileToBase64(photo) : null,
+        log_file: log ? await fileToBase64(log) : null
+      };
+
+      const data = await apiFetch(API.uploadEvidence, {
+        method: "POST",
+        body: JSON.stringify(payload)
+      });
+
+      setStatusBox(els.evidenceStatusBox,
+        `Uploaded ✅\n${data.verification_id}`
+      );
+
+    } catch (e) {
+      setStatusBox(els.evidenceStatusBox, e.message);
+    }
+  }
+
+  document.getElementById("admin-login-btn").onclick = loginAdmin;
+  document.getElementById("create-property-form").onsubmit = handleCreateProperty;
+  document.getElementById("save-inspection-form").onsubmit = handleSaveInspection;
+  document.getElementById("upload-evidence-form").onsubmit = handleUploadEvidence;
+
+</script>
 </body>
 </html>
