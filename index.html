@@ -760,7 +760,8 @@
 
     let currentGuest = null;
     let currentGuestToken = sessionStorage.getItem("readymark_guest_token") || "";
-
+    let authMode = "login";   
+    
     function escapeHtml(str) {
       if (str === null || str === undefined) return "";
       return String(str)
@@ -1034,7 +1035,7 @@
     submitBtn.textContent = "Create Account";
 
     // Mark mode
-    submitBtn.setAttribute("data-mode", "signup");
+    authMode = "signup";
   });
 }
       if (cancelBtn) {
@@ -1046,7 +1047,7 @@
           const email = document.getElementById("guest-email")?.value.trim() || "";
           const password = document.getElementById("guest-password")?.value || "";
 
-          const mode = submitBtn.getAttribute("data-mode");
+          const mode = authMode;          
           showStatus("Mode: " + mode, "");
           
 if (mode === "signup") {
