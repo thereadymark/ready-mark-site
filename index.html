@@ -1003,13 +1003,12 @@
       }
 
       if (signupLink) {
-  signupLink.addEventListener("click", function (e) {
-    e.preventDefault();
-
-    // Change title
-    document.querySelector("#guest-auth-overlay h2").textContent = "Create Account";
-
-    // Inject extra fields if not already added
+  
+   signupLink.addEventListener("click", function (e) {
+  e.preventDefault();
+  renderSignupModal();
+});
+      }
     if (!document.getElementById("signup-extra-fields")) {
       const form = document.querySelector("#guest-auth-overlay .form-body");
 
