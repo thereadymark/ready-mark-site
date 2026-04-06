@@ -1259,392 +1259,439 @@
       }
     }
 
-    function renderResultPage(data, slug) {
-      const app = document.getElementById("app");
+   function renderResultPage(data, slug) {
+  const app = document.getElementById("app");
 
-      const property = data.property || "—";
-      const room = data.room || "—";
-      const inspector = data.inspectorId || "—";
-      const verificationId = data.verificationId || "—";
-      const certification = data.certificationTier || "Verified Clean";
-      const statusClass = getStatusClass(certification);
+  const property = data.property || "—";
+  const room = data.room || "—";
+  const inspector = data.inspectorId || "—";
+  const verificationId = data.verificationId || "—";
+  const certification = data.certificationTier || "Verified Clean";
+  const statusClass = getStatusClass(certification);
+  const photoUrl = data.photoUrl || "";
+  const logFileUrl = data.logFileUrl || "";
 
-      let date = "—";
-      if (data.inspectionDate) {
-        try {
-          date = new Date(data.inspectionDate).toLocaleDateString();
-        } catch (err) {
-          date = data.inspectionDate;
-        }
-      }
+  let date = "—";
+  if (data.inspectionDate) {
+    try {
+      date = new Date(data.inspectionDate).toLocaleDateString();
+    } catch (err) {
+      date = data.inspectionDate;
+    }
+  }
 
-      const score =
-        data.score !== null && data.score !== undefined && data.score !== ""
-          ? `${data.score} / 100`
-          : "—";
+  const score =
+    data.score !== null && data.score !== undefined && data.score !== ""
+      ? `${data.score} / 100`
+      : "—";
 
-      app.innerHTML = `
-        <div class="shell">
-          <div class="panel">
+  app.innerHTML = `
+    <div class="shell">
+      <div class="panel">
 
-            <div class="panel-header">
-              <div class="header-lockup">
-                <img src="/readymarkseal(best)nobackground.PNG" alt="The Ready Mark" class="crest">
-                ${renderBrandLockup()}
-              </div>
-
-              <h1>Verification Record</h1>
-
-              <div id="status-wrap" class="status-wrap">
-                <div class="status-pill ${statusClass}">
-                  ${escapeHtml(certification)}
-                </div>
-              </div>
-
-              <div class="subtext">
-                This room has been inspected and verified under The Ready Mark Cleanliness Standard.
-              </div>
-            </div>
-
-            <div class="content">
-
-              <div class="card">
-                <div class="info-grid">
-
-                  <div class="info-item">
-                    <div class="info-label">Property</div>
-                    <div class="info-value">${escapeHtml(property)}</div>
-                  </div>
-
-                  <div class="info-item">
-                    <div class="info-label">Room</div>
-                    <div class="info-value">${escapeHtml(room)}</div>
-                  </div>
-
-                  <div class="info-item">
-                    <div class="info-label">Inspector</div>
-                    <div class="info-value">${escapeHtml(inspector)}</div>
-                  </div>
-
-                  <div class="info-item">
-                    <div class="info-label">Inspection Date</div>
-                    <div class="info-value">${escapeHtml(date)}</div>
-                  </div>
-
-                  <div class="info-item">
-                    <div class="info-label">Score</div>
-                    <div class="info-value">${escapeHtml(score)}</div>
-                  </div>
-
-                  <div class="info-item">
-                    <div class="info-label">Verification ID</div>
-                    <div class="info-value">${escapeHtml(verificationId)}</div>
-                  </div>
-
-                </div>
-              </div>
-
-              <div class="card">
-                <h2 class="section-title">How This Room Was Verified</h2>
-                <div class="section-divider"></div>
-
-                <div class="verification-proof">
-                  <div class="proof-video-wrap">
-                    <iframe
-                      src="${VERIFICATION_VIDEO_URL}"
-                      title="Ready Mark Verification Process"
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                      allowfullscreen>
-                    </iframe>
-                  </div>
-                </div>
-
-                <div class="below-video">
-                  <div class="proof-step">
-                    <div class="proof-icon">🔎</div>
-                    <div>
-                      <strong>Perform Certified Inspection</strong>
-                      <div class="proof-sub">
-                        A room-specific inspection is completed and documented against the Ready Mark standard.
-                      </div>
-                    </div>
-                  </div>
-
-                  <div class="proof-step">
-                    <div class="proof-icon">🏷️</div>
-                    <div>
-                      <strong>Assign Verification Record</strong>
-                      <div class="proof-sub">
-                        The inspection is tied to the room record and published through the Ready Mark verification system.
-                      </div>
-                    </div>
-                  </div>
-
-                  <div class="proof-step">
-                    <div class="proof-icon">✅</div>
-                    <div>
-                      <strong>Scan &amp; View Results</strong>
-                      <div class="proof-sub">
-                        Guests can scan and view the live verification record connected to the room they are occupying.
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div class="card">
-                <h2 class="section-title">Need Help With Room Cleanliness?</h2>
-                <div class="section-divider"></div>
-
-                <div class="portal-note" style="margin-bottom:14px;">
-                  If something about this room’s cleanliness does not meet expectations, you can report it privately here for direct follow-up.
-                </div>
-
-                <div class="guest-auth-wrap">
-                  <div id="guest-auth-chip-wrap"></div>
-                </div>
-
-                <div id="report-start-view">
-                  <div class="button-row" style="justify-content:center;">
-                    <button id="open-report-btn" class="primary-btn" type="button">Report an Issue</button>
-                  </div>
-                </div>
-
-                <div id="report-form-view" class="hidden">
-                  <div class="form-group">
-                    <label for="issue-type">What’s the issue?</label>
-                    <select id="issue-type">
-                      <option value="">Select an issue</option>
-                      <option value="Bathroom not clean">Bathroom not clean</option>
-                      <option value="Bed or linens issue">Bed or linens issue</option>
-                      <option value="Dust or surfaces">Dust or surfaces</option>
-                      <option value="Odor">Odor</option>
-                      <option value="Trash or leftover items">Trash or leftover items</option>
-                      <option value="Floor issue">Floor issue</option>
-                      <option value="Other">Other</option>
-                    </select>
-                  </div>
-
-                  <div class="form-group">
-                    <label for="reservation-last-name">Last Name on Reservation</label>
-                    <input id="reservation-last-name" placeholder="Required for verification">
-                  </div>
-
-                  <div class="form-group">
-                    <label for="guest-note">Anything else we should know?</label>
-                    <textarea id="guest-note" placeholder="Optional details about the issue."></textarea>
-                  </div>
-
-                  <div class="form-group">
-                    <label for="issue-photo">Upload Photo (optional)</label>
-                    <input type="file" id="issue-photo" accept="image/*">
-                  </div>
-
-                  <div class="button-row" style="justify-content:center;">
-                    <button id="submit-report-btn" class="primary-btn" type="button">Submit Report</button>
-                    <button id="cancel-report-btn" class="secondary-btn" type="button">Cancel</button>
-                  </div>
-
-                  <div id="report-status" class="hidden"></div>
-                </div>
-              </div>
-
-              <div class="card">
-                <div class="portal-note">
-                  This room has been inspected under The Ready Mark Cleanliness Standard. High-touch surfaces, linens, bathrooms, and guest areas were reviewed according to the Ready Mark inspection protocol.
-                </div>
-              </div>
-
-              <div class="portal-link">
-                <a href="/privacy.html" target="_blank" rel="noopener noreferrer">Privacy Policy</a>
-              </div>
-
-              <div class="portal-link">
-                <a href="/">Back to Home</a>
-              </div>
-
-            </div>
-
-            <div class="footer-note">
-              Verified through The Ready Mark system.
-            </div>
-
+        <div class="panel-header">
+          <div class="header-lockup">
+            <img src="/readymarkseal(best)nobackground.PNG" alt="The Ready Mark" class="crest">
+            ${renderBrandLockup()}
           </div>
+
+          <h1>Verification Record</h1>
+
+          <div id="status-wrap" class="status-wrap">
+            <div class="status-pill ${statusClass}">
+              ${escapeHtml(certification)}
+            </div>
+          </div>
+
+          <div class="subtext">
+            This room has been independently inspected and verified under The Ready Mark Cleanliness Standard.
+          </div>
+        </div>
+
+        <div class="content">
+
+          <div class="card">
+            <div class="info-grid">
+
+              <div class="info-item">
+                <div class="info-label">Property</div>
+                <div class="info-value">${escapeHtml(property)}</div>
+              </div>
+
+              <div class="info-item">
+                <div class="info-label">Room</div>
+                <div class="info-value">${escapeHtml(room)}</div>
+              </div>
+
+              <div class="info-item">
+                <div class="info-label">Inspector</div>
+                <div class="info-value">${escapeHtml(inspector)}</div>
+              </div>
+
+              <div class="info-item">
+                <div class="info-label">Inspection Date</div>
+                <div class="info-value">${escapeHtml(date)}</div>
+              </div>
+
+              <div class="info-item">
+                <div class="info-label">Score</div>
+                <div class="info-value">${escapeHtml(score)}</div>
+              </div>
+
+              <div class="info-item">
+                <div class="info-label">Verification ID</div>
+                <div class="info-value">${escapeHtml(verificationId)}</div>
+              </div>
+
+            </div>
+          </div>
+
+          <div class="card">
+            <h2 class="section-title">Verified Room Condition</h2>
+            <div class="section-divider"></div>
+
+            ${
+              photoUrl
+                ? `
+                  <div class="verification-proof" style="padding:16px;">
+                    <img
+                      src="${escapeHtml(photoUrl)}"
+                      alt="Verified room condition"
+                      style="display:block;width:100%;height:auto;border-radius:16px;border:1px solid rgba(199,162,87,0.12);background:#fff;"
+                    />
+                  </div>
+
+                  <div class="portal-note" style="margin-top:14px;">
+                    Captured at time of inspection.
+                  </div>
+                `
+                : `
+                  <div class="inline-status">
+                    Verified inspection photo is not available for this room record.
+                  </div>
+                `
+            }
+
+            ${
+              logFileUrl
+                ? `
+                  <div class="button-row" style="justify-content:center;margin-top:18px;">
+                    <a
+                      href="${escapeHtml(logFileUrl)}"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="primary-btn"
+                      style="text-decoration:none;"
+                    >
+                      View Inspection Log
+                    </a>
+                  </div>
+                `
+                : ``
+            }
+          </div>
+
+          <div class="card">
+            <h2 class="section-title">How This Room Was Verified</h2>
+            <div class="section-divider"></div>
+
+            <div class="verification-proof">
+              <div class="proof-video-wrap">
+                <iframe
+                  src="${VERIFICATION_VIDEO_URL}"
+                  title="Ready Mark Verification Process"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowfullscreen>
+                </iframe>
+              </div>
+            </div>
+
+            <div class="below-video">
+              <div class="proof-step">
+                <div class="proof-icon">🔎</div>
+                <div>
+                  <strong>Perform Certified Inspection</strong>
+                  <div class="proof-sub">
+                    A room-specific inspection is completed and documented against the Ready Mark standard.
+                  </div>
+                </div>
+              </div>
+
+              <div class="proof-step">
+                <div class="proof-icon">🏷️</div>
+                <div>
+                  <strong>Assign Verification Record</strong>
+                  <div class="proof-sub">
+                    The inspection is tied to the room record and published through the Ready Mark verification system.
+                  </div>
+                </div>
+              </div>
+
+              <div class="proof-step">
+                <div class="proof-icon">✅</div>
+                <div>
+                  <strong>Scan &amp; View Results</strong>
+                  <div class="proof-sub">
+                    Guests can scan and view the live verification record connected to the room they are occupying.
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <h2 class="section-title">Need Help With Room Cleanliness?</h2>
+            <div class="section-divider"></div>
+
+            <div class="portal-note" style="margin-bottom:14px;">
+              If something about this room’s cleanliness does not meet expectations, you can report it privately here for direct follow-up.
+            </div>
+
+            <div class="guest-auth-wrap">
+              <div id="guest-auth-chip-wrap"></div>
+            </div>
+
+            <div id="report-start-view">
+              <div class="button-row" style="justify-content:center;">
+                <button id="open-report-btn" class="primary-btn" type="button">Report an Issue</button>
+              </div>
+            </div>
+
+            <div id="report-form-view" class="hidden">
+              <div class="form-group">
+                <label for="issue-type">What’s the issue?</label>
+                <select id="issue-type">
+                  <option value="">Select an issue</option>
+                  <option value="Bathroom not clean">Bathroom not clean</option>
+                  <option value="Bed or linens issue">Bed or linens issue</option>
+                  <option value="Dust or surfaces">Dust or surfaces</option>
+                  <option value="Odor">Odor</option>
+                  <option value="Trash or leftover items">Trash or leftover items</option>
+                  <option value="Floor issue">Floor issue</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="reservation-last-name">Last Name on Reservation</label>
+                <input id="reservation-last-name" placeholder="Required for verification">
+              </div>
+
+              <div class="form-group">
+                <label for="guest-note">Anything else we should know?</label>
+                <textarea id="guest-note" placeholder="Optional details about the issue."></textarea>
+              </div>
+
+              <div class="form-group">
+                <label for="issue-photo">Upload Photo (optional)</label>
+                <input type="file" id="issue-photo" accept="image/*">
+              </div>
+
+              <div class="button-row" style="justify-content:center;">
+                <button id="submit-report-btn" class="primary-btn" type="button">Submit Report</button>
+                <button id="cancel-report-btn" class="secondary-btn" type="button">Cancel</button>
+              </div>
+
+              <div id="report-status" class="hidden"></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="portal-note">
+              This room has been inspected under The Ready Mark Cleanliness Standard. High-touch surfaces, linens, bathrooms, and guest areas were reviewed according to the Ready Mark inspection protocol.
+            </div>
+          </div>
+
+          <div class="portal-link">
+            <a href="/privacy.html" target="_blank" rel="noopener noreferrer">Privacy Policy</a>
+          </div>
+
+          <div class="portal-link">
+            <a href="/">Back to Home</a>
+          </div>
+
+        </div>
+
+        <div class="footer-note">
+          Verified through The Ready Mark system.
+        </div>
+
+      </div>
+    </div>
+  `;
+
+  revealStatusPill();
+
+  const guestChipWrap = document.getElementById("guest-auth-chip-wrap");
+  const openReportBtn = document.getElementById("open-report-btn");
+  const reportStartView = document.getElementById("report-start-view");
+  const reportFormView = document.getElementById("report-form-view");
+  const cancelReportBtn = document.getElementById("cancel-report-btn");
+  const submitReportBtn = document.getElementById("submit-report-btn");
+  const reportStatus = document.getElementById("report-status");
+
+  function renderGuestChip() {
+    if (!guestChipWrap) return;
+
+    if (currentGuest && (currentGuest.email || currentGuest.first_name)) {
+      const displayName = currentGuest.email || "Guest";
+
+      guestChipWrap.innerHTML = `
+        <div class="guest-chip">
+          <span>Signed in as ${escapeHtml(displayName)}</span>
+          <button id="guest-logout-btn" class="guest-logout-btn" type="button">Logout</button>
         </div>
       `;
 
-      revealStatusPill();
-
-      const guestChipWrap = document.getElementById("guest-auth-chip-wrap");
-      const openReportBtn = document.getElementById("open-report-btn");
-      const reportStartView = document.getElementById("report-start-view");
-      const reportFormView = document.getElementById("report-form-view");
-      const cancelReportBtn = document.getElementById("cancel-report-btn");
-      const submitReportBtn = document.getElementById("submit-report-btn");
-      const reportStatus = document.getElementById("report-status");
-
-      function renderGuestChip() {
-        if (!guestChipWrap) return;
-
-        if (currentGuest && (currentGuest.email || currentGuest.first_name)) {
-          const displayName = currentGuest.email || "Guest";
-
-          guestChipWrap.innerHTML = `
-            <div class="guest-chip">
-              <span>Signed in as ${escapeHtml(displayName)}</span>
-              <button id="guest-logout-btn" class="guest-logout-btn" type="button">Logout</button>
-            </div>
-          `;
-
-          const logoutBtn = document.getElementById("guest-logout-btn");
-          if (logoutBtn) {
-            logoutBtn.addEventListener("click", function () {
-              resetGuestSession();
-              renderGuestChip();
-              if (reportFormView) reportFormView.classList.add("hidden");
-              if (reportStartView) reportStartView.classList.remove("hidden");
-              if (reportStatus) {
-                reportStatus.className = "hidden";
-                reportStatus.textContent = "";
-              }
-            });
+      const logoutBtn = document.getElementById("guest-logout-btn");
+      if (logoutBtn) {
+        logoutBtn.addEventListener("click", function () {
+          resetGuestSession();
+          renderGuestChip();
+          if (reportFormView) reportFormView.classList.add("hidden");
+          if (reportStartView) reportStartView.classList.remove("hidden");
+          if (reportStatus) {
+            reportStatus.className = "hidden";
+            reportStatus.textContent = "";
           }
-        } else {
-          guestChipWrap.innerHTML = "";
-        }
+        });
       }
+    } else {
+      guestChipWrap.innerHTML = "";
+    }
+  }
 
-      function showReportStatus(message, type) {
-        if (!reportStatus) return;
-        reportStatus.className = `inline-status ${type || ""}`;
-        reportStatus.textContent = message;
-      }
+  function showReportStatus(message, type) {
+    if (!reportStatus) return;
+    reportStatus.className = `inline-status ${type || ""}`;
+    reportStatus.textContent = message;
+  }
 
-      function openReportForm() {
-        if (reportStartView) reportStartView.classList.add("hidden");
-        if (reportFormView) reportFormView.classList.remove("hidden");
-      }
+  function openReportForm() {
+    if (reportStartView) reportStartView.classList.add("hidden");
+    if (reportFormView) reportFormView.classList.remove("hidden");
+  }
 
-      renderGuestChip();
+  renderGuestChip();
 
-      if (openReportBtn) {
-        openReportBtn.addEventListener("click", async function () {
-          if (!currentGuestToken) {
-            renderLoginModal(() => {
-              renderGuestChip();
-              openReportForm();
-            });
-            return;
-          }
-
-          const verified = await verifyGuestSession();
-          if (!verified) {
-            renderLoginModal(() => {
-              renderGuestChip();
-              openReportForm();
-            });
-            return;
-          }
-
+  if (openReportBtn) {
+    openReportBtn.addEventListener("click", async function () {
+      if (!currentGuestToken) {
+        renderLoginModal(() => {
           renderGuestChip();
           openReportForm();
         });
+        return;
       }
 
-      if (cancelReportBtn && reportStartView && reportFormView && reportStatus) {
-        cancelReportBtn.addEventListener("click", function () {
-          reportFormView.classList.add("hidden");
-          reportStartView.classList.remove("hidden");
-          reportStatus.className = "hidden";
-          reportStatus.textContent = "";
+      const verified = await verifyGuestSession();
+      if (!verified) {
+        renderLoginModal(() => {
+          renderGuestChip();
+          openReportForm();
         });
+        return;
       }
 
-      if (submitReportBtn) {
-        submitReportBtn.addEventListener("click", async function () {
-          const issue = document.getElementById("issue-type")?.value || "";
-          const note = document.getElementById("guest-note")?.value || "";
-          const reservationLastName = document.getElementById("reservation-last-name")?.value.trim() || "";
+      renderGuestChip();
+      openReportForm();
+    });
+  }
 
-          if (!reservationLastName) {
-            showReportStatus("Please enter the last name on the reservation.", "error");
-            return;
-          }
+  if (cancelReportBtn && reportStartView && reportFormView && reportStatus) {
+    cancelReportBtn.addEventListener("click", function () {
+      reportFormView.classList.add("hidden");
+      reportStartView.classList.remove("hidden");
+      reportStatus.className = "hidden";
+      reportStatus.textContent = "";
+    });
+  }
 
-          if (!issue) {
-            showReportStatus("Please select an issue.", "error");
-            return;
-          }
+  if (submitReportBtn) {
+    submitReportBtn.addEventListener("click", async function () {
+      const issue = document.getElementById("issue-type")?.value || "";
+      const note = document.getElementById("guest-note")?.value || "";
+      const reservationLastName = document.getElementById("reservation-last-name")?.value.trim() || "";
 
-          if (!currentGuestToken) {
-            showReportStatus("Session expired. Please rescan the QR code.", "error");
-            return;
-          }
+      if (!reservationLastName) {
+        showReportStatus("Please enter the last name on the reservation.", "error");
+        return;
+      }
 
-          submitReportBtn.disabled = true;
-          submitReportBtn.textContent = "Submitting...";
+      if (!issue) {
+        showReportStatus("Please select an issue.", "error");
+        return;
+      }
 
-          try {
-            const fileInput = document.getElementById("issue-photo");
-            let photoPayload = null;
+      if (!currentGuestToken) {
+        showReportStatus("Session expired. Please rescan the QR code.", "error");
+        return;
+      }
 
-            if (fileInput && fileInput.files.length > 0) {
-              const file = fileInput.files[0];
+      submitReportBtn.disabled = true;
+      submitReportBtn.textContent = "Submitting...";
 
-              const base64 = await new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = () => {
-                  const result = String(reader.result || "").split(",")[1];
-                  resolve(result);
-                };
-                reader.onerror = reject;
-                reader.readAsDataURL(file);
-              });
+      try {
+        const fileInput = document.getElementById("issue-photo");
+        let photoPayload = null;
 
-              photoPayload = {
-                name: file.name,
-                type: file.type,
-                base64: base64
-              };
-            }
+        if (fileInput && fileInput.files.length > 0) {
+          const file = fileInput.files[0];
 
-            const response = await fetch("/api/report-issue", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                "x-guest-token": currentGuestToken
-              },
-              body: JSON.stringify({
-                verification_id: verificationId,
-                property_slug: slug.includes("-room-") ? slug.split("-room-")[0] : "",
-                property_name: property,
-                room_number: room,
-                issue_types: [issue],
-                guest_note: note,
-                reservation_last_name: reservationLastName,
-                photo_file: photoPayload
-              })
-            });
+          const base64 = await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => {
+              const result = String(reader.result || "").split(",")[1];
+              resolve(result);
+            };
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+          });
 
-            const result = await response.json().catch(() => null);
+          photoPayload = {
+            name: file.name,
+            type: file.type,
+            base64: base64
+          };
+        }
 
-            if (!response.ok) {
-              throw new Error(result?.error || "Failed to submit report.");
-            }
-
-            showReportStatus("Report submitted successfully.", "success");
-          } catch (err) {
-            console.error(err);
-            showReportStatus(err.message || "Something went wrong.", "error");
-          } finally {
-            submitReportBtn.disabled = false;
-            submitReportBtn.textContent = "Submit Report";
-          }
+        const response = await fetch("/api/report-issue", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-guest-token": currentGuestToken
+          },
+          body: JSON.stringify({
+            verification_id: verificationId,
+            property_slug: slug.includes("-room-") ? slug.split("-room-")[0] : "",
+            property_name: property,
+            room_number: room,
+            issue_types: [issue],
+            guest_note: note,
+            reservation_last_name: reservationLastName,
+            photo_file: photoPayload
+          })
         });
-      }
-    }
 
-    function renderErrorPage(msg) {
+        const result = await response.json().catch(() => null);
+
+        if (!response.ok) {
+          throw new Error(result?.error || "Failed to submit report.");
+        }
+
+        showReportStatus("Report submitted successfully.", "success");
+      } catch (err) {
+        console.error(err);
+        showReportStatus(err.message || "Something went wrong.", "error");
+      } finally {
+        submitReportBtn.disabled = false;
+        submitReportBtn.textContent = "Submit Report";
+      }
+    });
+  }
+} 
+
+function renderErrorPage(msg) {
       const app = document.getElementById("app");
 
       app.innerHTML = `
