@@ -549,11 +549,11 @@
         </div>
 
         <div class="topbar-right">
-          <div class="user-chip">admin@thereadymarkgroup.com</div>
-          <button id="topbar-new-inspection-btn" class="btn btn-primary" type="button">New Inspection</button>
-        </div>
-      </div>
-
+  <div class="user-chip">admin@thereadymarkgroup.com</div>
+  <button id="topbar-new-inspection-btn" class="btn btn-primary" type="button">New Inspection</button>
+  <button id="admin-logout-btn" class="btn btn-secondary" type="button">Log Out</button>
+</div>
+    
       <div class="content">
         <section id="admin-dashboard-view" class="view active">
           <div class="cards">
@@ -780,11 +780,21 @@
                 <h2>Inspection Status</h2>
                 <p>System response and verification output appear here.</p>
               </div>
+              
               <div class="section-body">
-                <div id="inspection-status-box" class="status-box">Waiting for inspection entry.</div>
-              </div>
-            </div>
-          </div>
+      <div id="inspection-status-box" class="status-box">Waiting for inspection entry.</div>
+
+<div style="margin-top:16px;">
+  <label>QR Preview</label>
+  <div id="qr-preview-wrap" class="status-box" style="display:flex;justify-content:center;align-items:center;min-height:220px;">
+    QR code will appear here after inspection save.
+  </div>
+</div>
+
+<div style="margin-top:16px;">
+  <button id="download-qr-btn" class="btn btn-secondary" type="button" style="display:none;">Download QR</button>
+</div>    
+     </div>
         </section>
 
         <section id="guest-reports-view" class="view">
@@ -1276,6 +1286,12 @@
           loginAdmin();
         }
       });
+
+      document.getElementById("admin-logout-btn").addEventListener("click", () => {
+  state.adminToken = "";
+  sessionStorage.removeItem(STORAGE_KEY);
+  document.getElementById("auth-overlay").classList.remove("hidden");
+});   
 
       document.getElementById("property-name-input").addEventListener("input", () => {
         const slugInput = document.getElementById("property-slug-input");
