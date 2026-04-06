@@ -74,7 +74,6 @@ export default async function handler(req, res) {
     const normalizedNotes = notes ? String(notes).trim() : null;
     const inspectionIsoDate = new Date(inspection_date).toISOString();
 
-    // PROPERTY LOOKUP
     const propertyRes = await fetch(
       `${supabaseUrl}/rest/v1/properties?property_slug=eq.${encodeURIComponent(normalizedPropertySlug)}&select=id,property_name,property_slug&limit=1`,
       { headers }
@@ -97,7 +96,6 @@ export default async function handler(req, res) {
 
     const property = propertyData[0];
 
-    // ROOM LOOKUP
     const roomLookupRes = await fetch(
       `${supabaseUrl}/rest/v1/Rooms?property_id=eq.${encodeURIComponent(property.id)}&room_number=eq.${encodeURIComponent(normalizedRoomNumber)}&select=id,room_number,qr_slug,qr_url&limit=1`,
       { headers }
@@ -113,9 +111,12 @@ export default async function handler(req, res) {
     }
 
     let room = null;
+    let roomWasReused = false;
+    let roomWasCreated = false;
 
     if (Array.isArray(roomLookupData) && roomLookupData.length > 0) {
       room = roomLookupData[0];
+      roomWasReused = true;
     } else {
       const cleanRoomNumber = normalizedRoomNumber.toLowerCase().replace(/\s+/g, "");
       const qrSlug = `${normalizedPropertySlug}-room-${cleanRoomNumber}`;
@@ -145,9 +146,9 @@ export default async function handler(req, res) {
       }
 
       room = roomInsertData[0];
+      roomWasCreated = true;
     }
 
-    // RETIRE PREVIOUS CURRENT INSPECTIONS FOR THIS ROOM
     const retirePreviousRes = await fetch(
       `${supabaseUrl}/rest/v1/Inspections?room_id=eq.${encodeURIComponent(room.id)}&is_current=eq.true`,
       {
@@ -168,7 +169,6 @@ export default async function handler(req, res) {
       });
     }
 
-    // CREATE NEW CURRENT INSPECTION
     const inspectionRes = await fetch(`${supabaseUrl}/rest/v1/Inspections`, {
       method: "POST",
       headers,
@@ -208,6 +208,14 @@ export default async function handler(req, res) {
       verification_id: normalizedVerificationId,
       inspection_id: newInspection?.id ?? null,
       is_current: true,
+      room_id: room.id,
+      qr_slug: room.qr_slug ?? "",
+      qr_url: room.qr_url ?? "",
+      room_was_reused: roomWasReused,
+      room_was_created: roomWasCreated,
+      room_message: roomWasReused
+        ? "QR destination reused from existing room record."
+        : "New room record created. This generated a new QR destination.",
       public_url:
         room.qr_url ||
         `https://verify.thereadymarkgroup.com/${property.property_slug}-room-${room.room_number}`
