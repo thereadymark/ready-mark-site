@@ -40,9 +40,11 @@ export default async function handler(req, res) {
     const allowedStatuses = [
       "New",
       "Under Review",
-      "Resolved",
+      "Sent to Property",
       "Escalated",
-      "Sent to Property"
+      "Resolved by Property",
+      "Confirmed with Guest",
+      "Fully Resolved"
     ];
 
     if (!allowedStatuses.includes(status)) {
