@@ -1267,6 +1267,102 @@ function formatShortDate(value) {
       }
     }
 
+    function buildPhotoGalleryMarkup(photoUrls) {
+  if (!Array.isArray(photoUrls) || !photoUrls.length) return "";
+
+  const safeUrls = photoUrls.filter(Boolean);
+
+  if (!safeUrls.length) return "";
+
+  return `
+    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;">
+      <div style="
+        width:100%;
+        display:flex;
+        justify-content:center;
+      ">
+        <img
+          id="verification-main-image"
+          src="${escapeHtml(safeUrls[0])}"
+          alt="Verified room condition"
+          style="
+            display:block;
+            width:100%;
+            max-width:520px;
+            height:auto;
+            border-radius:16px;
+            box-shadow:0 10px 25px rgba(0,0,0,0.15);
+            border:1px solid rgba(199,162,87,0.2);
+            background:#fff;
+          "
+        />
+      </div>
+
+      ${
+        safeUrls.length > 1
+          ? `
+            <div style="
+              margin-top:14px;
+              display:flex;
+              gap:10px;
+              flex-wrap:wrap;
+              justify-content:center;
+            ">
+              ${safeUrls.map((url, index) => `
+                <button
+                  type="button"
+                  class="verification-thumb-btn"
+                  data-full-image="${escapeHtml(url)}"
+                  aria-label="View inspection image ${index + 1}"
+                  style="
+                    padding:0;
+                    border:none;
+                    background:transparent;
+                    cursor:pointer;
+                  "
+                >
+                  <img
+                    src="${escapeHtml(url)}"
+                    alt="Inspection thumbnail ${index + 1}"
+                    style="
+                      width:76px;
+                      height:76px;
+                      object-fit:cover;
+                      border-radius:12px;
+                      border:1px solid rgba(199,162,87,0.18);
+                      box-shadow:0 4px 12px rgba(0,0,0,0.08);
+                      background:#fff;
+                    "
+                  />
+                </button>
+              `).join("")}
+            </div>
+          `
+          : ""
+      }
+
+      <div style="
+        margin-top:14px;
+        font-size:13px;
+        color:#6f6a61;
+        text-align:center;
+      ">
+        Verified inspection image${safeUrls.length > 1 ? "s" : ""} captured during official Ready Mark inspection.
+      </div>
+
+      <div style="
+        margin-top:6px;
+        font-size:11px;
+        letter-spacing:1px;
+        text-transform:uppercase;
+        color:#ad8842;
+        font-weight:700;
+      ">
+        Evidence Type: Visual Verification
+      </div>
+    </div>
+  `;
+}
    function renderResultPage(data, slug) {
   const app = document.getElementById("app");
 
@@ -1278,8 +1374,11 @@ function formatShortDate(value) {
   const statusClass = getStatusClass(certification);
   const photoUrl = data.photoUrl || "";
   const logFileUrl = data.logFileUrl || "";
-  const inspectionHistory = Array.isArray(data.inspectionHistory) ? data.inspectionHistory : [];     
-
+  const inspectionHistory = Array.isArray(data.inspectionHistory) ? data.inspectionHistory : [];  
+  const photoUrls = Array.isArray(data.photoUrls) && data.photoUrls.length
+  ? data.photoUrls
+  : (photoUrl ? [photoUrl] : []);
+     
   let date = "—";
   if (data.inspectionDate) {
     try {
@@ -1359,119 +1458,76 @@ function formatShortDate(value) {
             <h2 class="section-title">Verified Room Condition</h2>
             <div class="section-divider"></div>
 
-            ${
-  photoUrl
-    ? `
-      <div style="
+     ${
+  photoUrls.length
+    ? buildPhotoGalleryMarkup(photoUrls)
+    : `
+      <div class="inline-status" style="
+        text-align:center;
         display:flex;
         flex-direction:column;
         align-items:center;
         justify-content:center;
-        padding:24px;
+        padding:34px 20px;
+        min-height:220px;
+        background:linear-gradient(180deg, rgba(255,255,255,0.96) 0%, rgba(251,249,244,0.92) 100%);
+        border:1px solid rgba(199,162,87,0.12);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.7);
       ">
-        <img
-          src="${escapeHtml(photoUrl)}"
-          alt="Verified room condition"
-          style="
-            display:block;
-            width:100%;
-            max-width:520px;
-            height:auto;
-            border-radius:16px;
-            box-shadow:0 10px 25px rgba(0,0,0,0.15);
-            border:1px solid rgba(199,162,87,0.2);
-            background:#fff;
-          "
-        />
+        <div style="
+          width:58px;
+          height:58px;
+          border-radius:999px;
+          display:flex;
+          align-items:center;
+          justify-content:center;
+          margin-bottom:14px;
+          background:linear-gradient(180deg, rgba(199,162,87,0.14) 0%, rgba(199,162,87,0.08) 100%);
+          border:1px solid rgba(199,162,87,0.16);
+          font-size:24px;
+        ">📷</div>
 
         <div style="
-          margin-top:14px;
-          font-size:13px;
-          color:#6f6a61;
-          text-align:center;
+          font-family:'Cinzel', serif;
+          font-size:22px;
+          line-height:1.2;
+          margin-bottom:10px;
+          color:#111315;
         ">
-          Verified inspection image captured during official Ready Mark inspection.
+          Inspection Image Pending
         </div>
 
         <div style="
-          margin-top:6px;
-          font-size:11px;
+          width:110px;
+          height:2px;
+          border-radius:999px;
+          margin:0 auto 14px;
+          background:linear-gradient(90deg, rgba(199,162,87,0), rgba(199,162,87,0.7), rgba(199,162,87,0));
+        "></div>
+
+        <div style="
+          font-size:14px;
+          color:#6f6a61;
+          line-height:1.8;
+          max-width:380px;
+          margin:0 auto;
+        ">
+          Verified inspection imagery will appear here once supporting documentation has been uploaded to this room record.
+        </div>
+
+        <div style="
+          margin-top:14px;
+          font-size:12px;
           letter-spacing:1px;
           text-transform:uppercase;
           color:#ad8842;
           font-weight:700;
         ">
-          Evidence Type: Visual Verification
+          Documentation Status: Pending Upload
         </div>
       </div>
     `
-    : `
-    <div class="inline-status" style="
-    text-align:center;
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    justify-content:center;
-    padding:34px 20px;
-    min-height:220px;
-    background:linear-gradient(180deg, rgba(255,255,255,0.96) 0%, rgba(251,249,244,0.92) 100%);
-    border:1px solid rgba(199,162,87,0.12);
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.7);
-  ">
-    <div style="
-      width:58px;
-      height:58px;
-      border-radius:999px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      margin-bottom:14px;
-      background:linear-gradient(180deg, rgba(199,162,87,0.14) 0%, rgba(199,162,87,0.08) 100%);
-      border:1px solid rgba(199,162,87,0.16);
-      font-size:24px;
-    ">📷</div>
-
-    <div style="
-      font-family:'Cinzel', serif;
-      font-size:22px;
-      line-height:1.2;
-      margin-bottom:10px;
-      color:#111315;
-    ">
-      Inspection Image Pending
-    </div>
-
-    <div style="
-      width:110px;
-      height:2px;
-      border-radius:999px;
-      margin:0 auto 14px;
-      background:linear-gradient(90deg, rgba(199,162,87,0), rgba(199,162,87,0.7), rgba(199,162,87,0));
-    "></div>
-
-    <div style="
-      font-size:14px;
-      color:#6f6a61;
-      line-height:1.8;
-      max-width:380px;
-      margin:0 auto;
-    ">
-      Verified inspection imagery will appear here once supporting documentation has been uploaded to this room record.
-    </div>
-
-    <div style="
-      margin-top:14px;
-      font-size:12px;
-      letter-spacing:1px;
-      text-transform:uppercase;
-      color:#ad8842;
-      font-weight:700;
-    ">
-      Documentation Status: Pending Upload
-    </div>
-  </div>
-`           
-            }
+}
 
             ${
               logFileUrl
@@ -1966,6 +2022,17 @@ function renderErrorPage(msg) {
         loadVerification(slug);
       }
     });
-  </script>
+    document.querySelectorAll(".verification-thumb-btn").forEach(btn => {
+  btn.addEventListener("click", function () {
+    const newUrl = btn.getAttribute("data-full-image");
+    const mainImage = document.getElementById("verification-main-image");
+
+    if (newUrl && mainImage) {
+      mainImage.src = newUrl;
+    }
+  });
+});
+  
+</script>
 </body>
 </html>
