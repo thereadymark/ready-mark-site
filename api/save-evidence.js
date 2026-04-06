@@ -115,6 +115,7 @@ export default async function handler(req, res) {
     let uploadedPhotoPath = null;
     let uploadedLogPath = null;
 
+    // Upload photo
     if (photo_file?.base64) {
       const buffer = bufferFromBase64(photo_file.base64);
 
@@ -150,6 +151,7 @@ export default async function handler(req, res) {
       uploadedPhotoPath = filePath;
     }
 
+    // Upload log
     if (log_file?.base64) {
       const buffer = bufferFromBase64(log_file.base64);
 
@@ -183,6 +185,35 @@ export default async function handler(req, res) {
       }
 
       uploadedLogPath = filePath;
+    }
+
+    // Patch inspection record
+    const updatePayload = {};
+    if (uploadedPhotoPath) updatePayload.photo_url = uploadedPhotoPath;
+    if (uploadedLogPath) updatePayload.log_file_url = uploadedLogPath;
+
+    if (Object.keys(updatePayload).length > 0) {
+      const { data: updatedInspection, error: updateError } = await supabase
+        .from("Inspections")
+        .update(updatePayload)
+        .eq("verification_id", verificationId)
+        .select("id, verification_id, photo_url, log_file_url")
+        .single();
+
+      if (updateError) {
+        return res.status(500).json({
+          error: "Files uploaded but failed to update inspection record",
+          details: updateError.message
+        });
+      }
+
+      return res.status(200).json({
+        success: true,
+        verification_id: verificationId,
+        photo_path: uploadedPhotoPath,
+        log_file_path: uploadedLogPath,
+        inspection: updatedInspection
+      });
     }
 
     return res.status(200).json({
