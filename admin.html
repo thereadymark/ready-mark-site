@@ -291,7 +291,7 @@
     .table {
       width: 100%;
       border-collapse: collapse;
-      min-width: 860px;
+      min-width: 980px;
     }
 
     .table th,
@@ -529,10 +529,18 @@
       line-height: 1.5;
     }
 
+    .filter-row {
+      display: grid;
+      grid-template-columns: 1fr 220px 220px;
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+
     @media (max-width: 1100px) {
       .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .split-grid,
-      .form-grid { grid-template-columns: 1fr; }
+      .form-grid,
+      .filter-row { grid-template-columns: 1fr; }
     }
 
     @media (max-width: 980px) {
@@ -859,6 +867,54 @@
               </div>
             </div>
           </div>
+
+          <div class="section-card">
+            <div class="section-header">
+              <h2>Inspection History</h2>
+              <p>Track every inspection by property, room, status, and current flag without digging through Supabase.</p>
+            </div>
+            <div class="section-body">
+              <div class="filter-row">
+                <div>
+                  <label for="inspection-history-search">Search</label>
+                  <input id="inspection-history-search" type="text" placeholder="Search property, room, verification ID, inspector..." />
+                </div>
+                <div>
+                  <label for="inspection-history-property-filter">Property</label>
+                  <select id="inspection-history-property-filter">
+                    <option value="">All properties</option>
+                  </select>
+                </div>
+                <div>
+                  <label for="inspection-history-current-filter">Current Status</label>
+                  <select id="inspection-history-current-filter">
+                    <option value="">All inspections</option>
+                    <option value="current">Current only</option>
+                    <option value="archived">Archived only</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="table-wrap">
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th>Property</th>
+                      <th>Room</th>
+                      <th>Date</th>
+                      <th>Tier</th>
+                      <th>Score</th>
+                      <th>Verification ID</th>
+                      <th>Current</th>
+                    </tr>
+                  </thead>
+                  <tbody id="inspection-history-body">
+                    <tr><td colspan="7">Loading inspection history...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
         </section>
 
         <section id="guest-reports-view" class="view">
@@ -953,6 +1009,8 @@
     const state = {
       adminToken: "",
       properties: [],
+      rooms: [],
+      inspections: [],
       guestReports: [],
       lastInspectionResult: null
     };
@@ -1003,6 +1061,19 @@
       return d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
     }
 
+    function formatDateTime(value) {
+      if (!value) return "—";
+      const d = new Date(value);
+      if (Number.isNaN(d.getTime())) return "—";
+      return d.toLocaleString(undefined, {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+        hour: "numeric",
+        minute: "2-digit"
+      });
+    }
+
     function setStatusBox(id, message) {
       const el = document.getElementById(id);
       if (el) el.textContent = message;
@@ -1017,7 +1088,8 @@
         normalized.includes("resolved by property") ||
         normalized === "resolved" ||
         normalized.includes("verified") ||
-        normalized.includes("active")
+        normalized.includes("active") ||
+        normalized.includes("current")
       ) {
         return "status-verified";
       }
@@ -1026,7 +1098,8 @@
         normalized.includes("under review") ||
         normalized.includes("sent to property") ||
         normalized.includes("issues") ||
-        normalized.includes("attention")
+        normalized.includes("attention") ||
+        normalized.includes("archived")
       ) {
         return "status-issues";
       }
@@ -1265,11 +1338,15 @@
     async function refreshAdminData() {
       const data = await apiFetch(API.adminData, { method: "GET" });
       state.properties = Array.isArray(data?.properties) ? data.properties : [];
+      state.rooms = Array.isArray(data?.rooms) ? data.rooms : [];
+      state.inspections = Array.isArray(data?.inspections) ? data.inspections : [];
       state.guestReports = Array.isArray(data?.guest_reports) ? data.guest_reports : [];
 
       renderProperties();
       renderInspectionProperties();
       renderGuestReports();
+      renderInspectionHistory();
+      renderInspectionHistoryPropertyFilter();
       renderDashboard();
     }
 
@@ -1298,9 +1375,19 @@
       `).join("");
     }
 
+    function renderInspectionHistoryPropertyFilter() {
+      const select = document.getElementById("inspection-history-property-filter");
+      const currentValue = select.value;
+
+      select.innerHTML = `<option value="">All properties</option>` + state.properties.map(property => `
+        <option value="${escapeHtml(property.property_slug)}">${escapeHtml(property.property_name)}</option>
+      `).join("");
+
+      select.value = currentValue;
+    }
+
     function getGuestReportActionButtons(report) {
       const status = String(report.status || "New");
-
       const actions = [];
 
       if (status !== "Sent to Property") {
@@ -1359,6 +1446,70 @@
                 : ``
               }
             </div>
+          </td>
+        </tr>
+      `).join("");
+    }
+
+    function renderInspectionHistory() {
+      const tbody = document.getElementById("inspection-history-body");
+      const searchValue = document.getElementById("inspection-history-search").value.trim().toLowerCase();
+      const propertyFilter = document.getElementById("inspection-history-property-filter").value;
+      const currentFilter = document.getElementById("inspection-history-current-filter").value;
+
+      let rows = [...state.inspections];
+
+      if (propertyFilter) {
+        rows = rows.filter((inspection) => inspection.property_slug === propertyFilter);
+      }
+
+      if (currentFilter === "current") {
+        rows = rows.filter((inspection) => Boolean(inspection.is_current));
+      } else if (currentFilter === "archived") {
+        rows = rows.filter((inspection) => !inspection.is_current);
+      }
+
+      if (searchValue) {
+        rows = rows.filter((inspection) => {
+          const haystack = [
+            inspection.property_name,
+            inspection.property_slug,
+            inspection.room_number,
+            inspection.verification_id,
+            inspection.inspector_id,
+            inspection.certification_tier,
+            inspection.score
+          ]
+            .map((value) => String(value ?? "").toLowerCase())
+            .join(" ");
+
+          return haystack.includes(searchValue);
+        });
+      }
+
+      if (!rows.length) {
+        tbody.innerHTML = `<tr><td colspan="7">No inspection history matches your filters.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = rows.map((inspection) => `
+        <tr>
+          <td>
+            ${escapeHtml(inspection.property_name || "—")}
+            <div class="report-meta">${escapeHtml(inspection.property_slug || "")}</div>
+          </td>
+          <td>${escapeHtml(inspection.room_number || "—")}</td>
+          <td>${escapeHtml(formatDateTime(inspection.created_at))}</td>
+          <td><span class="status-pill ${getStatusPillClass(inspection.certification_tier)}">${escapeHtml(inspection.certification_tier || "—")}</span></td>
+          <td>${escapeHtml(String(inspection.score ?? "—"))}</td>
+          <td>
+            ${escapeHtml(inspection.verification_id || "—")}
+            <div class="report-meta">${escapeHtml(inspection.inspector_id || "")}</div>
+          </td>
+          <td>
+            <span class="status-pill ${inspection.is_current ? "status-verified" : "status-issues"}">
+              ${inspection.is_current ? "Current" : "Archived"}
+            </span>
           </td>
         </tr>
       `).join("");
@@ -1503,10 +1654,10 @@
 
         setStatusBox(
           "inspection-status-box",
-          `Inspection saved successfully.\nProperty: ${data.property_name}\nRoom: ${data.room_number}\nVerification ID: ${data.verification_id}\nPublic URL: ${data.public_url}`
+          `Inspection saved successfully.\nProperty: ${data.property_name}\nRoom: ${data.room_number}\nVerification ID: ${data.verification_id}\nPublic URL: ${data.public_url}\nPrevious current inspections for this room were automatically archived.`
         );
 
-        renderDashboard();
+        await refreshAdminData();
       } catch (error) {
         setStatusBox("inspection-status-box", `Inspection save failed.\n${error.message}`);
       }
@@ -1546,6 +1697,8 @@
           "evidence-status-box",
           `Evidence uploaded successfully.\nVerification ID: ${data.verification_id}\nPhoto Path: ${data.photo_path || "None"}\nLog Path: ${data.log_file_path || "None"}`
         );
+
+        await refreshAdminData();
       } catch (error) {
         setStatusBox("evidence-status-box", `Evidence upload failed.\n${error.message}`);
       }
@@ -1620,6 +1773,10 @@
       document.getElementById("generate-verification-id-btn").addEventListener("click", () => {
         document.getElementById("inspection-verification-id").value = generateVerificationId();
       });
+
+      document.getElementById("inspection-history-search").addEventListener("input", renderInspectionHistory);
+      document.getElementById("inspection-history-property-filter").addEventListener("change", renderInspectionHistory);
+      document.getElementById("inspection-history-current-filter").addEventListener("change", renderInspectionHistory);
 
       document.getElementById("create-property-form").addEventListener("submit", handleCreateProperty);
       document.getElementById("save-inspection-form").addEventListener("submit", handleSaveInspection);
