@@ -1365,11 +1365,72 @@
                     Captured at time of inspection.
                   </div>
                 `
-                : `
-                  <div class="inline-status">
-                    Verified inspection photo is not available for this room record.
-                  </div>
-                `
+               : `
+  <div class="inline-status" style="
+    text-align:center;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    padding:34px 20px;
+    min-height:220px;
+    background:linear-gradient(180deg, rgba(255,255,255,0.96) 0%, rgba(251,249,244,0.92) 100%);
+    border:1px solid rgba(199,162,87,0.12);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.7);
+  ">
+    <div style="
+      width:58px;
+      height:58px;
+      border-radius:999px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      margin-bottom:14px;
+      background:linear-gradient(180deg, rgba(199,162,87,0.14) 0%, rgba(199,162,87,0.08) 100%);
+      border:1px solid rgba(199,162,87,0.16);
+      font-size:24px;
+    ">📷</div>
+
+    <div style="
+      font-family:'Cinzel', serif;
+      font-size:22px;
+      line-height:1.2;
+      margin-bottom:10px;
+      color:#111315;
+    ">
+      Inspection Image Pending
+    </div>
+
+    <div style="
+      width:110px;
+      height:2px;
+      border-radius:999px;
+      margin:0 auto 14px;
+      background:linear-gradient(90deg, rgba(199,162,87,0), rgba(199,162,87,0.7), rgba(199,162,87,0));
+    "></div>
+
+    <div style="
+      font-size:14px;
+      color:#6f6a61;
+      line-height:1.8;
+      max-width:380px;
+      margin:0 auto;
+    ">
+      Verified inspection imagery will appear here once supporting documentation has been uploaded to this room record.
+    </div>
+
+    <div style="
+      margin-top:14px;
+      font-size:12px;
+      letter-spacing:1px;
+      text-transform:uppercase;
+      color:#ad8842;
+      font-weight:700;
+    ">
+      Documentation Status: Pending Upload
+    </div>
+  </div>
+`           
             }
 
             ${
