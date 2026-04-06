@@ -147,25 +147,24 @@
     }
 
     .topbar-right {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: nowrap;
-  justify-content: flex-end;
-}
-
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: nowrap;
+      justify-content: flex-end;
+    }
 
     .user-chip {
-  display: inline-flex;
-  align-items: center;
-  padding: 10px 14px;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  background: var(--panel-soft);
-  color: var(--muted);
-  font-size: 14px;
-  white-space: nowrap;
-}
+      display: inline-flex;
+      align-items: center;
+      padding: 10px 14px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--panel-soft);
+      color: var(--muted);
+      font-size: 14px;
+      white-space: nowrap;
+    }
 
     .btn {
       min-height: 44px;
@@ -306,7 +305,6 @@
     }
 
     .table tr:last-child td { border-bottom: none; }
-
     .table tr:hover td { background: #fcfbf8; }
 
     .status-pill {
@@ -321,6 +319,7 @@
       letter-spacing: 0.4px;
       text-transform: uppercase;
       border: 1px solid transparent;
+      white-space: nowrap;
     }
 
     .status-verified {
@@ -356,8 +355,9 @@
 
     .split-grid {
       display: grid;
-      grid-template-columns: 1.2fr 1fr;
+      grid-template-columns: minmax(0, 1.65fr) minmax(340px, 1fr);
       gap: 18px;
+      align-items: start;
     }
 
     .form-grid {
@@ -419,6 +419,7 @@
       color: var(--muted);
       line-height: 1.7;
       white-space: pre-wrap;
+      overflow-wrap: anywhere;
     }
 
     .auth-overlay {
@@ -479,6 +480,34 @@
 
     .hidden { display: none !important; }
 
+    .qr-preview-card {
+      width: 100%;
+      text-align: center;
+    }
+
+    .qr-preview-image {
+      max-width: 260px;
+      width: 100%;
+      height: auto;
+      border-radius: 12px;
+      background: #fff;
+      padding: 10px;
+      border: 1px solid var(--line);
+    }
+
+    .qr-link {
+      color: var(--gold-dark);
+      text-decoration: underline;
+      word-break: break-word;
+    }
+
+    .qr-action-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 16px;
+    }
+
     @media (max-width: 1100px) {
       .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .split-grid,
@@ -488,13 +517,14 @@
     @media (max-width: 980px) {
       .sidebar { display: none; }
     }
-    
+
     @media (max-width: 900px) {
-  .topbar-right {
-    flex-wrap: wrap;
-    justify-content: flex-start;
-  }
-}
+      .topbar-right {
+        flex-wrap: wrap;
+        justify-content: flex-start;
+      }
+    }
+
     @media (max-width: 700px) {
       .topbar { padding: 18px; }
       .content { padding: 18px; }
@@ -508,6 +538,7 @@
         justify-content: center;
       }
       .auth-actions { flex-direction: column; }
+      .qr-action-row { flex-direction: column; }
     }
   </style>
 </head>
@@ -550,20 +581,20 @@
     </aside>
 
     <main class="main">
-     <div class="topbar">
-  <div class="topbar-left">
-    <h1>Admin Portal</h1>
-    <p>Operations, reporting, and verification management in one place.</p>
-  </div>
+      <div class="topbar">
+        <div class="topbar-left">
+          <h1>Admin Portal</h1>
+          <p>Operations, reporting, and verification management in one place.</p>
+        </div>
 
-  <div class="topbar-right">
-    <div class="user-chip">admin@thereadymarkgroup.com</div>
-    <button id="topbar-new-inspection-btn" class="btn btn-primary" type="button">New Inspection</button>
-    <button id="admin-logout-btn" class="btn btn-secondary" type="button">Log Out</button>
-  </div>
-</div>
+        <div class="topbar-right">
+          <div class="user-chip">admin@thereadymarkgroup.com</div>
+          <button id="topbar-new-inspection-btn" class="btn btn-primary" type="button">New Inspection</button>
+          <button id="admin-logout-btn" class="btn btn-secondary" type="button">Log Out</button>
+        </div>
+      </div>
 
-<div class="content">
+      <div class="content">
         <section id="admin-dashboard-view" class="view active">
           <div class="cards">
             <div class="card">
@@ -789,22 +820,24 @@
                 <h2>Inspection Status</h2>
                 <p>System response and verification output appear here.</p>
               </div>
-              
+
               <div class="section-body">
-      <div id="inspection-status-box" class="status-box">Waiting for inspection entry.</div>
+                <div id="inspection-status-box" class="status-box">Waiting for inspection entry.</div>
 
-<div style="margin-top:16px;">
-  <label>QR Preview</label>
-  <div id="qr-preview-wrap" class="status-box" style="display:flex;justify-content:center;align-items:center;min-height:220px;">
-    QR code will appear here after inspection save.
-  </div>
-</div>
+                <div style="margin-top:16px;">
+                  <label>QR Preview</label>
+                  <div id="qr-preview-wrap" class="status-box" style="display:flex;justify-content:center;align-items:center;min-height:220px;">
+                    QR code will appear here after inspection save.
+                  </div>
+                </div>
 
-<div style="margin-top:16px;">
-  <button id="download-qr-btn" class="btn btn-secondary" type="button" style="display:none;">Download QR</button>
-</div>    
-     </div>
+                <div class="qr-action-row">
+                  <button id="download-qr-btn" class="btn btn-secondary" type="button" style="display:none;">Download QR</button>
+                  <button id="print-qr-btn" class="btn btn-secondary" type="button" style="display:none;">Print QR Label</button>
+                </div>
+              </div>
             </div>
+          </div>
         </section>
 
         <section id="guest-reports-view" class="view">
@@ -995,48 +1028,157 @@
         reader.readAsDataURL(file);
       });
     }
+
     function renderQrCode(publicUrl) {
-  const qrWrap = document.getElementById("qr-preview-wrap");
-  const downloadBtn = document.getElementById("download-qr-btn");
+      const qrWrap = document.getElementById("qr-preview-wrap");
+      const downloadBtn = document.getElementById("download-qr-btn");
+      const printBtn = document.getElementById("print-qr-btn");
 
-  if (!qrWrap || !publicUrl) return;
+      if (!qrWrap || !publicUrl) return;
 
-  const qrSrc =
-    "https://api.qrserver.com/v1/create-qr-code/?size=260x260&data=" +
-    encodeURIComponent(publicUrl);
+      const qrSrc = "https://api.qrserver.com/v1/create-qr-code/?size=260x260&data=" + encodeURIComponent(publicUrl);
 
-  qrWrap.innerHTML = `
-    <div style="text-align:center; width:100%;">
-      <img
-        id="generated-qr-image"
-        src="${qrSrc}"
-        alt="QR Code"
-        style="max-width:260px;width:100%;height:auto;border-radius:12px;background:#fff;padding:10px;border:1px solid var(--line);"
-      />
-      <div style="margin-top:12px;color:var(--muted);font-size:13px;word-break:break-word;">
-        ${publicUrl}
-      </div>
-    </div>
-  `;
+      const propertySelect = document.getElementById("inspection-property-select");
+      const propertyName = propertySelect.options[propertySelect.selectedIndex]?.text || "Property";
+      const propertySlug = propertySelect.value || "property";
+      const roomNumber = document.getElementById("inspection-room-number").value || "room";
+      const verificationId = document.getElementById("inspection-verification-id").value || "verification";
 
-  if (downloadBtn) {
-    downloadBtn.style.display = "inline-flex";
-    downloadBtn.onclick = async () => {
-      const response = await fetch(qrSrc);
-      const blob = await response.blob();
-      const blobUrl = URL.createObjectURL(blob);
+      qrWrap.innerHTML = `
+        <div id="printable-qr-label" class="qr-preview-card">
+          <img
+            id="generated-qr-image"
+            src="${qrSrc}"
+            alt="QR Code"
+            class="qr-preview-image"
+          />
+          <div style="margin-top:12px;font-size:13px;">
+            <a
+              href="${publicUrl}"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="qr-link"
+            >
+              ${publicUrl}
+            </a>
+          </div>
+        </div>
+      `;
 
-      const link = document.createElement("a");
-      link.href = blobUrl;
-      link.download = "ready-mark-qr.png";
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
+      if (downloadBtn) {
+        downloadBtn.style.display = "inline-flex";
+        downloadBtn.onclick = async () => {
+          const response = await fetch(qrSrc);
+          const blob = await response.blob();
+          const blobUrl = URL.createObjectURL(blob);
 
-      URL.revokeObjectURL(blobUrl);
-    };
-  }
-}
+          const link = document.createElement("a");
+          link.href = blobUrl;
+          link.download = `${propertySlug}-room-${roomNumber}-${verificationId}.png`;
+          document.body.appendChild(link);
+          link.click();
+          link.remove();
+
+          URL.revokeObjectURL(blobUrl);
+        };
+      }
+
+      if (printBtn) {
+        printBtn.style.display = "inline-flex";
+        printBtn.onclick = () => {
+          const printWindow = window.open("", "_blank", "width=900,height=700");
+          if (!printWindow) return;
+
+          printWindow.document.write(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+              <meta charset="UTF-8" />
+              <title>Print QR Label</title>
+              <style>
+                body {
+                  margin: 0;
+                  padding: 32px;
+                  background: #ffffff;
+                  font-family: Arial, sans-serif;
+                  color: #111315;
+                }
+                .sheet {
+                  display: flex;
+                  justify-content: center;
+                }
+                .label-card {
+                  width: 380px;
+                  border: 1px solid #e8e4dc;
+                  border-radius: 18px;
+                  padding: 24px;
+                  text-align: center;
+                }
+                .brand {
+                  font-family: Georgia, serif;
+                  font-size: 24px;
+                  margin-bottom: 16px;
+                }
+                .meta {
+                  font-size: 14px;
+                  line-height: 1.6;
+                  margin-bottom: 6px;
+                  word-break: break-word;
+                }
+                .qr-box {
+                  margin: 18px 0;
+                }
+                .qr-box img {
+                  width: 240px;
+                  height: 240px;
+                }
+                .url {
+                  font-size: 12px;
+                  color: #444;
+                  word-break: break-word;
+                  margin-top: 10px;
+                }
+                @media print {
+                  body {
+                    padding: 0;
+                  }
+                  .sheet {
+                    display: block;
+                  }
+                  .label-card {
+                    border: none;
+                    border-radius: 0;
+                    width: 100%;
+                  }
+                }
+              </style>
+            </head>
+            <body>
+              <div class="sheet">
+                <div class="label-card">
+                  <div class="brand">The Ready Mark</div>
+                  <div class="meta"><strong>Property:</strong> ${propertyName}</div>
+                  <div class="meta"><strong>Room:</strong> ${roomNumber}</div>
+                  <div class="meta"><strong>Verification ID:</strong> ${verificationId}</div>
+                  <div class="qr-box">
+                    <img src="${qrSrc}" alt="QR Code" />
+                  </div>
+                  <div class="url">${publicUrl}</div>
+                </div>
+              </div>
+              <script>
+                window.onload = function () {
+                  window.print();
+                };
+              <\/script>
+            </body>
+            </html>
+          `);
+
+          printWindow.document.close();
+        };
+      }
+    }
 
     async function loginAdmin() {
       const passwordInput = document.getElementById("admin-password-input");
@@ -1165,6 +1307,7 @@
         recentLines.push(`${state.lastInspectionResult.property_name} inspection saved.`);
         recentLines.push(`Verification ID: ${state.lastInspectionResult.verification_id}`);
       }
+
       state.guestReports.slice(0, 3).forEach(report => {
         recentLines.push(`${report.property_name || report.property_slug || "Property"} report for room ${report.room_number || "—"} is ${report.status || "New"}.`);
       });
@@ -1186,6 +1329,7 @@
       snapshotBody.innerHTML = state.properties.map(property => {
         const reportCount = reportCountMap[property.property_slug] || 0;
         const hasIssues = reportCount > 0;
+
         return `
           <tr>
             <td>${escapeHtml(property.property_name)}</td>
@@ -1270,16 +1414,17 @@
         });
 
         state.lastInspectionResult = data;
-document.getElementById("evidence-verification-id").value = verificationId;
+        document.getElementById("evidence-verification-id").value = verificationId;
 
-if (data.public_url) {
-  renderQrCode(data.public_url);
-}
+        if (data.public_url) {
+          renderQrCode(data.public_url);
+        }
 
-setStatusBox(
-  "inspection-status-box",
-  `Inspection saved successfully.\nProperty: ${data.property_name}\nRoom: ${data.room_number}\nVerification ID: ${data.verification_id}\nPublic URL: ${data.public_url}`
-);
+        setStatusBox(
+          "inspection-status-box",
+          `Inspection saved successfully.\nProperty: ${data.property_name}\nRoom: ${data.room_number}\nVerification ID: ${data.verification_id}\nPublic URL: ${data.public_url}`
+        );
+
         renderDashboard();
       } catch (error) {
         setStatusBox("inspection-status-box", `Inspection save failed.\n${error.message}`);
@@ -1343,10 +1488,10 @@ setStatusBox(
       });
 
       document.getElementById("admin-logout-btn").addEventListener("click", () => {
-  state.adminToken = "";
-  sessionStorage.removeItem(STORAGE_KEY);
-  document.getElementById("auth-overlay").classList.remove("hidden");
-});   
+        state.adminToken = "";
+        sessionStorage.removeItem(STORAGE_KEY);
+        document.getElementById("auth-overlay").classList.remove("hidden");
+      });
 
       document.getElementById("property-name-input").addEventListener("input", () => {
         const slugInput = document.getElementById("property-slug-input");
