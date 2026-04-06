@@ -248,12 +248,17 @@ export default async function handler(req, res) {
         }))
       : [];
 
-    let signedPhotoUrl = "";
-    let signedLogFileUrl = "";
+let signedPhotoUrl = "";
+let signedLogFileUrl = "";
+let signedPhotoUrls = [];
 
-    const photoPath = inspection?.photo_url ? String(inspection.photo_url).trim() : "";
-    const logFilePath = inspection?.log_file_url ? String(inspection.log_file_url).trim() : "";
+const photoPath = inspection?.photo_url ? String(inspection.photo_url).trim() : "";
+const logFilePath = inspection?.log_file_url ? String(inspection.log_file_url).trim() : "";
 
+const photoPaths = Array.isArray(inspection?.photo_urls)
+  ? inspection.photo_urls.map(path => String(path || "").trim()).filter(Boolean)
+  : [];
+    
     if (photoPath) {
       const { data, error } = await supabase.storage
         .from(PHOTO_BUCKET)
@@ -264,6 +269,23 @@ export default async function handler(req, res) {
       }
     }
 
+    if (photoPaths.length) {
+  const signedPhotoResults = await Promise.all(
+    photoPaths.map(async (path) => {
+      const { data, error } = await supabase.storage
+        .from(PHOTO_BUCKET)
+        .createSignedUrl(path, SIGNED_URL_EXPIRES_IN);
+
+      if (error || !data?.signedUrl) {
+        return null;
+      }
+
+      return data.signedUrl;
+    })
+  );
+
+  signedPhotoUrls = signedPhotoResults.filter(Boolean);
+}
     if (logFilePath) {
       const { data, error } = await supabase.storage
         .from(DOC_BUCKET)
@@ -290,6 +312,7 @@ export default async function handler(req, res) {
       photoPath,
       logFilePath,
       photoUrl: signedPhotoUrl,
+      photoUrls: signedPhotoUrls,
       logFileUrl: signedLogFileUrl,
       inspectionHistory
     });
