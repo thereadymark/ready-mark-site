@@ -8,7 +8,7 @@ const supabase = createClient(
 export const config = {
   api: {
     bodyParser: {
-      sizeLimit: "20mb"
+      sizeLimit: "40mb"
     }
   }
 };
@@ -18,6 +18,7 @@ const DOC_BUCKET = "inspection-docs";
 
 const MAX_PHOTO_BYTES = 10 * 1024 * 1024;
 const MAX_DOC_BYTES = 15 * 1024 * 1024;
+const MAX_PHOTO_COUNT = 6;
 
 const ALLOWED_PHOTO_TYPES = new Set([
   "image/jpeg",
@@ -67,6 +68,20 @@ function validateFile({ type, buffer, allowedTypes, maxBytes, label }) {
   return null;
 }
 
+function normalizePhotoFiles(photoFileInput) {
+  if (!photoFileInput) return [];
+
+  if (Array.isArray(photoFileInput)) {
+    return photoFileInput.filter(file => file && file.base64);
+  }
+
+  if (photoFileInput.base64) {
+    return [photoFileInput];
+  }
+
+  return [];
+}
+
 export default async function handler(req, res) {
   const allowedOrigin = "https://verify.thereadymarkgroup.com";
 
@@ -106,49 +121,58 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Missing verification_id" });
     }
 
-    if (!photo_file && !log_file) {
+    const photoFiles = normalizePhotoFiles(photo_file);
+
+    if (!photoFiles.length && !log_file) {
       return res.status(400).json({ error: "No files provided" });
+    }
+
+    if (photoFiles.length > MAX_PHOTO_COUNT) {
+      return res.status(400).json({
+        error: `You can upload up to ${MAX_PHOTO_COUNT} photos at one time.`
+      });
     }
 
     const verificationId = String(verification_id).trim();
 
-    let uploadedPhotoPath = null;
     let uploadedLogPath = null;
+    const uploadedPhotoPaths = [];
 
-    // Upload photo
-    if (photo_file?.base64) {
-      const buffer = bufferFromBase64(photo_file.base64);
+    // Upload one or many photos
+    for (let i = 0; i < photoFiles.length; i += 1) {
+      const currentPhoto = photoFiles[i];
+      const buffer = bufferFromBase64(currentPhoto.base64);
 
       const error = validateFile({
-        type: photo_file.type,
+        type: currentPhoto.type,
         buffer,
         allowedTypes: ALLOWED_PHOTO_TYPES,
         maxBytes: MAX_PHOTO_BYTES,
-        label: "Inspection photo"
+        label: `Inspection photo ${i + 1}`
       });
 
       if (error) {
         return res.status(400).json({ error });
       }
 
-      const fileName = sanitizeFileName(photo_file.name);
-      const filePath = `${verificationId}/${Date.now()}-${fileName}`;
+      const fileName = sanitizeFileName(currentPhoto.name);
+      const filePath = `${verificationId}/${Date.now()}-${i + 1}-${fileName}`;
 
       const { error: uploadError } = await supabase.storage
         .from(PHOTO_BUCKET)
         .upload(filePath, buffer, {
-          contentType: photo_file.type,
+          contentType: currentPhoto.type,
           upsert: false
         });
 
       if (uploadError) {
         return res.status(500).json({
-          error: "Photo upload failed",
+          error: `Photo upload failed`,
           details: uploadError.message
         });
       }
 
-      uploadedPhotoPath = filePath;
+      uploadedPhotoPaths.push(filePath);
     }
 
     // Upload log
@@ -187,17 +211,43 @@ export default async function handler(req, res) {
       uploadedLogPath = filePath;
     }
 
-    // Patch inspection record
+    // Load current inspection record first so we can merge photo arrays
+    const { data: existingInspection, error: existingInspectionError } = await supabase
+      .from("Inspections")
+      .select("id, verification_id, photo_url, photo_urls, log_file_url")
+      .eq("verification_id", verificationId)
+      .single();
+
+    if (existingInspectionError) {
+      return res.status(500).json({
+        error: "Files uploaded but failed to load inspection record",
+        details: existingInspectionError.message
+      });
+    }
+
+    const existingPhotoUrls = Array.isArray(existingInspection.photo_urls)
+      ? existingInspection.photo_urls.filter(Boolean)
+      : [];
+
+    const mergedPhotoUrls = [...existingPhotoUrls, ...uploadedPhotoPaths];
+
     const updatePayload = {};
-    if (uploadedPhotoPath) updatePayload.photo_url = uploadedPhotoPath;
-    if (uploadedLogPath) updatePayload.log_file_url = uploadedLogPath;
+
+    if (uploadedPhotoPaths.length) {
+      updatePayload.photo_url = mergedPhotoUrls[0] || uploadedPhotoPaths[0];
+      updatePayload.photo_urls = mergedPhotoUrls;
+    }
+
+    if (uploadedLogPath) {
+      updatePayload.log_file_url = uploadedLogPath;
+    }
 
     if (Object.keys(updatePayload).length > 0) {
       const { data: updatedInspection, error: updateError } = await supabase
         .from("Inspections")
         .update(updatePayload)
         .eq("verification_id", verificationId)
-        .select("id, verification_id, photo_url, log_file_url")
+        .select("id, verification_id, photo_url, photo_urls, log_file_url")
         .single();
 
       if (updateError) {
@@ -210,7 +260,8 @@ export default async function handler(req, res) {
       return res.status(200).json({
         success: true,
         verification_id: verificationId,
-        photo_path: uploadedPhotoPath,
+        photo_path: uploadedPhotoPaths[0] || null,
+        photo_paths: uploadedPhotoPaths,
         log_file_path: uploadedLogPath,
         inspection: updatedInspection
       });
@@ -219,7 +270,8 @@ export default async function handler(req, res) {
     return res.status(200).json({
       success: true,
       verification_id: verificationId,
-      photo_path: uploadedPhotoPath,
+      photo_path: uploadedPhotoPaths[0] || null,
+      photo_paths: uploadedPhotoPaths,
       log_file_path: uploadedLogPath
     });
   } catch (error) {
