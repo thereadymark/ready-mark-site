@@ -190,6 +190,13 @@
       border: 1px solid var(--line);
     }
 
+    .btn-small {
+      min-height: 34px;
+      padding: 8px 12px;
+      font-size: 12px;
+      border-radius: 10px;
+    }
+
     .content {
       padding: 28px;
       display: flex;
@@ -284,7 +291,7 @@
     .table {
       width: 100%;
       border-collapse: collapse;
-      min-width: 780px;
+      min-width: 860px;
     }
 
     .table th,
@@ -293,7 +300,7 @@
       padding: 16px 18px;
       border-bottom: 1px solid var(--line);
       font-size: 14px;
-      vertical-align: middle;
+      vertical-align: top;
     }
 
     .table th {
@@ -506,6 +513,20 @@
       gap: 12px;
       flex-wrap: wrap;
       margin-top: 16px;
+    }
+
+    .report-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      min-width: 230px;
+    }
+
+    .report-meta {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 6px;
+      line-height: 1.5;
     }
 
     @media (max-width: 1100px) {
@@ -922,7 +943,9 @@
       adminData: "/api/admin-data",
       createProperty: "/api/create-property",
       saveInspection: "/api/save-inspection",
-      uploadEvidence: "/api/save-evidence"
+      uploadEvidence: "/api/save-evidence",
+      sendReportToProperty: "/api/send-report-to-property",
+      updateReportStatus: "/api/update-report-status"
     };
 
     const STORAGE_KEY = "rm_admin_token";
@@ -987,8 +1010,27 @@
 
     function getStatusPillClass(statusText) {
       const normalized = String(statusText || "").toLowerCase();
-      if (normalized.includes("resolved") || normalized.includes("verified") || normalized.includes("active")) return "status-verified";
-      if (normalized.includes("review") || normalized.includes("issues") || normalized.includes("attention")) return "status-issues";
+
+      if (
+        normalized.includes("fully resolved") ||
+        normalized.includes("confirmed with guest") ||
+        normalized.includes("resolved by property") ||
+        normalized === "resolved" ||
+        normalized.includes("verified") ||
+        normalized.includes("active")
+      ) {
+        return "status-verified";
+      }
+
+      if (
+        normalized.includes("under review") ||
+        normalized.includes("sent to property") ||
+        normalized.includes("issues") ||
+        normalized.includes("attention")
+      ) {
+        return "status-issues";
+      }
+
       return "status-new";
     }
 
@@ -1139,12 +1181,8 @@
                   margin-top: 10px;
                 }
                 @media print {
-                  body {
-                    padding: 0;
-                  }
-                  .sheet {
-                    display: block;
-                  }
+                  body { padding: 0; }
+                  .sheet { display: block; }
                   .label-card {
                     border: none;
                     border-radius: 0;
@@ -1260,6 +1298,38 @@
       `).join("");
     }
 
+    function getGuestReportActionButtons(report) {
+      const status = String(report.status || "New");
+
+      const actions = [];
+
+      if (status !== "Sent to Property") {
+        actions.push(`<button class="btn btn-secondary btn-small" type="button" onclick="sendReportToProperty('${escapeHtml(report.id)}')">Send to Property</button>`);
+      }
+
+      if (status !== "Under Review") {
+        actions.push(`<button class="btn btn-secondary btn-small" type="button" onclick="updateGuestReportStatus('${escapeHtml(report.id)}','Under Review')">Under Review</button>`);
+      }
+
+      if (status !== "Escalated") {
+        actions.push(`<button class="btn btn-secondary btn-small" type="button" onclick="updateGuestReportStatus('${escapeHtml(report.id)}','Escalated')">Escalate</button>`);
+      }
+
+      if (status !== "Resolved by Property") {
+        actions.push(`<button class="btn btn-secondary btn-small" type="button" onclick="updateGuestReportStatus('${escapeHtml(report.id)}','Resolved by Property')">Resolved by Property</button>`);
+      }
+
+      if (status !== "Confirmed with Guest") {
+        actions.push(`<button class="btn btn-secondary btn-small" type="button" onclick="updateGuestReportStatus('${escapeHtml(report.id)}','Confirmed with Guest')">Confirmed with Guest</button>`);
+      }
+
+      if (status !== "Fully Resolved") {
+        actions.push(`<button class="btn btn-primary btn-small" type="button" onclick="updateGuestReportStatus('${escapeHtml(report.id)}','Fully Resolved')">Fully Resolved</button>`);
+      }
+
+      return actions.join("");
+    }
+
     function renderGuestReports() {
       const tbody = document.getElementById("guest-reports-body");
 
@@ -1270,16 +1340,25 @@
 
       tbody.innerHTML = state.guestReports.map(report => `
         <tr>
-          <td>${escapeHtml(report.confirmation_number || report.verification_id || report.id || "—")}</td>
-          <td>${escapeHtml(report.property_name || report.property_slug || "—")}</td>
+          <td>
+            ${escapeHtml(report.confirmation_number || report.verification_id || report.id || "—")}
+            <div class="report-meta">${escapeHtml(report.verification_id || "")}</div>
+          </td>
+          <td>
+            ${escapeHtml(report.property_name || report.property_slug || "—")}
+            <div class="report-meta">${escapeHtml(report.property_slug || "")}</div>
+          </td>
           <td>${escapeHtml(report.room_number || "—")}</td>
           <td><span class="status-pill ${getStatusPillClass(report.status)}">${escapeHtml(report.status || "New")}</span></td>
           <td>${escapeHtml(formatDate(report.reported_at))}</td>
           <td>
-            ${report.photo_url
-              ? `<a class="text-btn" href="${escapeHtml(report.photo_url)}" target="_blank" rel="noopener noreferrer">Open</a>`
-              : `<span style="color: var(--muted);">No photo</span>`
-            }
+            <div class="report-actions">
+              ${getGuestReportActionButtons(report)}
+              ${report.photo_url
+                ? `<a class="btn btn-secondary btn-small" href="${escapeHtml(report.photo_url)}" target="_blank" rel="noopener noreferrer" style="text-decoration:none;display:inline-flex;align-items:center;">Open Photo</a>`
+                : ``
+              }
+            </div>
           </td>
         </tr>
       `).join("");
@@ -1288,14 +1367,16 @@
     function renderDashboard() {
       document.getElementById("dashboard-properties-count").textContent = String(state.properties.length);
 
+      const resolvedStatuses = ["fully resolved", "confirmed with guest", "resolved by property", "resolved", "closed"];
+
       const openReports = state.guestReports.filter(report => {
         const status = String(report.status || "").toLowerCase();
-        return status !== "resolved" && status !== "closed";
+        return !resolvedStatuses.includes(status);
       }).length;
 
       const resolvedReports = state.guestReports.filter(report => {
         const status = String(report.status || "").toLowerCase();
-        return status === "resolved" || status === "closed";
+        return resolvedStatuses.includes(status);
       }).length;
 
       document.getElementById("dashboard-open-reports-count").textContent = String(openReports);
@@ -1469,6 +1550,38 @@
         setStatusBox("evidence-status-box", `Evidence upload failed.\n${error.message}`);
       }
     }
+
+    async function sendReportToProperty(reportId) {
+      try {
+        await apiFetch(API.sendReportToProperty, {
+          method: "POST",
+          body: JSON.stringify({ report_id: reportId })
+        });
+
+        await refreshAdminData();
+      } catch (error) {
+        alert(error.message);
+      }
+    }
+
+    async function updateGuestReportStatus(reportId, status) {
+      try {
+        await apiFetch(API.updateReportStatus, {
+          method: "POST",
+          body: JSON.stringify({
+            report_id: reportId,
+            status
+          })
+        });
+
+        await refreshAdminData();
+      } catch (error) {
+        alert(error.message);
+      }
+    }
+
+    window.sendReportToProperty = sendReportToProperty;
+    window.updateGuestReportStatus = updateGuestReportStatus;
 
     function wireEvents() {
       document.querySelectorAll(".nav-btn").forEach(btn => {
