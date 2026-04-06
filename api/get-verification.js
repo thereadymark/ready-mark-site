@@ -1,3 +1,14 @@
+import { createClient } from "@supabase/supabase-js";
+
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+);
+
+const PHOTO_BUCKET = "inspection-photos";
+const DOC_BUCKET = "inspection-docs";
+const SIGNED_URL_EXPIRES_IN = 60 * 60; // 1 hour
+
 export default async function handler(req, res) {
   const allowedOrigin = "https://verify.thereadymarkgroup.com";
 
@@ -186,6 +197,32 @@ export default async function handler(req, res) {
         ? inspectionData[0]
         : null;
 
+    let signedPhotoUrl = "";
+    let signedLogFileUrl = "";
+
+    const photoPath = inspection?.photo_url ? String(inspection.photo_url).trim() : "";
+    const logFilePath = inspection?.log_file_url ? String(inspection.log_file_url).trim() : "";
+
+    if (photoPath) {
+      const { data, error } = await supabase.storage
+        .from(PHOTO_BUCKET)
+        .createSignedUrl(photoPath, SIGNED_URL_EXPIRES_IN);
+
+      if (!error && data?.signedUrl) {
+        signedPhotoUrl = data.signedUrl;
+      }
+    }
+
+    if (logFilePath) {
+      const { data, error } = await supabase.storage
+        .from(DOC_BUCKET)
+        .createSignedUrl(logFilePath, SIGNED_URL_EXPIRES_IN);
+
+      if (!error && data?.signedUrl) {
+        signedLogFileUrl = data.signedUrl;
+      }
+    }
+
     return res.status(200).json({
       property: property?.property_name ?? "",
       property_slug: property?.property_slug ?? propertySlug ?? "",
@@ -199,8 +236,10 @@ export default async function handler(req, res) {
       score: inspection?.score ?? "",
       status: inspection?.certification_tier ?? "Not verified",
       notes: inspection?.notes ?? "",
-      photoUrl: inspection?.photo_url ?? "",
-      logFileUrl: inspection?.log_file_url ?? ""
+      photoPath,
+      logFilePath,
+      photoUrl: signedPhotoUrl,
+      logFileUrl: signedLogFileUrl
     });
   } catch (error) {
     return res.status(500).json({
