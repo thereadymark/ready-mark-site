@@ -147,23 +147,25 @@
     }
 
     .topbar-right {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      flex-wrap: wrap;
-      justify-content: flex-end;
-    }
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: nowrap;
+  justify-content: flex-end;
+}
+
 
     .user-chip {
-      display: inline-flex;
-      align-items: center;
-      padding: 10px 14px;
-      border: 1px solid var(--line);
-      border-radius: 999px;
-      background: var(--panel-soft);
-      color: var(--muted);
-      font-size: 14px;
-    }
+  display: inline-flex;
+  align-items: center;
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--panel-soft);
+  color: var(--muted);
+  font-size: 14px;
+  white-space: nowrap;
+}
 
     .btn {
       min-height: 44px;
@@ -486,7 +488,13 @@
     @media (max-width: 980px) {
       .sidebar { display: none; }
     }
-
+    
+    @media (max-width: 900px) {
+  .topbar-right {
+    flex-wrap: wrap;
+    justify-content: flex-start;
+  }
+}
     @media (max-width: 700px) {
       .topbar { padding: 18px; }
       .content { padding: 18px; }
@@ -985,6 +993,48 @@
         reader.readAsDataURL(file);
       });
     }
+    function renderQrCode(publicUrl) {
+  const qrWrap = document.getElementById("qr-preview-wrap");
+  const downloadBtn = document.getElementById("download-qr-btn");
+
+  if (!qrWrap || !publicUrl) return;
+
+  const qrSrc =
+    "https://api.qrserver.com/v1/create-qr-code/?size=260x260&data=" +
+    encodeURIComponent(publicUrl);
+
+  qrWrap.innerHTML = `
+    <div style="text-align:center; width:100%;">
+      <img
+        id="generated-qr-image"
+        src="${qrSrc}"
+        alt="QR Code"
+        style="max-width:260px;width:100%;height:auto;border-radius:12px;background:#fff;padding:10px;border:1px solid var(--line);"
+      />
+      <div style="margin-top:12px;color:var(--muted);font-size:13px;word-break:break-word;">
+        ${publicUrl}
+      </div>
+    </div>
+  `;
+
+  if (downloadBtn) {
+    downloadBtn.style.display = "inline-flex";
+    downloadBtn.onclick = async () => {
+      const response = await fetch(qrSrc);
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = "ready-mark-qr.png";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+
+      URL.revokeObjectURL(blobUrl);
+    };
+  }
+}
 
     async function loginAdmin() {
       const passwordInput = document.getElementById("admin-password-input");
@@ -1218,13 +1268,16 @@
         });
 
         state.lastInspectionResult = data;
-        document.getElementById("evidence-verification-id").value = verificationId;
+document.getElementById("evidence-verification-id").value = verificationId;
 
-        setStatusBox(
-          "inspection-status-box",
-          `Inspection saved successfully.\nProperty: ${data.property_name}\nRoom: ${data.room_number}\nVerification ID: ${data.verification_id}\nPublic URL: ${data.public_url}`
-        );
+if (data.public_url) {
+  renderQrCode(data.public_url);
+}
 
+setStatusBox(
+  "inspection-status-box",
+  `Inspection saved successfully.\nProperty: ${data.property_name}\nRoom: ${data.room_number}\nVerification ID: ${data.verification_id}\nPublic URL: ${data.public_url}`
+);
         renderDashboard();
       } catch (error) {
         setStatusBox("inspection-status-box", `Inspection save failed.\n${error.message}`);
