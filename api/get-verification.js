@@ -168,7 +168,7 @@ export default async function handler(req, res) {
     const inspectionUrl =
       `${supabaseUrl}/rest/v1/${INSPECTION_TABLE}` +
       `?room_id=eq.${encodeURIComponent(room.id)}` +
-      `&select=inspector_id,created_at,certification_tier,verification_id,score,notes` +
+      `&select=inspector_id,created_at,certification_tier,verification_id,score,notes,photo_url,log_file_url` +
       `&order=created_at.desc.nullslast` +
       `&limit=1`;
 
@@ -198,7 +198,9 @@ export default async function handler(req, res) {
       verificationId: inspection?.verification_id ?? "",
       score: inspection?.score ?? "",
       status: inspection?.certification_tier ?? "Not verified",
-      notes: inspection?.notes ?? ""
+      notes: inspection?.notes ?? "",
+      photoUrl: inspection?.photo_url ?? "",
+      logFileUrl: inspection?.log_file_url ?? ""
     });
   } catch (error) {
     return res.status(500).json({
