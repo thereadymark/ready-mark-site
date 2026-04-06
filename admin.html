@@ -1670,46 +1670,84 @@ Previous current inspections for this room were automatically archived.`
     }
 
     async function handleUploadEvidence(event) {
-      event.preventDefault();
+  event.preventDefault();
 
-      const verificationId = document.getElementById("evidence-verification-id").value.trim();
-      const photoFile = document.getElementById("evidence-photo-file").files[0] || null;
-      const logFile = document.getElementById("evidence-log-file").files[0] || null;
+  const verificationId = document.getElementById("evidence-verification-id").value.trim();
+  const photoFiles = document.getElementById("evidence-photo-file").files;
+  const logFile = document.getElementById("evidence-log-file").files[0] || null;
 
-      if (!verificationId) {
-        setStatusBox("evidence-status-box", "Enter a verification ID.");
-        return;
-      }
+  if (!verificationId) {
+    setStatusBox("evidence-status-box", "Enter a verification ID.");
+    return;
+  }
 
-      if (!photoFile && !logFile) {
-        setStatusBox("evidence-status-box", "Select at least one file to upload.");
-        return;
-      }
+  if (!photoFiles.length && !logFile) {
+    setStatusBox("evidence-status-box", "Select at least one file to upload.");
+    return;
+  }
 
-      try {
-        const photoPayload = await fileToBase64(photoFile);
-        const logPayload = await fileToBase64(logFile);
+  try {
+    setStatusBox("evidence-status-box", "Uploading evidence...");
 
-        const data = await apiFetch(API.uploadEvidence, {
-          method: "POST",
-          body: JSON.stringify({
-            verification_id: verificationId,
-            photo_file: photoPayload,
-            log_file: logPayload
-          })
+    // 🔥 Convert ALL selected photos to base64
+    let photoPayload = [];
+
+    if (photoFiles.length) {
+      for (let i = 0; i < photoFiles.length; i++) {
+        const file = photoFiles[i];
+        const base64Data = await fileToBase64(file);
+
+        photoPayload.push({
+          name: file.name,
+          type: file.type,
+          base64: base64Data
         });
-
-        setStatusBox(
-          "evidence-status-box",
-          `Evidence uploaded successfully.\nVerification ID: ${data.verification_id}\nPhoto Path: ${data.photo_path || "None"}\nLog Path: ${data.log_file_path || "None"}`
-        );
-
-        await refreshAdminData();
-      } catch (error) {
-        setStatusBox("evidence-status-box", `Evidence upload failed.\n${error.message}`);
       }
     }
 
+    // 📄 Convert log file (unchanged)
+    let logPayload = null;
+
+    if (logFile) {
+      const base64Data = await fileToBase64(logFile);
+
+      logPayload = {
+        name: logFile.name,
+        type: logFile.type,
+        base64: base64Data
+      };
+    }
+
+    // 🚀 Send request
+    const res = await fetch("/api/save-evidence", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-admin-token": sessionStorage.getItem("readymark_admin_token")
+      },
+      body: JSON.stringify({
+        verification_id: verificationId,
+        photo_file: photoPayload, // 🔥 ARRAY NOW
+        log_file: logPayload
+      })
+    });
+
+    const data = await res.json().catch(() => null);
+
+    if (!res.ok) {
+      throw new Error(data?.error || "Upload failed");
+    }
+
+    setStatusBox("evidence-status-box", "Evidence uploaded successfully ✅");
+
+    // optional reset
+    document.getElementById("evidence-photo-file").value = "";
+    document.getElementById("evidence-log-file").value = "";
+
+  } catch (err) {
+    setStatusBox("evidence-status-box", `Error: ${err.message}`);
+  }
+}
     async function sendReportToProperty(reportId) {
       try {
         await apiFetch(API.sendReportToProperty, {
