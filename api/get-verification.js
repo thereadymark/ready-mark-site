@@ -7,7 +7,7 @@ const supabase = createClient(
 
 const PHOTO_BUCKET = "inspection-photos";
 const DOC_BUCKET = "inspection-docs";
-const SIGNED_URL_EXPIRES_IN = 60 * 60; // 1 hour
+const SIGNED_URL_EXPIRES_IN = 60 * 60; // 1 hour;
 
 export default async function handler(req, res) {
   const allowedOrigin = "https://verify.thereadymarkgroup.com";
@@ -179,7 +179,8 @@ export default async function handler(req, res) {
     const inspectionUrl =
       `${supabaseUrl}/rest/v1/${INSPECTION_TABLE}` +
       `?room_id=eq.${encodeURIComponent(room.id)}` +
-      `&select=inspector_id,created_at,certification_tier,verification_id,score,notes,photo_url,log_file_url` +
+      `&select=id,inspector_id,created_at,certification_tier,verification_id,score,notes,photo_url,log_file_url,is_current` +
+      `&is_current=eq.true` +
       `&order=created_at.desc.nullslast` +
       `&limit=1`;
 
@@ -192,10 +193,60 @@ export default async function handler(req, res) {
       });
     }
 
-    const inspection =
+    let inspection =
       Array.isArray(inspectionData) && inspectionData.length > 0
         ? inspectionData[0]
         : null;
+
+    if (!inspection) {
+      const fallbackInspectionUrl =
+        `${supabaseUrl}/rest/v1/${INSPECTION_TABLE}` +
+        `?room_id=eq.${encodeURIComponent(room.id)}` +
+        `&select=id,inspector_id,created_at,certification_tier,verification_id,score,notes,photo_url,log_file_url,is_current` +
+        `&order=created_at.desc.nullslast` +
+        `&limit=1`;
+
+      const { response: fallbackRes, json: fallbackData } = await fetchJson(fallbackInspectionUrl);
+
+      if (!fallbackRes.ok) {
+        return res.status(500).json({
+          error: "Inspection fallback lookup failed",
+          details: fallbackData
+        });
+      }
+
+      inspection =
+        Array.isArray(fallbackData) && fallbackData.length > 0
+          ? fallbackData[0]
+          : null;
+    }
+
+    const historyUrl =
+      `${supabaseUrl}/rest/v1/${INSPECTION_TABLE}` +
+      `?room_id=eq.${encodeURIComponent(room.id)}` +
+      `&select=id,created_at,certification_tier,verification_id,score,is_current` +
+      `&order=created_at.desc.nullslast` +
+      `&limit=5`;
+
+    const { response: historyRes, json: historyData } = await fetchJson(historyUrl);
+
+    if (!historyRes.ok) {
+      return res.status(500).json({
+        error: "Inspection history lookup failed",
+        details: historyData
+      });
+    }
+
+    const inspectionHistory = Array.isArray(historyData)
+      ? historyData.map((item) => ({
+          id: item.id ?? null,
+          created_at: item.created_at ?? "",
+          certification_tier: item.certification_tier ?? "Not verified",
+          verification_id: item.verification_id ?? "",
+          score: item.score ?? "",
+          is_current: Boolean(item.is_current)
+        }))
+      : [];
 
     let signedPhotoUrl = "";
     let signedLogFileUrl = "";
@@ -239,7 +290,8 @@ export default async function handler(req, res) {
       photoPath,
       logFilePath,
       photoUrl: signedPhotoUrl,
-      logFileUrl: signedLogFileUrl
+      logFileUrl: signedLogFileUrl,
+      inspectionHistory
     });
   } catch (error) {
     return res.status(500).json({
