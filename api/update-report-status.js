@@ -39,8 +39,8 @@ export default async function handler(req, res) {
 
     const allowedStatuses = [
       "New",
-      "Under Review",
       "Sent to Property",
+      "Under Review",
       "Escalated",
       "Resolved by Property",
       "Confirmed with Guest",
@@ -48,7 +48,10 @@ export default async function handler(req, res) {
     ];
 
     if (!allowedStatuses.includes(status)) {
-      return res.status(400).json({ error: "Invalid status" });
+      return res.status(400).json({
+        error: "Invalid status",
+        allowed_statuses: allowedStatuses
+      });
     }
 
     const supabaseUrl = process.env.SUPABASE_URL;
