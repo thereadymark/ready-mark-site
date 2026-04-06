@@ -68,8 +68,13 @@ export default async function handler(req, res) {
 
     const normalizedPropertySlug = String(property_slug).trim();
     const normalizedRoomNumber = String(room_number).trim();
+    const normalizedInspectorId = String(inspector_id).trim();
+    const normalizedCertificationTier = String(certification_tier).trim();
+    const normalizedVerificationId = String(verification_id).trim();
+    const normalizedNotes = notes ? String(notes).trim() : null;
+    const inspectionIsoDate = new Date(inspection_date).toISOString();
 
-    // 🔍 PROPERTY LOOKUP
+    // PROPERTY LOOKUP
     const propertyRes = await fetch(
       `${supabaseUrl}/rest/v1/properties?property_slug=eq.${encodeURIComponent(normalizedPropertySlug)}&select=id,property_name,property_slug&limit=1`,
       { headers }
@@ -92,7 +97,7 @@ export default async function handler(req, res) {
 
     const property = propertyData[0];
 
-    // 🔍 ROOM LOOKUP
+    // ROOM LOOKUP
     const roomLookupRes = await fetch(
       `${supabaseUrl}/rest/v1/Rooms?property_id=eq.${encodeURIComponent(property.id)}&room_number=eq.${encodeURIComponent(normalizedRoomNumber)}&select=id,room_number,qr_slug,qr_url&limit=1`,
       { headers }
@@ -119,13 +124,15 @@ export default async function handler(req, res) {
       const roomInsertRes = await fetch(`${supabaseUrl}/rest/v1/Rooms`, {
         method: "POST",
         headers,
-        body: JSON.stringify([{
-          property_id: property.id,
-          room_number: normalizedRoomNumber,
-          qr_slug: qrSlug,
-          qr_url: qrUrl,
-          guest_access_code: generateGuestAccessCode()
-        }])
+        body: JSON.stringify([
+          {
+            property_id: property.id,
+            room_number: normalizedRoomNumber,
+            qr_slug: qrSlug,
+            qr_url: qrUrl,
+            guest_access_code: generateGuestAccessCode()
+          }
+        ])
       });
 
       const roomInsertData = await roomInsertRes.json().catch(() => null);
@@ -140,19 +147,43 @@ export default async function handler(req, res) {
       room = roomInsertData[0];
     }
 
-    // 🧾 CREATE INSPECTION
+    // RETIRE PREVIOUS CURRENT INSPECTIONS FOR THIS ROOM
+    const retirePreviousRes = await fetch(
+      `${supabaseUrl}/rest/v1/Inspections?room_id=eq.${encodeURIComponent(room.id)}&is_current=eq.true`,
+      {
+        method: "PATCH",
+        headers,
+        body: JSON.stringify({
+          is_current: false
+        })
+      }
+    );
+
+    const retirePreviousData = await retirePreviousRes.json().catch(() => null);
+
+    if (!retirePreviousRes.ok) {
+      return res.status(500).json({
+        error: "Failed to retire previous current inspections",
+        details: retirePreviousData
+      });
+    }
+
+    // CREATE NEW CURRENT INSPECTION
     const inspectionRes = await fetch(`${supabaseUrl}/rest/v1/Inspections`, {
       method: "POST",
       headers,
-      body: JSON.stringify([{
-        room_id: room.id,
-        inspector_id: String(inspector_id).trim(),
-        created_at: new Date(inspection_date).toISOString(),
-        certification_tier: String(certification_tier).trim(),
-        verification_id: String(verification_id).trim(),
-        score: score ? Number(score) : null,
-        notes: notes ? String(notes).trim() : null
-      }])
+      body: JSON.stringify([
+        {
+          room_id: room.id,
+          inspector_id: normalizedInspectorId,
+          created_at: inspectionIsoDate,
+          certification_tier: normalizedCertificationTier,
+          verification_id: normalizedVerificationId,
+          score: score ? Number(score) : null,
+          notes: normalizedNotes,
+          is_current: true
+        }
+      ])
     });
 
     const inspectionData = await inspectionRes.json().catch(() => null);
@@ -164,15 +195,23 @@ export default async function handler(req, res) {
       });
     }
 
+    const newInspection =
+      Array.isArray(inspectionData) && inspectionData.length > 0
+        ? inspectionData[0]
+        : null;
+
     return res.status(200).json({
       success: true,
       property_name: property.property_name,
       property_slug: property.property_slug,
       room_number: room.room_number,
-      verification_id,
-      public_url: room.qr_url || `https://verify.thereadymarkgroup.com/${property.property_slug}-room-${room.room_number}`
+      verification_id: normalizedVerificationId,
+      inspection_id: newInspection?.id ?? null,
+      is_current: true,
+      public_url:
+        room.qr_url ||
+        `https://verify.thereadymarkgroup.com/${property.property_slug}-room-${room.room_number}`
     });
-
   } catch (error) {
     return res.status(500).json({
       error: `Server error: ${error.message}`
