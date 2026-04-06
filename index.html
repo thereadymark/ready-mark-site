@@ -1169,6 +1169,14 @@
     });
   }
 }    
+function formatShortDate(value) {
+  if (!value) return "—";
+  try {
+    return new Date(value).toLocaleDateString();
+  } catch (err) {
+    return value;
+  }
+}    
     function renderLandingPage() {
       const app = document.getElementById("app");
 
@@ -1270,6 +1278,7 @@
   const statusClass = getStatusClass(certification);
   const photoUrl = data.photoUrl || "";
   const logFileUrl = data.logFileUrl || "";
+  const inspectionHistory = Array.isArray(data.inspectionHistory) ? data.inspectionHistory : [];     
 
   let date = "—";
   if (data.inspectionDate) {
@@ -1483,6 +1492,97 @@
             }
           </div>
 
+<div class="card">
+  <h2 class="section-title">Recent Verification Activity</h2>
+  <div class="section-divider"></div>
+
+  ${
+    inspectionHistory.length
+      ? `
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          ${inspectionHistory.map(item => `
+            <div style="
+              display:flex;
+              justify-content:space-between;
+              align-items:center;
+              gap:14px;
+              flex-wrap:wrap;
+              padding:16px 18px;
+              border-radius:16px;
+              background:linear-gradient(180deg, rgba(251,249,244,0.92) 0%, rgba(246,243,237,0.90) 100%);
+              border:1px solid rgba(199,162,87,0.09);
+              box-shadow:0 1px 0 rgba(255,255,255,0.65) inset;
+            ">
+              <div style="display:flex;flex-direction:column;gap:6px;min-width:220px;">
+                <div style="font-size:14px;font-weight:700;color:#111315;">
+                  ${escapeHtml(formatShortDate(item.created_at))}
+                </div>
+                <div style="font-size:12px;color:#6f6a61;letter-spacing:1px;text-transform:uppercase;">
+                  Verification ID: ${escapeHtml(item.verification_id || "—")}
+                </div>
+              </div>
+
+              <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end;">
+                <div class="status-pill ${getStatusClass(item.certification_tier)}">             
+                ${escapeHtml(item.certification_tier || "Not verified")}
+                </div>
+
+                <div style="
+                  padding:8px 12px;
+                  border-radius:999px;
+                  font-size:12px;
+                  font-weight:700;
+                  letter-spacing:0.6px;
+                  text-transform:uppercase;
+                  background:${item.is_current ? "rgba(79,143,99,0.12)" : "rgba(199,162,87,0.10)"};
+                  color:${item.is_current ? "#4f8f63" : "#9c7b3d"};
+                  border:1px solid ${item.is_current ? "rgba(79,143,99,0.18)" : "rgba(199,162,87,0.18)"};
+                ">
+                  ${item.is_current ? "Current Record" : "Archived"}
+                </div>
+
+                <div style="
+                  min-width:88px;
+                  text-align:center;
+                  padding:8px 12px;
+                  border-radius:999px;
+                  background:#fff;
+                  border:1px solid rgba(199,162,87,0.12);
+                  font-size:12px;
+                  font-weight:700;
+                  color:#111315;
+                ">
+                  ${item.score !== null && item.score !== undefined && item.score !== "" ? `${escapeHtml(item.score)} / 100` : "—"}
+                </div>
+              </div>
+            </div>
+          `).join("")}
+        </div>
+
+        <div class="portal-note" style="margin-top:14px;">
+          This room is part of an active verification system with ongoing inspection monitoring.
+        </div>
+      `
+      : `
+        <div class="inline-status" style="
+          text-align:center;
+          display:flex;
+          flex-direction:column;
+          align-items:center;
+          justify-content:center;
+          padding:28px 20px;
+        ">
+          <div style="font-weight:600; margin-bottom:6px;">
+            Inspection History Unavailable
+          </div>
+
+          <div style="font-size:13px; color:#6f6a61; max-width:340px;">
+            Recent verification activity will appear here once additional inspections have been logged for this room.
+          </div>
+        </div>
+      `
+  }
+</div>
           <div class="card">
             <h2 class="section-title">How This Room Was Verified</h2>
             <div class="section-divider"></div>
