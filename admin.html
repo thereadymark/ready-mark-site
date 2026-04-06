@@ -1653,10 +1653,16 @@
         }
 
         setStatusBox(
-          "inspection-status-box",
-          `Inspection saved successfully.\nProperty: ${data.property_name}\nRoom: ${data.room_number}\nVerification ID: ${data.verification_id}\nPublic URL: ${data.public_url}\nPrevious current inspections for this room were automatically archived.`
-        );
-
+  "inspection-status-box",
+  `Inspection saved successfully.
+Property: ${data.property_name}
+Room: ${data.room_number}
+Verification ID: ${data.verification_id}
+Public URL: ${data.public_url}
+Room Record: ${data.room_was_reused ? "Existing room reused" : "New room created"}
+QR Status: ${data.room_message}
+Previous current inspections for this room were automatically archived.`
+);
         await refreshAdminData();
       } catch (error) {
         setStatusBox("inspection-status-box", `Inspection save failed.\n${error.message}`);
