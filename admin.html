@@ -1692,24 +1692,19 @@ Previous current inspections for this room were automatically archived.`
     // 🔥 Convert ALL selected photos to base64
     let photoPayload = [];
 
-    if (photoFiles.length) {
-      for (let i = 0; i < photoFiles.length; i++) {
-        const file = photoFiles[i];
-        const base64Data = await fileToBase64(file);
-
-        photoPayload.push({
-          name: file.name,
-          type: file.type,
-          base64: base64Data
-        });
-      }
-    }
-
+if (photoFiles.length) {
+  for (let i = 0; i < photoFiles.length; i += 1) {
+    const file = photoFiles[i];
+    const filePayload = await fileToBase64(file);
+    photoPayload.push(filePayload);
+  }
+}     
+    
     // 📄 Convert log file (unchanged)
     let logPayload = null;
 
     if (logFile) {
-      const base64Data = await fileToBase64(logFile);
+      logPayLoad = await fileToBase64(logFile);
 
       logPayload = {
         name: logFile.name,
