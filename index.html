@@ -1368,6 +1368,8 @@ function formatShortDate(value) {
                       border:1px solid rgba(199,162,87,0.18);
                       box-shadow:0 4px 12px rgba(0,0,0,0.08);
                       background:#fff;
+                      opacity:0.5;
+                      transition:opacity 0.2s ease;
                     "
                   />
                 </button>
@@ -1852,16 +1854,29 @@ window.prevImage = prevImage;
   ">
 </div>
 `;
-    const thumbButtons = document.querySelectorAll(".verification-thumb-btn");
+
+const thumbButtons = document.querySelectorAll(".verification-thumb-btn");
 const mainImage = document.getElementById("verification-main-image");
 
 thumbButtons.forEach((btn, index) => {
-  btn.addEventListener("click", function () {
-   
-    thumbButtons.forEach(b => b.style.opacity = "0.5");
+  const img = btn.querySelector("img");
+  if (img) {
+    img.style.opacity = index === 0 ? "1" : "0.5";
+    img.style.transition = "opacity 0.2s ease, border 0.2s ease";
+  }
 
-    btn.style.opacity = "1";
-    
+  btn.addEventListener("click", function () {
+    thumbButtons.forEach((b) => {
+      const thumbImg = b.querySelector("img");
+      if (thumbImg) {
+        thumbImg.style.opacity = "0.5";
+      }
+    });
+
+    if (img) {
+      img.style.opacity = "1";
+    }
+
     updateMainImage(index);
   });
 });
@@ -1870,7 +1885,7 @@ if (mainImage) {
   mainImage.addEventListener("click", function () {
     openLightbox(mainImage.src);
   });
-} 
+}
      
   revealStatusPill();
 
