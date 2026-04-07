@@ -1409,137 +1409,67 @@ function formatShortDate(value) {
   if (!Array.isArray(photoUrls) || !photoUrls.length) return "";
 
   const safeUrls = photoUrls.filter(Boolean);
-
   if (!safeUrls.length) return "";
 
   return `
-    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;">
-      <div style="
-        width:100%;
-        display:flex;
-        justify-content:center;
-      ">
-       <div style="position:relative; display:flex; justify-content:center;">
+    <div class="verification-gallery">
+      <div class="verification-gallery-media">
+        <div class="verification-gallery-frame">
+          <div class="verification-gallery-main-wrap">
+            ${
+              safeUrls.length > 1
+                ? `
+                  <button type="button" class="verification-gallery-arrow left" onclick="prevImage()">‹</button>
+                  <button type="button" class="verification-gallery-arrow right" onclick="nextImage()">›</button>
+                `
+                : ``
+            }
 
-  <!-- LEFT ARROW -->
-  <button onclick="prevImage()" style="
-    position:absolute;
-    left:10px;
-    top:50%;
-    transform:translateY(-50%);
-    background:rgba(0,0,0,0.5);
-    color:#fff;
-    border:none;
-    border-radius:50%;
-    width:40px;
-    height:40px;
-    cursor:pointer;
-    z-index:2;
-  ">‹</button>
+            <img
+              id="verification-main-image"
+              class="verification-gallery-main"
+              src="${escapeHtml(safeUrls[0])}"
+              alt="Verified room condition"
+            />
+          </div>
 
-  <!-- MAIN IMAGE -->
-  <img
-    id="verification-main-image"
-    src="${escapeHtml(safeUrls[0])}"
-    alt="Verified room condition"
-    style="
-      cursor:zoom-in;
-      display:block;
-      width:100%;
-      max-width:520px;
-      height:auto;
-      border-radius:16px;
-      box-shadow:0 10px 25px rgba(0,0,0,0.15);
-      border:1px solid rgba(199,162,87,0.2);
-      background:#fff;
-    "
-  />
-
-  <!-- RIGHT ARROW -->
-  <button onclick="nextImage()" style="
-    position:absolute;
-    right:10px;
-    top:50%;
-    transform:translateY(-50%);
-    background:rgba(0,0,0,0.5);
-    color:#fff;
-    border:none;
-    border-radius:50%;
-    width:40px;
-    height:40px;
-    cursor:pointer;
-    z-index:2;
-  ">›</button>
-
-</div>
-      ${
-        safeUrls.length > 1
-          ? `
-            <div style="
-              margin-top:14px;
-              display:flex;
-              gap:10px;
-              flex-wrap:wrap;
-              justify-content:center;
-            ">
-              ${safeUrls.map((url, index) => `
-                <button
-                  type="button"
-                  class="verification-thumb-btn"
-                  data-full-image="${escapeHtml(url)}"
-                  aria-label="View inspection image ${index + 1}"
-                  style="
-                    padding:0;
-                    border:none;
-                    background:transparent;
-                    cursor:pointer;
-                  "
-                >
-                  <img
-                    src="${escapeHtml(url)}"
-                    alt="Inspection thumbnail ${index + 1}"
-                    style="
-                      width:76px;
-                      height:76px;
-                      object-fit:cover;
-                      border-radius:12px;
-                      border:1px solid rgba(199,162,87,0.18);
-                      box-shadow:0 4px 12px rgba(0,0,0,0.08);
-                      background:#fff;
-                      opacity:0.5;
-                      transition:opacity 0.2s ease;
-                    "
-                  />
-                </button>
-              `).join("")}
-            </div>
-          `
-          : ""
-      }
-
-      <div style="
-        margin-top:14px;
-        font-size:13px;
-        color:#6f6a61;
-        text-align:center;
-      ">
-        Verified inspection image${safeUrls.length > 1 ? "s" : ""} captured during official Ready Mark inspection.
+          ${
+            safeUrls.length > 1
+              ? `
+                <div class="verification-gallery-thumbs">
+                  ${safeUrls.map((url, index) => `
+                    <button
+                      type="button"
+                      class="verification-thumb-btn"
+                      data-full-image="${escapeHtml(url)}"
+                      aria-label="View inspection image ${index + 1}"
+                    >
+                      <img
+                        src="${escapeHtml(url)}"
+                        alt="Inspection thumbnail ${index + 1}"
+                        class="verification-thumb-image ${index === 0 ? "active" : ""}"
+                      />
+                    </button>
+                  `).join("")}
+                </div>
+              `
+              : ``
+          }
+        </div>
       </div>
 
-      <div style="
-        margin-top:6px;
-        font-size:11px;
-        letter-spacing:1px;
-        text-transform:uppercase;
-        color:#ad8842;
-        font-weight:700;
-      ">
-        Evidence Type: Visual Verification
+      <div class="verification-gallery-meta">
+        <div class="verification-gallery-caption">
+          Verified inspection image${safeUrls.length > 1 ? "s" : ""} captured during official Ready Mark inspection.
+        </div>
+        <div class="verification-gallery-label">
+          Evidence Type: Visual Verification
+        </div>
       </div>
     </div>
   `;
 }
-   function renderResultPage(data, slug) {
+    function renderResultPage(data, slug) {
   const app = document.getElementById("app");
 
   const property = data.property || "—";
