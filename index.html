@@ -270,7 +270,13 @@
       box-shadow: 0 0 14px rgba(79,143,99,0.12), 0 4px 14px rgba(0,0,0,0.04);
       animation: softPulse 3s ease-in-out infinite;
     }
-
+    
+.status-pill-icon {
+  font-size: 14px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+}
     .status-certified {
       color: var(--verified);
       background: linear-gradient(180deg, rgba(79,143,99,0.12) 0%, rgba(79,143,99,0.08) 100%);
@@ -564,6 +570,20 @@
       margin-bottom: 3px;
     }
 
+    .proof-step .status-pill {
+  padding: 6px 12px;
+  font-size: 11px;
+  gap: 6px;
+}
+
+.proof-step .status-pill-icon {
+  font-size: 11px;
+}
+.proof-step .status-pill {
+  border-radius: 999px;
+  font-weight: 500;
+  letter-spacing: 0.2px;
+}
     .proof-sub {
       font-size: 13px;
       color: var(--muted);
@@ -930,6 +950,17 @@
       `;
     }
 
+    function getStatusIcon(level) {
+  const normalized = String(level || "").toLowerCase();
+
+  if (normalized.includes("premier")) return "🏆";
+  if (normalized.includes("verified clean")) return "✅";
+  if (normalized.includes("certified")) return "✅";
+  if (normalized.includes("attention")) return "⚠️";
+  if (normalized.includes("not clean")) return "⛔";
+
+  return "•";
+}
     function getStatusClass(level) {
   const normalized = String(level || "").toLowerCase();
 
@@ -1549,9 +1580,13 @@ window.prevImage = prevImage;
 
           <div id="status-wrap" class="status-wrap">
             <div class="status-pill ${statusClass}">
-              ${escapeHtml(certification)}
-            </div>
-          </div>
+  <span class="status-pill-icon">${getStatusIcon(certification)}
+  </span>
+  <span>
+  ${escapeHtml(certification)}
+  </span>
+</div>          
+</div>
 
           <div class="subtext">
             This room has been independently inspected and verified under The Ready Mark Cleanliness Standard.
@@ -1821,16 +1856,44 @@ window.prevImage = prevImage;
               </div>
 
               <div class="proof-step">
-                <div class="proof-icon">✅</div>
-                <div>
-                  <strong>Scan &amp; View Results</strong>
-                  <div class="proof-sub">
-                    Guests can scan and view the live verification record connected to the room they are occupying.
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+  <div class="proof-icon">✅</div>
+  <div>
+    <strong>Scan &amp; View Results</strong>
+    <div class="proof-sub">
+      Guests can scan and view the live verification record connected to the room they are occupying.
+    </div>
+
+    <div style="
+      margin-top:10px;
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      justify-content:flex-start;
+    ">
+      <span class="status-pill status-premier">
+        <span class="status-pill-icon">🏆</span>
+        <span>Premier</span>
+      </span>
+
+      <span class="status-pill status-certified">
+        <span class="status-pill-icon">✅</span>
+        <span>Verified Clean</span>
+      </span>
+
+      <span class="status-pill status-attention">
+        <span class="status-pill-icon">⚠️</span>
+        <span>Needs Attention</span>
+      </span>
+
+      <span class="status-pill status-error">
+        <span class="status-pill-icon">⛔</span>
+        <span>Not Clean</span>
+      </span>
+    </div>
+  </div>
+</div>           
+</div>
+</div>
 
           <div class="card">
             <h2 class="section-title">Need Help With Room Cleanliness?</h2>
