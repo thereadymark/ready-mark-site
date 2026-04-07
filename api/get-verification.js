@@ -255,20 +255,21 @@ let signedPhotoUrls = [];
 const photoPath = inspection?.photo_url ? String(inspection.photo_url).trim() : "";
 const logFilePath = inspection?.log_file_url ? String(inspection.log_file_url).trim() : "";
 
-const photoPaths = Array.isArray(inspection?.photo_urls)
-  ? inspection.photo_urls.map(path => String(path || "").trim()).filter(Boolean)
+const photoPaths = Array.isArray(inspection.photo_urls)
+  ? inspection.photo_urls.map(p => String(p || "").trim()).filter(Boolean)
   : [];
-    
-    if (photoPath) {
-      const { data, error } = await supabase.storage
-        .from(PHOTO_BUCKET)
-        .createSignedUrl(photoPath, SIGNED_URL_EXPIRES_IN);
 
-      if (!error && data?.signedUrl) {
-        signedPhotoUrl = data.signedUrl;
-      }
-    }
+let signedPhotoUrls = [];
 
+if (photoPaths.length) {
+  const { data, error } = await supabase.storage
+    .from("inspection-photos")
+    .createSignedUrls(photoPaths, 3600);
+
+  if (!error && data) {
+    signedPhotoUrls = data.map(item => item.signedUrl).filter(Boolean);
+  }
+}
     if (photoPaths.length) {
   const signedPhotoResults = await Promise.all(
     photoPaths.map(async (path) => {
