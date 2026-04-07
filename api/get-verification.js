@@ -7,7 +7,7 @@ const supabase = createClient(
 
 const PHOTO_BUCKET = "inspection-photos";
 const DOC_BUCKET = "inspection-docs";
-const SIGNED_URL_EXPIRES_IN = 60 * 60; // 1 hour;
+const SIGNED_URL_EXPIRES_IN = 60 * 60;
 
 export default async function handler(req, res) {
   const allowedOrigin = "https://verify.thereadymarkgroup.com";
@@ -59,9 +59,7 @@ export default async function handler(req, res) {
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
     if (!supabaseUrl || !serviceRoleKey) {
-      return res.status(500).json({
-        error: "Missing server environment variables"
-      });
+      return res.status(500).json({ error: "Missing server environment variables" });
     }
 
     const headers = {
@@ -93,16 +91,11 @@ export default async function handler(req, res) {
       const { response: propertyRes, json: propertyData } = await fetchJson(propertyUrl);
 
       if (!propertyRes.ok) {
-        return res.status(500).json({
-          error: "Property lookup failed",
-          details: propertyData
-        });
+        return res.status(500).json({ error: "Property lookup failed" });
       }
 
       if (!Array.isArray(propertyData) || propertyData.length === 0) {
-        return res.status(404).json({
-          error: "Property not found"
-        });
+        return res.status(404).json({ error: "Property not found" });
       }
 
       property = propertyData[0];
@@ -117,16 +110,11 @@ export default async function handler(req, res) {
       const { response: roomRes, json: roomData } = await fetchJson(roomUrl);
 
       if (!roomRes.ok) {
-        return res.status(500).json({
-          error: "Room lookup failed",
-          details: roomData
-        });
+        return res.status(500).json({ error: "Room lookup failed" });
       }
 
       if (!Array.isArray(roomData) || roomData.length === 0) {
-        return res.status(404).json({
-          error: "Room not found for selected property"
-        });
+        return res.status(404).json({ error: "Room not found for selected property" });
       }
 
       room = roomData[0];
@@ -140,16 +128,11 @@ export default async function handler(req, res) {
       const { response: roomRes, json: roomData } = await fetchJson(roomUrl);
 
       if (!roomRes.ok) {
-        return res.status(500).json({
-          error: "Room lookup failed",
-          details: roomData
-        });
+        return res.status(500).json({ error: "Room lookup failed" });
       }
 
       if (!Array.isArray(roomData) || roomData.length === 0) {
-        return res.status(404).json({
-          error: "Room not found"
-        });
+        return res.status(404).json({ error: "Room not found" });
       }
 
       room = roomData[0];
@@ -164,10 +147,7 @@ export default async function handler(req, res) {
         const { response: propertyRes, json: propertyData } = await fetchJson(propertyUrl);
 
         if (!propertyRes.ok) {
-          return res.status(500).json({
-            error: "Property lookup failed",
-            details: propertyData
-          });
+          return res.status(500).json({ error: "Property lookup failed" });
         }
 
         if (Array.isArray(propertyData) && propertyData.length > 0) {
@@ -179,114 +159,61 @@ export default async function handler(req, res) {
     const inspectionUrl =
       `${supabaseUrl}/rest/v1/${INSPECTION_TABLE}` +
       `?room_id=eq.${encodeURIComponent(room.id)}` +
-      `&select=id,inspector_id,created_at,certification_tier,verification_id,score,notes,photo_url,log_file_url,is_current` +
-      `&is_current=eq.true` +
+      `&select=inspector_id,created_at,certification_tier,verification_id,score,notes,photo_url,photo_urls,log_file_url` +
       `&order=created_at.desc.nullslast` +
       `&limit=1`;
 
     const { response: inspectionRes, json: inspectionData } = await fetchJson(inspectionUrl);
 
     if (!inspectionRes.ok) {
-      return res.status(500).json({
-        error: "Inspection lookup failed",
-        details: inspectionData
-      });
+      return res.status(500).json({ error: "Inspection lookup failed" });
     }
 
-    let inspection =
+    const inspection =
       Array.isArray(inspectionData) && inspectionData.length > 0
         ? inspectionData[0]
         : null;
 
-    if (!inspection) {
-      const fallbackInspectionUrl =
-        `${supabaseUrl}/rest/v1/${INSPECTION_TABLE}` +
-        `?room_id=eq.${encodeURIComponent(room.id)}` +
-        `&select=id,inspector_id,created_at,certification_tier,verification_id,score,notes,photo_url,log_file_url,is_current` +
-        `&order=created_at.desc.nullslast` +
-        `&limit=1`;
+    let signedPhotoUrl = "";
+    let signedLogFileUrl = "";
+    let signedPhotoUrls = [];
 
-      const { response: fallbackRes, json: fallbackData } = await fetchJson(fallbackInspectionUrl);
+    const photoPath = inspection?.photo_url ? String(inspection.photo_url).trim() : "";
+    const logFilePath = inspection?.log_file_url ? String(inspection.log_file_url).trim() : "";
 
-      if (!fallbackRes.ok) {
-        return res.status(500).json({
-          error: "Inspection fallback lookup failed",
-          details: fallbackData
-        });
-      }
-
-      inspection =
-        Array.isArray(fallbackData) && fallbackData.length > 0
-          ? fallbackData[0]
-          : null;
-    }
-
-    const historyUrl =
-      `${supabaseUrl}/rest/v1/${INSPECTION_TABLE}` +
-      `?room_id=eq.${encodeURIComponent(room.id)}` +
-      `&select=id,created_at,certification_tier,verification_id,score,is_current` +
-      `&order=created_at.desc.nullslast` +
-      `&limit=5`;
-
-    const { response: historyRes, json: historyData } = await fetchJson(historyUrl);
-
-    if (!historyRes.ok) {
-      return res.status(500).json({
-        error: "Inspection history lookup failed",
-        details: historyData
-      });
-    }
-
-    const inspectionHistory = Array.isArray(historyData)
-      ? historyData.map((item) => ({
-          id: item.id ?? null,
-          created_at: item.created_at ?? "",
-          certification_tier: item.certification_tier ?? "Not verified",
-          verification_id: item.verification_id ?? "",
-          score: item.score ?? "",
-          is_current: Boolean(item.is_current)
-        }))
+    const rawPhotoUrls = Array.isArray(inspection?.photo_urls)
+      ? inspection.photo_urls.map(path => String(path || "").trim()).filter(Boolean)
       : [];
 
-let signedPhotoUrl = "";
-let signedLogFileUrl = "";
-let signedPhotoUrls = [];
-
-const photoPath = inspection?.photo_url ? String(inspection.photo_url).trim() : "";
-const logFilePath = inspection?.log_file_url ? String(inspection.log_file_url).trim() : "";
-
-const photoPaths = Array.isArray(inspection.photo_urls)
-  ? inspection.photo_urls.map(p => String(p || "").trim()).filter(Boolean)
-  : [];
-
-let signedPhotoUrls = [];
-
-if (photoPaths.length) {
-  const { data, error } = await supabase.storage
-    .from("inspection-photos")
-    .createSignedUrls(photoPaths, 3600);
-
-  if (!error && data) {
-    signedPhotoUrls = data.map(item => item.signedUrl).filter(Boolean);
-  }
-}
-    if (photoPaths.length) {
-  const signedPhotoResults = await Promise.all(
-    photoPaths.map(async (path) => {
+    if (photoPath) {
       const { data, error } = await supabase.storage
         .from(PHOTO_BUCKET)
-        .createSignedUrl(path, SIGNED_URL_EXPIRES_IN);
+        .createSignedUrl(photoPath, SIGNED_URL_EXPIRES_IN);
 
-      if (error || !data?.signedUrl) {
-        return null;
+      if (!error && data?.signedUrl) {
+        signedPhotoUrl = data.signedUrl;
       }
+    }
 
-      return data.signedUrl;
-    })
-  );
+    if (rawPhotoUrls.length) {
+      const signedResults = await Promise.all(
+        rawPhotoUrls.map(async (path) => {
+          const { data, error } = await supabase.storage
+            .from(PHOTO_BUCKET)
+            .createSignedUrl(path, SIGNED_URL_EXPIRES_IN);
 
-  signedPhotoUrls = signedPhotoResults.filter(Boolean);
-}
+          if (error || !data?.signedUrl) return null;
+          return data.signedUrl;
+        })
+      );
+
+      signedPhotoUrls = signedResults.filter(Boolean);
+    }
+
+    if (!signedPhotoUrls.length && signedPhotoUrl) {
+      signedPhotoUrls = [signedPhotoUrl];
+    }
+
     if (logFilePath) {
       const { data, error } = await supabase.storage
         .from(DOC_BUCKET)
@@ -314,13 +241,11 @@ if (photoPaths.length) {
       logFilePath,
       photoUrl: signedPhotoUrl,
       photoUrls: signedPhotoUrls,
-      logFileUrl: signedLogFileUrl,
-      inspectionHistory
+      logFileUrl: signedLogFileUrl
     });
   } catch (error) {
     return res.status(500).json({
-      error: "Server error",
-      details: error.message
+      error: error?.message || "Server error"
     });
   }
 }
