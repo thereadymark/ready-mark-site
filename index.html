@@ -1793,7 +1793,24 @@ function formatShortDate(value) {
   ">
 </div>
 `;
+     const thumbButtons = document.querySelectorAll(".verification-thumb-btn");
+const mainImage = document.getElementById("verification-main-image");
 
+thumbButtons.forEach((btn) => {
+  btn.addEventListener("click", function () {
+    const newUrl = btn.getAttribute("data-full-image");
+
+    if (newUrl && mainImage) {
+      mainImage.src = newUrl;
+
+      mainImage.setAttribute(
+        "onclick",
+        `openLightbox('${newUrl.replace(/'/g, "\\'")}')`
+      );
+    }
+  });
+});
+     
   revealStatusPill();
 
   const guestChipWrap = document.getElementById("guest-auth-chip-wrap");
