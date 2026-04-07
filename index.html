@@ -1281,26 +1281,59 @@ function formatShortDate(value) {
         display:flex;
         justify-content:center;
       ">
-        <img
-          id="verification-main-image"
-          src="${escapeHtml(safeUrls[0])}"
-          alt="Verified room condition"
-          onclick="openLightbox(this.src)"
-          style="
-            
-            cursor:zoom-in;
-            display:block;
-            width:100%;
-            max-width:520px;
-            height:auto;
-            border-radius:16px;
-            box-shadow:0 10px 25px rgba(0,0,0,0.15);
-            border:1px solid rgba(199,162,87,0.2);
-            background:#fff;
-          "
-        />
-      </div>
+       <div style="position:relative; display:flex; justify-content:center;">
 
+  <!-- LEFT ARROW -->
+  <button onclick="prevImage()" style="
+    position:absolute;
+    left:10px;
+    top:50%;
+    transform:translateY(-50%);
+    background:rgba(0,0,0,0.5);
+    color:#fff;
+    border:none;
+    border-radius:50%;
+    width:40px;
+    height:40px;
+    cursor:pointer;
+    z-index:2;
+  ">‹</button>
+
+  <!-- MAIN IMAGE -->
+  <img
+    id="verification-main-image"
+    src="${escapeHtml(safeUrls[0])}"
+    alt="Verified room condition"
+    style="
+      cursor:zoom-in;
+      display:block;
+      width:100%;
+      max-width:520px;
+      height:auto;
+      border-radius:16px;
+      box-shadow:0 10px 25px rgba(0,0,0,0.15);
+      border:1px solid rgba(199,162,87,0.2);
+      background:#fff;
+    "
+  />
+
+  <!-- RIGHT ARROW -->
+  <button onclick="nextImage()" style="
+    position:absolute;
+    right:10px;
+    top:50%;
+    transform:translateY(-50%);
+    background:rgba(0,0,0,0.5);
+    color:#fff;
+    border:none;
+    border-radius:50%;
+    width:40px;
+    height:40px;
+    cursor:pointer;
+    z-index:2;
+  ">›</button>
+
+</div>
       ${
         safeUrls.length > 1
           ? `
@@ -1381,6 +1414,32 @@ function formatShortDate(value) {
   const photoUrls = Array.isArray(data.photoUrls) && data.photoUrls.length
   ? data.photoUrls
   : (photoUrl ? [photoUrl] : []);
+
+    let currentIndex= 0; 
+     function updateMainImage(index) {
+  if (!photoUrls.length) return;
+
+  currentIndex = index;
+  const mainImage = document.getElementById("verification-main-image");
+
+  if (mainImage) {
+    mainImage.src = photoUrls[currentIndex];
+  }
+}
+
+function nextImage() {
+  if (!photoUrls.length) return;
+  updateMainImage((currentIndex + 1) % photoUrls.length);
+}
+
+function prevImage() {
+  if (!photoUrls.length) return;
+  updateMainImage((currentIndex - 1 + photoUrls.length) % photoUrls.length);
+}
+
+// make buttons work
+window.nextImage = nextImage;
+window.prevImage = prevImage;
      
   let date = "—";
   if (data.inspectionDate) {
@@ -1793,23 +1852,20 @@ function formatShortDate(value) {
   ">
 </div>
 `;
-     const thumbButtons = document.querySelectorAll(".verification-thumb-btn");
+    const thumbButtons = document.querySelectorAll(".verification-thumb-btn");
 const mainImage = document.getElementById("verification-main-image");
 
-thumbButtons.forEach((btn) => {
+thumbButtons.forEach((btn, index) => {
   btn.addEventListener("click", function () {
-    const newUrl = btn.getAttribute("data-full-image");
-
-    if (newUrl && mainImage) {
-      mainImage.src = newUrl;
-
-      mainImage.setAttribute(
-        "onclick",
-        `openLightbox('${newUrl.replace(/'/g, "\\'")}')`
-      );
-    }
+    updateMainImage(index);
   });
 });
+
+if (mainImage) {
+  mainImage.addEventListener("click", function () {
+    openLightbox(mainImage.src);
+  });
+} 
      
   revealStatusPill();
 
@@ -2085,6 +2141,17 @@ function closeLightbox() {
       mainImage.src = newUrl;
     }
   });   
+function updateMainImage(index) {
+  if (!photoUrls.length) return;
+
+  currentIndex = index;
+
+  const mainImage = document.getElementById("verification-main-image");
+
+  if (mainImage) {
+    mainImage.src = photoUrls[currentIndex];
+  }
+}      
     });
   
 </script>
