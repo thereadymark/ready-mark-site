@@ -1706,11 +1706,11 @@ if (photoFiles.length) {
     if (logFile) {
       logPayLoad = await fileToBase64(logFile);
 
-      logPayload = {
-        name: logFile.name,
-        type: logFile.type,
-        base64: base64Data
-      };
+     let logPayload = null;
+
+if (logFile) {
+  logPayload = await fileToBase64(logFile);
+}    
     }
 
     // 🚀 Send request
