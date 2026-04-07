@@ -1857,6 +1857,11 @@ const mainImage = document.getElementById("verification-main-image");
 
 thumbButtons.forEach((btn, index) => {
   btn.addEventListener("click", function () {
+   
+    thumbButtons.forEach(b => b.style.opacity = "0.5");
+
+    btn.style.opacity = "1";
+    
     updateMainImage(index);
   });
 });
@@ -2132,27 +2137,7 @@ function closeLightbox() {
         loadVerification(slug);
       }
     });
-    document.querySelectorAll(".verification-thumb-btn").forEach(btn => {
-  btn.addEventListener("click", function () {
-    const newUrl = btn.getAttribute("data-full-image");
-    const mainImage = document.getElementById("verification-main-image");
-
-    if (newUrl && mainImage) {
-      mainImage.src = newUrl;
-    }
-  });   
-function updateMainImage(index) {
-  if (!photoUrls.length) return;
-
-  currentIndex = index;
-
-  const mainImage = document.getElementById("verification-main-image");
-
-  if (mainImage) {
-    mainImage.src = photoUrls[currentIndex];
-  }
-}      
-    });
+    
   
 </script>
 </body>
