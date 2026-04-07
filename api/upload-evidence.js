@@ -38,12 +38,17 @@ const ALLOWED_DOC_TYPES = new Set([
 
 function bufferFromBase64(base64String) {
   try {
-    return Buffer.from(base64String, "base64");
+    if (!base64String) return null;
+
+    const cleaned = base64String.includes("base64,")
+      ? base64String.split("base64,")[1]
+      : base64String;
+
+    return Buffer.from(cleaned, "base64");
   } catch {
     return null;
   }
 }
-
 function sanitizeFileName(name) {
   return String(name || "file")
     .replace(/\s+/g, "-")
