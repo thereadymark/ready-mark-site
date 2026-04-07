@@ -1962,8 +1962,8 @@ function renderErrorPage(msg) {
               </div>
 
               <div class="subtext">
-                ${escapeHtml(msg || "Unable to load record")}
-              </div>
+                ${escapeHtml(typeof msg === "string" ? msg : JSON.stringify(msg || "Unable to load record"))}            
+                </div>
             </div>
 
             <div class="content">
