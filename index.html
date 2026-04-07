@@ -745,6 +745,144 @@
         gap: 10px;
       }
     }
+.verification-gallery {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 24px 0 6px;
+}
+
+.verification-gallery-media {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.verification-gallery-frame {
+  width: 100%;
+  max-width: 760px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 92px;
+  gap: 16px;
+  align-items: start;
+}
+
+.verification-gallery-main-wrap {
+  position: relative;
+  width: 100%;
+}
+
+.verification-gallery-main {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: 16px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+  border: 1px solid rgba(199,162,87,0.2);
+  background: #fff;
+  cursor: zoom-in;
+}
+
+.verification-gallery-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 40px;
+  height: 40px;
+  min-height: 40px;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: rgba(0,0,0,0.45);
+  color: #fff;
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+  z-index: 2;
+}
+
+.verification-gallery-arrow.left {
+  left: 10px;
+}
+
+.verification-gallery-arrow.right {
+  right: 10px;
+}
+
+.verification-gallery-thumbs {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: center;
+}
+
+.verification-thumb-btn {
+  padding: 0;
+  min-height: auto;
+  width: auto;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+.verification-thumb-image {
+  display: block;
+  width: 76px;
+  height: 76px;
+  object-fit: cover;
+  border-radius: 12px;
+  border: 1px solid rgba(199,162,87,0.18);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  background: #fff;
+  opacity: 0.5;
+  transition: opacity 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
+}
+
+.verification-thumb-image.active {
+  opacity: 1;
+  border-color: rgba(199,162,87,0.55);
+  transform: scale(1.02);
+}
+
+.verification-gallery-meta {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.verification-gallery-caption {
+  font-size: 13px;
+  color: #6f6a61;
+  text-align: center;
+}
+
+.verification-gallery-label {
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: #ad8842;
+  font-weight: 700;
+}
+
+@media (max-width: 760px) {
+  .verification-gallery-frame {
+    grid-template-columns: 1fr;
+  }
+
+  .verification-gallery-thumbs {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .verification-gallery-main {
+    aspect-ratio: 4 / 3;
+  }
+}    
   </style>
 </head>
 <body>
@@ -1412,13 +1550,17 @@ function formatShortDate(value) {
   const statusClass = getStatusClass(certification);
   const photoUrl = data.photoUrl || "";
   const logFileUrl = data.logFileUrl || "";
-  const inspectionHistory = Array.isArray(data.inspectionHistory) ? data.inspectionHistory : [];  
-  const photoUrls = Array.isArray(data.photoUrls) && data.photoUrls.length
+   const inspectionHistory =
+  Array.isArray(data.inspectionHistory) ? data.inspectionHistory :
+  Array.isArray(data.inspection_history) ? data.inspection_history :
+  [];
+   const photoUrls = Array.isArray(data.photoUrls) && data.photoUrls.length
   ? data.photoUrls
   : (photoUrl ? [photoUrl] : []);
 
     let currentIndex= 0; 
-     function updateMainImage(index) {
+
+function updateMainImage(index) {
   if (!photoUrls.length) return;
 
   currentIndex = index;
@@ -1858,26 +2000,19 @@ window.prevImage = prevImage;
 const thumbButtons = document.querySelectorAll(".verification-thumb-btn");
 const mainImage = document.getElementById("verification-main-image");
 
-thumbButtons.forEach((btn, index) => {
-  const img = btn.querySelector("img");
-  if (img) {
-    img.style.opacity = index === 0 ? "1" : "0.5";
-    img.style.transition = "opacity 0.2s ease, border 0.2s ease";
-  }
-
-  btn.addEventListener("click", function () {
-    thumbButtons.forEach((b) => {
-      const thumbImg = b.querySelector("img");
-      if (thumbImg) {
-        thumbImg.style.opacity = "0.5";
-      }
-    });
-
-    if (img) {
-      img.style.opacity = "1";
+function syncActiveThumbnail(index) {
+  thumbButtons.forEach((btn, btnIndex) => {
+    const thumbImg = btn.querySelector(".verification-thumb-image");
+    if (thumbImg) {
+      thumbImg.classList.toggle("active", btnIndex === index);
     }
+  });
+}
 
+thumbButtons.forEach((btn, index) => {
+  btn.addEventListener("click", function () {
     updateMainImage(index);
+    syncActiveThumbnail(index);
   });
 });
 
@@ -1885,9 +2020,10 @@ if (mainImage) {
   mainImage.addEventListener("click", function () {
     openLightbox(mainImage.src);
   });
-}
+}  
+
      
-  revealStatusPill();
+     revealStatusPill();
 
   const guestChipWrap = document.getElementById("guest-auth-chip-wrap");
   const openReportBtn = document.getElementById("open-report-btn");
