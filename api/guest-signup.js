@@ -9,13 +9,38 @@ function generateVerificationCode() {
   return String(Math.floor(100000 + Math.random() * 900000));
 }
 
+function validatePassword(password) {
+  const value = String(password || "");
+
+  if (value.length < 8) {
+    return "Password must be at least 8 characters.";
+  }
+
+  if (!/[A-Z]/.test(value)) {
+    return "Password must include at least one uppercase letter.";
+  }
+
+  if (!/[a-z]/.test(value)) {
+    return "Password must include at least one lowercase letter.";
+  }
+
+  if (!/[0-9]/.test(value)) {
+    return "Password must include at least one number.";
+  }
+
+  if (!/[^A-Za-z0-9]/.test(value)) {
+    return "Password must include at least one special character.";
+  }
+
+  return null;
+}
+
 async function sendVerificationEmail(resend, email, code) {
   const fromEmail = process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev";
 
   const emailHtml = `
 <div style="margin:0;padding:0;background:#f7f6f3;font-family:Georgia,serif;">
   <div style="max-width:640px;margin:0 auto;padding:40px 16px;">
-
     <div style="
       background:#ffffff;
       border:1px solid rgba(199,162,87,0.25);
@@ -24,12 +49,12 @@ async function sendVerificationEmail(resend, email, code) {
       box-shadow:0 10px 30px rgba(0,0,0,0.08);
       text-align:center;
     ">
+      <img
+        src="https://verify.thereadymarkgroup.com/readymarkseal(best)nobackground.PNG"
+        alt="The Ready Mark"
+        style="width:80px;margin-bottom:12px;"
+      />
 
-      <!-- LOGO -->
-      <img src="https://verify.thereadymarkgroup.com/readymarkseal(best)nobackground.PNG"
-           style="width:80px;margin-bottom:12px;" />
-
-      <!-- BRAND -->
       <div style="
         color:#c7a257;
         font-size:13px;
@@ -41,7 +66,6 @@ async function sendVerificationEmail(resend, email, code) {
         The Ready Mark
       </div>
 
-      <!-- TITLE -->
       <h1 style="
         margin:8px 0 12px;
         font-size:26px;
@@ -50,7 +74,6 @@ async function sendVerificationEmail(resend, email, code) {
         Verify Your Email
       </h1>
 
-      <!-- TEXT -->
       <p style="
         font-size:15px;
         color:#6f6a61;
@@ -60,7 +83,6 @@ async function sendVerificationEmail(resend, email, code) {
         Use the verification code below to complete your account setup.
       </p>
 
-      <!-- CODE BOX -->
       <div style="
         margin:20px auto;
         padding:18px;
@@ -76,21 +98,19 @@ async function sendVerificationEmail(resend, email, code) {
         ${code}
       </div>
 
-      <!-- FOOTER -->
       <p style="
         margin-top:18px;
         font-size:13px;
         color:#9a958d;
         line-height:1.7;
       ">
-        This code will expire shortly. Do not share it with anyone.
+        This code will expire in 10 minutes. Do not share it with anyone.
       </p>
-
     </div>
-
   </div>
 </div>
 `;
+
   await resend.emails.send({
     from: `Ready Mark <${fromEmail}>`,
     to: email,
@@ -121,14 +141,21 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { first_name, last_name, email, password } = req.body || {};
+    const { email, password } = req.body || {};
 
-    if (!first_name || !last_name || !email || !password) {
-      return res.status(400).json({ error: "Missing required fields" });
+    if (!email || !password) {
+      return res.status(400).json({ error: "Email and password are required." });
     }
 
-    if (String(password).length < 8) {
-      return res.status(400).json({ error: "Password must be at least 8 characters." });
+    const normalizedEmail = String(email).trim().toLowerCase();
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+      return res.status(400).json({ error: "Please enter a valid email address." });
+    }
+
+    const passwordError = validatePassword(password);
+    if (passwordError) {
+      return res.status(400).json({ error: passwordError });
     }
 
     const supabaseUrl = process.env.SUPABASE_URL;
@@ -144,7 +171,6 @@ export default async function handler(req, res) {
     }
 
     const resend = new Resend(resendApiKey);
-    const normalizedEmail = String(email).trim().toLowerCase();
     const passwordHash = hashPassword(password);
     const verificationCode = generateVerificationCode();
     const verificationExpiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
@@ -181,8 +207,8 @@ export default async function handler(req, res) {
       method: "POST",
       headers,
       body: JSON.stringify([{
-        first_name: String(first_name).trim(),
-        last_name: String(last_name).trim(),
+        first_name: "Guest",
+        last_name: "User",
         email: normalizedEmail,
         password_hash: passwordHash,
         email_verified: false,
