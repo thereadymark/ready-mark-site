@@ -1341,7 +1341,83 @@
   }
 }    
 
-   
+    function renderVerificationModal(email) {
+  const existing = document.getElementById("verification-overlay");
+  if (existing) existing.remove();
+
+  document.body.insertAdjacentHTML("beforeend", `
+    <div id="verification-overlay" class="auth-overlay">
+      <div class="auth-modal">
+        <h2 class="auth-title">Enter Verification Code</h2>
+        <div class="auth-subtext">
+          We sent a code to <strong>${email}</strong>
+        </div>
+
+        <div class="form-group">
+          <input id="verification-code" type="text" maxlength="6" placeholder="Enter code">
+        </div>
+
+        <div class="button-row">
+          <button id="verify-btn" class="primary-btn">Verify</button>
+          <button id="cancel-btn" class="secondary-btn">Cancel</button>
+        </div>
+
+        <div id="verify-status"></div>
+      </div>
+    </div>
+  `);
+
+  const overlay = document.getElementById("verification-overlay");
+  const verifyBtn = document.getElementById("verify-btn");
+  const cancelBtn = document.getElementById("cancel-btn");
+  const status = document.getElementById("verify-status");
+
+  function close() {
+    if (overlay) overlay.remove();
+  }
+
+  cancelBtn.onclick = close;
+
+  verifyBtn.onclick = async () => {
+    const code = document.getElementById("verification-code").value.trim();
+
+    if (!code) {
+      status.textContent = "Enter your code";
+      return;
+    }
+
+    verifyBtn.disabled = true;
+    status.textContent = "Verifying...";
+
+    try {
+      const res = await fetch("/api/guest-verify-email", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ email, code })
+      });
+
+      const data = await res.json().catch(() => null);
+
+      if (!res.ok || data?.error) {
+        throw new Error(data?.error || "Verification failed");
+      }
+
+      status.textContent = "Verified!";
+
+      setTimeout(() => {
+        close();
+        renderLoginModal();
+      }, 800);
+
+    } catch (err) {
+      status.textContent = err.message;
+    } finally {
+      verifyBtn.disabled = false;
+    }
+  };
+}   
  
 function formatShortDate(value) {
   if (!value) return "—";
