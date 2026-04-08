@@ -156,74 +156,108 @@ export default async function handler(req, res) {
       }
     }
 
-    const inspectionUrl =
-      `${supabaseUrl}/rest/v1/${INSPECTION_TABLE}` +
-      `?room_id=eq.${encodeURIComponent(room.id)}` +
-      `&select=inspector_id,created_at,certification_tier,verification_id,score,notes,photo_url,photo_urls,log_file_url` +
-      `&order=created_at.desc.nullslast` +
-      `&limit=1`;
+   const currentInspectionUrl =
+  `${supabaseUrl}/rest/v1/${INSPECTION_TABLE}` +
+  `?room_id=eq.${encodeURIComponent(room.id)}` +
+  `&select=id,inspector_id,created_at,certification_tier,verification_id,score,notes,photo_url,photo_urls,log_file_url,is_current` +
+  `&order=created_at.desc.nullslast` +
+  `&limit=1`;
 
-    const { response: inspectionRes, json: inspectionData } = await fetchJson(inspectionUrl);
+const { response: inspectionRes, json: inspectionData } = await fetchJson(currentInspectionUrl);
 
-    if (!inspectionRes.ok) {
-      return res.status(500).json({ error: "Inspection lookup failed" });
-    }
+if (!inspectionRes.ok) {
+  return res.status(500).json({ error: "Inspection lookup failed" });
+}
 
-    const inspection =
-      Array.isArray(inspectionData) && inspectionData.length > 0
-        ? inspectionData[0]
-        : null;
+const inspection =
+  Array.isArray(inspectionData) && inspectionData.length > 0
+    ? inspectionData[0]
+    : null;
 
-    let signedPhotoUrl = "";
-    let signedLogFileUrl = "";
-    let signedPhotoUrls = [];
+const historyUrl =
+  `${supabaseUrl}/rest/v1/${INSPECTION_TABLE}` +
+  `?room_id=eq.${encodeURIComponent(room.id)}` +
+  `&select=id,created_at,certification_tier,verification_id,score,is_current` +
+  `&order=created_at.desc.nullslast`;
 
-    const photoPath = inspection?.photo_url ? String(inspection.photo_url).trim() : "";
-    const logFilePath = inspection?.log_file_url ? String(inspection.log_file_url).trim() : "";
+const { response: historyRes, json: historyData } = await fetchJson(historyUrl);
 
-    const rawPhotoUrls = Array.isArray(inspection?.photo_urls)
-      ? inspection.photo_urls.map(path => String(path || "").trim()).filter(Boolean)
-      : [];
+if (!historyRes.ok) {
+  return res.status(500).json({ error: "Inspection history lookup failed" });
+}
 
-    if (photoPath) {
+const inspectionHistory = Array.isArray(historyData) ? historyData : [];
+
+let signedPhotoUrl = "";
+let signedLogFileUrl = "";
+let signedPhotoUrls = [];
+
+const photoPath = inspection?.photo_url ? String(inspection.photo_url).trim() : "";
+const logFilePath = inspection?.log_file_url ? String(inspection.log_file_url).trim() : "";
+
+const rawPhotoUrls = Array.isArray(inspection?.photo_urls)
+  ? inspection.photo_urls.map(path => String(path || "").trim()).filter(Boolean)
+  : [];
+
+if (photoPath) {
+  const { data, error } = await supabase.storage
+    .from(PHOTO_BUCKET)
+    .createSignedUrl(photoPath, SIGNED_URL_EXPIRES_IN);
+
+  if (!error && data?.signedUrl) {
+    signedPhotoUrl = data.signedUrl;
+  }
+}
+
+if (rawPhotoUrls.length) {
+  const signedResults = await Promise.all(
+    rawPhotoUrls.map(async (path) => {
       const { data, error } = await supabase.storage
         .from(PHOTO_BUCKET)
-        .createSignedUrl(photoPath, SIGNED_URL_EXPIRES_IN);
+        .createSignedUrl(path, SIGNED_URL_EXPIRES_IN);
 
-      if (!error && data?.signedUrl) {
-        signedPhotoUrl = data.signedUrl;
-      }
-    }
+      if (error || !data?.signedUrl) return null;
+      return data.signedUrl;
+    })
+  );
 
-    if (rawPhotoUrls.length) {
-      const signedResults = await Promise.all(
-        rawPhotoUrls.map(async (path) => {
-          const { data, error } = await supabase.storage
-            .from(PHOTO_BUCKET)
-            .createSignedUrl(path, SIGNED_URL_EXPIRES_IN);
+  signedPhotoUrls = signedResults.filter(Boolean);
+}
 
-          if (error || !data?.signedUrl) return null;
-          return data.signedUrl;
-        })
-      );
+if (!signedPhotoUrls.length && signedPhotoUrl) {
+  signedPhotoUrls = [signedPhotoUrl];
+}
 
-      signedPhotoUrls = signedResults.filter(Boolean);
-    }
+if (logFilePath) {
+  const { data, error } = await supabase.storage
+    .from(DOC_BUCKET)
+    .createSignedUrl(logFilePath, SIGNED_URL_EXPIRES_IN);
 
-    if (!signedPhotoUrls.length && signedPhotoUrl) {
-      signedPhotoUrls = [signedPhotoUrl];
-    }
+  if (!error && data?.signedUrl) {
+    signedLogFileUrl = data.signedUrl;
+  }
+}
 
-    if (logFilePath) {
-      const { data, error } = await supabase.storage
-        .from(DOC_BUCKET)
-        .createSignedUrl(logFilePath, SIGNED_URL_EXPIRES_IN);
-
-      if (!error && data?.signedUrl) {
-        signedLogFileUrl = data.signedUrl;
-      }
-    }
-
+return res.status(200).json({
+  property: property?.property_name ?? "",
+  property_slug: property?.property_slug ?? propertySlug ?? "",
+  room: room?.room_number ?? roomNumber ?? "",
+  qrSlug: room?.qr_slug ?? "",
+  qrUrl: room?.qr_url ?? "",
+  inspectorId: inspection?.inspector_id ?? "",
+  inspectionDate: inspection?.created_at ?? "",
+  certificationTier: inspection?.certification_tier ?? "Not verified",
+  verificationId: inspection?.verification_id ?? "",
+  score: inspection?.score ?? "",
+  status: inspection?.certification_tier ?? "Not verified",
+  notes: inspection?.notes ?? "",
+  photoPath,
+  logFilePath,
+  photoUrl: signedPhotoUrl,
+  photoUrls: signedPhotoUrls,
+  logFileUrl: signedLogFileUrl,
+  inspectionHistory
+});
     return res.status(200).json({
       property: property?.property_name ?? "",
       property_slug: property?.property_slug ?? propertySlug ?? "",
