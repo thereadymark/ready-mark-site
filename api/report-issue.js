@@ -92,10 +92,10 @@ async function sendEmail({ resendApiKey, from, to, subject, html }) {
       "Content-Type": "application/json"
     },
     body: JSON.stringify({
-      from,
-      to,
-      subject,
-      html
+      email,
+      last_name: lastName,
+      room,
+      issue
     })
   });
 
