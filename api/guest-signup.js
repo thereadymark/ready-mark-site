@@ -39,83 +39,86 @@ async function sendVerificationEmail(resend, email, code) {
   const fromEmail = process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev";
 
   const emailHtml = `
-<div style="margin:0;padding:0;background:#f7f6f3;font-family:Georgia,serif;">
-  <div style="max-width:640px;margin:0 auto;padding:40px 16px;">
-    <div style="
-      background:#ffffff;
-      border:1px solid rgba(199,162,87,0.25);
-      border-radius:20px;
-      padding:32px;
-      box-shadow:0 10px 30px rgba(0,0,0,0.08);
-      text-align:center;
-    ">
-      <img
-        src="https://verify.thereadymarkgroup.com/readymarkseal(best)nobackground.PNG"
-        alt="The Ready Mark"
-        style="width:80px;margin-bottom:12px;"
-      />
+<!DOCTYPE html>
+<html>
+  <body style="margin:0;padding:0;background-color:#f7f6f3;background:#f7f6f3;font-family:Georgia,serif;color:#111315;">
+    <div style="margin:0;padding:32px 16px;background-color:#f7f6f3;background:#f7f6f3;">
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;">
+        <tr>
+          <td align="center">
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width:640px;border-collapse:collapse;">
+              <tr>
+                <td style="background-color:#ffffff;background:#ffffff;border:1px solid #e3d3aa;border-radius:18px;padding:32px 28px;text-align:center;">
 
-      <div style="
-        color:#c7a257;
-        font-size:13px;
-        letter-spacing:3px;
-        text-transform:uppercase;
-        font-weight:700;
-        margin-bottom:6px;
-      ">
-        The Ready Mark
-      </div>
+                  <img
+                    src="https://verify.thereadymarkgroup.com/readymarkseal(best)nobackground.PNG"
+                    alt="The Ready Mark"
+                    width="80"
+                    style="display:block;margin:0 auto 12px auto;border:0;outline:none;text-decoration:none;"
+                  />
 
-      <h1 style="
-        margin:8px 0 12px;
-        font-size:26px;
-        color:#111315;
-      ">
-        Verify Your Email
-      </h1>
+                  <div style="font-size:13px;line-height:1.4;letter-spacing:3px;text-transform:uppercase;font-weight:700;color:#c7a257;margin:0 0 8px 0;">
+                    The Ready Mark
+                  </div>
 
-      <p style="
-        font-size:15px;
-        color:#6f6a61;
-        line-height:1.7;
-        margin-bottom:22px;
-      ">
-        Use the verification code below to complete your account setup.
-      </p>
+                  <h1 style="margin:0 0 12px 0;font-size:28px;line-height:1.2;font-weight:600;color:#111315;">
+                    Verify Your Email
+                  </h1>
 
-      <div style="
-        margin:20px auto;
-        padding:18px;
-        border-radius:14px;
-        background:#fbfaf7;
-        border:1px solid rgba(199,162,87,0.20);
-        font-size:26px;
-        letter-spacing:6px;
-        font-weight:700;
-        color:#111315;
-        max-width:240px;
-      ">
-        ${code}
-      </div>
+                  <p style="margin:0 0 22px 0;font-size:15px;line-height:1.7;color:#6f6a61;">
+                    Use the verification code below to complete your account setup.
+                  </p>
 
-      <p style="
-        margin-top:18px;
-        font-size:13px;
-        color:#9a958d;
-        line-height:1.7;
-      ">
-        This code will expire in 10 minutes. Do not share it with anyone.
-      </p>
+                  <div style="margin:0 auto 22px auto;max-width:240px;background-color:#fbfaf7;background:#fbfaf7;border:1px solid #e7d8b4;border-radius:14px;padding:18px 16px;">
+                    <div style="font-size:28px;line-height:1.2;letter-spacing:6px;font-weight:700;color:#111315;">
+                      ${code}
+                    </div>
+                  </div>
+
+                  <p style="margin:0 0 10px 0;font-size:13px;line-height:1.7;color:#958d82;">
+                    This code expires in 10 minutes.
+                  </p>
+
+                  <p style="margin:0;font-size:13px;line-height:1.7;color:#958d82;">
+                    Do not share this code with anyone.
+                  </p>
+
+                </td>
+              </tr>
+
+              <tr>
+                <td style="padding:14px 8px 0 8px;text-align:center;">
+                  <p style="margin:0;font-size:12px;line-height:1.6;color:#8f887d;">
+                    You are receiving this email because a Ready Mark account was created using this address.
+                  </p>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
     </div>
-  </div>
-</div>
+  </body>
+</html>
 `;
+
+  const emailText = `The Ready Mark
+
+Verify Your Email
+
+Use this verification code to complete your account setup:
+
+${code}
+
+This code expires in 10 minutes.
+Do not share this code with anyone.`;
 
   await resend.emails.send({
     from: `Ready Mark <${fromEmail}>`,
     to: email,
     subject: "Your Ready Mark Verification Code",
-    html: emailHtml
+    html: emailHtml,
+    text: emailText
   });
 }
 
