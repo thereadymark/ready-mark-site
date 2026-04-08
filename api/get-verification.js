@@ -178,8 +178,9 @@ const historyUrl =
   `${supabaseUrl}/rest/v1/${INSPECTION_TABLE}` +
   `?room_id=eq.${encodeURIComponent(room.id)}` +
   `&select=id,created_at,certification_tier,verification_id,score,is_current` +
-  `&order=created_at.desc.nullslast`;
-
+  `&order=created_at.desc.nullslast` +
+  `&limit=5`;
+    
 const { response: historyRes, json: historyData } = await fetchJson(historyUrl);
 
 if (!historyRes.ok) {
