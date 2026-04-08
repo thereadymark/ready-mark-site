@@ -1252,6 +1252,108 @@
         </div>
 
         <div class="form-group">
+          <label for="signup-email">Email</label>
+          <input id="signup-email" type="email" placeholder="Enter your email">
+        </div>
+
+        <div class="form-group">
+          <label for="signup-password">Password</label>
+          <input id="signup-password" type="password" placeholder="Create a password">
+          <div style="margin-top:8px;font-size:12px;color:#6f6a61;line-height:1.6;">
+            Must be at least 8 characters and include an uppercase letter, lowercase letter, number, and special character.
+          </div>
+        </div>
+
+        <div class="button-row">
+          <button id="signup-submit" class="primary-btn" type="button">Create Account</button>
+          <button id="signup-cancel" class="secondary-btn" type="button">Cancel</button>
+        </div>
+
+        <div id="signup-status" class="hidden"></div>
+      </div>
+    </div>
+  `);
+
+  const overlay = document.getElementById("signup-overlay");
+  const submitBtn = document.getElementById("signup-submit");
+  const cancelBtn = document.getElementById("signup-cancel");
+  const statusBox = document.getElementById("signup-status");
+
+  function closeModal() {
+    if (overlay) overlay.remove();
+  }
+
+  function showStatus(message, type) {
+    statusBox.className = `inline-status ${type || ""}`;
+    statusBox.textContent = message;
+  }
+
+  if (cancelBtn) {
+    cancelBtn.addEventListener("click", closeModal);
+  }
+
+  if (submitBtn) {
+    submitBtn.addEventListener("click", async function () {
+      const email = document.getElementById("signup-email")?.value.trim() || "";
+      const password = document.getElementById("signup-password")?.value || "";
+
+      if (!email || !password) {
+        showStatus("Please enter your email and password.", "error");
+        return;
+      }
+
+      submitBtn.disabled = true;
+      showStatus("Creating account...", "");
+
+      try {
+        const res = await fetch("/api/guest-signup", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json"
+          },
+          body: JSON.stringify({
+            email,
+            password
+          })
+        });
+
+        const data = await res.json().catch(() => null);
+
+        if (!res.ok || data?.error) {
+          throw new Error(data?.error || "Signup failed");
+        }
+
+        showStatus("Verification code sent to your email.", "success");
+
+        setTimeout(() => {
+          closeModal();
+          if (typeof renderVerificationModal === "function") {
+            renderVerificationModal(email);
+          }
+        }, 900);
+      } catch (err) {
+        showStatus(err.message || "Signup failed", "error");
+      } finally {
+        submitBtn.disabled = false;
+      }
+    });
+  }
+}    
+
+    function renderSignupModal() {
+  const existing = document.getElementById("signup-overlay");
+  if (existing) existing.remove();
+
+  document.body.insertAdjacentHTML("beforeend", `
+    <div id="signup-overlay" class="auth-overlay">
+      <div class="auth-modal">
+        <h2 class="auth-title">Create Account</h2>
+        <div class="auth-subtext">
+          Create your account to continue with a room-specific cleanliness report.
+        </div>
+
+        <div class="form-group">
           <label for="signup-first-name">First Name</label>
           <input id="signup-first-name" type="text" placeholder="Enter your first name">
         </div>
@@ -1506,6 +1608,7 @@ function formatShortDate(value) {
     </div>
   `;
 }
+
     function renderResultPage(data, slug) {
   const app = document.getElementById("app");
 
