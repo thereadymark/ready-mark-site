@@ -92,10 +92,10 @@ async function sendEmail({ resendApiKey, from, to, subject, html }) {
       "Content-Type": "application/json"
     },
     body: JSON.stringify({
-      email,
-      last_name: lastName,
-      room,
-      issue
+      from,
+      to,
+      subject,
+      html
     })
   });
 
@@ -196,6 +196,7 @@ function buildInternalAlertEmail({
   guestNote,
   guestName,
   guestEmail,
+  reservationLastName,
   photoUrl,
   submittedAt,
   priority
@@ -252,8 +253,8 @@ function buildInternalAlertEmail({
         </div>
 
         <div style="margin-bottom:18px;">
-          <div style="color:#d8bb7a;font-size:12px;text-transform:uppercase;margin-bottom:6px;">Guest</div>
-          <div style="font-size:18px;color:#f3eee5;">${escapeHtml(guestName || "Not available")}</div>
+          <div style="color:#d8bb7a;font-size:12px;text-transform:uppercase;margin-bottom:6px;">Reservation Last Name</div>
+          <div style="font-size:18px;color:#f3eee5;">${escapeHtml(reservationLastName || guestName || "Not available")}</div>
         </div>
 
         <div style="margin-bottom:18px;">
@@ -369,7 +370,8 @@ export default async function handler(req, res) {
       room_number,
       issue_types,
       guest_note,
-      photo_file
+      photo_file,
+      reservation_last_name
     } = req.body || {};
 
     if (!verification_id) {
@@ -378,6 +380,10 @@ export default async function handler(req, res) {
 
     if (!room_number) {
       return res.status(400).json({ error: "Missing room_number" });
+    }
+
+    if (!reservation_last_name || !String(reservation_last_name).trim()) {
+      return res.status(400).json({ error: "Missing reservation_last_name" });
     }
 
     if (!Array.isArray(issue_types) || issue_types.length === 0) {
@@ -389,6 +395,7 @@ export default async function handler(req, res) {
     const normalizedPropertyName = formatPropertyName(property_name);
     const normalizedRoomNumber = String(room_number).trim();
     const normalizedGuestNote = guest_note ? String(guest_note).trim() : null;
+    const normalizedReservationLastName = String(reservation_last_name).trim();
 
     const duplicateCheck = await supabase
       .from("guest_reports")
@@ -459,8 +466,9 @@ export default async function handler(req, res) {
       reported_at: new Date().toISOString(),
       guest_user_id: guestUser.id,
       guest_email: guestUser.email,
-      guest_first_name: guestUser.first_name,
-      guest_last_name: guestUser.last_name,
+      guest_first_name: "Guest",
+      guest_last_name: normalizedReservationLastName,
+      reservation_last_name: normalizedReservationLastName,
       access_code_verified: false,
       stay_match_status: "pending"
     };
@@ -496,9 +504,7 @@ export default async function handler(req, res) {
       process.env.INTERNAL_REPORT_ALERT_EMAIL ||
       "reportissues@thereadymarkgroup.com";
 
-    const guestFullName =
-      `${guestUser.first_name || ""} ${guestUser.last_name || ""}`.trim();
-
+    const guestFullName = normalizedReservationLastName;
     const issueText = issue_types.join(", ");
     const submittedAt = data?.reported_at
       ? new Date(data.reported_at).toLocaleString()
@@ -510,7 +516,7 @@ export default async function handler(req, res) {
       try {
         await sendEmail({
           resendApiKey,
-          from: resendFromEmail,
+          from: `Ready Mark <${resendFromEmail}>`,
           to: guestUser.email,
           subject: `Your Ready Mark Report Confirmation – ${confirmationNumber}`,
           html: buildGuestConfirmationEmail({
@@ -528,7 +534,7 @@ export default async function handler(req, res) {
       try {
         await sendEmail({
           resendApiKey,
-          from: resendFromEmail,
+          from: `Ready Mark <${resendFromEmail}>`,
           to: internalAlertEmail,
           subject: `Ready Mark New Guest Report – ${confirmationNumber}`,
           html: buildInternalAlertEmail({
@@ -540,6 +546,7 @@ export default async function handler(req, res) {
             guestNote: normalizedGuestNote,
             guestName: guestFullName,
             guestEmail: guestUser.email,
+            reservationLastName: normalizedReservationLastName,
             photoUrl: signedPhotoUrl,
             submittedAt,
             priority: uploadedPhotoPath ? "Urgent" : "Normal"
