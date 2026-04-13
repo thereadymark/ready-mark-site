@@ -122,11 +122,28 @@ function buildGuestConfirmationEmail({
 }) {
   const detailsSection = guestNote
     ? `
-      <div style="margin-top:16px;padding:18px;border-radius:14px;background:#0f1317;border:1px solid rgba(199,162,87,0.15);">
-        <div style="color:#d8bb7a;font-size:12px;text-transform:uppercase;margin-bottom:8px;">
+      <div style="
+        margin-top:16px;
+        padding:18px;
+        border-radius:14px;
+        background:#fbfaf7;
+        border:1px solid rgba(199,162,87,0.15);
+      ">
+        <div style="
+          color:#c7a257;
+          font-size:12px;
+          text-transform:uppercase;
+          margin-bottom:8px;
+          letter-spacing:1px;
+          font-weight:700;
+        ">
           Additional Details
         </div>
-        <div style="font-size:16px;line-height:1.8;color:#f3eee5;">
+        <div style="
+          font-size:16px;
+          line-height:1.8;
+          color:#111315;
+        ">
           ${escapeHtml(guestNote)}
         </div>
       </div>
@@ -134,50 +151,149 @@ function buildGuestConfirmationEmail({
     : "";
 
   return `
-<div style="margin:0;padding:0;background:#0f1114;font-family:Georgia,serif;color:#f3eee5;">
+<div style="margin:0;padding:0;background:#f7f6f3;font-family:Georgia,serif;color:#111315;">
   <div style="max-width:720px;margin:0 auto;padding:36px 20px;">
-    <div style="background:#15191d;border:1px solid rgba(199,162,87,0.25);border-radius:22px;overflow:hidden;box-shadow:0 0 40px rgba(199,162,87,0.08);">
-      <div style="padding:34px 30px 24px;text-align:center;border-bottom:1px solid rgba(199,162,87,0.18);">
-        <img src="https://verify.thereadymarkgroup.com/readymarkseal(best)nobackground.PNG" alt="The Ready Mark" style="width:90px;margin-bottom:12px;">
-        <div style="color:#c7a257;font-size:13px;letter-spacing:3px;text-transform:uppercase;font-weight:700;">
+    <div style="
+      background:linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(251,249,244,0.96) 100%);
+      border:1px solid rgba(199,162,87,0.25);
+      border-radius:22px;
+      overflow:hidden;
+      box-shadow:
+        0 0 0 1px rgba(199,162,87,0.08),
+        0 12px 32px rgba(0,0,0,0.08),
+        0 2px 0 rgba(255,255,255,0.85) inset;
+    ">
+
+      <div style="
+        padding:34px 30px 24px;
+        text-align:center;
+        border-bottom:1px solid rgba(199,162,87,0.18);
+        background:
+          radial-gradient(circle at 50% -10%, rgba(199,162,87,0.16) 0%, rgba(199,162,87,0.06) 18%, rgba(199,162,87,0) 44%),
+          linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(251,249,244,0.90) 100%);
+      ">
+        <img
+          src="https://verify.thereadymarkgroup.com/readymarkseal(best)nobackground.PNG"
+          alt="The Ready Mark"
+          style="width:90px;margin-bottom:12px;display:block;margin-left:auto;margin-right:auto;"
+        />
+
+        <div style="
+          color:#c7a257;
+          font-size:13px;
+          letter-spacing:3px;
+          text-transform:uppercase;
+          font-weight:700;
+          margin-bottom:8px;
+        ">
           The Ready Mark
         </div>
-        <h1 style="margin:10px 0 6px;font-size:32px;color:#ffffff;">
+
+        <h1 style="
+          margin:10px 0 6px;
+          font-size:32px;
+          color:#111315;
+          font-weight:600;
+        ">
           Issue Received
         </h1>
-        <p style="margin:0;color:#b7b0a5;font-size:15px;line-height:1.75;max-width:540px;margin-left:auto;margin-right:auto;">
+
+        <p style="
+          margin:0;
+          color:#6f6a61;
+          font-size:15px;
+          line-height:1.75;
+          max-width:540px;
+          margin-left:auto;
+          margin-right:auto;
+        ">
           Your report has been received and logged for review.
         </p>
       </div>
 
       <div style="padding:26px 30px;">
         <div style="margin-bottom:18px;">
-          <div style="color:#d8bb7a;font-size:12px;text-transform:uppercase;margin-bottom:6px;">Reference</div>
-          <div style="font-size:18px;color:#f3eee5;font-weight:700;">${escapeHtml(confirmationNumber)}</div>
+          <div style="
+            color:#c7a257;
+            font-size:12px;
+            text-transform:uppercase;
+            margin-bottom:6px;
+            letter-spacing:1px;
+            font-weight:700;
+          ">
+            Reference
+          </div>
+          <div style="font-size:18px;color:#111315;font-weight:700;">
+            ${escapeHtml(confirmationNumber)}
+          </div>
         </div>
 
         <div style="margin-bottom:18px;">
-          <div style="color:#d8bb7a;font-size:12px;text-transform:uppercase;margin-bottom:6px;">Property</div>
-          <div style="font-size:18px;color:#f3eee5;">${escapeHtml(propertyName)}</div>
+          <div style="
+            color:#c7a257;
+            font-size:12px;
+            text-transform:uppercase;
+            margin-bottom:6px;
+            letter-spacing:1px;
+            font-weight:700;
+          ">
+            Property
+          </div>
+          <div style="font-size:18px;color:#111315;">
+            ${escapeHtml(propertyName)}
+          </div>
         </div>
 
         <div style="margin-bottom:18px;">
-          <div style="color:#d8bb7a;font-size:12px;text-transform:uppercase;margin-bottom:6px;">Room</div>
-          <div style="font-size:18px;color:#f3eee5;">${escapeHtml(roomNumber)}</div>
+          <div style="
+            color:#c7a257;
+            font-size:12px;
+            text-transform:uppercase;
+            margin-bottom:6px;
+            letter-spacing:1px;
+            font-weight:700;
+          ">
+            Room
+          </div>
+          <div style="font-size:18px;color:#111315;">
+            ${escapeHtml(roomNumber)}
+          </div>
         </div>
 
-        <div style="margin-top:22px;padding:18px;border-radius:14px;background:#0f1317;border:1px solid rgba(199,162,87,0.15);">
-          <div style="color:#d8bb7a;font-size:12px;text-transform:uppercase;margin-bottom:8px;">
+        <div style="
+          margin-top:22px;
+          padding:18px;
+          border-radius:14px;
+          background:#fbfaf7;
+          border:1px solid rgba(199,162,87,0.15);
+        ">
+          <div style="
+            color:#c7a257;
+            font-size:12px;
+            text-transform:uppercase;
+            margin-bottom:8px;
+            letter-spacing:1px;
+            font-weight:700;
+          ">
             Reported Issue
           </div>
-          <div style="font-size:16px;line-height:1.7;color:#f3eee5;">
+          <div style="
+            font-size:16px;
+            line-height:1.7;
+            color:#111315;
+          ">
             ${escapeHtml(issueText)}
           </div>
         </div>
 
         ${detailsSection}
 
-        <div style="margin-top:24px;font-size:13px;color:#8f8775;line-height:1.7;">
+        <div style="
+          margin-top:24px;
+          font-size:13px;
+          color:#8f8775;
+          line-height:1.7;
+        ">
           Please keep this reference number for your records.
         </div>
       </div>
@@ -186,7 +302,6 @@ function buildGuestConfirmationEmail({
 </div>
 `;
 }
-
 function buildInternalAlertEmail({
   confirmationNumber,
   verificationId,
