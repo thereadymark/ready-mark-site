@@ -1392,6 +1392,7 @@ function completeGuestAuth({ token, guest, onSuccess }) {
   const verifyBtn = document.getElementById("verify-btn");
   const cancelBtn = document.getElementById("cancel-btn");
   const status = document.getElementById("verify-status");
+  const resendBtn = document.getElementById("resend-code-btn");    
 
   function close() {
     if (overlay) overlay.remove();
@@ -1406,6 +1407,35 @@ function completeGuestAuth({ token, guest, onSuccess }) {
     cancelBtn.addEventListener("click", close);
   }
 
+  if (resendBtn) {
+  resendBtn.addEventListener("click", async function () {
+    resendBtn.disabled = true;
+    showStatus("Sending a new code...", "");
+
+    try {
+      const res = await fetch("/api/resend-verification-code", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+        },
+        body: JSON.stringify({ email })
+      });
+
+      const data = await res.json().catch(() => null);
+
+      if (!res.ok || data?.error) {
+        throw new Error(data?.error || "Could not resend code.");
+      }
+
+      showStatus(data?.message || "A new code has been sent.", "success");
+    } catch (err) {
+      showStatus(err.message || "Could not resend code.", "error");
+    } finally {
+      resendBtn.disabled = false;
+    }
+  });
+}
   if (verifyBtn) {
     verifyBtn.addEventListener("click", async function () {
       const code = document.getElementById("verification-code")?.value.trim() || "";
