@@ -1006,6 +1006,34 @@
       }
     }
 
+function closeAllAuthOverlays() {
+  [
+    "guest-auth-overlay",
+    "signup-overlay",
+    "verification-overlay",
+    "forgot-password-overlay"
+  ].forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) el.remove();
+  });
+}
+
+function completeGuestAuth({ token, guest, onSuccess }) {
+  currentGuestToken = token || "";
+  if (currentGuestToken) {
+    sessionStorage.setItem("readymark_guest_token", currentGuestToken);
+  } else {
+    sessionStorage.removeItem("readymark_guest_token");
+  }
+
+  currentGuest = guest || null;
+
+  closeAllAuthOverlays();
+
+  if (typeof onSuccess === "function") {
+    onSuccess();
+  }
+}
     function revealStatusPill() {
       const statusWrap = document.getElementById("status-wrap");
       if (!statusWrap) return;
@@ -1181,7 +1209,7 @@
     signupLink.addEventListener("click", function (e) {
       e.preventDefault();
       closeModal();
-      renderSignupModal();
+      renderSignupModal(onSuccess);
     });
   }
 
@@ -1221,15 +1249,11 @@
           throw new Error("Login did not return a session token.");
         }
 
-        currentGuestToken = token;
-        sessionStorage.setItem("readymark_guest_token", currentGuestToken);
-        currentGuest = data?.guest || data?.user || { email };
-
-        closeModal();
-
-        if (typeof onSuccess === "function") {
-          onSuccess();
-        }
+        completeGuestAuth({
+          token,
+          guest: data?.guest || data?.user || { email },
+          onSuccess
+        });
       } catch (err) {
         showStatus(err.message || "Unable to sign in.", "error");
       } finally {
@@ -1237,9 +1261,8 @@
       }
     });
   }
-}    
-
-    function renderSignupModal() {
+}   
+   function renderSignupModal(onSuccess) {
   const existing = document.getElementById("signup-overlay");
   if (existing) existing.remove();
 
@@ -1312,10 +1335,7 @@
             "Content-Type": "application/json",
             "Accept": "application/json"
           },
-          body: JSON.stringify({
-            email,
-            password
-          })
+          body: JSON.stringify({ email, password })
         });
 
         const data = await res.json().catch(() => null);
@@ -1328,9 +1348,7 @@
 
         setTimeout(() => {
           closeModal();
-          if (typeof renderVerificationModal === "function") {
-            renderVerificationModal(email);
-          }
+          renderVerificationModal(email, onSuccess);
         }, 900);
       } catch (err) {
         showStatus(err.message || "Signup failed", "error");
@@ -1339,9 +1357,8 @@
       }
     });
   }
-}    
-
-    function renderVerificationModal(email) {
+}   
+    function renderVerificationModal(email, onSuccess) {
   const existing = document.getElementById("verification-overlay");
   if (existing) existing.remove();
 
@@ -1350,7 +1367,7 @@
       <div class="auth-modal">
         <h2 class="auth-title">Enter Verification Code</h2>
         <div class="auth-subtext">
-          We sent a code to <strong>${email}</strong>
+          We sent a code to <strong>${escapeHtml(email)}</strong>
         </div>
 
         <div class="form-group">
@@ -1358,11 +1375,11 @@
         </div>
 
         <div class="button-row">
-          <button id="verify-btn" class="primary-btn">Verify</button>
-          <button id="cancel-btn" class="secondary-btn">Cancel</button>
+          <button id="verify-btn" class="primary-btn" type="button">Verify</button>
+          <button id="cancel-btn" class="secondary-btn" type="button">Cancel</button>
         </div>
 
-        <div id="verify-status"></div>
+        <div id="verify-status" class="inline-status hidden"></div>
       </div>
     </div>
   `);
@@ -1376,49 +1393,65 @@
     if (overlay) overlay.remove();
   }
 
-  cancelBtn.onclick = close;
+  function showStatus(message, type) {
+    status.className = `inline-status ${type || ""}`;
+    status.textContent = message;
+  }
 
-  verifyBtn.onclick = async () => {
-    const code = document.getElementById("verification-code").value.trim();
+  if (cancelBtn) {
+    cancelBtn.addEventListener("click", close);
+  }
 
-    if (!code) {
-      status.textContent = "Enter your code";
-      return;
-    }
+  if (verifyBtn) {
+    verifyBtn.addEventListener("click", async function () {
+      const code = document.getElementById("verification-code")?.value.trim() || "";
 
-    verifyBtn.disabled = true;
-    status.textContent = "Verifying...";
-
-    try {
-      const res = await fetch("/api/verify-email", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ email, code })
-      });
-
-      const data = await res.json().catch(() => null);
-
-      if (!res.ok || data?.error) {
-        throw new Error(data?.error || "Verification failed");
+      if (!code) {
+        showStatus("Enter your code.", "error");
+        return;
       }
 
-      status.textContent = "Verified!";
+      verifyBtn.disabled = true;
+      showStatus("Verifying...", "");
 
-      setTimeout(() => {
-        close();
-        renderLoginModal();
-      }, 800);
+      try {
+        const res = await fetch("/api/verify-email", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json"
+          },
+          body: JSON.stringify({ email, code })
+        });
 
-    } catch (err) {
-      status.textContent = err.message;
-    } finally {
-      verifyBtn.disabled = false;
-    }
-  };
-}   
- 
+        const data = await res.json().catch(() => null);
+
+        if (!res.ok || data?.error) {
+          throw new Error(data?.error || "Verification failed.");
+        }
+
+        const token = data?.token || data?.session_token;
+        if (!token) {
+          throw new Error("Verification succeeded but no session token was returned.");
+        }
+
+        showStatus("Verified successfully.", "success");
+
+        setTimeout(() => {
+          completeGuestAuth({
+            token,
+            guest: data?.guest || data?.user || { email },
+            onSuccess
+          });
+        }, 700);
+      } catch (err) {
+        showStatus(err.message || "Verification failed.", "error");
+      } finally {
+        verifyBtn.disabled = false;
+      }
+    });
+  }
+} 
 function formatShortDate(value) {
   if (!value) return "—";
   try {
