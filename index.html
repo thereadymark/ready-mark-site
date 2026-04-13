@@ -1260,9 +1260,7 @@ function completeGuestAuth({ token, guest, onSuccess }) {
   }
 }   
    function renderSignupModal(onSuccess) {
-     closeAllAuthOverlays();
-     const existing = document.getElementById("signup-overlay");
-  if (existing) existing.remove();
+  closeAllAuthOverlays();
 
   document.body.insertAdjacentHTML("beforeend", `
     <div id="signup-overlay" class="auth-overlay">
@@ -1342,12 +1340,35 @@ function completeGuestAuth({ token, guest, onSuccess }) {
           throw new Error(data?.error || "Signup failed");
         }
 
-        showStatus("Verification code sent to your email.", "success");
+        if (data?.action === "login") {
+          showStatus(
+            data?.message || "An account with this email already exists. Please log in.",
+            "success"
+          );
 
-        setTimeout(() => {
-          closeModal();
-          renderVerificationModal(email, onSuccess);
-        }, 900);
+          setTimeout(() => {
+            closeModal();
+            renderLoginModal(onSuccess);
+          }, 900);
+
+          return;
+        }
+
+        if (data?.action === "verify" || data?.requires_email_verification) {
+          showStatus(
+            data?.message || "Verification code sent to your email.",
+            "success"
+          );
+
+          setTimeout(() => {
+            closeModal();
+            renderVerificationModal(email, onSuccess);
+          }, 900);
+
+          return;
+        }
+
+        showStatus(data?.message || "Signup complete.", "success");
       } catch (err) {
         showStatus(err.message || "Signup failed", "error");
       } finally {
@@ -1355,7 +1376,7 @@ function completeGuestAuth({ token, guest, onSuccess }) {
       }
     });
   }
-}   
+}
     function renderVerificationModal(email, onSuccess) {
     closeAllAuthOverlays();
   const existing = document.getElementById("verification-overlay");
