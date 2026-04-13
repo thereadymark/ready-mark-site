@@ -89,7 +89,7 @@ async function sendVerificationEmail(resend, email, code) {
               <tr>
                 <td style="padding:14px 8px 0 8px;text-align:center;">
                   <p style="margin:0;font-size:12px;line-height:1.6;color:#8f887d;">
-                    You are receiving this email because a Ready Mark account was created using this address.
+                    You are receiving this email because a Ready Mark account was created or updated using this address.
                   </p>
                 </td>
               </tr>
@@ -200,9 +200,50 @@ export default async function handler(req, res) {
       });
     }
 
-    if (Array.isArray(existingData) && existingData.length > 0) {
-      return res.status(400).json({
-        error: "An account with this email already exists."
+    const existingUser =
+      Array.isArray(existingData) && existingData.length > 0
+        ? existingData[0]
+        : null;
+
+    if (existingUser) {
+      if (existingUser.email_verified) {
+        return res.status(200).json({
+          success: false,
+          action: "login",
+          message: "An account with this email already exists. Please log in."
+        });
+      }
+
+      const updateRes = await fetch(
+        `${supabaseUrl}/rest/v1/guest_users?id=eq.${encodeURIComponent(existingUser.id)}`,
+        {
+          method: "PATCH",
+          headers,
+          body: JSON.stringify({
+            password_hash: passwordHash,
+            email_verification_code: verificationCode,
+            email_verification_expires_at: verificationExpiresAt
+          })
+        }
+      );
+
+      const updateData = await updateRes.json().catch(() => null);
+
+      if (!updateRes.ok) {
+        return res.status(500).json({
+          error: "Failed to update existing unverified account",
+          details: updateData
+        });
+      }
+
+      await sendVerificationEmail(resend, normalizedEmail, verificationCode);
+
+      return res.status(200).json({
+        success: true,
+        action: "verify",
+        email: normalizedEmail,
+        requires_email_verification: true,
+        message: "Account exists but is not verified. A new verification code has been sent."
       });
     }
 
@@ -233,6 +274,7 @@ export default async function handler(req, res) {
 
     return res.status(200).json({
       success: true,
+      action: "verify",
       email: normalizedEmail,
       requires_email_verification: true,
       message: "Account created. Verification code sent."
