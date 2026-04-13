@@ -1007,12 +1007,13 @@
     }
 
 function closeAllAuthOverlays() {
-  document.querySelectorAll(".auth-overlay").forEach(el => {
-    el.style.pointerEvents = "none"; // kill interaction immediately
-    el.remove();
-  });
-}
+  const overlays = document.querySelectorAll(".auth-overlay");
+  console.log("Removing overlays:", overlays.length);
+  overlays.forEach((el) => el.remove());
+} 
 function completeGuestAuth({ token, guest, onSuccess }) {
+  console.log("completeGuestAuth called");
+  debugAuthOverlays();
   currentGuestToken = token || "";
   if (currentGuestToken) {
     sessionStorage.setItem("readymark_guest_token", currentGuestToken);
@@ -2176,12 +2177,15 @@ if (mainImage) {
     reportStatus.textContent = message;
   }
 
-  function openReportForm() {
-    if (reportStartView) reportStartView.classList.add("hidden");
-    if (reportFormView) reportFormView.classList.remove("hidden");
-  }
+ function openReportForm() {
+  debugAuthOverlays();
+  closeAllAuthOverlays();
+  debugAuthOverlays();
 
-  renderGuestChip();
+  if (reportStartView) reportStartView.classList.add("hidden");
+  if (reportFormView) reportFormView.classList.remove("hidden");
+}
+      renderGuestChip();
 
   if (openReportBtn) {
     openReportBtn.addEventListener("click", async function () {
@@ -2370,8 +2374,12 @@ function renderErrorPage(msg) {
   img.src = src;
   lightbox.style.display = "flex";
 }
-
-function closeLightbox() {
+    
+function debugAuthOverlays() {
+  const overlays = document.querySelectorAll(".auth-overlay");
+  console.log("AUTH OVERLAYS:", overlays.length, overlays);
+}
+    function closeLightbox() {
   const lightbox = document.getElementById("lightbox");
   if (lightbox) lightbox.style.display = "none";
 }  
