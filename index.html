@@ -1007,17 +1007,11 @@
     }
 
 function closeAllAuthOverlays() {
-  [
-    "guest-auth-overlay",
-    "signup-overlay",
-    "verification-overlay",
-    "forgot-password-overlay"
-  ].forEach((id) => {
-    const el = document.getElementById(id);
-    if (el) el.remove();
+  document.querySelectorAll(".auth-overlay").forEach(el => {
+    el.style.pointerEvents = "none"; // kill interaction immediately
+    el.remove();
   });
 }
-
 function completeGuestAuth({ token, guest, onSuccess }) {
   currentGuestToken = token || "";
   if (currentGuestToken) {
@@ -1054,6 +1048,7 @@ function completeGuestAuth({ token, guest, onSuccess }) {
     }
 
     function renderForgotPasswordModal() {
+      closeAllAuthOverlays();
       const existing = document.getElementById("forgot-password-overlay");
       if (existing) existing.remove();
 
@@ -1140,7 +1135,8 @@ function completeGuestAuth({ token, guest, onSuccess }) {
     }
 
  function renderLoginModal(onSuccess) {
-  const existing = document.getElementById("guest-auth-overlay");
+   closeAllAuthOverlays();
+   const existing = document.getElementById("guest-auth-overlay");
   if (existing) existing.remove();
 
   document.body.insertAdjacentHTML("beforeend", `
@@ -1263,7 +1259,8 @@ function completeGuestAuth({ token, guest, onSuccess }) {
   }
 }   
    function renderSignupModal(onSuccess) {
-  const existing = document.getElementById("signup-overlay");
+     closeAllAuthOverlays();
+     const existing = document.getElementById("signup-overlay");
   if (existing) existing.remove();
 
   document.body.insertAdjacentHTML("beforeend", `
@@ -1359,6 +1356,7 @@ function completeGuestAuth({ token, guest, onSuccess }) {
   }
 }   
     function renderVerificationModal(email, onSuccess) {
+    closeAllAuthOverlays();
   const existing = document.getElementById("verification-overlay");
   if (existing) existing.remove();
 
