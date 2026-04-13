@@ -1373,11 +1373,16 @@ function completeGuestAuth({ token, guest, onSuccess }) {
           <input id="verification-code" type="text" maxlength="6" placeholder="Enter code">
         </div>
 
-        <div class="button-row">
-          <button id="verify-btn" class="primary-btn" type="button">Verify</button>
-          <button id="cancel-btn" class="secondary-btn" type="button">Cancel</button>
-        </div>
+      <div class="button-row">
+  <button id="verify-btn" class="primary-btn" type="button">Verify</button>
+  <button id="cancel-btn" class="secondary-btn" type="button">Cancel</button>
+</div>
 
+<div style="margin-top:10px;text-align:center;">
+  <button id="resend-code-btn" class="secondary-btn" type="button">
+    Resend Code
+  </button>
+</div>
         <div id="verify-status" class="inline-status hidden"></div>
       </div>
     </div>
