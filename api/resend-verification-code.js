@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { Resend } from "resend";
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
@@ -9,165 +10,102 @@ function generateCode() {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
-async function sendEmail({ resendApiKey, from, to, subject, html }) {
-  const response = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${resendApiKey}`,
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      from,
-      to,
-      subject,
-      html
-    })
-  });
-
-  const data = await response.json().catch(() => null);
-
-  if (!response.ok) {
-    throw new Error(
-      data?.message ||
-      data?.error ||
-      data?.name ||
-      "Email failed"
-    );
-  }
-
-  return data;
-}
-
 function buildVerificationCodeEmail(code) {
   return `
-<div style="margin:0;padding:0;background:#f7f6f3;font-family:Georgia,serif;color:#111315;">
-  <div style="max-width:720px;margin:0 auto;padding:36px 20px;">
-    <div style="
-      background:linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(251,249,244,0.96) 100%);
-      border:1px solid rgba(199,162,87,0.25);
-      border-radius:22px;
-      overflow:hidden;
-      box-shadow:
-        0 0 0 1px rgba(199,162,87,0.08),
-        0 12px 32px rgba(0,0,0,0.08),
-        0 2px 0 rgba(255,255,255,0.85) inset;
-    ">
-      <div style="
-        padding:34px 30px 24px;
-        text-align:center;
-        border-bottom:1px solid rgba(199,162,87,0.18);
-        background:
-          radial-gradient(circle at 50% -10%, rgba(199,162,87,0.16) 0%, rgba(199,162,87,0.06) 18%, rgba(199,162,87,0) 44%),
-          linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(251,249,244,0.90) 100%);
-      ">
-        <img
-          src="https://verify.thereadymarkgroup.com/readymarkseal(best)nobackground.PNG"
-          alt="The Ready Mark"
-          style="width:90px;margin-bottom:12px;display:block;margin-left:auto;margin-right:auto;"
-        />
+<!DOCTYPE html>
+<html>
+  <body style="margin:0;padding:0;background-color:#f7f6f3;background:#f7f6f3;font-family:Georgia,serif;color:#111315;">
+    <div style="margin:0;padding:32px 16px;background-color:#f7f6f3;background:#f7f6f3;">
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;">
+        <tr>
+          <td align="center">
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width:640px;border-collapse:collapse;">
+              <tr>
+                <td style="background-color:#ffffff;background:#ffffff;border:1px solid #e3d3aa;border-radius:18px;padding:32px 28px;text-align:center;">
 
-        <div style="
-          color:#c7a257;
-          font-size:13px;
-          letter-spacing:3px;
-          text-transform:uppercase;
-          font-weight:700;
-          margin-bottom:8px;
-        ">
-          The Ready Mark
-        </div>
+                  <img
+                    src="https://verify.thereadymarkgroup.com/readymarkseal(best)nobackground.PNG"
+                    alt="The Ready Mark"
+                    width="80"
+                    style="display:block;margin:0 auto 12px auto;border:0;outline:none;text-decoration:none;"
+                  />
 
-        <h1 style="
-          margin:10px 0 6px;
-          font-size:32px;
-          line-height:1.15;
-          color:#111315;
-          font-weight:600;
-        ">
-          Verify Your Email
-        </h1>
+                  <div style="font-size:13px;line-height:1.4;letter-spacing:3px;text-transform:uppercase;font-weight:700;color:#c7a257;margin:0 0 8px 0;">
+                    The Ready Mark
+                  </div>
 
-        <p style="
-          margin:0;
-          color:#5f5a52;
-          font-size:15px;
-          line-height:1.75;
-          max-width:540px;
-          margin-left:auto;
-          margin-right:auto;
-        ">
-          Use the verification code below to complete your account setup.
-        </p>
-      </div>
+                  <h1 style="margin:0 0 12px 0;font-size:28px;line-height:1.2;font-weight:600;color:#111315;">
+                    Verify Your Email
+                  </h1>
 
-      <div style="padding:26px 30px;text-align:center;">
-        <div style="
-          margin:0 auto 22px;
-          max-width:320px;
-          padding:18px 22px;
-          border-radius:16px;
-          background:#111315;
-          border:1px solid rgba(199,162,87,0.28);
-          box-shadow:0 8px 20px rgba(0,0,0,0.08);
-        ">
-          <div style="
-            font-size:12px;
-            line-height:1.5;
-            letter-spacing:2px;
-            text-transform:uppercase;
-            color:#c7a257;
-            font-weight:700;
-            margin-bottom:10px;
-          ">
-            Verification Code
-          </div>
+                  <p style="margin:0 0 22px 0;font-size:15px;line-height:1.7;color:#6f6a61;">
+                    Use the verification code below to complete your account setup.
+                  </p>
 
-          <div style="
-            font-size:34px;
-            line-height:1.1;
-            letter-spacing:8px;
-            font-weight:700;
-            color:#ffffff;
-          ">
-            ${code}
-          </div>
-        </div>
+                  <div style="margin:0 auto 22px auto;max-width:240px;background-color:#fbfaf7;background:#fbfaf7;border:1px solid #e7d8b4;border-radius:14px;padding:18px 16px;">
+                    <div style="font-size:28px;line-height:1.2;letter-spacing:6px;font-weight:700;color:#111315;">
+                      ${code}
+                    </div>
+                  </div>
 
-        <div style="
-          margin-top:8px;
-          font-size:14px;
-          color:#6f6a61;
-          line-height:1.8;
-        ">
-          This code expires in 10 minutes.
-        </div>
+                  <p style="margin:0 0 10px 0;font-size:13px;line-height:1.7;color:#958d82;">
+                    This code expires in 10 minutes.
+                  </p>
 
-        <div style="
-          margin-top:8px;
-          font-size:14px;
-          color:#6f6a61;
-          line-height:1.8;
-        ">
-          Do not share this code with anyone.
-        </div>
-      </div>
+                  <p style="margin:0;font-size:13px;line-height:1.7;color:#958d82;">
+                    Do not share this code with anyone.
+                  </p>
+
+                </td>
+              </tr>
+
+              <tr>
+                <td style="padding:14px 8px 0 8px;text-align:center;">
+                  <p style="margin:0;font-size:12px;line-height:1.6;color:#8f887d;">
+                    You are receiving this email because a Ready Mark account was created or updated using this address.
+                  </p>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
     </div>
-
-    <div style="
-      text-align:center;
-      margin-top:18px;
-      font-size:13px;
-      color:#8f8775;
-      line-height:1.8;
-    ">
-      You are receiving this email because a Ready Mark account was created or updated using this address.
-    </div>
-  </div>
-</div>
+  </body>
+</html>
 `;
 }
 
+function buildVerificationCodeText(code) {
+  return `The Ready Mark
+
+Verify Your Email
+
+Use this verification code to complete your account setup:
+
+${code}
+
+This code expires in 10 minutes.
+Do not share this code with anyone.`;
+}
+
 export default async function handler(req, res) {
+  const allowedOrigin = "https://verify.thereadymarkgroup.com";
+
+  const corsHeaders = {
+    "Access-Control-Allow-Origin": allowedOrigin,
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization"
+  };
+
+  Object.entries(corsHeaders).forEach(([key, value]) => {
+    res.setHeader(key, value);
+  });
+
+  if (req.method === "OPTIONS") {
+    return res.status(200).end();
+  }
+
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
@@ -179,6 +117,15 @@ export default async function handler(req, res) {
     if (!email) {
       return res.status(400).json({ error: "Email is required" });
     }
+
+    const resendApiKey = process.env.RESEND_API_KEY;
+    const resendFromEmail = process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev";
+
+    if (!resendApiKey) {
+      return res.status(500).json({ error: "Missing RESEND_API_KEY" });
+    }
+
+    const resend = new Resend(resendApiKey);
 
     const { data: user, error } = await supabase
       .from("guest_users")
@@ -207,8 +154,8 @@ export default async function handler(req, res) {
     const { error: updateError } = await supabase
       .from("guest_users")
       .update({
-        verification_code: code,
-        verification_expires_at: expiresAt
+        email_verification_code: code,
+        email_verification_expires_at: expiresAt
       })
       .eq("id", user.id);
 
@@ -216,21 +163,12 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: updateError.message });
     }
 
-    const resendApiKey = process.env.RESEND_API_KEY;
-    const resendFromEmail = process.env.RESEND_FROM_EMAIL;
-
-    if (!resendApiKey || !resendFromEmail) {
-      return res.status(500).json({
-        error: "Email configuration missing"
-      });
-    }
-
-    await sendEmail({
-      resendApiKey,
+    await resend.emails.send({
       from: `Ready Mark <${resendFromEmail}>`,
       to: email,
       subject: "Your Ready Mark Verification Code",
-      html: buildVerificationCodeEmail(code)
+      html: buildVerificationCodeEmail(code),
+      text: buildVerificationCodeText(code)
     });
 
     return res.status(200).json({
