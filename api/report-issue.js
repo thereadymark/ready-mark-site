@@ -497,10 +497,9 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Missing room_number" });
     }
 
-    if (!reservation_last_name || !String(reservation_last_name).trim()) {
-      return res.status(400).json({ error: "Missing reservation_last_name" });
-    }
-
+  const normalizedReservationLastName = reservation_last_name
+  ? String(reservation_last_name).trim()
+  : null;
     if (!Array.isArray(issue_types) || issue_types.length === 0) {
       return res.status(400).json({ error: "Please select at least one issue type." });
     }
