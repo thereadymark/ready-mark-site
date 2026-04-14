@@ -2275,92 +2275,115 @@ if (mainImage) {
       reportStatus.textContent = "";
     });
   }
+if (submitReportBtn) {
+  submitReportBtn.addEventListener("click", async function () {
+    const issueTypeEl = document.getElementById("issue-type");
+    const guestNoteEl = document.getElementById("guest-note");
+    const reservationLastNameEl = document.getElementById("reservation-last-name");
+    const issuePhotoEl = document.getElementById("issue-photo");
 
-  if (submitReportBtn) {
-    submitReportBtn.addEventListener("click", async function () {
-      const issue = document.getElementById("issue-type")?.value || "";
-      const note = document.getElementById("guest-note")?.value || "";
-      const reservationLastName = document.getElementById("reservation-last-name")?.value.trim() || "";
+    const issue = issueTypeEl?.value || "";
+    const note = guestNoteEl?.value || "";
+    const reservationLastName = reservationLastNameEl?.value.trim() || "";
 
-      if (!reservationLastName) {
-        showReportStatus("Please enter the last name on the reservation.", "error");
-        return;
-      }
+    if (!reservationLastName) {
+      showReportStatus("Please enter the last name on the reservation.", "error");
+      return;
+    }
 
-      if (!issue) {
-        showReportStatus("Please select an issue.", "error");
-        return;
-      }
+    if (!issue) {
+      showReportStatus("Please select an issue.", "error");
+      return;
+    }
 
-      if (!currentGuestToken) {
-        showReportStatus("Session expired. Please rescan the QR code.", "error");
-        return;
-      }
+    if (!currentGuestToken) {
+      showReportStatus("Session expired. Please rescan the QR code.", "error");
+      return;
+    }
 
-      submitReportBtn.disabled = true;
-      submitReportBtn.textContent = "Submitting...";
+    submitReportBtn.disabled = true;
+    submitReportBtn.textContent = "Submitting...";
 
-      try {
-        const fileInput = document.getElementById("issue-photo");
-        let photoPayload = null;
+    try {
+      let photoPayload = null;
 
-        if (fileInput && fileInput.files.length > 0) {
-          const file = fileInput.files[0];
+      if (issuePhotoEl && issuePhotoEl.files.length > 0) {
+        const file = issuePhotoEl.files[0];
 
-          const base64 = await new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = () => {
-              const result = String(reader.result || "").split(",")[1];
-              resolve(result);
-            };
-            reader.onerror = reject;
-            reader.readAsDataURL(file);
-          });
-
-          photoPayload = {
-            name: file.name,
-            type: file.type,
-            base64: base64
+        const base64 = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => {
+            const result = String(reader.result || "").split(",")[1];
+            resolve(result);
           };
-        }
-
-        const response = await fetch("/api/report-issue", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "x-guest-token": currentGuestToken
-          },
-          body: JSON.stringify({
-            verification_id: verificationId,
-            property_slug: slug.includes("-room-") ? slug.split("-room-")[0] : "",
-            property_name: property,
-            room_number: room,
-            issue_types: [issue],
-            guest_note: note,
-            reservation_last_name: reservationLastName,
-            photo_file: photoPayload
-          })
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
         });
 
-        const result = await response.json().catch(() => null);
-
-        if (!response.ok) {
-          throw new Error(result?.error || "Failed to submit report.");
-        }
-
-        showReportStatus("Report submitted successfully.", "success");
-      } catch (err) {
-        console.error(err);
-        showReportStatus(err.message || "Something went wrong.", "error");
-      } finally {
-        submitReportBtn.disabled = false;
-        submitReportBtn.textContent = "Submit Report";
+        photoPayload = {
+          name: file.name,
+          type: file.type,
+          base64
+        };
       }
-    });
-  }
-} 
 
-function renderErrorPage(msg) {
+      const response = await fetch("/api/report-issue", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-guest-token": currentGuestToken
+        },
+        body: JSON.stringify({
+          verification_id: verificationId,
+          property_slug: slug.includes("-room-") ? slug.split("-room-")[0] : "",
+          property_name: property,
+          room_number: room,
+          issue_types: [issue],
+          guest_note: note,
+          reservation_last_name: reservationLastName,
+          photo_file: photoPayload
+        })
+      });
+
+      const result = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        throw new Error(result?.error || "Failed to submit report.");
+      }
+
+      const referenceNumber =
+        result?.reference ||
+        result?.confirmation_number ||
+        result?.report?.confirmation_number ||
+        "Not available";
+
+      showReportStatus(
+        `Your report has been submitted successfully. Reference number: ${referenceNumber}. A confirmation email has been sent if email delivery is available.`,
+        "success"
+      );
+
+      if (issueTypeEl) issueTypeEl.value = "";
+      if (guestNoteEl) guestNoteEl.value = "";
+      if (reservationLastNameEl) reservationLastNameEl.value = "";
+      if (issuePhotoEl) issuePhotoEl.value = "";
+
+      if (submitReportBtn) {
+        submitReportBtn.textContent = "Report Submitted";
+        submitReportBtn.disabled = true;
+      }
+
+      if (cancelReportBtn) {
+        cancelReportBtn.textContent = "Close";
+      }
+    } catch (err) {
+      console.error(err);
+      showReportStatus(err.message || "Something went wrong.", "error");
+      submitReportBtn.disabled = false;
+      submitReportBtn.textContent = "Submit Report";
+    }
+  });
+}
+      function renderErrorPage(msg) {
       const app = document.getElementById("app");
 
       app.innerHTML = `
