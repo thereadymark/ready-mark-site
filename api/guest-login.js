@@ -26,34 +26,67 @@ async function sendVerificationEmail(resend, email, code) {
     to: email,
     subject: "Your Ready Mark Verification Code",
     html: `
-      <div style="font-family: Georgia, serif; background:#121416; color:#f3eee5; padding:40px 20px;">
-        <div style="max-width:520px; margin:0 auto; background:linear-gradient(180deg,#1b1f23,#15181b); border:1px solid rgba(199,162,87,0.28); border-radius:18px; padding:30px; text-align:center; box-shadow:0 14px 34px rgba(0,0,0,0.35);">
-          <img src="https://verify.thereadymarkgroup.com/readymarkseal(best)nobackground.PNG"
-               style="width:90px;margin-bottom:14px;" />
+<!DOCTYPE html>
+<html>
+  <body style="margin:0;padding:0;background-color:#f7f6f3;background:#f7f6f3;font-family:Georgia,serif;color:#111315;">
+    <div style="margin:0;padding:32px 16px;background-color:#f7f6f3;background:#f7f6f3;">
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;">
+        <tr>
+          <td align="center">
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width:640px;border-collapse:collapse;">
+              <tr>
+                <td style="background-color:#ffffff;background:#ffffff;border:1px solid #e3d3aa;border-radius:18px;padding:32px 28px;text-align:center;">
 
-          <div style="width:140px; height:2px; margin:0 auto 18px; background:linear-gradient(90deg, rgba(199,162,87,0), rgba(216,187,122,0.98), rgba(199,162,87,0)); border-radius:999px;"></div>
+                  <img
+                    src="https://verify.thereadymarkgroup.com/readymarkseal(best)nobackground.PNG"
+                    alt="The Ready Mark"
+                    width="80"
+                    style="display:block;margin:0 auto 12px auto;border:0;outline:none;text-decoration:none;"
+                  />
 
-          <h2 style="margin:0 0 10px; font-size:26px; letter-spacing:1px; color:#e6d39a;">
-            The Ready Mark
-          </h2>
+                  <div style="font-size:13px;line-height:1.4;letter-spacing:3px;text-transform:uppercase;font-weight:700;color:#c7a257;margin:0 0 8px 0;">
+                    The Ready Mark
+                  </div>
 
-          <p style="color:#d8bb7a; font-size:13px; letter-spacing:3px; text-transform:uppercase; margin-bottom:22px;">
-            Email Verification
-          </p>
+                  <h1 style="margin:0 0 12px 0;font-size:28px;line-height:1.2;font-weight:600;color:#111315;">
+                    Verify Your Email
+                  </h1>
 
-          <p style="font-size:16px; line-height:1.7; margin-bottom:20px; color:#f3eee5;">
-            Enter this verification code to continue:
-          </p>
+                  <p style="margin:0 0 22px 0;font-size:15px;line-height:1.7;color:#6f6a61;">
+                    Use the verification code below to complete your account setup.
+                  </p>
 
-          <div style="font-size:36px; font-weight:700; letter-spacing:8px; margin-bottom:18px; color:#f3eee5;">
-            ${code}
-          </div>
+                  <div style="margin:0 auto 22px auto;max-width:240px;background-color:#fbfaf7;background:#fbfaf7;border:1px solid #e7d8b4;border-radius:14px;padding:18px 16px;">
+                    <div style="font-size:28px;line-height:1.2;letter-spacing:6px;font-weight:700;color:#111315;">
+                      ${code}
+                    </div>
+                  </div>
 
-          <p style="margin-top:10px; font-size:13px; color:#958d82;">
-            This code expires in ${VERIFICATION_CODE_MINUTES} minutes.
-          </p>
-        </div>
-      </div>
+                  <p style="margin:0 0 10px 0;font-size:13px;line-height:1.7;color:#958d82;">
+                    This code expires in ${VERIFICATION_CODE_MINUTES} minutes.
+                  </p>
+
+                  <p style="margin:0;font-size:13px;line-height:1.7;color:#958d82;">
+                    Do not share this code with anyone.
+                  </p>
+
+                </td>
+              </tr>
+
+              <tr>
+                <td style="padding:14px 8px 0 8px;text-align:center;">
+                  <p style="margin:0;font-size:12px;line-height:1.6;color:#8f887d;">
+                    You are receiving this email because a Ready Mark account was created or updated using this address.
+                  </p>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+    </div>
+  </body>
+</html>
     `
   });
 }
@@ -178,7 +211,7 @@ export default async function handler(req, res) {
     };
 
     const userRes = await fetch(
-      `${supabaseUrl}/rest/v1/guest_users?email=eq.${encodeURIComponent(normalizedEmail)}&select=id,first_name,last_name,email,email_verified,password_hash,failed_login_attempts,login_locked_until&limit=1`,
+      `${supabaseUrl}/rest/v1/guest_users?email=eq.${encodeURIComponent(normalizedEmail)}&select=id,first_name,last_name,email,email_verified,password_hash,failed_login_attempts,login_locked_until,email_verification_code,email_verification_expires_at&limit=1`,
       { headers }
     );
 
@@ -207,8 +240,14 @@ export default async function handler(req, res) {
       lockedUntilMs > Date.now();
 
     if (isLocked) {
+      const msRemaining = lockedUntilMs - Date.now();
+      const secondsRemaining = Math.max(1, Math.ceil(msRemaining / 1000));
+      const minutesRemaining = Math.ceil(msRemaining / 60000);
+
       return res.status(429).json({
-        error: "Too many failed login attempts. Please try again later."
+        error: `Too many failed login attempts. Try again in ${minutesRemaining} minute${minutesRemaining === 1 ? "" : "s"}.`,
+        lockout_remaining_seconds: secondsRemaining,
+        login_locked_until: user.login_locked_until
       });
     }
 
@@ -227,10 +266,12 @@ export default async function handler(req, res) {
         login_locked_until: loginLockedUntil
       });
 
-      return res.status(401).json({
+      return res.status(shouldLock ? 429 : 401).json({
         error: shouldLock
-          ? "Too many failed login attempts. Please try again later."
-          : "Invalid email or password"
+          ? `Too many failed login attempts. Try again in ${LOGIN_LOCK_MINUTES} minutes.`
+          : "Invalid email or password",
+        lockout_remaining_seconds: shouldLock ? LOGIN_LOCK_MINUTES * 60 : undefined,
+        login_locked_until: shouldLock ? loginLockedUntil : undefined
       });
     }
 
@@ -255,6 +296,38 @@ export default async function handler(req, res) {
           email_verified: true
         },
         message: "Login successful."
+      });
+    }
+
+    const existingCode = user.email_verification_code
+      ? String(user.email_verification_code).trim()
+      : "";
+
+    const existingExpiryMs = user.email_verification_expires_at
+      ? new Date(user.email_verification_expires_at).getTime()
+      : NaN;
+
+    const hasUsableExistingCode =
+      existingCode &&
+      !Number.isNaN(existingExpiryMs) &&
+      existingExpiryMs > Date.now();
+
+    if (hasUsableExistingCode) {
+      const secondsRemaining = Math.max(1, Math.ceil((existingExpiryMs - Date.now()) / 1000));
+
+      return res.status(200).json({
+        success: true,
+        email_verified: false,
+        email: normalizedEmail,
+        guest: {
+          id: user.id,
+          first_name: user.first_name,
+          last_name: user.last_name,
+          email: user.email,
+          email_verified: false
+        },
+        message: "A verification code was already sent. Please check your email.",
+        verification_code_remaining_seconds: secondsRemaining
       });
     }
 
