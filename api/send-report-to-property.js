@@ -21,10 +21,12 @@ async function sendPortalNotificationEmail({
   contactName,
   propertyName,
   roomNumber,
-  referenceNumber
-}) {
-  const portalUrl = "https://verify.thereadymarkgroup.com/client-portal.html";
-
+  referenceNumber,
+  propertySlug
+})
+{
+  const portalUrl = `https://verify.thereadymarkgroup.com/dashboard.html?property_slug=${encodeURIComponent(propertySlug)}`;
+  
   const html = `
 <!DOCTYPE html>
 <html>
@@ -275,6 +277,7 @@ export default async function handler(req, res) {
           propertyName: property.property_name || report.property_name || "",
           roomNumber: report.room_number || "",
           referenceNumber: report.confirmation_number || ""
+          propertySlug: report.property_slug
         });
 
         notifiedEmail = contact.email;
