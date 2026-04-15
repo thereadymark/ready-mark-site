@@ -915,6 +915,20 @@
   <div id="app"></div>
 
   <script>
+
+    function togglePasswordVisibility(inputId, toggleBtnId) {
+  const input = document.getElementById(inputId);
+  const btn = document.getElementById(toggleBtnId);
+
+  if (!input || !btn) return;
+
+  btn.addEventListener("click", function () {
+    const isHidden = input.type === "password";
+    input.type = isHidden ? "text" : "password";
+    btn.textContent = isHidden ? "🙈" : "👁️";
+  });
+}
+    
     const PROPERTY_OPTIONS = [
       { value: "", label: "Select a property" },
       { value: "crown-plaza-hotel-stl", label: "Crown Plaza Hotel STL" }
@@ -1155,9 +1169,19 @@ function completeGuestAuth({ token, guest, onSuccess }) {
 
         <div class="form-group">
           <label for="guest-password">Password</label>
-          <input id="guest-password" type="password" placeholder="Enter your password">
-        </div>
-
+         <div style="position:relative;">
+  <input id="guest-password" type="password" placeholder="Enter your password">
+  <button id="toggle-login-password" type="button" style="
+    position:absolute;
+    right:12px;
+    top:50%;
+    transform:translateY(-50%);
+    background:none;
+    border:none;
+    cursor:pointer;
+    font-size:16px;
+  ">👁️</button>
+</div>
         <div style="text-align:center; margin-top:10px;">
           <a href="#" id="forgot-password-link" style="font-size:13px; color:#c7a257;">
             Forgot password?
@@ -1185,6 +1209,7 @@ function completeGuestAuth({ token, guest, onSuccess }) {
   const forgotPasswordLink = document.getElementById("forgot-password-link");
   const signupLink = document.getElementById("signup-link");
 
+togglePasswordVisibility("guest-password", "toggle-login-password");   
   function closeModal() {
     if (overlay) overlay.remove();
   }
@@ -1219,6 +1244,7 @@ function completeGuestAuth({ token, guest, onSuccess }) {
       const email = document.getElementById("guest-email")?.value.trim() || "";
       const password = document.getElementById("guest-password")?.value || "";
 
+      
       if (!email || !password) {
         showStatus("Please enter email and password.", "error");
         return;
@@ -1277,13 +1303,38 @@ function completeGuestAuth({ token, guest, onSuccess }) {
 
         <div class="form-group">
           <label for="signup-password">Password</label>
-          <input id="signup-password" type="password" placeholder="Create a password">
-          <div style="margin-top:8px;font-size:12px;color:#6f6a61;line-height:1.6;">
-            Must be at least 8 characters and include an uppercase letter, lowercase letter, number, and special character.
-          </div>
-        </div>
+         <div style="position:relative;">
+  <input id="signup-password" type="password" placeholder="Create a password">
+  <button id="toggle-signup-password" type="button" style="
+    position:absolute;
+    right:12px;
+    top:50%;
+    transform:translateY(-50%);
+    background:none;
+    border:none;
+    cursor:pointer;
+    font-size:16px;
+  ">👁️</button>
+</div>       
+</div>
 
-        <div class="button-row">
+        <div class="form-group">
+  <label for="signup-confirm-password">Confirm Password</label>
+  <div style="position:relative;">
+  <input id="signup-confirm-password" type="password" placeholder="Re-enter your password">
+  <button id="toggle-confirm-password" type="button" style="
+    position:absolute;
+    right:12px;
+    top:50%;
+    transform:translateY(-50%);
+    background:none;
+    border:none;
+    cursor:pointer;
+    font-size:16px;
+  ">👁️</button>
+</div>
+
+<div class="button-row">
           <button id="signup-submit" class="primary-btn" type="button">Create Account</button>
           <button id="signup-cancel" class="secondary-btn" type="button">Cancel</button>
         </div>
@@ -1298,6 +1349,9 @@ function completeGuestAuth({ token, guest, onSuccess }) {
   const cancelBtn = document.getElementById("signup-cancel");
   const statusBox = document.getElementById("signup-status");
 
+togglePasswordVisibility("signup-password", "toggle-signup-password");
+togglePasswordVisibility("signup-confirm-password", "toggle-confirm-password");
+     
   function closeModal() {
     if (overlay) overlay.remove();
   }
@@ -1315,7 +1369,12 @@ function completeGuestAuth({ token, guest, onSuccess }) {
     submitBtn.addEventListener("click", async function () {
       const email = document.getElementById("signup-email")?.value.trim() || "";
       const password = document.getElementById("signup-password")?.value || "";
+      const confirmPassword = document.getElementById("signup-confirm-password")?.value || "";
 
+      if (password !== confirmPassword) {
+  showStatus("Passwords do not match.", "error");
+  return;
+}      
       if (!email || !password) {
         showStatus("Please enter your email and password.", "error");
         return;
