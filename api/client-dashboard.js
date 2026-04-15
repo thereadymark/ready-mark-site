@@ -1,10 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
 
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-);
-
 const ACTIVE_STATUSES = ["New", "Under Review", "Escalated", "Sent to Property"];
 const RESOLVED_STATUS = "Resolved";
 
@@ -57,27 +52,35 @@ function buildRoomSummary(room, latestInspection) {
 
 export default async function handler(req, res) {
   try {
-  const allowedOrigin = "https://verify.thereadymarkgroup.com";
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-  const corsHeaders = {
-    "Access-Control-Allow-Origin": allowedOrigin,
-    "Access-Control-Allow-Methods": "GET, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type, Authorization"
-  };
+    if (!supabaseUrl || !serviceRoleKey) {
+      throw new Error("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY");
+    }
 
-  Object.entries(corsHeaders).forEach(([key, value]) => {
-    res.setHeader(key, value);
-  });
+    const supabase = createClient(supabaseUrl, serviceRoleKey);
 
-  if (req.method === "OPTIONS") {
-    return res.status(200).end();
-  }
+    const allowedOrigin = "https://verify.thereadymarkgroup.com";
 
-  if (req.method !== "GET") {
-    return res.status(405).json({ error: "Method not allowed" });
-  }
+    const corsHeaders = {
+      "Access-Control-Allow-Origin": allowedOrigin,
+      "Access-Control-Allow-Methods": "GET, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization"
+    };
 
-  try {
+    Object.entries(corsHeaders).forEach(([key, value]) => {
+      res.setHeader(key, value);
+    });
+
+    if (req.method === "OPTIONS") {
+      return res.status(200).end();
+    }
+
+    if (req.method !== "GET") {
+      return res.status(405).json({ error: "Method not allowed" });
+    }
+
     const { property_slug } = req.query || {};
 
     if (!property_slug || typeof property_slug !== "string") {
@@ -88,7 +91,6 @@ export default async function handler(req, res) {
 
     const normalizedPropertySlug = String(property_slug).trim().toLowerCase();
 
-    // PROPERTY
     const { data: property, error: propertyError } = await supabase
       .from("properties")
       .select("id, property_name, property_slug, city, state, property_type")
@@ -96,9 +98,7 @@ export default async function handler(req, res) {
       .maybeSingle();
 
     if (propertyError) {
-      return res.status(500).json({
-        error: propertyError.message
-      });
+      throw new Error(propertyError.message);
     }
 
     if (!property) {
@@ -107,35 +107,29 @@ export default async function handler(req, res) {
       });
     }
 
-    // ROOMS
     const { data: rooms, error: roomsError } = await supabase
-      .from("Rooms")
+      .from("rooms")
       .select("id, room_number, qr_slug, qr_url, guest_access_code, property_id")
       .eq("property_id", property.id)
       .order("room_number", { ascending: true });
 
     if (roomsError) {
-      return res.status(500).json({
-        error: roomsError.message
-      });
+      throw new Error(roomsError.message);
     }
 
     const roomList = Array.isArray(rooms) ? rooms : [];
     const roomIds = roomList.map(room => room.id);
 
-    // INSPECTIONS
     let inspections = [];
     if (roomIds.length > 0) {
       const { data: inspectionData, error: inspectionsError } = await supabase
-        .from("Inspections")
+        .from("inspections")
         .select("id, room_id, inspector_id, created_at, certification_tier, verification_id, score, notes")
         .in("room_id", roomIds)
         .order("created_at", { ascending: false });
 
       if (inspectionsError) {
-        return res.status(500).json({
-          error: inspectionsError.message
-        });
+        throw new Error(inspectionsError.message);
       }
 
       inspections = Array.isArray(inspectionData) ? inspectionData : [];
@@ -149,73 +143,58 @@ export default async function handler(req, res) {
       return buildRoomSummary(room, latestInspection);
     });
 
-   / 🔥 CLIENT-FACING DATA
-  active_issues: activeIssues,
-  awaiting_response: awaitingResponse,
-  remediation_submitted: remediationSubmitted,
-  resolved_issues: resolvedIssues,
+    const { data: guestReports, error: guestReportsError } = await supabase
+      .from("guest_reports")
+      .select(`
+        id,
+        confirmation_number,
+        verification_id,
+        property_slug,
+        property_name,
+        room_number,
+        issue_types,
+        guest_note,
+        details,
+        photo_url,
+        status,
+        priority,
+        reported_at,
+        hotel_notified_at,
+        resolution_note,
+        resolved_by,
+        resolved_at,
+        response_minutes,
+        reservation_last_name
+      `)
+      .eq("property_slug", normalizedPropertySlug)
+      .not("hotel_notified_at", "is", null)
+      .order("reported_at", { ascending: false });
 
-  inspection_history: inspectionHistory
-});
+    if (guestReportsError) {
+      throw new Error(guestReportsError.message);
+    }
 
+    const reports = Array.isArray(guestReports) ? guestReports : [];
 
-// GUEST REPORTS (CLIENT VISIBLE ONLY)
-const { data: guestReports, error: guestReportsError } = await supabase
-  .from("guest_reports")
-  .select(`
-    id,
-    confirmation_number,
-    verification_id,
-    property_slug,
-    property_name,
-    room_number,
-    issue_types,
-    guest_note,
-    details,
-    photo_url,
-    status,
-    priority,
-    reported_at,
-    hotel_notified_at,
-    resolution_note,
-    resolved_by,
-    resolved_at,
-    response_minutes
-  `)
-  .eq("property_slug", normalizedPropertySlug)
-  .not("hotel_notified_at", "is", null) // 🔥 KEY FILTER
-  .order("reported_at", { ascending: false });
+    const activeIssues = reports.filter(report =>
+      ACTIVE_STATUSES.includes(report.status)
+    );
 
-if (guestReportsError) {
-  return res.status(500).json({
-    error: guestReportsError.message
-  });
-}
+    const awaitingResponse = reports.filter(report =>
+      report.status === "Sent to Property" &&
+      !report.resolution_note &&
+      !report.resolved_at
+    );
 
-const reports = Array.isArray(guestReports) ? guestReports : [];
+    const remediationSubmitted = reports.filter(report =>
+      report.resolution_note &&
+      !report.resolved_at
+    );
 
-// 🔥 NEW CLASSIFICATION LOGIC
+    const resolvedIssues = reports.filter(report =>
+      report.resolved_at || report.status === RESOLVED_STATUS
+    );
 
-const activeIssues = reports.filter(r =>
-  ["Sent to Property", "Escalated"].includes(r.status)
-);
-
-const awaitingResponse = reports.filter(r =>
-  r.status === "Sent to Property" &&
-  !r.resolution_note &&
-  !r.resolved_at
-);
-
-const remediationSubmitted = reports.filter(r =>
-  r.resolution_note &&
-  !r.resolved_at
-);
-
-const resolvedIssues = reports.filter(r =>
-  r.resolved_at || r.status === "Resolved"
-);
-
-    // RECENT INSPECTION HISTORY
     const inspectionHistory = inspections
       .slice()
       .sort((a, b) => sortByDateDesc(a, b, "created_at"))
@@ -237,7 +216,6 @@ const resolvedIssues = reports.filter(r =>
         };
       });
 
-    // QR LOOKUP LIST
     const qrRecords = roomSummaries.map(room => ({
       room_id: room.room_id,
       room_number: room.room_number,
@@ -248,55 +226,44 @@ const resolvedIssues = reports.filter(r =>
       last_inspected_at: room.latest_inspection?.created_at || ""
     }));
 
-    // DASHBOARD SUMMARY
     const latestInspectionOverall = inspectionHistory[0] || null;
 
-    const summary = {
-      total_rooms: roomSummaries.length,
-      total_active_issues: activeIssues.length,
-      total_resolved_issues: resolvedIssues.length,
-      total_reports: reports.length,
-      latest_inspection_date: latestInspectionOverall?.created_at || null,
-      latest_inspection_room: latestInspectionOverall?.room_number || null
-    };
+    return res.status(200).json({
+      success: true,
+      property: {
+        id: property.id,
+        property_name: property.property_name || "",
+        property_slug: property.property_slug || "",
+        city: property.city || "",
+        state: property.state || "",
+        property_type: property.property_type || ""
+      },
 
-return res.status(200).json({
-  success: true,
-  property: {
-    id: property.id,
-    property_name: property.property_name || "",
-    property_slug: property.property_slug || "",
-    city: property.city || "",
-    state: property.state || "",
-    property_type: property.property_type || ""
-  },
+      summary: {
+        total_rooms: roomSummaries.length,
+        total_active_issues: activeIssues.length,
+        total_awaiting_response: awaitingResponse.length,
+        total_remediation_submitted: remediationSubmitted.length,
+        total_resolved_issues: resolvedIssues.length,
+        total_reports: reports.length,
+        latest_inspection_date: latestInspectionOverall?.created_at || null,
+        latest_inspection_room: latestInspectionOverall?.room_number || null
+      },
 
-  summary: {
-    total_rooms: roomSummaries.length,
-    total_active_issues: activeIssues.length,
-    total_awaiting_response: awaitingResponse.length,
-    total_remediation_submitted: remediationSubmitted.length,
-    total_resolved_issues: resolvedIssues.length,
-    total_reports: reports.length
-  },
+      rooms: roomSummaries,
+      qr_records: qrRecords,
+      active_issues: activeIssues,
+      awaiting_response: awaitingResponse,
+      remediation_submitted: remediationSubmitted,
+      resolved_issues: resolvedIssues,
+      inspection_history: inspectionHistory
+    });
+  } catch (err) {
+    console.error("CLIENT DASHBOARD ERROR:", err);
 
-  rooms: roomSummaries,
-  qr_records: qrRecords,
-
-  // 🔥 CLIENT-FACING DATA
-  active_issues: activeIssues,
-  awaiting_response: awaitingResponse,
-  remediation_submitted: remediationSubmitted,
-  resolved_issues: resolvedIssues,
-
-  inspection_history: inspectionHistory
-});   
-    } catch (err) {
-  console.error("CLIENT DASHBOARD ERROR:", err);
-
-  return res.status(500).json({
-    error: err.message || "Internal server error",
-    stack: err.stack || null
-  });
- }
+    return res.status(500).json({
+      error: err.message || "Internal server error",
+      stack: err.stack || null
+    });
+  }
 }
