@@ -56,6 +56,7 @@ function buildRoomSummary(room, latestInspection) {
 }
 
 export default async function handler(req, res) {
+  try {
   const allowedOrigin = "https://verify.thereadymarkgroup.com";
 
   const corsHeaders = {
@@ -289,6 +290,13 @@ return res.status(200).json({
   resolved_issues: resolvedIssues,
 
   inspection_history: inspectionHistory
-});    
-  }
+});   
+    } catch (err) {
+  console.error("CLIENT DASHBOARD ERROR:", err);
+
+  return res.status(500).json({
+    error: err.message || "Internal server error",
+    stack: err.stack || null
+  });
+ }
 }
