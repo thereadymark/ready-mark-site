@@ -108,7 +108,7 @@ export default async function handler(req, res) {
     }
 
     const { data: rooms, error: roomsError } = await supabase
-      .from("rooms")
+      .from("Rooms")
       .select("id, room_number, qr_slug, qr_url, guest_access_code, property_id")
       .eq("property_id", property.id)
       .order("room_number", { ascending: true });
@@ -123,7 +123,7 @@ export default async function handler(req, res) {
     let inspections = [];
     if (roomIds.length > 0) {
       const { data: inspectionData, error: inspectionsError } = await supabase
-        .from("inspections")
+        .from("Inspections")
         .select("id, room_id, inspector_id, created_at, certification_tier, verification_id, score, notes")
         .in("room_id", roomIds)
         .order("created_at", { ascending: false });
