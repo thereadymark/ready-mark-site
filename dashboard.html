@@ -1499,21 +1499,24 @@
         submitBtn.disabled = false;
       }
     }
+function showLoadError(message) {
+  const safeMessage =
+    typeof message === "string"
+      ? message
+      : JSON.stringify(message, null, 2);
 
-    function showLoadError(message) {
-      document.getElementById("portal-content").innerHTML = `
-        <div class="section-card">
-          <div class="section-header">
-            <h2>Unable to Load Dashboard</h2>
-            <p>Please review the current property configuration or API response.</p>
-          </div>
-          <div class="section-body">
-            <div class="status-box">${escapeHtml(message)}</div>
-          </div>
-        </div>
-      `;
-    }
-
+  document.getElementById("portal-content").innerHTML = `
+    <div class="section-card">
+      <div class="section-header">
+        <h2>Unable to Load Dashboard</h2>
+        <p>Please review the current property configuration or API response.</p>
+      </div>
+      <div class="section-body">
+        <div class="status-box">${escapeHtml(safeMessage)}</div>
+      </div>
+    </div>
+  `;
+}   
     async function loadDashboard() {
       try {
         const portalContent = document.getElementById("portal-content");
@@ -1532,10 +1535,16 @@
 
         const data = await res.json().catch(() => null);
 
-        if (!res.ok || data?.error) {
-          throw new Error(data?.error || "Failed to load dashboard.");
-        }
+if (!res.ok || data?.error) {
+  const errorMessage =
+    typeof data?.error === "string"
+      ? data.error
+      : data?.error?.message ||
+        data?.details?.message ||
+        JSON.stringify(data?.error || data?.details || data || "Failed to load dashboard.");
 
+  throw new Error(errorMessage);
+}
         dashboardData = data;
 
         renderTopLevel(data);
