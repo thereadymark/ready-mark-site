@@ -148,42 +148,71 @@ export default async function handler(req, res) {
       return buildRoomSummary(room, latestInspection);
     });
 
-    // GUEST REPORTS
-    const { data: guestReports, error: guestReportsError } = await supabase
-      .from("guest_reports")
-      .select(`
-        id,
-        confirmation_number,
-        verification_id,
-        property_slug,
-        property_name,
-        room_number,
-        issue_types,
-        guest_note,
-        details,
-        photo_url,
-        status,
-        priority,
-        reported_at
-      `)
-      .eq("property_slug", normalizedPropertySlug)
-      .order("reported_at", { ascending: false });
+   / 🔥 CLIENT-FACING DATA
+  active_issues: activeIssues,
+  awaiting_response: awaitingResponse,
+  remediation_submitted: remediationSubmitted,
+  resolved_issues: resolvedIssues,
 
-    if (guestReportsError) {
-      return res.status(500).json({
-        error: guestReportsError.message
-      });
-    }
+  inspection_history: inspectionHistory
+});
 
-    const reports = Array.isArray(guestReports) ? guestReports : [];
 
-    const activeIssues = reports.filter(report =>
-      ACTIVE_STATUSES.includes(report.status)
-    );
+// GUEST REPORTS (CLIENT VISIBLE ONLY)
+const { data: guestReports, error: guestReportsError } = await supabase
+  .from("guest_reports")
+  .select(`
+    id,
+    confirmation_number,
+    verification_id,
+    property_slug,
+    property_name,
+    room_number,
+    issue_types,
+    guest_note,
+    details,
+    photo_url,
+    status,
+    priority,
+    reported_at,
+    hotel_notified_at,
+    resolution_note,
+    resolved_by,
+    resolved_at,
+    response_minutes
+  `)
+  .eq("property_slug", normalizedPropertySlug)
+  .not("hotel_notified_at", "is", null) // 🔥 KEY FILTER
+  .order("reported_at", { ascending: false });
 
-    const resolvedIssues = reports.filter(report =>
-      report.status === RESOLVED_STATUS
-    );
+if (guestReportsError) {
+  return res.status(500).json({
+    error: guestReportsError.message
+  });
+}
+
+const reports = Array.isArray(guestReports) ? guestReports : [];
+
+// 🔥 NEW CLASSIFICATION LOGIC
+
+const activeIssues = reports.filter(r =>
+  ["Sent to Property", "Escalated"].includes(r.status)
+);
+
+const awaitingResponse = reports.filter(r =>
+  r.status === "Sent to Property" &&
+  !r.resolution_note &&
+  !r.resolved_at
+);
+
+const remediationSubmitted = reports.filter(r =>
+  r.resolution_note &&
+  !r.resolved_at
+);
+
+const resolvedIssues = reports.filter(r =>
+  r.resolved_at || r.status === "Resolved"
+);
 
     // RECENT INSPECTION HISTORY
     const inspectionHistory = inspections
@@ -230,26 +259,36 @@ export default async function handler(req, res) {
       latest_inspection_room: latestInspectionOverall?.room_number || null
     };
 
-    return res.status(200).json({
-      success: true,
-      property: {
-        id: property.id,
-        property_name: property.property_name || "",
-        property_slug: property.property_slug || "",
-        city: property.city || "",
-        state: property.state || "",
-        property_type: property.property_type || ""
-      },
-      summary,
-      rooms: roomSummaries,
-      qr_records: qrRecords,
-      active_issues: activeIssues,
-      resolved_issues: resolvedIssues,
-      inspection_history: inspectionHistory
-    });
-  } catch (error) {
-    return res.status(500).json({
-      error: `Server error: ${error.message}`
-    });
+return res.status(200).json({
+  success: true,
+  property: {
+    id: property.id,
+    property_name: property.property_name || "",
+    property_slug: property.property_slug || "",
+    city: property.city || "",
+    state: property.state || "",
+    property_type: property.property_type || ""
+  },
+
+  summary: {
+    total_rooms: roomSummaries.length,
+    total_active_issues: activeIssues.length,
+    total_awaiting_response: awaitingResponse.length,
+    total_remediation_submitted: remediationSubmitted.length,
+    total_resolved_issues: resolvedIssues.length,
+    total_reports: reports.length
+  },
+
+  rooms: roomSummaries,
+  qr_records: qrRecords,
+
+  // 🔥 CLIENT-FACING DATA
+  active_issues: activeIssues,
+  awaiting_response: awaitingResponse,
+  remediation_submitted: remediationSubmitted,
+  resolved_issues: resolvedIssues,
+
+  inspection_history: inspectionHistory
+});    
   }
 }
