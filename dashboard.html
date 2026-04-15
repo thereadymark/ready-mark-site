@@ -195,6 +195,17 @@
       filter: brightness(1.02);
     }
 
+    .btn-secondary {
+      background: #fff;
+      color: var(--text);
+      border: 1px solid var(--line);
+    }
+
+    .btn:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+    }
+
     .content {
       padding: 28px;
       display: flex;
@@ -392,6 +403,18 @@
       white-space: pre-wrap;
     }
 
+    .status-box.success {
+      color: var(--success);
+      border-color: rgba(47, 143, 87, 0.22);
+      background: rgba(47, 143, 87, 0.06);
+    }
+
+    .status-box.error {
+      color: var(--danger);
+      border-color: rgba(180, 76, 76, 0.22);
+      background: rgba(180, 76, 76, 0.06);
+    }
+
     .detail-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -497,6 +520,63 @@
       pointer-events: none;
     }
 
+    .evidence-image {
+      width: 100%;
+      max-width: 520px;
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      display: block;
+      box-shadow: var(--shadow);
+      background: #fff;
+    }
+
+    .form-group + .form-group {
+      margin-top: 16px;
+    }
+
+    .form-label {
+      display: block;
+      margin-bottom: 9px;
+      color: var(--muted);
+      font-size: 12px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+
+    .form-input,
+    .form-textarea {
+      width: 100%;
+      background: rgba(255,255,255,0.96);
+      border: 1px solid rgba(199,162,87,0.18);
+      border-radius: 14px;
+      color: var(--text);
+      padding: 15px 16px;
+      font-size: 16px;
+      outline: none;
+      appearance: none;
+      font-family: "Lato", sans-serif;
+      box-shadow: 0 1px 0 rgba(255,255,255,0.65) inset;
+    }
+
+    .form-textarea {
+      min-height: 140px;
+      resize: vertical;
+    }
+
+    .button-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 18px;
+    }
+
+    .empty-note {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
     @media (max-width: 1100px) {
       .cards {
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -537,7 +617,8 @@
         justify-content: center;
       }
 
-      .btn-primary {
+      .btn-primary,
+      .btn-secondary {
         width: 100%;
       }
     }
@@ -559,7 +640,7 @@
       </nav>
 
       <div class="sidebar-footer">
-        View-only access to property status, issue history, inspection records, and QR-linked verification data.
+        Client-side visibility into property issue status, remediation responses, inspection records, and QR-linked verification data.
       </div>
     </aside>
 
@@ -571,8 +652,8 @@
         </div>
 
         <div class="topbar-right">
-          <div class="user-chip">client@email.com</div>
-          <button class="btn btn-primary" type="button">Request Inspection</button>
+          <div class="user-chip" id="topbar-chip">Property Access</div>
+          <button class="btn btn-primary" type="button" id="refresh-btn">Refresh</button>
         </div>
       </div>
 
@@ -592,15 +673,15 @@
             </div>
 
             <div class="card">
-              <div class="card-label">Active Issues</div>
-              <div class="card-value" id="active-issues-card">—</div>
-              <div class="card-subtext">Current guest-reported items still under review or resolution.</div>
+              <div class="card-label">Awaiting Response</div>
+              <div class="card-value" id="awaiting-response-card">—</div>
+              <div class="card-subtext">Property-visible issues that still need a remediation response.</div>
             </div>
 
             <div class="card">
               <div class="card-label">Resolved Issues</div>
               <div class="card-value" id="resolved-issues-card">—</div>
-              <div class="card-subtext">Previously reported issues marked resolved in the system.</div>
+              <div class="card-subtext">Issues that have already been marked resolved in the system.</div>
             </div>
           </div>
 
@@ -633,6 +714,32 @@
 
           <div class="section-card">
             <div class="section-header">
+              <h2>Issue Response Snapshot</h2>
+              <p>Quick view of issues needing property action and remediation updates awaiting Ready Mark review.</p>
+            </div>
+            <div class="table-wrap">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Reference</th>
+                    <th>Room</th>
+                    <th>Status</th>
+                    <th>Priority</th>
+                    <th>Reported</th>
+                    <th>View</th>
+                  </tr>
+                </thead>
+                <tbody id="dashboard-issues-body">
+                  <tr>
+                    <td colspan="6">Loading issue overview...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="section-card">
+            <div class="section-header">
               <h2>Recent Inspection Activity</h2>
               <p>Most recent inspection records currently associated with this property.</p>
             </div>
@@ -660,8 +767,8 @@
         <section id="issues-view" class="view">
           <div class="section-card">
             <div class="section-header">
-              <h2>Active Issues</h2>
-              <p>Current guest-reported issues that are still open, under review, escalated, or sent for resolution.</p>
+              <h2>Awaiting Property Response</h2>
+              <p>Issues that were sent to the property and still require a remediation response.</p>
             </div>
             <div class="table-wrap">
               <table class="table">
@@ -673,11 +780,38 @@
                     <th>Priority</th>
                     <th>Status</th>
                     <th>Reported</th>
+                    <th>View</th>
                   </tr>
                 </thead>
-                <tbody id="active-issues-body">
+                <tbody id="awaiting-response-body">
                   <tr>
-                    <td colspan="6">Loading active issues...</td>
+                    <td colspan="7">Loading issues...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="section-card">
+            <div class="section-header">
+              <h2>Remediation Submitted</h2>
+              <p>Issues where the property has already submitted an action taken note and Ready Mark can review next.</p>
+            </div>
+            <div class="table-wrap">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Reference</th>
+                    <th>Room</th>
+                    <th>Issue</th>
+                    <th>Resolved By</th>
+                    <th>Status</th>
+                    <th>View</th>
+                  </tr>
+                </thead>
+                <tbody id="remediation-submitted-body">
+                  <tr>
+                    <td colspan="6">Loading remediation queue...</td>
                   </tr>
                 </tbody>
               </table>
@@ -765,6 +899,120 @@
           </div>
         </section>
 
+        <section id="issue-detail-view" class="view">
+          <button class="back-btn" id="issue-back-btn" type="button">← Back</button>
+
+          <div class="detail-grid">
+            <div class="detail-block full">
+              <div class="report-title-row">
+                <div>
+                  <h2 id="issue-detail-title">Issue Record</h2>
+                  <p id="issue-detail-subtitle">Loading issue details...</p>
+                </div>
+                <span class="status-pill status-open" id="issue-detail-status">—</span>
+              </div>
+            </div>
+
+            <div class="detail-block">
+              <h3>Issue Details</h3>
+              <div class="meta-list">
+                <div class="meta-item">
+                  <div class="meta-label">Reference</div>
+                  <div class="meta-value" id="issue-detail-reference">—</div>
+                </div>
+                <div class="meta-item">
+                  <div class="meta-label">Room</div>
+                  <div class="meta-value" id="issue-detail-room">—</div>
+                </div>
+                <div class="meta-item">
+                  <div class="meta-label">Priority</div>
+                  <div class="meta-value" id="issue-detail-priority">—</div>
+                </div>
+                <div class="meta-item">
+                  <div class="meta-label">Reported</div>
+                  <div class="meta-value" id="issue-detail-reported-at">—</div>
+                </div>
+                <div class="meta-item">
+                  <div class="meta-label">Verification ID</div>
+                  <div class="meta-value" id="issue-detail-verification">—</div>
+                </div>
+                <div class="meta-item">
+                  <div class="meta-label">Status</div>
+                  <div class="meta-value" id="issue-detail-status-text">—</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="detail-block">
+              <h3>Guest Submission</h3>
+              <div class="meta-list">
+                <div class="meta-item">
+                  <div class="meta-label">Issue Type</div>
+                  <div class="meta-value" id="issue-detail-types">—</div>
+                </div>
+                <div class="meta-item">
+                  <div class="meta-label">Reservation Last Name</div>
+                  <div class="meta-value" id="issue-detail-reservation-name">—</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="detail-block full">
+              <h3>Guest Notes</h3>
+              <p id="issue-detail-note">No guest note provided.</p>
+            </div>
+
+            <div class="detail-block full" id="issue-evidence-block">
+              <h3>Photo Evidence</h3>
+              <div id="issue-detail-photo-wrap" class="empty-note">No photo evidence attached.</div>
+            </div>
+
+            <div class="detail-block full">
+              <h3>Current Resolution Record</h3>
+              <div class="meta-list">
+                <div class="meta-item">
+                  <div class="meta-label">Resolution Note</div>
+                  <div class="meta-value" id="issue-detail-resolution-note">No resolution submitted yet.</div>
+                </div>
+                <div class="meta-item">
+                  <div class="meta-label">Resolved By</div>
+                  <div class="meta-value" id="issue-detail-resolved-by">—</div>
+                </div>
+                <div class="meta-item">
+                  <div class="meta-label">Resolved At</div>
+                  <div class="meta-value" id="issue-detail-resolved-at">—</div>
+                </div>
+                <div class="meta-item">
+                  <div class="meta-label">Response Minutes</div>
+                  <div class="meta-value" id="issue-detail-response-minutes">—</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="detail-block full" id="remediation-form-block">
+              <h3>Submit Remediation</h3>
+              <p style="margin-bottom:16px;">Use this form to document what action was taken so Ready Mark can review and finalize the record.</p>
+
+              <div class="form-group">
+                <label class="form-label" for="resolution-note-input">Resolution Note</label>
+                <textarea class="form-textarea" id="resolution-note-input" placeholder="Describe what was done to address the issue."></textarea>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="resolved-by-input">Resolved By</label>
+                <input class="form-input" id="resolved-by-input" placeholder="Example: Housekeeping Manager">
+              </div>
+
+              <div class="button-row">
+                <button class="btn btn-primary" type="button" id="submit-remediation-btn">Submit Remediation</button>
+                <button class="btn btn-secondary" type="button" id="cancel-remediation-btn">Cancel</button>
+              </div>
+
+              <div id="remediation-status-box" class="status-box" style="display:none;margin-top:16px;"></div>
+            </div>
+          </div>
+        </section>
+
         <section id="report-detail-view" class="view">
           <button class="back-btn" id="report-back-btn" type="button">← Back</button>
 
@@ -822,10 +1070,12 @@
   <script>
     const params = new URLSearchParams(window.location.search);
     const PROPERTY_SLUG = params.get("property_slug") || "crown-plaza-hotel-stl";
-    const API_BASE = "/api/client-dashboard";
+    const DASHBOARD_API = "/api/client-dashboard";
+    const REMEDIATION_API = "/api/client-submit-remediation";
 
     let dashboardData = null;
-    let lastNonDetailView = "reports-view";
+    let lastNonDetailView = "dashboard-view";
+    let currentIssueRecord = null;
 
     function formatDate(value) {
       if (!value) return "—";
@@ -845,10 +1095,7 @@
 
     function getInspectionStatusClass(value) {
       const normalized = String(value || "").toLowerCase().trim();
-      if (
-        normalized.includes("verified") ||
-        normalized.includes("premier")
-      ) {
+      if (normalized.includes("verified") || normalized.includes("premier")) {
         return "status-verified";
       }
       if (
@@ -864,6 +1111,7 @@
     function getIssueStatusClass(value) {
       const normalized = String(value || "").toLowerCase().trim();
       if (normalized === "resolved") return "status-resolved";
+      if (normalized === "remediation submitted") return "status-progress";
       if (normalized === "under review" || normalized === "sent to property") return "status-progress";
       if (normalized === "escalated" || normalized === "new") return "status-new";
       return "status-open";
@@ -885,10 +1133,17 @@
         target.classList.add("active");
       }
 
-      if (viewId !== "report-detail-view") {
+      if (viewId !== "report-detail-view" && viewId !== "issue-detail-view") {
         lastNonDetailView = viewId;
         setActiveNav(viewId);
       }
+    }
+
+    function showStatusBox(el, message, type) {
+      if (!el) return;
+      el.style.display = "block";
+      el.className = `status-box ${type || ""}`;
+      el.textContent = message;
     }
 
     function renderTopLevel(data) {
@@ -901,13 +1156,42 @@
       document.getElementById("property-name-card").textContent = property.property_name || "—";
       document.getElementById("property-type-card").textContent = property.property_type || "Property type unavailable";
       document.getElementById("total-rooms-card").textContent = summary.total_rooms ?? 0;
-      document.getElementById("active-issues-card").textContent = summary.total_active_issues ?? 0;
+      document.getElementById("awaiting-response-card").textContent = summary.total_awaiting_response ?? 0;
       document.getElementById("resolved-issues-card").textContent = summary.total_resolved_issues ?? 0;
       document.getElementById("property-location").textContent =
-        `${property.city || "—"}${property.city && property.state ? ", " : ""}${property.state || ""}` || "—";
+        `${property.city || "—"}${property.city && property.state ? ", " : ""}${property.state || ""}`;
       document.getElementById("property-type").textContent = property.property_type || "—";
       document.getElementById("latest-inspection-date").textContent = formatDate(summary.latest_inspection_date);
       document.getElementById("latest-inspection-room").textContent = summary.latest_inspection_room || "—";
+      document.getElementById("topbar-chip").textContent = property.property_name || "Property Access";
+    }
+
+    function renderDashboardIssues() {
+      const body = document.getElementById("dashboard-issues-body");
+      body.innerHTML = "";
+
+      const combined = [
+        ...(Array.isArray(dashboardData.awaiting_response) ? dashboardData.awaiting_response : []),
+        ...(Array.isArray(dashboardData.remediation_submitted) ? dashboardData.remediation_submitted : [])
+      ].slice(0, 6);
+
+      if (!combined.length) {
+        body.innerHTML = '<tr><td colspan="6">No active property-side issues to display.</td></tr>';
+        return;
+      }
+
+      body.innerHTML = combined.map(item => `
+        <tr>
+          <td>${escapeHtml(item.confirmation_number || "—")}</td>
+          <td>${escapeHtml(item.room_number || "—")}</td>
+          <td><span class="status-pill ${getIssueStatusClass(item.status)}">${escapeHtml(item.status || "—")}</span></td>
+          <td>${escapeHtml(item.priority || "Normal")}</td>
+          <td>${escapeHtml(formatDate(item.reported_at))}</td>
+          <td><button class="text-btn issue-open-btn" type="button" data-issue-id="${escapeHtml(item.id)}">Open</button></td>
+        </tr>
+      `).join("");
+
+      bindIssueButtons();
     }
 
     function renderRecentInspections(items) {
@@ -927,19 +1211,19 @@
           <td><span class="status-pill ${getInspectionStatusClass(item.certification_tier)}">${escapeHtml(item.certification_tier || "—")}</span></td>
           <td>${item.score ?? "—"}</td>
           <td>${escapeHtml(formatDate(item.created_at))}</td>
-          <td><button class="text-btn" type="button" data-report-id="${escapeHtml(item.id)}">View</button></td>
+          <td><button class="text-btn report-open-btn" type="button" data-report-id="${escapeHtml(item.id)}">View</button></td>
         </tr>
       `).join("");
 
       bindReportButtons();
     }
 
-    function renderActiveIssues(items) {
-      const body = document.getElementById("active-issues-body");
+    function renderAwaitingResponse(items) {
+      const body = document.getElementById("awaiting-response-body");
       body.innerHTML = "";
 
       if (!items.length) {
-        body.innerHTML = '<tr><td colspan="6">No active issues.</td></tr>';
+        body.innerHTML = '<tr><td colspan="7">No issues currently awaiting a property response.</td></tr>';
         return;
       }
 
@@ -951,8 +1235,34 @@
           <td>${escapeHtml(item.priority || "Normal")}</td>
           <td><span class="status-pill ${getIssueStatusClass(item.status)}">${escapeHtml(item.status || "—")}</span></td>
           <td>${escapeHtml(formatDate(item.reported_at))}</td>
+          <td><button class="text-btn issue-open-btn" type="button" data-issue-id="${escapeHtml(item.id)}">Open</button></td>
         </tr>
       `).join("");
+
+      bindIssueButtons();
+    }
+
+    function renderRemediationSubmitted(items) {
+      const body = document.getElementById("remediation-submitted-body");
+      body.innerHTML = "";
+
+      if (!items.length) {
+        body.innerHTML = '<tr><td colspan="6">No remediation responses awaiting review.</td></tr>';
+        return;
+      }
+
+      body.innerHTML = items.map(item => `
+        <tr>
+          <td>${escapeHtml(item.confirmation_number || "—")}</td>
+          <td>${escapeHtml(item.room_number || "—")}</td>
+          <td>${escapeHtml(Array.isArray(item.issue_types) ? item.issue_types.join(", ") : "—")}</td>
+          <td>${escapeHtml(item.resolved_by || "—")}</td>
+          <td><span class="status-pill ${getIssueStatusClass(item.status)}">${escapeHtml(item.status || "—")}</span></td>
+          <td><button class="text-btn issue-open-btn" type="button" data-issue-id="${escapeHtml(item.id)}">Open</button></td>
+        </tr>
+      `).join("");
+
+      bindIssueButtons();
     }
 
     function renderResolvedIssues(items) {
@@ -971,9 +1281,11 @@
           <td>${escapeHtml(Array.isArray(item.issue_types) ? item.issue_types.join(", ") : "—")}</td>
           <td><span class="status-pill status-resolved">${escapeHtml(item.status || "Resolved")}</span></td>
           <td>${escapeHtml(formatDate(item.reported_at))}</td>
-          <td><button class="text-btn" type="button">View</button></td>
+          <td><button class="text-btn issue-open-btn" type="button" data-issue-id="${escapeHtml(item.id)}">View</button></td>
         </tr>
       `).join("");
+
+      bindIssueButtons();
     }
 
     function renderQRRecords(items) {
@@ -1011,7 +1323,7 @@
           <td><span class="status-pill ${getInspectionStatusClass(item.certification_tier)}">${escapeHtml(item.certification_tier || "—")}</span></td>
           <td>${item.score ?? "—"}</td>
           <td>${escapeHtml(formatDate(item.created_at))}</td>
-          <td><button class="text-btn" type="button" data-report-id="${escapeHtml(item.id)}">Open</button></td>
+          <td><button class="text-btn report-open-btn" type="button" data-report-id="${escapeHtml(item.id)}">Open</button></td>
         </tr>
       `).join("");
 
@@ -1019,14 +1331,22 @@
     }
 
     function bindReportButtons() {
-      document.querySelectorAll("[data-report-id]").forEach(btn => {
+      document.querySelectorAll(".report-open-btn").forEach(btn => {
         btn.addEventListener("click", () => {
-          openReportById(btn.dataset.reportId);
+          openInspectionReportById(btn.dataset.reportId);
         });
       });
     }
 
-    function openReportById(reportId) {
+    function bindIssueButtons() {
+      document.querySelectorAll(".issue-open-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+          openIssueById(btn.dataset.issueId);
+        });
+      });
+    }
+
+    function openInspectionReportById(reportId) {
       if (!dashboardData || !Array.isArray(dashboardData.inspection_history)) return;
 
       const report = dashboardData.inspection_history.find(item => String(item.id) === String(reportId));
@@ -1060,6 +1380,126 @@
       goToView("report-detail-view");
     }
 
+    function getAllIssues() {
+      return [
+        ...(Array.isArray(dashboardData?.awaiting_response) ? dashboardData.awaiting_response : []),
+        ...(Array.isArray(dashboardData?.remediation_submitted) ? dashboardData.remediation_submitted : []),
+        ...(Array.isArray(dashboardData?.resolved_issues) ? dashboardData.resolved_issues : []),
+        ...(Array.isArray(dashboardData?.active_issues) ? dashboardData.active_issues : [])
+      ];
+    }
+
+    function openIssueById(issueId) {
+      const issue = getAllIssues().find(item => String(item.id) === String(issueId));
+      if (!issue) return;
+
+      currentIssueRecord = issue;
+
+      document.getElementById("issue-detail-title").textContent = `Guest Issue — Room ${issue.room_number || "—"}`;
+      document.getElementById("issue-detail-subtitle").textContent =
+        `${dashboardData.property?.property_name || "Property"} • Reference ${issue.confirmation_number || "—"}`;
+
+      const statusEl = document.getElementById("issue-detail-status");
+      statusEl.textContent = issue.status || "—";
+      statusEl.className = `status-pill ${getIssueStatusClass(issue.status)}`;
+
+      document.getElementById("issue-detail-reference").textContent = issue.confirmation_number || "—";
+      document.getElementById("issue-detail-room").textContent = issue.room_number || "—";
+      document.getElementById("issue-detail-priority").textContent = issue.priority || "Normal";
+      document.getElementById("issue-detail-reported-at").textContent = formatDate(issue.reported_at);
+      document.getElementById("issue-detail-verification").textContent = issue.verification_id || "—";
+      document.getElementById("issue-detail-status-text").textContent = issue.status || "—";
+      document.getElementById("issue-detail-types").textContent =
+        Array.isArray(issue.issue_types) && issue.issue_types.length
+          ? issue.issue_types.join(", ")
+          : "—";
+      document.getElementById("issue-detail-reservation-name").textContent =
+        issue.reservation_last_name || "—";
+      document.getElementById("issue-detail-note").textContent =
+        issue.guest_note || issue.details || "No guest note provided.";
+      document.getElementById("issue-detail-resolution-note").textContent =
+        issue.resolution_note || "No resolution submitted yet.";
+      document.getElementById("issue-detail-resolved-by").textContent =
+        issue.resolved_by || "—";
+      document.getElementById("issue-detail-resolved-at").textContent =
+        issue.resolved_at ? formatDate(issue.resolved_at) : "—";
+      document.getElementById("issue-detail-response-minutes").textContent =
+        issue.response_minutes ?? "—";
+
+      const photoWrap = document.getElementById("issue-detail-photo-wrap");
+      if (issue.photo_url) {
+        photoWrap.innerHTML = `
+          <a href="${escapeHtml(issue.photo_url)}" target="_blank" rel="noopener noreferrer">
+            <img class="evidence-image" src="${escapeHtml(issue.photo_url)}" alt="Issue evidence">
+          </a>
+        `;
+      } else {
+        photoWrap.innerHTML = `No photo evidence attached.`;
+      }
+
+      const noteInput = document.getElementById("resolution-note-input");
+      const resolvedByInput = document.getElementById("resolved-by-input");
+      const remediationStatus = document.getElementById("remediation-status-box");
+      remediationStatus.style.display = "none";
+      remediationStatus.textContent = "";
+      remediationStatus.className = "status-box";
+
+      noteInput.value = issue.resolution_note || "";
+      resolvedByInput.value = issue.resolved_by || "";
+
+      const canSubmitRemediation = !issue.resolved_at && issue.status !== "Resolved";
+      document.getElementById("remediation-form-block").style.display = canSubmitRemediation ? "block" : "none";
+
+      goToView("issue-detail-view");
+    }
+
+    async function submitRemediation() {
+      if (!currentIssueRecord) return;
+
+      const submitBtn = document.getElementById("submit-remediation-btn");
+      const note = document.getElementById("resolution-note-input").value.trim();
+      const resolvedBy = document.getElementById("resolved-by-input").value.trim();
+      const statusBox = document.getElementById("remediation-status-box");
+
+      if (!note) {
+        showStatusBox(statusBox, "Please enter a remediation note before submitting.", "error");
+        return;
+      }
+
+      submitBtn.disabled = true;
+      showStatusBox(statusBox, "Submitting remediation...", "");
+
+      try {
+        const res = await fetch(REMEDIATION_API, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json"
+          },
+          body: JSON.stringify({
+            report_id: currentIssueRecord.id,
+            property_slug: dashboardData?.property?.property_slug || PROPERTY_SLUG,
+            resolution_note: note,
+            resolved_by: resolvedBy || "Property"
+          })
+        });
+
+        const data = await res.json().catch(() => null);
+
+        if (!res.ok || data?.error) {
+          throw new Error(data?.error || "Failed to submit remediation.");
+        }
+
+        showStatusBox(statusBox, data?.message || "Remediation submitted successfully.", "success");
+        await loadDashboard();
+        openIssueById(currentIssueRecord.id);
+      } catch (error) {
+        showStatusBox(statusBox, error.message || "Failed to submit remediation.", "error");
+      } finally {
+        submitBtn.disabled = false;
+      }
+    }
+
     function showLoadError(message) {
       document.getElementById("portal-content").innerHTML = `
         <div class="section-card">
@@ -1076,13 +1516,14 @@
 
     async function loadDashboard() {
       try {
-        document.getElementById("portal-content").classList.add("loading");
+        const portalContent = document.getElementById("portal-content");
+        portalContent.classList.add("loading");
 
         if (!PROPERTY_SLUG || PROPERTY_SLUG === "your-property-slug") {
-          throw new Error("Set a real property_slug in the URL like ?property_slug=hilton-downtown or replace the fallback in dashboard.html.");
+          throw new Error("Set a real property_slug in the URL like ?property_slug=hotel-name or replace the fallback in dashboard.html.");
         }
 
-        const res = await fetch(`${API_BASE}?property_slug=${encodeURIComponent(PROPERTY_SLUG)}`, {
+        const res = await fetch(`${DASHBOARD_API}?property_slug=${encodeURIComponent(PROPERTY_SLUG)}`, {
           method: "GET",
           headers: {
             "Accept": "application/json"
@@ -1098,8 +1539,10 @@
         dashboardData = data;
 
         renderTopLevel(data);
+        renderDashboardIssues();
         renderRecentInspections(Array.isArray(data.inspection_history) ? data.inspection_history : []);
-        renderActiveIssues(Array.isArray(data.active_issues) ? data.active_issues : []);
+        renderAwaitingResponse(Array.isArray(data.awaiting_response) ? data.awaiting_response : []);
+        renderRemediationSubmitted(Array.isArray(data.remediation_submitted) ? data.remediation_submitted : []);
         renderResolvedIssues(Array.isArray(data.resolved_issues) ? data.resolved_issues : []);
         renderQRRecords(Array.isArray(data.qr_records) ? data.qr_records : []);
         renderReports(Array.isArray(data.inspection_history) ? data.inspection_history : []);
@@ -1121,6 +1564,20 @@
 
     document.getElementById("report-back-btn").addEventListener("click", () => {
       goToView(lastNonDetailView || "reports-view");
+    });
+
+    document.getElementById("issue-back-btn").addEventListener("click", () => {
+      goToView(lastNonDetailView || "issues-view");
+    });
+
+    document.getElementById("refresh-btn").addEventListener("click", () => {
+      loadDashboard();
+    });
+
+    document.getElementById("submit-remediation-btn").addEventListener("click", submitRemediation);
+
+    document.getElementById("cancel-remediation-btn").addEventListener("click", () => {
+      goToView(lastNonDetailView || "issues-view");
     });
 
     loadDashboard();
