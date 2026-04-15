@@ -268,20 +268,25 @@ export default async function handler(req, res) {
 
       const contact = Array.isArray(contactData) ? contactData[0] : null;
 
+      if (send_email_notification && !contact?.email) {
+  return res.status(404).json({
+    error: "No valid property contact email found"
+  });
+}
       if (contact?.email) {
-        await sendPortalNotificationEmail({
-          resendApiKey,
-          resendFromEmail,
-          to: contact.email,
-          contactName: contact.name || "",
-          propertyName: property.property_name || report.property_name || "",
-          roomNumber: report.room_number || "",
-          referenceNumber: report.confirmation_number || ""
-          propertySlug: report.property_slug
-        });
+  await sendPortalNotificationEmail({
+    resendApiKey,
+    resendFromEmail,
+    to: contact.email,
+    contactName: contact.name || "",
+    propertyName: property.property_name || report.property_name || "",
+    roomNumber: report.room_number || "",
+    referenceNumber: report.confirmation_number || "",
+    propertySlug: report.property_slug
+  });
 
-        notifiedEmail = contact.email;
-      }
+  notifiedEmail = contact.email;
+}
     }
 
     return res.status(200).json({
