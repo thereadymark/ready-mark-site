@@ -1,6 +1,11 @@
 import crypto from "crypto";
 import { Resend } from "resend";
 
+const MAX_FAILED_LOGIN_ATTEMPTS = 5;
+const LOGIN_LOCK_MINUTES = 15;
+const VERIFICATION_CODE_MINUTES = 10;
+const SESSION_DAYS = 30;
+
 function hashPassword(password) {
   return crypto.createHash("sha256").update(password).digest("hex");
 }
@@ -45,7 +50,7 @@ async function sendVerificationEmail(resend, email, code) {
           </div>
 
           <p style="margin-top:10px; font-size:13px; color:#958d82;">
-            This code expires in 10 minutes.
+            This code expires in ${VERIFICATION_CODE_MINUTES} minutes.
           </p>
         </div>
       </div>
@@ -55,7 +60,7 @@ async function sendVerificationEmail(resend, email, code) {
 
 async function createGuestSession(supabaseUrl, serviceRoleKey, user) {
   const sessionToken = generateSessionToken();
-  const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+  const expiresAt = new Date(Date.now() + SESSION_DAYS * 24 * 60 * 60 * 1000).toISOString();
 
   const sessionPayload = {
     guest_user_id: user.id,
@@ -90,6 +95,36 @@ async function createGuestSession(supabaseUrl, serviceRoleKey, user) {
     expires_at: expiresAt,
     session: Array.isArray(sessionData) ? sessionData[0] : sessionData
   };
+}
+
+async function patchGuestUser(supabaseUrl, serviceRoleKey, userId, payload) {
+  const patchRes = await fetch(
+    `${supabaseUrl}/rest/v1/guest_users?id=eq.${encodeURIComponent(userId)}`,
+    {
+      method: "PATCH",
+      headers: {
+        apikey: serviceRoleKey,
+        Authorization: `Bearer ${serviceRoleKey}`,
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        Prefer: "return=representation"
+      },
+      body: JSON.stringify(payload)
+    }
+  );
+
+  const patchData = await patchRes.json().catch(() => null);
+
+  if (!patchRes.ok) {
+    throw new Error(
+      patchData?.message ||
+      patchData?.error ||
+      patchData?.details ||
+      "Failed to update guest user"
+    );
+  }
+
+  return Array.isArray(patchData) ? patchData[0] : patchData;
 }
 
 export default async function handler(req, res) {
@@ -134,7 +169,7 @@ export default async function handler(req, res) {
 
     const resend = new Resend(resendApiKey);
     const normalizedEmail = String(email).trim().toLowerCase();
-    const password_hash = hashPassword(password);
+    const passwordHash = hashPassword(password);
 
     const headers = {
       apikey: serviceRoleKey,
@@ -143,7 +178,7 @@ export default async function handler(req, res) {
     };
 
     const userRes = await fetch(
-      `${supabaseUrl}/rest/v1/guest_users?email=eq.${encodeURIComponent(normalizedEmail)}&select=id,first_name,last_name,email,email_verified,password_hash&limit=1`,
+      `${supabaseUrl}/rest/v1/guest_users?email=eq.${encodeURIComponent(normalizedEmail)}&select=id,first_name,last_name,email,email_verified,password_hash,failed_login_attempts,login_locked_until&limit=1`,
       { headers }
     );
 
@@ -158,9 +193,51 @@ export default async function handler(req, res) {
 
     const user = Array.isArray(userData) && userData.length > 0 ? userData[0] : null;
 
-    if (!user || user.password_hash !== password_hash) {
+    if (!user) {
       return res.status(401).json({ error: "Invalid email or password" });
     }
+
+    const lockedUntilMs = user.login_locked_until
+      ? new Date(user.login_locked_until).getTime()
+      : NaN;
+
+    const isLocked =
+      user.login_locked_until &&
+      !Number.isNaN(lockedUntilMs) &&
+      lockedUntilMs > Date.now();
+
+    if (isLocked) {
+      return res.status(429).json({
+        error: "Too many failed login attempts. Please try again later."
+      });
+    }
+
+    const currentFailedAttempts = Number(user.failed_login_attempts || 0);
+    const passwordMatches = user.password_hash === passwordHash;
+
+    if (!passwordMatches) {
+      const nextFailedAttempts = currentFailedAttempts + 1;
+      const shouldLock = nextFailedAttempts >= MAX_FAILED_LOGIN_ATTEMPTS;
+      const loginLockedUntil = shouldLock
+        ? new Date(Date.now() + LOGIN_LOCK_MINUTES * 60 * 1000).toISOString()
+        : null;
+
+      await patchGuestUser(supabaseUrl, serviceRoleKey, user.id, {
+        failed_login_attempts: nextFailedAttempts,
+        login_locked_until: loginLockedUntil
+      });
+
+      return res.status(401).json({
+        error: shouldLock
+          ? "Too many failed login attempts. Please try again later."
+          : "Invalid email or password"
+      });
+    }
+
+    await patchGuestUser(supabaseUrl, serviceRoleKey, user.id, {
+      failed_login_attempts: 0,
+      login_locked_until: null
+    });
 
     if (user.email_verified) {
       const guestSession = await createGuestSession(supabaseUrl, serviceRoleKey, user);
@@ -182,31 +259,14 @@ export default async function handler(req, res) {
     }
 
     const verificationCode = generateVerificationCode();
-    const verificationExpiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
+    const verificationExpiresAt = new Date(
+      Date.now() + VERIFICATION_CODE_MINUTES * 60 * 1000
+    ).toISOString();
 
-    const patchRes = await fetch(
-      `${supabaseUrl}/rest/v1/guest_users?id=eq.${encodeURIComponent(user.id)}`,
-      {
-        method: "PATCH",
-        headers: {
-          ...headers,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          email_verification_code: verificationCode,
-          email_verification_expires_at: verificationExpiresAt
-        })
-      }
-    );
-
-    const patchText = await patchRes.text();
-
-    if (!patchRes.ok) {
-      return res.status(500).json({
-        error: "Failed to prepare verification code",
-        details: patchText
-      });
-    }
+    await patchGuestUser(supabaseUrl, serviceRoleKey, user.id, {
+      email_verification_code: verificationCode,
+      email_verification_expires_at: verificationExpiresAt
+    });
 
     await sendVerificationEmail(resend, normalizedEmail, verificationCode);
 
