@@ -31,7 +31,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { report_id, status } = req.body || {};
+    const { report_id, status, admin_name } = req.body || {};
 
     if (!report_id || !status) {
       return res.status(400).json({ error: "Missing report_id or status" });
@@ -44,6 +44,8 @@ export default async function handler(req, res) {
       "Escalated",
       "Resolved by Property",
       "Confirmed with Guest",
+      "Remediation Submitted",
+      "Resolved",
       "Fully Resolved"
     ];
 
@@ -68,7 +70,7 @@ export default async function handler(req, res) {
     };
 
     const existingRes = await fetch(
-      `${supabaseUrl}/rest/v1/guest_reports?id=eq.${encodeURIComponent(report_id)}&select=id,status&limit=1`,
+      `${supabaseUrl}/rest/v1/guest_reports?id=eq.${encodeURIComponent(report_id)}&select=id,status,verification_status,resolved_at,verified_at,guest_confirmation_status,remediation_submitted_at&limit=1`,
       { headers }
     );
 
@@ -87,6 +89,62 @@ export default async function handler(req, res) {
       return res.status(404).json({ error: "Guest report not found" });
     }
 
+    const now = new Date().toISOString();
+    const verifiedBy = String(admin_name || "Ready Mark").trim();
+
+    let updatePayload = {
+      status
+    };
+
+    if (status === "Under Review") {
+      updatePayload = {
+        ...updatePayload
+      };
+    }
+
+    if (status === "Escalated") {
+      updatePayload = {
+        ...updatePayload
+      };
+    }
+
+    if (status === "Sent to Property") {
+      updatePayload = {
+        ...updatePayload
+      };
+    }
+
+    if (status === "Resolved by Property" || status === "Remediation Submitted") {
+      updatePayload = {
+        ...updatePayload,
+        status: "Remediation Submitted",
+        verification_status: "pending",
+        remediation_submitted_at: existingReport.remediation_submitted_at || now,
+        resolved_at: null,
+        verified_at: null,
+        verified_by: null
+      };
+    }
+
+    if (status === "Confirmed with Guest") {
+      updatePayload = {
+        ...updatePayload,
+        guest_confirmation_status: "satisfied",
+        guest_confirmed_at: now
+      };
+    }
+
+    if (status === "Fully Resolved" || status === "Resolved") {
+      updatePayload = {
+        ...updatePayload,
+        status: "Resolved",
+        verification_status: "approved",
+        verified_at: now,
+        verified_by: verifiedBy,
+        resolved_at: now
+      };
+    }
+
     const patchRes = await fetch(
       `${supabaseUrl}/rest/v1/guest_reports?id=eq.${encodeURIComponent(report_id)}`,
       {
@@ -97,7 +155,7 @@ export default async function handler(req, res) {
           "Content-Type": "application/json",
           Prefer: "return=representation"
         },
-        body: JSON.stringify({ status })
+        body: JSON.stringify(updatePayload)
       }
     );
 
@@ -114,7 +172,9 @@ export default async function handler(req, res) {
 
     return res.status(200).json({
       success: true,
-      report: updatedReport
+      report: updatedReport,
+      applied_status: status,
+      stored_status: updatedReport?.status || status
     });
   } catch (error) {
     return res.status(500).json({
