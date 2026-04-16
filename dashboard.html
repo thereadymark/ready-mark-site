@@ -1044,9 +1044,8 @@
   </div>
 
   <div class="button-row">
-    <button id="submit-remediation-btn" class="btn btn-primary" type="button">Submit Remediation</button>
+   <button id="report-remediation-btn" class="btn btn-primary" type="button">Submit Remediation</button> 
   </div>
-
   <div id="remediation-status" class="status-box" style="display:none;margin-top:14px;"></div>
 </div>
             
@@ -1107,6 +1106,34 @@
       return date.toLocaleString();
     }
 
+
+function minutesBetween(startValue, endValue) {
+  if (!startValue || !endValue) return null;
+
+  const start = new Date(startValue).getTime();
+  const end = new Date(endValue).getTime();
+
+  if (Number.isNaN(start) || Number.isNaN(end) || end < start) return null;
+
+  return Math.round((end - start) / 60000);
+}
+
+function formatMinutesLabel(totalMinutes) {
+  if (totalMinutes === null || totalMinutes === undefined) return "—";
+
+  if (totalMinutes < 60) {
+    return `${totalMinutes} min`;
+  }
+
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+
+  if (minutes === 0) {
+    return `${hours} hr`;
+  }
+
+  return `${hours} hr ${minutes} min`;
+}
     function escapeHtml(value) {
       return String(value ?? "")
         .replace(/&/g, "&amp;")
@@ -1190,32 +1217,60 @@
     }
 
     function renderDashboardIssues() {
-      const body = document.getElementById("dashboard-issues-body");
-      body.innerHTML = "";
+  const body = document.getElementById("dashboard-issues-body");
+  body.innerHTML = "";
 
-      const combined = [
-        ...(Array.isArray(dashboardData.awaiting_response) ? dashboardData.awaiting_response : []),
-        ...(Array.isArray(dashboardData.remediation_submitted) ? dashboardData.remediation_submitted : [])
-      ].slice(0, 6);
+  const combined = [
+    ...(Array.isArray(dashboardData.awaiting_response) ? dashboardData.awaiting_response : []),
+    ...(Array.isArray(dashboardData.remediation_submitted) ? dashboardData.remediation_submitted : [])
+  ].slice(0, 6);
 
-      if (!combined.length) {
-        body.innerHTML = '<tr><td colspan="6">No active property-side issues to display.</td></tr>';
-        return;
-      }
+  if (!combined.length) {
+    body.innerHTML = '<tr><td colspan="6">No active property-side issues to display.</td></tr>';
+    return;
+  }
 
-      body.innerHTML = combined.map(item => `
-        <tr>
-          <td>${escapeHtml(item.confirmation_number || "—")}</td>
-          <td>${escapeHtml(item.room_number || "—")}</td>
-          <td><span class="status-pill ${getIssueStatusClass(item.status)}">${escapeHtml(item.status || "—")}</span></td>
-          <td>${escapeHtml(item.priority || "Normal")}</td>
-          <td>${escapeHtml(formatDate(item.reported_at))}</td>
-          <td><button class="text-btn issue-open-btn" type="button" data-issue-id="${escapeHtml(item.id)}">Open</button></td>
-        </tr>
-      `).join("");
+  body.innerHTML = combined.map(item => {
+    const timeToProperty = minutesBetween(item.reported_at, item.hotel_notified_at);
+    const timeToRemediation = minutesBetween(item.hotel_notified_at, item.remediation_submitted_at);
+    const openFor = minutesBetween(item.reported_at, new Date().toISOString());
 
-      bindIssueButtons();
-    }
+    return `
+      <tr>
+        <td>
+          ${escapeHtml(item.confirmation_number || "—")}
+          <div class="report-meta">
+            ${item.verification_id ? `Verification: ${escapeHtml(item.verification_id)}` : ""}
+          </div>
+        </td>
+        <td>${escapeHtml(item.room_number || "—")}</td>
+        <td>
+          <span class="status-pill ${getIssueStatusClass(item.status)}">${escapeHtml(item.status || "—")}</span>
+          <div class="report-meta">
+            ${item.reported_at ? `Reported: ${escapeHtml(formatDate(item.reported_at))}<br>` : ""}
+            ${item.hotel_notified_at ? `Sent to Property: ${escapeHtml(formatDate(item.hotel_notified_at))}<br>` : ""}
+            ${item.under_review_at ? `Under Review: ${escapeHtml(formatDate(item.under_review_at))}<br>` : ""}
+            ${item.escalated_at ? `Escalated: ${escapeHtml(formatDate(item.escalated_at))}<br>` : ""}
+            ${item.remediation_submitted_at ? `Remediation Submitted: ${escapeHtml(formatDate(item.remediation_submitted_at))}<br>` : ""}
+            ${item.guest_confirmed_at ? `Guest Confirmed: ${escapeHtml(formatDate(item.guest_confirmed_at))}` : ""}
+          </div>
+        </td>
+        <td>
+          ${escapeHtml(item.priority || "Normal")}
+          <div class="report-meta">
+            ${timeToProperty !== null ? `To Property: ${escapeHtml(formatMinutesLabel(timeToProperty))}<br>` : ""}
+            ${timeToRemediation !== null ? `To Remediation: ${escapeHtml(formatMinutesLabel(timeToRemediation))}<br>` : ""}
+            Open For: ${escapeHtml(formatMinutesLabel(openFor))}
+          </div>
+        </td>
+        <td>${escapeHtml(formatDate(item.reported_at))}</td>
+        <td><button class="text-btn issue-open-btn" type="button" data-issue-id="${escapeHtml(item.id)}">Open</button></td>
+      </tr>
+    `;
+  }).join("");
+
+  bindIssueButtons();
+}
 
     function renderRecentInspections(items) {
       const body = document.getElementById("recent-inspection-body");
@@ -1241,76 +1296,152 @@
       bindReportButtons();
     }
 
-    function renderAwaitingResponse(items) {
-      const body = document.getElementById("awaiting-response-body");
-      body.innerHTML = "";
+function renderAwaitingResponse(items) {
+  const body = document.getElementById("awaiting-response-body");
+  body.innerHTML = "";
 
-      if (!items.length) {
-        body.innerHTML = '<tr><td colspan="7">No issues currently awaiting a property response.</td></tr>';
-        return;
-      }
+  if (!items.length) {
+    body.innerHTML = '<tr><td colspan="7">No issues currently awaiting a property response.</td></tr>';
+    return;
+  }
 
-      body.innerHTML = items.map(item => `
-        <tr>
-          <td>${escapeHtml(item.confirmation_number || "—")}</td>
-          <td>${escapeHtml(item.room_number || "—")}</td>
-          <td>${escapeHtml(Array.isArray(item.issue_types) ? item.issue_types.join(", ") : "—")}</td>
-          <td>${escapeHtml(item.priority || "Normal")}</td>
-          <td><span class="status-pill ${getIssueStatusClass(item.status)}">${escapeHtml(item.status || "—")}</span></td>
-          <td>${escapeHtml(formatDate(item.reported_at))}</td>
-          <td><button class="text-btn issue-open-btn" type="button" data-issue-id="${escapeHtml(item.id)}">Open</button></td>
-        </tr>
-      `).join("");
+  body.innerHTML = items.map(item => {
+    const timeToProperty = minutesBetween(item.reported_at, item.hotel_notified_at);
+    const openFor = minutesBetween(item.reported_at, new Date().toISOString());
 
-      bindIssueButtons();
-    }
+    return `
+      <tr>
+        <td>
+          ${escapeHtml(item.confirmation_number || "—")}
+          <div class="report-meta">
+            ${item.verification_id ? `Verification: ${escapeHtml(item.verification_id)}` : ""}
+          </div>
+        </td>
+        <td>${escapeHtml(item.room_number || "—")}</td>
+        <td>
+          ${escapeHtml(Array.isArray(item.issue_types) ? item.issue_types.join(", ") : "—")}
+          <div class="report-meta">
+            ${item.reported_at ? `Reported: ${escapeHtml(formatDate(item.reported_at))}<br>` : ""}
+            ${item.hotel_notified_at ? `Sent to Property: ${escapeHtml(formatDate(item.hotel_notified_at))}<br>` : ""}
+            ${item.under_review_at ? `Under Review: ${escapeHtml(formatDate(item.under_review_at))}<br>` : ""}
+            ${item.escalated_at ? `Escalated: ${escapeHtml(formatDate(item.escalated_at))}` : ""}
+          </div>
+        </td>
+        <td>
+          ${escapeHtml(item.priority || "Normal")}
+          <div class="report-meta">
+            ${timeToProperty !== null ? `To Property: ${escapeHtml(formatMinutesLabel(timeToProperty))}<br>` : ""}
+            Open For: ${escapeHtml(formatMinutesLabel(openFor))}
+          </div>
+        </td>
+        <td><span class="status-pill ${getIssueStatusClass(item.status)}">${escapeHtml(item.status || "—")}</span></td>
+        <td>${escapeHtml(formatDate(item.reported_at))}</td>
+        <td><button class="text-btn issue-open-btn" type="button" data-issue-id="${escapeHtml(item.id)}">Open</button></td>
+      </tr>
+    `;
+  }).join("");
+
+  bindIssueButtons();
+}
 
     function renderRemediationSubmitted(items) {
-      const body = document.getElementById("remediation-submitted-body");
-      body.innerHTML = "";
+  const body = document.getElementById("remediation-submitted-body");
+  body.innerHTML = "";
 
-      if (!items.length) {
-        body.innerHTML = '<tr><td colspan="6">No remediation responses awaiting review.</td></tr>';
-        return;
-      }
+  if (!items.length) {
+    body.innerHTML = '<tr><td colspan="6">No remediation responses awaiting review.</td></tr>';
+    return;
+  }
 
-      body.innerHTML = items.map(item => `
-        <tr>
-          <td>${escapeHtml(item.confirmation_number || "—")}</td>
-          <td>${escapeHtml(item.room_number || "—")}</td>
-          <td>${escapeHtml(Array.isArray(item.issue_types) ? item.issue_types.join(", ") : "—")}</td>
-          <td>${escapeHtml(item.resolved_by || "—")}</td>
-          <td><span class="status-pill ${getIssueStatusClass(item.status)}">${escapeHtml(item.status || "—")}</span></td>
-          <td><button class="text-btn issue-open-btn" type="button" data-issue-id="${escapeHtml(item.id)}">Open</button></td>
-        </tr>
-      `).join("");
+  body.innerHTML = items.map(item => {
+    const timeToProperty = minutesBetween(item.reported_at, item.hotel_notified_at);
+    const timeToRemediation = minutesBetween(item.hotel_notified_at, item.remediation_submitted_at);
+    const openFor = minutesBetween(item.reported_at, new Date().toISOString());
 
-      bindIssueButtons();
-    }
+    return `
+      <tr>
+        <td>
+          ${escapeHtml(item.confirmation_number || "—")}
+          <div class="report-meta">
+            ${item.verification_id ? `Verification: ${escapeHtml(item.verification_id)}` : ""}
+          </div>
+        </td>
+        <td>${escapeHtml(item.room_number || "—")}</td>
+        <td>
+          ${escapeHtml(Array.isArray(item.issue_types) ? item.issue_types.join(", ") : "—")}
+          <div class="report-meta">
+            ${item.reported_at ? `Reported: ${escapeHtml(formatDate(item.reported_at))}<br>` : ""}
+            ${item.hotel_notified_at ? `Sent to Property: ${escapeHtml(formatDate(item.hotel_notified_at))}<br>` : ""}
+            ${item.remediation_submitted_at ? `Remediation Submitted: ${escapeHtml(formatDate(item.remediation_submitted_at))}<br>` : ""}
+            ${item.guest_confirmed_at ? `Guest Confirmed: ${escapeHtml(formatDate(item.guest_confirmed_at))}` : ""}
+          </div>
+        </td>
+        <td>
+          ${escapeHtml(item.resolved_by || "—")}
+          <div class="report-meta">
+            ${timeToProperty !== null ? `To Property: ${escapeHtml(formatMinutesLabel(timeToProperty))}<br>` : ""}
+            ${timeToRemediation !== null ? `To Remediation: ${escapeHtml(formatMinutesLabel(timeToRemediation))}<br>` : ""}
+            Open For: ${escapeHtml(formatMinutesLabel(openFor))}
+          </div>
+        </td>
+        <td><span class="status-pill ${getIssueStatusClass(item.status)}">${escapeHtml(item.status || "—")}</span></td>
+        <td><button class="text-btn issue-open-btn" type="button" data-issue-id="${escapeHtml(item.id)}">Open</button></td>
+      </tr>
+    `;
+  }).join("");
 
+  bindIssueButtons();
+}
+    
     function renderResolvedIssues(items) {
-      const body = document.getElementById("resolved-issues-body");
-      body.innerHTML = "";
+  const body = document.getElementById("resolved-issues-body");
+  body.innerHTML = "";
 
-      if (!items.length) {
-        body.innerHTML = '<tr><td colspan="6">No resolved issues yet.</td></tr>';
-        return;
-      }
+  if (!items.length) {
+    body.innerHTML = '<tr><td colspan="6">No resolved issues yet.</td></tr>';
+    return;
+  }
 
-      body.innerHTML = items.map(item => `
-        <tr>
-          <td>${escapeHtml(item.confirmation_number || "—")}</td>
-          <td>${escapeHtml(item.room_number || "—")}</td>
-          <td>${escapeHtml(Array.isArray(item.issue_types) ? item.issue_types.join(", ") : "—")}</td>
-          <td><span class="status-pill status-resolved">${escapeHtml(item.status || "Resolved")}</span></td>
-          <td>${escapeHtml(formatDate(item.reported_at))}</td>
-          <td><button class="text-btn issue-open-btn" type="button" data-issue-id="${escapeHtml(item.id)}">View</button></td>
-        </tr>
-      `).join("");
+  body.innerHTML = items.map(item => {
+    const timeToProperty = minutesBetween(item.reported_at, item.hotel_notified_at);
+    const timeToRemediation = minutesBetween(item.hotel_notified_at, item.remediation_submitted_at);
+    const totalResolutionTime = minutesBetween(item.reported_at, item.resolved_at);
 
-      bindIssueButtons();
-    }
+    return `
+      <tr>
+        <td>
+          ${escapeHtml(item.confirmation_number || "—")}
+          <div class="report-meta">
+            ${item.verification_id ? `Verification: ${escapeHtml(item.verification_id)}` : ""}
+          </div>
+        </td>
+        <td>${escapeHtml(item.room_number || "—")}</td>
+        <td>
+          ${escapeHtml(Array.isArray(item.issue_types) ? item.issue_types.join(", ") : "—")}
+          <div class="report-meta">
+            Reported: ${escapeHtml(formatDate(item.reported_at))}<br>
+            ${item.hotel_notified_at ? `Sent to Property: ${escapeHtml(formatDate(item.hotel_notified_at))}<br>` : ""}
+            ${item.remediation_submitted_at ? `Remediation Submitted: ${escapeHtml(formatDate(item.remediation_submitted_at))}<br>` : ""}
+            ${item.guest_confirmed_at ? `Guest Confirmed: ${escapeHtml(formatDate(item.guest_confirmed_at))}<br>` : ""}
+            ${item.resolved_at ? `Resolved: ${escapeHtml(formatDate(item.resolved_at))}` : ""}
+          </div>
+        </td>
+        <td>
+          <span class="status-pill status-resolved">${escapeHtml(item.status || "Resolved")}</span>
+          <div class="report-meta">
+            ${timeToProperty !== null ? `To Property: ${escapeHtml(formatMinutesLabel(timeToProperty))}<br>` : ""}
+            ${timeToRemediation !== null ? `To Remediation: ${escapeHtml(formatMinutesLabel(timeToRemediation))}<br>` : ""}
+            ${totalResolutionTime !== null ? `Total Resolution: ${escapeHtml(formatMinutesLabel(totalResolutionTime))}` : ""}
+          </div>
+        </td>
+        <td>${escapeHtml(formatDate(item.reported_at))}</td>
+        <td><button class="text-btn issue-open-btn" type="button" data-issue-id="${escapeHtml(item.id)}">View</button></td>
+      </tr>
+    `;
+  }).join("");
 
+  bindIssueButtons();
+}
     function renderQRRecords(items) {
       const body = document.getElementById("qr-records-body");
       body.innerHTML = "";
