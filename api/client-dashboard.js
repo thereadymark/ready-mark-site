@@ -145,27 +145,35 @@ export default async function handler(req, res) {
 
     const { data: guestReports, error: guestReportsError } = await supabase
       .from("guest_reports")
-      .select(`
-        id,
-        confirmation_number,
-        verification_id,
-        property_slug,
-        property_name,
-        room_number,
-        issue_types,
-        guest_note,
-        details,
-        photo_url,
-        status,
-        priority,
-        reported_at,
-        hotel_notified_at,
-        resolution_note,
-        resolved_by,
-        resolved_at,
-        response_minutes,
-        reservation_last_name
-      `)
+.select(`
+  id,
+  confirmation_number,
+  verification_id,
+  property_slug,
+  property_name,
+  room_number,
+  issue_types,
+  guest_note,
+  details,
+  photo_url,
+  status,
+  priority,
+  reported_at,
+  hotel_notified_at,
+  under_review_at,
+  escalated_at,
+  remediation_submitted_at,
+  resolution_note,
+  resolved_by,
+  resolved_at,
+  guest_confirmation_status,
+  guest_confirmed_at,
+  verification_status,
+  verified_at,
+  verified_by,
+  response_minutes,
+  reservation_last_name
+`)
       .eq("property_slug", normalizedPropertySlug)
       .not("hotel_notified_at", "is", null)
       .order("reported_at", { ascending: false });
