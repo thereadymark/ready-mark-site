@@ -69,10 +69,10 @@ export default async function handler(req, res) {
       `?select=id,room_id,created_at,inspector_id,score,certification_tier,verification_id,notes,is_current,photo_url,log_file_url` +
       `&order=created_at.desc.nullslast`;
 
-    const reportsUrl =
-      `${supabaseUrl}/rest/v1/guest_reports` +
-      `?select=id,verification_id,confirmation_number,property_slug,property_name,room_number,issue_types,guest_note,details,photo_url,status,priority,reported_at,guest_email,guest_first_name,guest_last_name` +
-      `&order=reported_at.desc.nullslast`;
+  const reportsUrl =
+  `${supabaseUrl}/rest/v1/guest_reports` +
+  `?select=id,verification_id,confirmation_number,property_slug,property_name,room_number,issue_types,guest_note,details,photo_url,status,priority,reported_at,guest_email,guest_first_name,guest_last_name,hotel_notified_at,readymark_notified_at,under_review_at,escalated_at,remediation_submitted_at,guest_confirmation_status,guest_confirmed_at,verification_status,verified_at,verified_by,resolved_at,resolution_note,response_minutes` +
+  `&order=reported_at.desc.nullslast`;
 
     const [propertiesRes, roomsRes, inspectionsRes, reportsRes] = await Promise.all([
       fetch(propertiesUrl, { headers }),
