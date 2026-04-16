@@ -657,6 +657,14 @@
             </div>
           </div>
 
+          <div id="no-issues-banner" class="section-card" style="display:none;">
+  <div class="section-body" style="text-align:center;">
+    <h3 style="margin:0 0 8px;">No Active Guest Issues</h3>
+    <p style="margin:0;color:var(--muted);">
+      All reported issues have been resolved. Avg resolution time: <span id="banner-resolution-time">—</span>.   
+    </p>
+  </div>
+</div>
           <div class="section-card">
             <div class="section-header">
               <h2>Property Overview</h2>
@@ -1187,7 +1195,15 @@ function setText(id, value) {
   setText("latest-inspection-room", summary.latest_inspection_room || "—");
   setText("topbar-chip", property.property_name || "Property Access");
 }
+    const banner = document.getElementById("no-issues-banner");
 
+if (banner) {
+  if ((metrics.openIssues ?? 0) === 0) {
+    banner.style.display = "block";
+  } else {
+    banner.style.display = "none";
+  }
+}
     function renderDashboardIssues() {
       const body = document.getElementById("dashboard-issues-body");
       body.innerHTML = "";
@@ -1202,6 +1218,14 @@ function setText(id, value) {
         return;
       }
 
+      const bannerTime = document.getElementById("banner-resolution-time");
+
+if (bannerTime) {
+  bannerTime.textContent =
+    metrics.avgResolution !== null
+      ? formatMinutesLabel(metrics.avgResolution)
+      : "—";
+}
       body.innerHTML = combined.map(item => {
         const timeToProperty = minutesBetween(item.reported_at, item.hotel_notified_at);
         const timeToRemediation = minutesBetween(item.hotel_notified_at, item.remediation_submitted_at);
