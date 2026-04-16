@@ -70,7 +70,7 @@ export default async function handler(req, res) {
     };
 
     const existingRes = await fetch(
-      `${supabaseUrl}/rest/v1/guest_reports?id=eq.${encodeURIComponent(report_id)}&select=id,status,verification_status,resolved_at,verified_at,guest_confirmation_status,remediation_submitted_at&limit=1`,
+      `${supabaseUrl}/rest/v1/guest_reports?id=eq.${encodeURIComponent(report_id)}&select=id,status,verification_status,resolved_at,verified_at,guest_confirmation_status,remediation_submitted_at,under_review_at,escalated_at&limit=1`,
       { headers }
     );
 
@@ -98,13 +98,15 @@ export default async function handler(req, res) {
 
     if (status === "Under Review") {
       updatePayload = {
-        ...updatePayload
+        ...updatePayload,
+        under_review_at: existingReport.under_review_at || now
       };
     }
 
     if (status === "Escalated") {
       updatePayload = {
-        ...updatePayload
+        ...updatePayload,
+        escalated_at: existingReport.escalated_at || now
       };
     }
 
