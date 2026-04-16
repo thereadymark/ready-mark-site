@@ -1194,16 +1194,21 @@ function setText(id, value) {
   setText("latest-inspection-date", formatDate(summary.latest_inspection_date));
   setText("latest-inspection-room", summary.latest_inspection_room || "—");
   setText("topbar-chip", property.property_name || "Property Access");
-}
-    const banner = document.getElementById("no-issues-banner");
 
-if (banner) {
-  if ((metrics.openIssues ?? 0) === 0) {
-    banner.style.display = "block";
-  } else {
-    banner.style.display = "none";
+    const banner = document.getElementById("no-issues-banner");
+  const bannerTime = document.getElementById("banner-resolution-time");
+
+  if (banner) {
+    banner.style.display = (metrics.openIssues ?? 0) === 0 ? "block" : "none";
   }
-}
+
+  if (bannerTime) {
+    bannerTime.textContent =
+      metrics.avgResolution !== null
+        ? formatMinutesLabel(metrics.avgResolution)
+        : "—";
+  }
+  } 
     function renderDashboardIssues() {
       const body = document.getElementById("dashboard-issues-body");
       body.innerHTML = "";
