@@ -18,13 +18,11 @@
       --success: #2f8f57;
       --warning: #c98a2b;
       --danger: #b44c4c;
-      --shadow: 0 12px 34px rgba(0, 0, 0, 0.05);
+      --shadow: 0 12px 34px rgba(0,0,0,0.05);
       --radius: 18px;
     }
 
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     html, body {
       margin: 0;
@@ -34,9 +32,7 @@
       font-family: "Lato", sans-serif;
     }
 
-    body {
-      display: flex;
-    }
+    body { display: flex; }
 
     .app-shell {
       display: flex;
@@ -46,7 +42,7 @@
 
     .sidebar {
       width: 260px;
-      background: #ffffff;
+      background: #fff;
       border-right: 1px solid var(--line);
       padding: 28px 20px;
       display: flex;
@@ -66,7 +62,6 @@
       font-family: "Cinzel", serif;
       font-size: 22px;
       line-height: 1.1;
-      letter-spacing: 0.5px;
     }
 
     .brand-subtitle {
@@ -104,7 +99,6 @@
       background: linear-gradient(180deg, #d8ba73, #b8934c);
       color: #111315;
       font-weight: 700;
-      border-color: transparent;
     }
 
     .sidebar-footer {
@@ -124,7 +118,7 @@
     }
 
     .topbar {
-      background: #ffffff;
+      background: #fff;
       border-bottom: 1px solid var(--line);
       padding: 18px 28px;
       display: flex;
@@ -140,8 +134,6 @@
       margin: 0;
       font-size: 24px;
       font-family: "Cinzel", serif;
-      font-weight: 600;
-      line-height: 1.1;
     }
 
     .topbar-left p {
@@ -191,10 +183,6 @@
       box-shadow: 0 10px 20px rgba(199, 162, 87, 0.18);
     }
 
-    .btn-primary:hover {
-      filter: brightness(1.02);
-    }
-
     .btn-secondary {
       background: #fff;
       color: var(--text);
@@ -225,7 +213,7 @@
 
     .cards {
       display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
+      grid-template-columns: repeat(6, minmax(0, 1fr));
       gap: 18px;
     }
 
@@ -246,9 +234,10 @@
     }
 
     .card-value {
-      font-size: 30px;
+      font-size: 28px;
       line-height: 1.1;
       font-weight: 700;
+      word-break: break-word;
     }
 
     .card-subtext {
@@ -276,8 +265,6 @@
       margin: 0;
       font-size: 20px;
       font-family: "Cinzel", serif;
-      font-weight: 600;
-      line-height: 1.1;
     }
 
     .section-header p {
@@ -287,13 +274,9 @@
       line-height: 1.6;
     }
 
-    .section-body {
-      padding: 22px;
-    }
+    .section-body { padding: 22px; }
 
-    .table-wrap {
-      overflow-x: auto;
-    }
+    .table-wrap { overflow-x: auto; }
 
     .table {
       width: 100%;
@@ -307,7 +290,7 @@
       padding: 16px 18px;
       border-bottom: 1px solid var(--line);
       font-size: 14px;
-      vertical-align: middle;
+      vertical-align: top;
     }
 
     .table th {
@@ -318,13 +301,8 @@
       background: var(--panel-soft);
     }
 
-    .table tr:last-child td {
-      border-bottom: none;
-    }
-
-    .table tr:hover td {
-      background: #fcfbf8;
-    }
+    .table tr:last-child td { border-bottom: none; }
+    .table tr:hover td { background: #fcfbf8; }
 
     .status-pill {
       display: inline-flex;
@@ -342,39 +320,39 @@
     }
 
     .status-verified {
-      background: rgba(47, 143, 87, 0.10);
+      background: rgba(47,143,87,0.10);
       color: var(--success);
-      border-color: rgba(47, 143, 87, 0.22);
+      border-color: rgba(47,143,87,0.22);
     }
 
     .status-issues {
-      background: rgba(201, 138, 43, 0.10);
+      background: rgba(201,138,43,0.10);
       color: var(--warning);
-      border-color: rgba(201, 138, 43, 0.22);
+      border-color: rgba(201,138,43,0.22);
     }
 
     .status-new {
-      background: rgba(180, 76, 76, 0.10);
+      background: rgba(180,76,76,0.10);
       color: var(--danger);
-      border-color: rgba(180, 76, 76, 0.22);
+      border-color: rgba(180,76,76,0.22);
     }
 
     .status-open {
-      background: rgba(180, 76, 76, 0.10);
+      background: rgba(180,76,76,0.10);
       color: var(--danger);
-      border-color: rgba(180, 76, 76, 0.22);
+      border-color: rgba(180,76,76,0.22);
     }
 
     .status-progress {
-      background: rgba(201, 138, 43, 0.10);
+      background: rgba(201,138,43,0.10);
       color: var(--warning);
-      border-color: rgba(201, 138, 43, 0.22);
+      border-color: rgba(201,138,43,0.22);
     }
 
     .status-resolved {
-      background: rgba(47, 143, 87, 0.10);
+      background: rgba(47,143,87,0.10);
       color: var(--success);
-      border-color: rgba(47, 143, 87, 0.22);
+      border-color: rgba(47,143,87,0.22);
     }
 
     .text-btn {
@@ -388,9 +366,7 @@
       padding: 0;
     }
 
-    .text-btn:hover {
-      text-decoration: underline;
-    }
+    .text-btn:hover { text-decoration: underline; }
 
     .status-box {
       border: 1px solid var(--line);
@@ -405,14 +381,14 @@
 
     .status-box.success {
       color: var(--success);
-      border-color: rgba(47, 143, 87, 0.22);
-      background: rgba(47, 143, 87, 0.06);
+      border-color: rgba(47,143,87,0.22);
+      background: rgba(47,143,87,0.06);
     }
 
     .status-box.error {
       color: var(--danger);
-      border-color: rgba(180, 76, 76, 0.22);
-      background: rgba(180, 76, 76, 0.06);
+      border-color: rgba(180,76,76,0.22);
+      background: rgba(180,76,76,0.06);
     }
 
     .detail-grid {
@@ -437,7 +413,6 @@
       margin: 0 0 12px;
       font-size: 18px;
       font-family: "Cinzel", serif;
-      line-height: 1.1;
     }
 
     .detail-block p {
@@ -445,6 +420,7 @@
       color: var(--muted);
       line-height: 1.8;
       font-size: 14px;
+      white-space: pre-wrap;
     }
 
     .meta-list {
@@ -473,6 +449,7 @@
       color: var(--text);
       line-height: 1.6;
       word-break: break-word;
+      white-space: pre-wrap;
     }
 
     .report-title-row {
@@ -487,7 +464,6 @@
       margin: 0;
       font-size: 28px;
       font-family: "Cinzel", serif;
-      line-height: 1.1;
     }
 
     .report-title-row p {
@@ -511,9 +487,7 @@
       font-family: "Lato", sans-serif;
     }
 
-    .back-btn:hover {
-      text-decoration: underline;
-    }
+    .back-btn:hover { text-decoration: underline; }
 
     .loading {
       opacity: 0.7;
@@ -530,9 +504,7 @@
       background: #fff;
     }
 
-    .form-group + .form-group {
-      margin-top: 16px;
-    }
+    .form-group + .form-group { margin-top: 16px; }
 
     .form-label {
       display: block;
@@ -556,7 +528,6 @@
       outline: none;
       appearance: none;
       font-family: "Lato", sans-serif;
-      box-shadow: 0 1px 0 rgba(255,255,255,0.65) inset;
     }
 
     .form-textarea {
@@ -571,52 +542,40 @@
       margin-top: 18px;
     }
 
-    .empty-note {
+    .report-meta {
+      font-size: 12px;
       color: var(--muted);
-      font-size: 14px;
-      line-height: 1.7;
+      margin-top: 6px;
+      line-height: 1.5;
+      white-space: normal;
+    }
+
+    @media (max-width: 1300px) {
+      .cards { grid-template-columns: repeat(3, minmax(0, 1fr)); }
     }
 
     @media (max-width: 1100px) {
-      .cards {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-
+      .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .detail-grid,
-      .meta-list {
-        grid-template-columns: 1fr;
-      }
+      .meta-list { grid-template-columns: 1fr; }
     }
 
     @media (max-width: 980px) {
-      .sidebar {
-        display: none;
-      }
+      .sidebar { display: none; }
     }
 
     @media (max-width: 700px) {
-      .topbar {
-        padding: 18px;
-      }
-
-      .content {
-        padding: 18px;
-      }
-
-      .cards {
-        grid-template-columns: 1fr;
-      }
-
+      .topbar { padding: 18px; }
+      .content { padding: 18px; }
+      .cards { grid-template-columns: 1fr; }
       .topbar-right {
         width: 100%;
         justify-content: flex-start;
       }
-
       .user-chip {
         width: 100%;
         justify-content: center;
       }
-
       .btn-primary,
       .btn-secondary {
         width: 100%;
@@ -658,43 +617,45 @@
       </div>
 
       <div class="content" id="portal-content">
-        <div class="cards">
-  <div class="card">
-    <div class="card-label">Property</div>
-    <div class="card-value" id="property-name-card">—</div>
-    <div class="card-subtext" id="property-type-card">Loading property details...</div>
-  </div>
 
-  <div class="card">
-    <div class="card-label">Total Rooms</div>
-    <div class="card-value" id="total-rooms-card">—</div>
-    <div class="card-subtext">Rooms tracked in the Ready Mark system.</div>
-  </div>
+        <section id="dashboard-view" class="view active">
+          <div class="cards">
+            <div class="card">
+              <div class="card-label">Property</div>
+              <div class="card-value" id="property-name-card">—</div>
+              <div class="card-subtext" id="property-type-card">Loading property details...</div>
+            </div>
 
-  <div class="card">
-    <div class="card-label">Avg Response Time</div>
-    <div class="card-value" id="avg-response-time">—</div>
-    <div class="card-subtext">Time from report → property notified</div>
-  </div>
+            <div class="card">
+              <div class="card-label">Total Rooms</div>
+              <div class="card-value" id="total-rooms-card">—</div>
+              <div class="card-subtext">Rooms tracked in the Ready Mark system.</div>
+            </div>
 
-  <div class="card">
-    <div class="card-label">Avg Resolution Time</div>
-    <div class="card-value" id="avg-resolution-time">—</div>
-    <div class="card-subtext">Time from report → fully resolved</div>
-  </div>
+            <div class="card">
+              <div class="card-label">Avg Response Time</div>
+              <div class="card-value" id="avg-response-time">—</div>
+              <div class="card-subtext">Report to property notified.</div>
+            </div>
 
-  <div class="card">
-    <div class="card-label">Same-Day Resolution</div>
-    <div class="card-value" id="same-day-rate">—</div>
-    <div class="card-subtext">Resolved within 24 hours</div>
-  </div>
+            <div class="card">
+              <div class="card-label">Avg Resolution Time</div>
+              <div class="card-value" id="avg-resolution-time">—</div>
+              <div class="card-subtext">Report to final resolution.</div>
+            </div>
 
-  <div class="card">
-    <div class="card-label">Open Issues</div>
-    <div class="card-value" id="open-issues-count">—</div>
-    <div class="card-subtext">Currently active issues</div>
-  </div>
-</div>
+            <div class="card">
+              <div class="card-label">Same-Day Resolution</div>
+              <div class="card-value" id="same-day-rate">—</div>
+              <div class="card-subtext">Resolved within 24 hours.</div>
+            </div>
+
+            <div class="card">
+              <div class="card-label">Open Issues</div>
+              <div class="card-value" id="open-issues-count">—</div>
+              <div class="card-subtext">Currently active issue records.</div>
+            </div>
+          </div>
 
           <div class="section-card">
             <div class="section-header">
@@ -734,16 +695,14 @@
                   <tr>
                     <th>Reference</th>
                     <th>Room</th>
-                    <th>Status</th>
-                    <th>Priority</th>
+                    <th>Status Timeline</th>
+                    <th>Priority / Timing</th>
                     <th>Reported</th>
                     <th>View</th>
                   </tr>
                 </thead>
                 <tbody id="dashboard-issues-body">
-                  <tr>
-                    <td colspan="6">Loading issue overview...</td>
-                  </tr>
+                  <tr><td colspan="6">Loading issue overview...</td></tr>
                 </tbody>
               </table>
             </div>
@@ -766,9 +725,7 @@
                   </tr>
                 </thead>
                 <tbody id="recent-inspection-body">
-                  <tr>
-                    <td colspan="5">Loading inspection history...</td>
-                  </tr>
+                  <tr><td colspan="5">Loading inspection history...</td></tr>
                 </tbody>
               </table>
             </div>
@@ -787,17 +744,15 @@
                   <tr>
                     <th>Reference</th>
                     <th>Room</th>
-                    <th>Issue</th>
-                    <th>Priority</th>
+                    <th>Issue Timeline</th>
+                    <th>Priority / Timing</th>
                     <th>Status</th>
                     <th>Reported</th>
                     <th>View</th>
                   </tr>
                 </thead>
                 <tbody id="awaiting-response-body">
-                  <tr>
-                    <td colspan="7">Loading issues...</td>
-                  </tr>
+                  <tr><td colspan="7">Loading issues...</td></tr>
                 </tbody>
               </table>
             </div>
@@ -814,16 +769,14 @@
                   <tr>
                     <th>Reference</th>
                     <th>Room</th>
-                    <th>Issue</th>
-                    <th>Resolved By</th>
+                    <th>Issue Timeline</th>
+                    <th>Resolved By / Timing</th>
                     <th>Status</th>
                     <th>View</th>
                   </tr>
                 </thead>
                 <tbody id="remediation-submitted-body">
-                  <tr>
-                    <td colspan="6">Loading remediation queue...</td>
-                  </tr>
+                  <tr><td colspan="6">Loading remediation queue...</td></tr>
                 </tbody>
               </table>
             </div>
@@ -840,16 +793,14 @@
                   <tr>
                     <th>Reference</th>
                     <th>Room</th>
-                    <th>Issue</th>
-                    <th>Status</th>
+                    <th>Issue Timeline</th>
+                    <th>Status / Timing</th>
                     <th>Reported</th>
                     <th>View</th>
                   </tr>
                 </thead>
                 <tbody id="resolved-issues-body">
-                  <tr>
-                    <td colspan="6">Loading resolved issues...</td>
-                  </tr>
+                  <tr><td colspan="6">Loading resolved issues...</td></tr>
                 </tbody>
               </table>
             </div>
@@ -874,9 +825,7 @@
                   </tr>
                 </thead>
                 <tbody id="qr-records-body">
-                  <tr>
-                    <td colspan="5">Loading QR records...</td>
-                  </tr>
+                  <tr><td colspan="5">Loading QR records...</td></tr>
                 </tbody>
               </table>
             </div>
@@ -901,9 +850,7 @@
                   </tr>
                 </thead>
                 <tbody id="reports-body">
-                  <tr>
-                    <td colspan="5">Loading reports...</td>
-                  </tr>
+                  <tr><td colspan="5">Loading reports...</td></tr>
                 </tbody>
               </table>
             </div>
@@ -969,11 +916,11 @@
             </div>
 
             <div class="detail-block full">
-              <h3>Guest Notes</h3>
+              <h3>Guest Notes & Timeline</h3>
               <p id="issue-detail-note">No guest note provided.</p>
             </div>
 
-            <div class="detail-block full" id="issue-evidence-block">
+            <div class="detail-block full">
               <h3>Photo Evidence</h3>
               <div id="issue-detail-photo-wrap" class="empty-note">No photo evidence attached.</div>
             </div>
@@ -1001,7 +948,8 @@
             </div>
 
             <div class="detail-block full" id="remediation-form-block">
-              <h3>Submit Remediation</h3>
+
+                            <h3>Submit Remediation</h3>
               <p style="margin-bottom:16px;">Use this form to document what action was taken so Ready Mark can review and finalize the record.</p>
 
               <div class="form-group">
@@ -1038,28 +986,6 @@
               </div>
             </div>
 
-<div class="detail-block full" id="remediation-block">
-  <h3>Submit Remediation</h3>
-  <p style="margin:0 0 14px;color:#6d6a64;line-height:1.7;font-size:14px;">
-    Tell The Ready Mark what action was taken to resolve this issue. This will be reviewed before the issue is marked resolved.
-  </p>
-
-  <div class="form-group">
-    <label for="remediation-note">Resolution Note</label>
-    <textarea id="remediation-note" placeholder="Describe what was done to resolve the issue."></textarea>
-  </div>
-
-  <div class="form-group">
-    <label for="remediation-resolved-by">Resolved By</label>
-    <input id="remediation-resolved-by" type="text" placeholder="Ex: Front Desk, Housekeeping Supervisor, Property Team">
-  </div>
-
-  <div class="button-row">
-   <button id="report-remediation-btn" class="btn btn-primary" type="button">Submit Remediation</button> 
-  </div>
-  <div id="remediation-status" class="status-box" style="display:none;margin-top:14px;"></div>
-</div>
-            
             <div class="detail-block">
               <h3>Inspection Details</h3>
               <div class="meta-list">
@@ -1117,34 +1043,22 @@
       return date.toLocaleString();
     }
 
+    function minutesBetween(startValue, endValue) {
+      if (!startValue || !endValue) return null;
+      const start = new Date(startValue).getTime();
+      const end = new Date(endValue).getTime();
+      if (Number.isNaN(start) || Number.isNaN(end) || end < start) return null;
+      return Math.round((end - start) / 60000);
+    }
 
-function minutesBetween(startValue, endValue) {
-  if (!startValue || !endValue) return null;
+    function formatMinutesLabel(totalMinutes) {
+      if (totalMinutes === null || totalMinutes === undefined) return "—";
+      if (totalMinutes < 60) return `${totalMinutes} min`;
+      const hours = Math.floor(totalMinutes / 60);
+      const minutes = totalMinutes % 60;
+      return minutes === 0 ? `${hours} hr` : `${hours} hr ${minutes} min`;
+    }
 
-  const start = new Date(startValue).getTime();
-  const end = new Date(endValue).getTime();
-
-  if (Number.isNaN(start) || Number.isNaN(end) || end < start) return null;
-
-  return Math.round((end - start) / 60000);
-}
-
-function formatMinutesLabel(totalMinutes) {
-  if (totalMinutes === null || totalMinutes === undefined) return "—";
-
-  if (totalMinutes < 60) {
-    return `${totalMinutes} min`;
-  }
-
-  const hours = Math.floor(totalMinutes / 60);
-  const minutes = totalMinutes % 60;
-
-  if (minutes === 0) {
-    return `${hours} hr`;
-  }
-
-  return `${hours} hr ${minutes} min`;
-}
     function escapeHtml(value) {
       return String(value ?? "")
         .replace(/&/g, "&amp;")
@@ -1156,16 +1070,8 @@ function formatMinutesLabel(totalMinutes) {
 
     function getInspectionStatusClass(value) {
       const normalized = String(value || "").toLowerCase().trim();
-      if (normalized.includes("verified") || normalized.includes("premier")) {
-        return "status-verified";
-      }
-      if (
-        normalized.includes("attention") ||
-        normalized.includes("issue") ||
-        normalized.includes("not clean")
-      ) {
-        return "status-issues";
-      }
+      if (normalized.includes("verified") || normalized.includes("premier")) return "status-verified";
+      if (normalized.includes("attention") || normalized.includes("issue") || normalized.includes("not clean")) return "status-issues";
       return "status-verified";
     }
 
@@ -1188,11 +1094,8 @@ function formatMinutesLabel(totalMinutes) {
       document.querySelectorAll(".view").forEach(view => {
         view.classList.remove("active");
       });
-
       const target = document.getElementById(viewId);
-      if (target) {
-        target.classList.add("active");
-      }
+      if (target) target.classList.add("active");
 
       if (viewId !== "report-detail-view" && viewId !== "issue-detail-view") {
         lastNonDetailView = viewId;
@@ -1207,9 +1110,42 @@ function formatMinutesLabel(totalMinutes) {
       el.textContent = message;
     }
 
+    function calculateMetrics(data) {
+      const allIssues = [
+        ...(data.awaiting_response || []),
+        ...(data.remediation_submitted || []),
+        ...(data.resolved_issues || [])
+      ];
+
+      const responseTimes = [];
+      const resolutionTimes = [];
+      let sameDayCount = 0;
+
+      allIssues.forEach(issue => {
+        const response = minutesBetween(issue.reported_at, issue.hotel_notified_at);
+        const resolution = minutesBetween(issue.reported_at, issue.resolved_at);
+
+        if (response !== null) responseTimes.push(response);
+        if (resolution !== null) {
+          resolutionTimes.push(resolution);
+          if (resolution <= 1440) sameDayCount++;
+        }
+      });
+
+      const avg = arr => arr.length ? Math.round(arr.reduce((a, b) => a + b, 0) / arr.length) : null;
+
+      return {
+        avgResponse: avg(responseTimes),
+        avgResolution: avg(resolutionTimes),
+        sameDayRate: resolutionTimes.length ? Math.round((sameDayCount / resolutionTimes.length) * 100) : null,
+        openIssues: (data.awaiting_response?.length || 0) + (data.remediation_submitted?.length || 0)
+      };
+    }
+
     function renderTopLevel(data) {
       const property = data.property || {};
       const summary = data.summary || {};
+      const metrics = calculateMetrics(data);
 
       document.getElementById("topbar-subtitle").textContent =
         `${property.property_name || "Property"} • ${property.city || ""}${property.city && property.state ? ", " : ""}${property.state || ""}`;
@@ -1217,8 +1153,11 @@ function formatMinutesLabel(totalMinutes) {
       document.getElementById("property-name-card").textContent = property.property_name || "—";
       document.getElementById("property-type-card").textContent = property.property_type || "Property type unavailable";
       document.getElementById("total-rooms-card").textContent = summary.total_rooms ?? 0;
-      document.getElementById("awaiting-response-card").textContent = summary.total_awaiting_response ?? 0;
-      document.getElementById("resolved-issues-card").textContent = summary.total_resolved_issues ?? 0;
+      document.getElementById("avg-response-time").textContent = metrics.avgResponse !== null ? formatMinutesLabel(metrics.avgResponse) : "—";
+      document.getElementById("avg-resolution-time").textContent = metrics.avgResolution !== null ? formatMinutesLabel(metrics.avgResolution) : "—";
+      document.getElementById("same-day-rate").textContent = metrics.sameDayRate !== null ? `${metrics.sameDayRate}%` : "—";
+      document.getElementById("open-issues-count").textContent = metrics.openIssues ?? 0;
+
       document.getElementById("property-location").textContent =
         `${property.city || "—"}${property.city && property.state ? ", " : ""}${property.state || ""}`;
       document.getElementById("property-type").textContent = property.property_type || "—";
@@ -1228,60 +1167,54 @@ function formatMinutesLabel(totalMinutes) {
     }
 
     function renderDashboardIssues() {
-  const body = document.getElementById("dashboard-issues-body");
-  body.innerHTML = "";
+      const body = document.getElementById("dashboard-issues-body");
+      body.innerHTML = "";
 
-  const combined = [
-    ...(Array.isArray(dashboardData.awaiting_response) ? dashboardData.awaiting_response : []),
-    ...(Array.isArray(dashboardData.remediation_submitted) ? dashboardData.remediation_submitted : [])
-  ].slice(0, 6);
+      const combined = [
+        ...(Array.isArray(dashboardData.awaiting_response) ? dashboardData.awaiting_response : []),
+        ...(Array.isArray(dashboardData.remediation_submitted) ? dashboardData.remediation_submitted : [])
+      ].slice(0, 6);
 
-  if (!combined.length) {
-    body.innerHTML = '<tr><td colspan="6">No active property-side issues to display.</td></tr>';
-    return;
-  }
+      if (!combined.length) {
+        body.innerHTML = '<tr><td colspan="6">No active property-side issues to display.</td></tr>';
+        return;
+      }
 
-  body.innerHTML = combined.map(item => {
-    const timeToProperty = minutesBetween(item.reported_at, item.hotel_notified_at);
-    const timeToRemediation = minutesBetween(item.hotel_notified_at, item.remediation_submitted_at);
-    const openFor = minutesBetween(item.reported_at, new Date().toISOString());
+      body.innerHTML = combined.map(item => {
+        const timeToProperty = minutesBetween(item.reported_at, item.hotel_notified_at);
+        const timeToRemediation = minutesBetween(item.hotel_notified_at, item.remediation_submitted_at);
+        const openFor = minutesBetween(item.reported_at, new Date().toISOString());
 
-    return `
-      <tr>
-        <td>
-          ${escapeHtml(item.confirmation_number || "—")}
-          <div class="report-meta">
-            ${item.verification_id ? `Verification: ${escapeHtml(item.verification_id)}` : ""}
-          </div>
-        </td>
-        <td>${escapeHtml(item.room_number || "—")}</td>
-        <td>
-          <span class="status-pill ${getIssueStatusClass(item.status)}">${escapeHtml(item.status || "—")}</span>
-          <div class="report-meta">
-            ${item.reported_at ? `Reported: ${escapeHtml(formatDate(item.reported_at))}<br>` : ""}
-            ${item.hotel_notified_at ? `Sent to Property: ${escapeHtml(formatDate(item.hotel_notified_at))}<br>` : ""}
-            ${item.under_review_at ? `Under Review: ${escapeHtml(formatDate(item.under_review_at))}<br>` : ""}
-            ${item.escalated_at ? `Escalated: ${escapeHtml(formatDate(item.escalated_at))}<br>` : ""}
-            ${item.remediation_submitted_at ? `Remediation Submitted: ${escapeHtml(formatDate(item.remediation_submitted_at))}<br>` : ""}
-            ${item.guest_confirmed_at ? `Guest Confirmed: ${escapeHtml(formatDate(item.guest_confirmed_at))}` : ""}
-          </div>
-        </td>
-        <td>
-          ${escapeHtml(item.priority || "Normal")}
-          <div class="report-meta">
-            ${timeToProperty !== null ? `To Property: ${escapeHtml(formatMinutesLabel(timeToProperty))}<br>` : ""}
-            ${timeToRemediation !== null ? `To Remediation: ${escapeHtml(formatMinutesLabel(timeToRemediation))}<br>` : ""}
-            Open For: ${escapeHtml(formatMinutesLabel(openFor))}
-          </div>
-        </td>
-        <td>${escapeHtml(formatDate(item.reported_at))}</td>
-        <td><button class="text-btn issue-open-btn" type="button" data-issue-id="${escapeHtml(item.id)}">Open</button></td>
-      </tr>
-    `;
-  }).join("");
+        return `
+          <tr>
+            <td>${escapeHtml(item.confirmation_number || "—")}</td>
+            <td>${escapeHtml(item.room_number || "—")}</td>
+            <td>
+              <span class="status-pill ${getIssueStatusClass(item.status)}">${escapeHtml(item.status || "—")}</span>
+              <div class="report-meta">
+                ${item.reported_at ? `Reported: ${escapeHtml(formatDate(item.reported_at))}<br>` : ""}
+                ${item.hotel_notified_at ? `Sent to Property: ${escapeHtml(formatDate(item.hotel_notified_at))}<br>` : ""}
+                ${item.under_review_at ? `Under Review: ${escapeHtml(formatDate(item.under_review_at))}<br>` : ""}
+                ${item.escalated_at ? `Escalated: ${escapeHtml(formatDate(item.escalated_at))}<br>` : ""}
+                ${item.remediation_submitted_at ? `Remediation Submitted: ${escapeHtml(formatDate(item.remediation_submitted_at))}` : ""}
+              </div>
+            </td>
+            <td>
+              ${escapeHtml(item.priority || "Normal")}
+              <div class="report-meta">
+                ${timeToProperty !== null ? `To Property: ${escapeHtml(formatMinutesLabel(timeToProperty))}<br>` : ""}
+                ${timeToRemediation !== null ? `To Remediation: ${escapeHtml(formatMinutesLabel(timeToRemediation))}<br>` : ""}
+                Open For: ${escapeHtml(formatMinutesLabel(openFor))}
+              </div>
+            </td>
+            <td>${escapeHtml(formatDate(item.reported_at))}</td>
+            <td><button class="text-btn issue-open-btn" type="button" data-issue-id="${escapeHtml(item.id)}">Open</button></td>
+          </tr>
+        `;
+      }).join("");
 
-  bindIssueButtons();
-}
+      bindIssueButtons();
+    }
 
     function renderRecentInspections(items) {
       const body = document.getElementById("recent-inspection-body");
@@ -1292,9 +1225,7 @@ function formatMinutesLabel(totalMinutes) {
         return;
       }
 
-      const recent = items.slice(0, 5);
-
-      body.innerHTML = recent.map(item => `
+      body.innerHTML = items.slice(0, 5).map(item => `
         <tr>
           <td>${escapeHtml(item.room_number || "—")}</td>
           <td><span class="status-pill ${getInspectionStatusClass(item.certification_tier)}">${escapeHtml(item.certification_tier || "—")}</span></td>
@@ -1307,152 +1238,136 @@ function formatMinutesLabel(totalMinutes) {
       bindReportButtons();
     }
 
-function renderAwaitingResponse(items) {
-  const body = document.getElementById("awaiting-response-body");
-  body.innerHTML = "";
+    function renderAwaitingResponse(items) {
+      const body = document.getElementById("awaiting-response-body");
+      body.innerHTML = "";
 
-  if (!items.length) {
-    body.innerHTML = '<tr><td colspan="7">No issues currently awaiting a property response.</td></tr>';
-    return;
-  }
+      if (!items.length) {
+        body.innerHTML = '<tr><td colspan="7">No issues currently awaiting a property response.</td></tr>';
+        return;
+      }
 
-  body.innerHTML = items.map(item => {
-    const timeToProperty = minutesBetween(item.reported_at, item.hotel_notified_at);
-    const openFor = minutesBetween(item.reported_at, new Date().toISOString());
+      body.innerHTML = items.map(item => {
+        const timeToProperty = minutesBetween(item.reported_at, item.hotel_notified_at);
+        const openFor = minutesBetween(item.reported_at, new Date().toISOString());
 
-    return `
-      <tr>
-        <td>
-          ${escapeHtml(item.confirmation_number || "—")}
-          <div class="report-meta">
-            ${item.verification_id ? `Verification: ${escapeHtml(item.verification_id)}` : ""}
-          </div>
-        </td>
-        <td>${escapeHtml(item.room_number || "—")}</td>
-        <td>
-          ${escapeHtml(Array.isArray(item.issue_types) ? item.issue_types.join(", ") : "—")}
-          <div class="report-meta">
-            ${item.reported_at ? `Reported: ${escapeHtml(formatDate(item.reported_at))}<br>` : ""}
-            ${item.hotel_notified_at ? `Sent to Property: ${escapeHtml(formatDate(item.hotel_notified_at))}<br>` : ""}
-            ${item.under_review_at ? `Under Review: ${escapeHtml(formatDate(item.under_review_at))}<br>` : ""}
-            ${item.escalated_at ? `Escalated: ${escapeHtml(formatDate(item.escalated_at))}` : ""}
-          </div>
-        </td>
-        <td>
-          ${escapeHtml(item.priority || "Normal")}
-          <div class="report-meta">
-            ${timeToProperty !== null ? `To Property: ${escapeHtml(formatMinutesLabel(timeToProperty))}<br>` : ""}
-            Open For: ${escapeHtml(formatMinutesLabel(openFor))}
-          </div>
-        </td>
-        <td><span class="status-pill ${getIssueStatusClass(item.status)}">${escapeHtml(item.status || "—")}</span></td>
-        <td>${escapeHtml(formatDate(item.reported_at))}</td>
-        <td><button class="text-btn issue-open-btn" type="button" data-issue-id="${escapeHtml(item.id)}">Open</button></td>
-      </tr>
-    `;
-  }).join("");
+        return `
+          <tr>
+            <td>${escapeHtml(item.confirmation_number || "—")}</td>
+            <td>${escapeHtml(item.room_number || "—")}</td>
+            <td>
+              ${escapeHtml(Array.isArray(item.issue_types) ? item.issue_types.join(", ") : "—")}
+              <div class="report-meta">
+                ${item.reported_at ? `Reported: ${escapeHtml(formatDate(item.reported_at))}<br>` : ""}
+                ${item.hotel_notified_at ? `Sent to Property: ${escapeHtml(formatDate(item.hotel_notified_at))}<br>` : ""}
+                ${item.under_review_at ? `Under Review: ${escapeHtml(formatDate(item.under_review_at))}<br>` : ""}
+                ${item.escalated_at ? `Escalated: ${escapeHtml(formatDate(item.escalated_at))}` : ""}
+              </div>
+            </td>
+            <td>
+              ${escapeHtml(item.priority || "Normal")}
+              <div class="report-meta">
+                ${timeToProperty !== null ? `To Property: ${escapeHtml(formatMinutesLabel(timeToProperty))}<br>` : ""}
+                Open For: ${escapeHtml(formatMinutesLabel(openFor))}
+              </div>
+            </td>
+            <td><span class="status-pill ${getIssueStatusClass(item.status)}">${escapeHtml(item.status || "—")}</span></td>
+            <td>${escapeHtml(formatDate(item.reported_at))}</td>
+            <td><button class="text-btn issue-open-btn" type="button" data-issue-id="${escapeHtml(item.id)}">Open</button></td>
+          </tr>
+        `;
+      }).join("");
 
-  bindIssueButtons();
-}
+      bindIssueButtons();
+    }
 
     function renderRemediationSubmitted(items) {
-  const body = document.getElementById("remediation-submitted-body");
-  body.innerHTML = "";
+      const body = document.getElementById("remediation-submitted-body");
+      body.innerHTML = "";
 
-  if (!items.length) {
-    body.innerHTML = '<tr><td colspan="6">No remediation responses awaiting review.</td></tr>';
-    return;
-  }
+      if (!items.length) {
+        body.innerHTML = '<tr><td colspan="6">No remediation responses awaiting review.</td></tr>';
+        return;
+      }
 
-  body.innerHTML = items.map(item => {
-    const timeToProperty = minutesBetween(item.reported_at, item.hotel_notified_at);
-    const timeToRemediation = minutesBetween(item.hotel_notified_at, item.remediation_submitted_at);
-    const openFor = minutesBetween(item.reported_at, new Date().toISOString());
+      body.innerHTML = items.map(item => {
+        const timeToProperty = minutesBetween(item.reported_at, item.hotel_notified_at);
+        const timeToRemediation = minutesBetween(item.hotel_notified_at, item.remediation_submitted_at);
+        const openFor = minutesBetween(item.reported_at, new Date().toISOString());
 
-    return `
-      <tr>
-        <td>
-          ${escapeHtml(item.confirmation_number || "—")}
-          <div class="report-meta">
-            ${item.verification_id ? `Verification: ${escapeHtml(item.verification_id)}` : ""}
-          </div>
-        </td>
-        <td>${escapeHtml(item.room_number || "—")}</td>
-        <td>
-          ${escapeHtml(Array.isArray(item.issue_types) ? item.issue_types.join(", ") : "—")}
-          <div class="report-meta">
-            ${item.reported_at ? `Reported: ${escapeHtml(formatDate(item.reported_at))}<br>` : ""}
-            ${item.hotel_notified_at ? `Sent to Property: ${escapeHtml(formatDate(item.hotel_notified_at))}<br>` : ""}
-            ${item.remediation_submitted_at ? `Remediation Submitted: ${escapeHtml(formatDate(item.remediation_submitted_at))}<br>` : ""}
-            ${item.guest_confirmed_at ? `Guest Confirmed: ${escapeHtml(formatDate(item.guest_confirmed_at))}` : ""}
-          </div>
-        </td>
-        <td>
-          ${escapeHtml(item.resolved_by || "—")}
-          <div class="report-meta">
-            ${timeToProperty !== null ? `To Property: ${escapeHtml(formatMinutesLabel(timeToProperty))}<br>` : ""}
-            ${timeToRemediation !== null ? `To Remediation: ${escapeHtml(formatMinutesLabel(timeToRemediation))}<br>` : ""}
-            Open For: ${escapeHtml(formatMinutesLabel(openFor))}
-          </div>
-        </td>
-        <td><span class="status-pill ${getIssueStatusClass(item.status)}">${escapeHtml(item.status || "—")}</span></td>
-        <td><button class="text-btn issue-open-btn" type="button" data-issue-id="${escapeHtml(item.id)}">Open</button></td>
-      </tr>
-    `;
-  }).join("");
+        return `
+          <tr>
+            <td>${escapeHtml(item.confirmation_number || "—")}</td>
+            <td>${escapeHtml(item.room_number || "—")}</td>
+            <td>
+              ${escapeHtml(Array.isArray(item.issue_types) ? item.issue_types.join(", ") : "—")}
+              <div class="report-meta">
+                ${item.reported_at ? `Reported: ${escapeHtml(formatDate(item.reported_at))}<br>` : ""}
+                ${item.hotel_notified_at ? `Sent to Property: ${escapeHtml(formatDate(item.hotel_notified_at))}<br>` : ""}
+                ${item.remediation_submitted_at ? `Remediation Submitted: ${escapeHtml(formatDate(item.remediation_submitted_at))}` : ""}
+              </div>
+            </td>
+            <td>
+              ${escapeHtml(item.resolved_by || "—")}
+              <div class="report-meta">
+                ${timeToProperty !== null ? `To Property: ${escapeHtml(formatMinutesLabel(timeToProperty))}<br>` : ""}
+                ${timeToRemediation !== null ? `To Remediation: ${escapeHtml(formatMinutesLabel(timeToRemediation))}<br>` : ""}
+                Open For: ${escapeHtml(formatMinutesLabel(openFor))}
+              </div>
+            </td>
+            <td><span class="status-pill ${getIssueStatusClass(item.status)}">${escapeHtml(item.status || "—")}</span></td>
+            <td><button class="text-btn issue-open-btn" type="button" data-issue-id="${escapeHtml(item.id)}">Open</button></td>
+          </tr>
+        `;
+      }).join("");
 
-  bindIssueButtons();
-}
-    
+      bindIssueButtons();
+    }
+
     function renderResolvedIssues(items) {
-  const body = document.getElementById("resolved-issues-body");
-  body.innerHTML = "";
+      const body = document.getElementById("resolved-issues-body");
+      body.innerHTML = "";
 
-  if (!items.length) {
-    body.innerHTML = '<tr><td colspan="6">No resolved issues yet.</td></tr>';
-    return;
-  }
+      if (!items.length) {
+        body.innerHTML = '<tr><td colspan="6">No resolved issues yet.</td></tr>';
+        return;
+      }
 
-  body.innerHTML = items.map(item => {
-    const timeToProperty = minutesBetween(item.reported_at, item.hotel_notified_at);
-    const timeToRemediation = minutesBetween(item.hotel_notified_at, item.remediation_submitted_at);
-    const totalResolutionTime = minutesBetween(item.reported_at, item.resolved_at);
+      body.innerHTML = items.map(item => {
+        const timeToProperty = minutesBetween(item.reported_at, item.hotel_notified_at);
+        const timeToRemediation = minutesBetween(item.hotel_notified_at, item.remediation_submitted_at);
+        const totalResolutionTime = minutesBetween(item.reported_at, item.resolved_at);
 
-    return `
-      <tr>
-        <td>
-          ${escapeHtml(item.confirmation_number || "—")}
-          <div class="report-meta">
-            ${item.verification_id ? `Verification: ${escapeHtml(item.verification_id)}` : ""}
-          </div>
-        </td>
-        <td>${escapeHtml(item.room_number || "—")}</td>
-        <td>
-          ${escapeHtml(Array.isArray(item.issue_types) ? item.issue_types.join(", ") : "—")}
-          <div class="report-meta">
-            Reported: ${escapeHtml(formatDate(item.reported_at))}<br>
-            ${item.hotel_notified_at ? `Sent to Property: ${escapeHtml(formatDate(item.hotel_notified_at))}<br>` : ""}
-            ${item.remediation_submitted_at ? `Remediation Submitted: ${escapeHtml(formatDate(item.remediation_submitted_at))}<br>` : ""}
-            ${item.guest_confirmed_at ? `Guest Confirmed: ${escapeHtml(formatDate(item.guest_confirmed_at))}<br>` : ""}
-            ${item.resolved_at ? `Resolved: ${escapeHtml(formatDate(item.resolved_at))}` : ""}
-          </div>
-        </td>
-        <td>
-          <span class="status-pill status-resolved">${escapeHtml(item.status || "Resolved")}</span>
-          <div class="report-meta">
-            ${timeToProperty !== null ? `To Property: ${escapeHtml(formatMinutesLabel(timeToProperty))}<br>` : ""}
-            ${timeToRemediation !== null ? `To Remediation: ${escapeHtml(formatMinutesLabel(timeToRemediation))}<br>` : ""}
-            ${totalResolutionTime !== null ? `Total Resolution: ${escapeHtml(formatMinutesLabel(totalResolutionTime))}` : ""}
-          </div>
-        </td>
-        <td>${escapeHtml(formatDate(item.reported_at))}</td>
-        <td><button class="text-btn issue-open-btn" type="button" data-issue-id="${escapeHtml(item.id)}">View</button></td>
-      </tr>
-    `;
-  }).join("");
+        return `
+          <tr>
+            <td>${escapeHtml(item.confirmation_number || "—")}</td>
+            <td>${escapeHtml(item.room_number || "—")}</td>
+            <td>
+              ${escapeHtml(Array.isArray(item.issue_types) ? item.issue_types.join(", ") : "—")}
+              <div class="report-meta">
+                Reported: ${escapeHtml(formatDate(item.reported_at))}<br>
+                ${item.hotel_notified_at ? `Sent to Property: ${escapeHtml(formatDate(item.hotel_notified_at))}<br>` : ""}
+                ${item.remediation_submitted_at ? `Remediation Submitted: ${escapeHtml(formatDate(item.remediation_submitted_at))}<br>` : ""}
+                ${item.resolved_at ? `Resolved: ${escapeHtml(formatDate(item.resolved_at))}` : ""}
+              </div>
+            </td>
+            <td>
+              <span class="status-pill status-resolved">${escapeHtml(item.status || "Resolved")}</span>
+              <div class="report-meta">
+                ${timeToProperty !== null ? `To Property: ${escapeHtml(formatMinutesLabel(timeToProperty))}<br>` : ""}
+                ${timeToRemediation !== null ? `To Remediation: ${escapeHtml(formatMinutesLabel(timeToRemediation))}<br>` : ""}
+                ${totalResolutionTime !== null ? `Total Resolution: ${escapeHtml(formatMinutesLabel(totalResolutionTime))}` : ""}
+              </div>
+            </td>
+            <td>${escapeHtml(formatDate(item.reported_at))}</td>
+            <td><button class="text-btn issue-open-btn" type="button" data-issue-id="${escapeHtml(item.id)}">View</button></td>
+          </tr>
+        `;
+      }).join("");
 
-  bindIssueButtons();
-}
+      bindIssueButtons();
+    }
+
     function renderQRRecords(items) {
       const body = document.getElementById("qr-records-body");
       body.innerHTML = "";
@@ -1488,7 +1403,7 @@ function renderAwaitingResponse(items) {
           <td><span class="status-pill ${getInspectionStatusClass(item.certification_tier)}">${escapeHtml(item.certification_tier || "—")}</span></td>
           <td>${item.score ?? "—"}</td>
           <td>${escapeHtml(formatDate(item.created_at))}</td>
-          <td><button class="text-btn report-open-btn" type="button" data-report-id="${escapeHtml(item.id)}">Open</button></td>
+          <td><button class="text-btn report-open-btn" type="button" data-report-id="${escapeHtml(item.id)}">View</button></td>
         </tr>
       `).join("");
 
@@ -1513,7 +1428,6 @@ function renderAwaitingResponse(items) {
 
     function openInspectionReportById(reportId) {
       if (!dashboardData || !Array.isArray(dashboardData.inspection_history)) return;
-
       const report = dashboardData.inspection_history.find(item => String(item.id) === String(reportId));
       if (!report) return;
 
@@ -1530,16 +1444,16 @@ function renderAwaitingResponse(items) {
       document.getElementById("report-detail-score").textContent = report.score ?? "—";
       document.getElementById("report-detail-inspector").textContent = report.inspector_id || "—";
       document.getElementById("report-detail-notes").textContent = report.notes || "No internal notes available for this record.";
-      document.getElementById("report-detail-qr-text").textContent =
-        report.qr_url ? "Open the most recent verification page tied to this room record." : "No QR URL available for this record.";
 
       const qrLink = document.getElementById("report-detail-qr-link");
       if (report.qr_url) {
         qrLink.href = report.qr_url;
         qrLink.style.display = "inline-flex";
+        document.getElementById("report-detail-qr-text").textContent = "Open the most recent verification page tied to this room record.";
       } else {
         qrLink.href = "#";
         qrLink.style.display = "none";
+        document.getElementById("report-detail-qr-text").textContent = "No QR URL available for this record.";
       }
 
       goToView("report-detail-view");
@@ -1549,8 +1463,7 @@ function renderAwaitingResponse(items) {
       return [
         ...(Array.isArray(dashboardData?.awaiting_response) ? dashboardData.awaiting_response : []),
         ...(Array.isArray(dashboardData?.remediation_submitted) ? dashboardData.remediation_submitted : []),
-        ...(Array.isArray(dashboardData?.resolved_issues) ? dashboardData.resolved_issues : []),
-        ...(Array.isArray(dashboardData?.active_issues) ? dashboardData.active_issues : [])
+        ...(Array.isArray(dashboardData?.resolved_issues) ? dashboardData.resolved_issues : [])
       ];
     }
 
@@ -1575,21 +1488,24 @@ function renderAwaitingResponse(items) {
       document.getElementById("issue-detail-verification").textContent = issue.verification_id || "—";
       document.getElementById("issue-detail-status-text").textContent = issue.status || "—";
       document.getElementById("issue-detail-types").textContent =
-        Array.isArray(issue.issue_types) && issue.issue_types.length
-          ? issue.issue_types.join(", ")
-          : "—";
-      document.getElementById("issue-detail-reservation-name").textContent =
-        issue.reservation_last_name || "—";
+        Array.isArray(issue.issue_types) && issue.issue_types.length ? issue.issue_types.join(", ") : "—";
+      document.getElementById("issue-detail-reservation-name").textContent = issue.reservation_last_name || "—";
+      document.getElementById("issue-detail-resolution-note").textContent = issue.resolution_note || "No resolution submitted yet.";
+      document.getElementById("issue-detail-resolved-by").textContent = issue.resolved_by || "—";
+      document.getElementById("issue-detail-resolved-at").textContent = issue.resolved_at ? formatDate(issue.resolved_at) : "—";
+      document.getElementById("issue-detail-response-minutes").textContent = issue.response_minutes ?? "—";
+
+      const timeline = [
+        issue.reported_at ? `Reported: ${formatDate(issue.reported_at)}` : null,
+        issue.hotel_notified_at ? `Sent to Property: ${formatDate(issue.hotel_notified_at)}` : null,
+        issue.under_review_at ? `Under Review: ${formatDate(issue.under_review_at)}` : null,
+        issue.escalated_at ? `Escalated: ${formatDate(issue.escalated_at)}` : null,
+        issue.remediation_submitted_at ? `Remediation Submitted: ${formatDate(issue.remediation_submitted_at)}` : null,
+        issue.resolved_at ? `Resolved: ${formatDate(issue.resolved_at)}` : null
+      ].filter(Boolean).join("\n");
+
       document.getElementById("issue-detail-note").textContent =
-        issue.guest_note || issue.details || "No guest note provided.";
-      document.getElementById("issue-detail-resolution-note").textContent =
-        issue.resolution_note || "No resolution submitted yet.";
-      document.getElementById("issue-detail-resolved-by").textContent =
-        issue.resolved_by || "—";
-      document.getElementById("issue-detail-resolved-at").textContent =
-        issue.resolved_at ? formatDate(issue.resolved_at) : "—";
-      document.getElementById("issue-detail-response-minutes").textContent =
-        issue.response_minutes ?? "—";
+        `${issue.guest_note || issue.details || "No guest note provided."}\n\n${timeline ? `Timeline:\n${timeline}` : ""}`;
 
       const photoWrap = document.getElementById("issue-detail-photo-wrap");
       if (issue.photo_url) {
@@ -1599,12 +1515,13 @@ function renderAwaitingResponse(items) {
           </a>
         `;
       } else {
-        photoWrap.innerHTML = `No photo evidence attached.`;
+        photoWrap.textContent = "No photo evidence attached.";
       }
 
       const noteInput = document.getElementById("resolution-note-input");
       const resolvedByInput = document.getElementById("resolved-by-input");
       const remediationStatus = document.getElementById("remediation-status-box");
+
       remediationStatus.style.display = "none";
       remediationStatus.textContent = "";
       remediationStatus.className = "status-box";
@@ -1664,62 +1581,26 @@ function renderAwaitingResponse(items) {
         submitBtn.disabled = false;
       }
     }
-function showLoadError(message) {
-  const safeMessage =
-    typeof message === "string"
-      ? message
-      : JSON.stringify(message, null, 2);
 
-  document.getElementById("portal-content").innerHTML = `
-    <div class="section-card">
-      <div class="section-header">
-        <h2>Unable to Load Dashboard</h2>
-        <p>Please review the current property configuration or API response.</p>
-      </div>
-      <div class="section-body">
-        <div class="status-box">${escapeHtml(safeMessage)}</div>
-      </div>
-    </div>
-  `;
-}   
+    function showLoadError(message) {
+      const safeMessage =
+        typeof message === "string"
+          ? message
+          : JSON.stringify(message, null, 2);
 
-    function calculateMetrics(data) {
-  const allIssues = [
-    ...(data.awaiting_response || []),
-    ...(data.remediation_submitted || []),
-    ...(data.resolved_issues || [])
-  ];
-
-  let responseTimes = [];
-  let resolutionTimes = [];
-  let sameDayCount = 0;
-
-  allIssues.forEach(issue => {
-    const response = minutesBetween(issue.reported_at, issue.hotel_notified_at);
-    const resolution = minutesBetween(issue.reported_at, issue.resolved_at);
-
-    if (response !== null) responseTimes.push(response);
-    if (resolution !== null) {
-      resolutionTimes.push(resolution);
-
-      if (resolution <= 1440) {
-        sameDayCount++;
-      }
+      document.getElementById("portal-content").innerHTML = `
+        <div class="section-card">
+          <div class="section-header">
+            <h2>Unable to Load Dashboard</h2>
+            <p>Please review the current property configuration or API response.</p>
+          </div>
+          <div class="section-body">
+            <div class="status-box">${escapeHtml(safeMessage)}</div>
+          </div>
+        </div>
+      `;
     }
-  });
 
-  const avg = arr => arr.length ? Math.round(arr.reduce((a, b) => a + b, 0) / arr.length) : null;
-
-  return {
-    avgResponse: avg(responseTimes),
-    avgResolution: avg(resolutionTimes),
-    sameDayRate: resolutionTimes.length
-      ? Math.round((sameDayCount / resolutionTimes.length) * 100)
-      : null,
-    openIssues: (data.awaiting_response?.length || 0) + (data.remediation_submitted?.length || 0)
-  };
-}
-    
     async function loadDashboard() {
       try {
         const portalContent = document.getElementById("portal-content");
@@ -1731,38 +1612,22 @@ function showLoadError(message) {
 
         const res = await fetch(`${DASHBOARD_API}?property_slug=${encodeURIComponent(PROPERTY_SLUG)}`, {
           method: "GET",
-          headers: {
-            "Accept": "application/json"
-          }
+          headers: { "Accept": "application/json" }
         });
 
         const data = await res.json().catch(() => null);
 
-if (!res.ok || data?.error) {
-  const errorMessage =
-    typeof data?.error === "string"
-      ? data.error
-      : data?.error?.message ||
-        data?.details?.message ||
-        JSON.stringify(data?.error || data?.details || data || "Failed to load dashboard.");
+        if (!res.ok || data?.error) {
+          const errorMessage =
+            typeof data?.error === "string"
+              ? data.error
+              : data?.error?.message ||
+                data?.details?.message ||
+                JSON.stringify(data?.error || data?.details || data || "Failed to load dashboard.");
+          throw new Error(errorMessage);
+        }
 
-  throw new Error(errorMessage);
-}
         dashboardData = data;
-
-        const metrics = calculateMetrics(data);
-
-document.getElementById("avg-response-time").textContent =
-  metrics.avgResponse !== null ? formatMinutesLabel(metrics.avgResponse) : "—";
-
-document.getElementById("avg-resolution-time").textContent =
-  metrics.avgResolution !== null ? formatMinutesLabel(metrics.avgResolution) : "—";
-
-document.getElementById("same-day-rate").textContent =
-  metrics.sameDayRate !== null ? `${metrics.sameDayRate}%` : "—";
-
-document.getElementById("open-issues-count").textContent =
-  metrics.openIssues ?? 0;
 
         renderTopLevel(data);
         renderDashboardIssues();
@@ -1776,9 +1641,7 @@ document.getElementById("open-issues-count").textContent =
         showLoadError(error.message || "Dashboard failed to load.");
       } finally {
         const portal = document.getElementById("portal-content");
-        if (portal) {
-          portal.classList.remove("loading");
-        }
+        if (portal) portal.classList.remove("loading");
       }
     }
 
