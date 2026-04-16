@@ -658,32 +658,43 @@
       </div>
 
       <div class="content" id="portal-content">
-        <section id="dashboard-view" class="view active">
-          <div class="cards">
-            <div class="card">
-              <div class="card-label">Property</div>
-              <div class="card-value" id="property-name-card">—</div>
-              <div class="card-subtext" id="property-type-card">Loading property details...</div>
-            </div>
+        <div class="cards">
+  <div class="card">
+    <div class="card-label">Property</div>
+    <div class="card-value" id="property-name-card">—</div>
+    <div class="card-subtext" id="property-type-card">Loading property details...</div>
+  </div>
 
-            <div class="card">
-              <div class="card-label">Total Rooms</div>
-              <div class="card-value" id="total-rooms-card">—</div>
-              <div class="card-subtext">Rooms currently tracked in the Ready Mark system.</div>
-            </div>
+  <div class="card">
+    <div class="card-label">Total Rooms</div>
+    <div class="card-value" id="total-rooms-card">—</div>
+    <div class="card-subtext">Rooms tracked in the Ready Mark system.</div>
+  </div>
 
-            <div class="card">
-              <div class="card-label">Awaiting Response</div>
-              <div class="card-value" id="awaiting-response-card">—</div>
-              <div class="card-subtext">Property-visible issues that still need a remediation response.</div>
-            </div>
+  <div class="card">
+    <div class="card-label">Avg Response Time</div>
+    <div class="card-value" id="avg-response-time">—</div>
+    <div class="card-subtext">Time from report → property notified</div>
+  </div>
 
-            <div class="card">
-              <div class="card-label">Resolved Issues</div>
-              <div class="card-value" id="resolved-issues-card">—</div>
-              <div class="card-subtext">Issues that have already been marked resolved in the system.</div>
-            </div>
-          </div>
+  <div class="card">
+    <div class="card-label">Avg Resolution Time</div>
+    <div class="card-value" id="avg-resolution-time">—</div>
+    <div class="card-subtext">Time from report → fully resolved</div>
+  </div>
+
+  <div class="card">
+    <div class="card-label">Same-Day Resolution</div>
+    <div class="card-value" id="same-day-rate">—</div>
+    <div class="card-subtext">Resolved within 24 hours</div>
+  </div>
+
+  <div class="card">
+    <div class="card-label">Open Issues</div>
+    <div class="card-value" id="open-issues-count">—</div>
+    <div class="card-subtext">Currently active issues</div>
+  </div>
+</div>
 
           <div class="section-card">
             <div class="section-header">
@@ -1671,6 +1682,44 @@ function showLoadError(message) {
     </div>
   `;
 }   
+
+    function calculateMetrics(data) {
+  const allIssues = [
+    ...(data.awaiting_response || []),
+    ...(data.remediation_submitted || []),
+    ...(data.resolved_issues || [])
+  ];
+
+  let responseTimes = [];
+  let resolutionTimes = [];
+  let sameDayCount = 0;
+
+  allIssues.forEach(issue => {
+    const response = minutesBetween(issue.reported_at, issue.hotel_notified_at);
+    const resolution = minutesBetween(issue.reported_at, issue.resolved_at);
+
+    if (response !== null) responseTimes.push(response);
+    if (resolution !== null) {
+      resolutionTimes.push(resolution);
+
+      if (resolution <= 1440) {
+        sameDayCount++;
+      }
+    }
+  });
+
+  const avg = arr => arr.length ? Math.round(arr.reduce((a, b) => a + b, 0) / arr.length) : null;
+
+  return {
+    avgResponse: avg(responseTimes),
+    avgResolution: avg(resolutionTimes),
+    sameDayRate: resolutionTimes.length
+      ? Math.round((sameDayCount / resolutionTimes.length) * 100)
+      : null,
+    openIssues: (data.awaiting_response?.length || 0) + (data.remediation_submitted?.length || 0)
+  };
+}
+    
     async function loadDashboard() {
       try {
         const portalContent = document.getElementById("portal-content");
@@ -1700,6 +1749,20 @@ if (!res.ok || data?.error) {
   throw new Error(errorMessage);
 }
         dashboardData = data;
+
+        const metrics = calculateMetrics(data);
+
+document.getElementById("avg-response-time").textContent =
+  metrics.avgResponse !== null ? formatMinutesLabel(metrics.avgResponse) : "—";
+
+document.getElementById("avg-resolution-time").textContent =
+  metrics.avgResolution !== null ? formatMinutesLabel(metrics.avgResolution) : "—";
+
+document.getElementById("same-day-rate").textContent =
+  metrics.sameDayRate !== null ? `${metrics.sameDayRate}%` : "—";
+
+document.getElementById("open-issues-count").textContent =
+  metrics.openIssues ?? 0;
 
         renderTopLevel(data);
         renderDashboardIssues();
