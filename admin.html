@@ -1098,6 +1098,34 @@
       });
     }
 
+    function minutesBetween(startValue, endValue) {
+  if (!startValue || !endValue) return null;
+
+  const start = new Date(startValue).getTime();
+  const end = new Date(endValue).getTime();
+
+  if (Number.isNaN(start) || Number.isNaN(end) || end < start) return null;
+
+  return Math.round((end - start) / 60000);
+}
+
+function formatMinutesLabel(totalMinutes) {
+  if (totalMinutes === null || totalMinutes === undefined) return "—";
+
+  if (totalMinutes < 60) {
+    return `${totalMinutes} min`;
+  }
+
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+
+  if (minutes === 0) {
+    return `${hours} hr`;
+  }
+
+  return `${hours} hr ${minutes} min`;
+}
+    
     function setStatusBox(id, message) {
       const el = document.getElementById(id);
       if (el) el.textContent = message;
@@ -1453,7 +1481,7 @@ function getGuestReportActionButtons(report) {
   return actions.join("");
 }
     
-    function renderGuestReports() {
+function renderGuestReports() {
   const activeBody = document.getElementById("guest-reports-body");
   const resolvedBody = document.getElementById("resolved-reports-body");
 
@@ -1463,64 +1491,93 @@ function getGuestReportActionButtons(report) {
   if (!activeReports.length) {
     activeBody.innerHTML = `<tr><td colspan="6">No active guest reports found.</td></tr>`;
   } else {
-    activeBody.innerHTML = activeReports.map(report => `
-      <tr>
-        <td>
-          ${escapeHtml(report.confirmation_number || report.verification_id || report.id || "—")}
-          <div class="report-meta">${escapeHtml(report.verification_id || "")}</div>
-        </td>
-        <td>
-          ${escapeHtml(report.property_name || report.property_slug || "—")}
-          <div class="report-meta">${escapeHtml(report.property_slug || "")}</div>
-        </td>
-        <td>${escapeHtml(report.room_number || "—")}</td>
-        <td>
-          <span class="status-pill ${getStatusPillClass(report.status)}">${escapeHtml(report.status || "New")}</span>
-          <div class="report-meta">
-            ${report.under_review_at ? `Under review: ${escapeHtml(formatDateTime(report.under_review_at))}<br>` : ""}
-            ${report.escalated_at ? `Escalated: ${escapeHtml(formatDateTime(report.escalated_at))}<br>` : ""}
-            ${report.remediation_submitted_at ? `Remediation: ${escapeHtml(formatDateTime(report.remediation_submitted_at))}<br>` : ""}
-            ${report.guest_confirmed_at ? `Guest confirmed: ${escapeHtml(formatDateTime(report.guest_confirmed_at))}` : ""}
-          </div>
-        </td>
-        <td>${escapeHtml(formatDate(report.reported_at))}</td>
-        <td>
-          <div class="report-actions">
-            ${getGuestReportActionButtons(report)}
-          </div>
-        </td>
-      </tr>
-    `).join("");
+    activeBody.innerHTML = activeReports.map(report => {
+      const timeToProperty = minutesBetween(report.reported_at, report.hotel_notified_at);
+      const timeToRemediation = minutesBetween(report.hotel_notified_at, report.remediation_submitted_at);
+      const totalOpenTime = minutesBetween(report.reported_at, new Date().toISOString());
+
+      return `
+        <tr>
+          <td>
+            ${escapeHtml(report.confirmation_number || report.verification_id || report.id || "—")}
+            <div class="report-meta">${escapeHtml(report.verification_id || "")}</div>
+          </td>
+          <td>
+            ${escapeHtml(report.property_name || report.property_slug || "—")}
+            <div class="report-meta">${escapeHtml(report.property_slug || "")}</div>
+          </td>
+          <td>${escapeHtml(report.room_number || "—")}</td>
+          <td>
+            <span class="status-pill ${getStatusPillClass(report.status)}">${escapeHtml(report.status || "New")}</span>
+            <div class="report-meta">
+              ${report.reported_at ? `Reported: ${escapeHtml(formatDateTime(report.reported_at))}<br>` : ""}
+              ${report.hotel_notified_at ? `Sent to Property: ${escapeHtml(formatDateTime(report.hotel_notified_at))}<br>` : ""}
+              ${report.under_review_at ? `Under Review: ${escapeHtml(formatDateTime(report.under_review_at))}<br>` : ""}
+              ${report.escalated_at ? `Escalated: ${escapeHtml(formatDateTime(report.escalated_at))}<br>` : ""}
+              ${report.remediation_submitted_at ? `Remediation Submitted: ${escapeHtml(formatDateTime(report.remediation_submitted_at))}<br>` : ""}
+              ${report.guest_confirmed_at ? `Guest Confirmed: ${escapeHtml(formatDateTime(report.guest_confirmed_at))}` : ""}
+            </div>
+          </td>
+          <td>
+            ${escapeHtml(formatDate(report.reported_at))}
+            <div class="report-meta">
+              ${timeToProperty !== null ? `To Property: ${escapeHtml(formatMinutesLabel(timeToProperty))}<br>` : ""}
+              ${timeToRemediation !== null ? `To Remediation: ${escapeHtml(formatMinutesLabel(timeToRemediation))}<br>` : ""}
+              Open For: ${escapeHtml(formatMinutesLabel(totalOpenTime))}
+            </div>
+          </td>
+          <td>
+            <div class="report-actions">
+              ${getGuestReportActionButtons(report)}
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join("");
   }
 
   if (!resolvedReports.length) {
     resolvedBody.innerHTML = `<tr><td colspan="6">No resolved issues found.</td></tr>`;
   } else {
-    resolvedBody.innerHTML = resolvedReports.map(report => `
-      <tr>
-        <td>
-          ${escapeHtml(report.confirmation_number || report.verification_id || report.id || "—")}
-          <div class="report-meta">${escapeHtml(report.verification_id || "")}</div>
-        </td>
-        <td>
-          ${escapeHtml(report.property_name || report.property_slug || "—")}
-          <div class="report-meta">${escapeHtml(report.property_slug || "")}</div>
-        </td>
-        <td>${escapeHtml(report.room_number || "—")}</td>
-        <td>${escapeHtml(formatDateTime(report.resolved_at))}</td>
-        <td>${escapeHtml(report.verified_by || "Ready Mark")}</td>
-        <td>
-          <div class="report-meta">
-            Reported: ${escapeHtml(formatDateTime(report.reported_at))}<br>
-            ${report.hotel_notified_at ? `Sent to property: ${escapeHtml(formatDateTime(report.hotel_notified_at))}<br>` : ""}
-            ${report.remediation_submitted_at ? `Remediation: ${escapeHtml(formatDateTime(report.remediation_submitted_at))}<br>` : ""}
-            Resolved: ${escapeHtml(formatDateTime(report.resolved_at))}
-          </div>
-        </td>
-      </tr>
-    `).join("");
+    resolvedBody.innerHTML = resolvedReports.map(report => {
+      const timeToProperty = minutesBetween(report.reported_at, report.hotel_notified_at);
+      const timeToRemediation = minutesBetween(report.hotel_notified_at, report.remediation_submitted_at);
+      const totalResolutionTime = minutesBetween(report.reported_at, report.resolved_at);
+
+      return `
+        <tr>
+          <td>
+            ${escapeHtml(report.confirmation_number || report.verification_id || report.id || "—")}
+            <div class="report-meta">${escapeHtml(report.verification_id || "")}</div>
+          </td>
+          <td>
+            ${escapeHtml(report.property_name || report.property_slug || "—")}
+            <div class="report-meta">${escapeHtml(report.property_slug || "")}</div>
+          </td>
+          <td>${escapeHtml(report.room_number || "—")}</td>
+          <td>
+            ${escapeHtml(formatDateTime(report.resolved_at))}
+            <div class="report-meta">
+              ${report.guest_confirmed_at ? `Guest Confirmed: ${escapeHtml(formatDateTime(report.guest_confirmed_at))}` : "Guest Confirmation: —"}
+            </div>
+          </td>
+          <td>${escapeHtml(report.verified_by || "Ready Mark")}</td>
+          <td>
+            <div class="report-meta">
+              Reported: ${escapeHtml(formatDateTime(report.reported_at))}<br>
+              ${report.hotel_notified_at ? `Sent to Property: ${escapeHtml(formatDateTime(report.hotel_notified_at))}<br>` : ""}
+              ${report.remediation_submitted_at ? `Remediation Submitted: ${escapeHtml(formatDateTime(report.remediation_submitted_at))}<br>` : ""}
+              Resolved: ${escapeHtml(formatDateTime(report.resolved_at))}<br><br>
+              ${timeToProperty !== null ? `To Property: ${escapeHtml(formatMinutesLabel(timeToProperty))}<br>` : ""}
+              ${timeToRemediation !== null ? `To Remediation: ${escapeHtml(formatMinutesLabel(timeToRemediation))}<br>` : ""}
+              Total Resolution Time: ${escapeHtml(formatMinutesLabel(totalResolutionTime))}
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join("");
   }
-}   
+}    
     function renderInspectionHistory() {
       const tbody = document.getElementById("inspection-history-body");
       const searchValue = document.getElementById("inspection-history-search").value.trim().toLowerCase();
