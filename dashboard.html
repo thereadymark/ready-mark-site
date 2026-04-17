@@ -850,7 +850,15 @@
         <section id="qr-view" class="view">
           <div class="section-card">
             <div class="section-header">
-              <h2>QR Verification Lookup</h2>
+              <div style="padding: 16px;">
+              <input 
+                type="text" 
+                 id="qr-search-input" 
+                  placeholder="Search by Room # or Verification ID"
+    style="width:100%; padding:12px; border-radius:10px; border:1px solid #ddd;"
+  />
+</div             
+                <h2>QR Verification Lookup</h2>
               <p>View QR-linked records and verification URLs for rooms currently in the system.</p>
             </div>
             <div class="table-wrap">
@@ -1498,7 +1506,17 @@ if (openIssuesCard && openIssuesCardWrapper) {
         </tr>
       `).join("");
     }
+function filterQRRecords() {
+  const input = document.getElementById("qr-search-input");
+  const value = input.value.toLowerCase();
 
+  const rows = document.querySelectorAll("#qr-records-body tr");
+
+  rows.forEach(row => {
+    const text = row.innerText.toLowerCase();
+    row.style.display = text.includes(value) ? "" : "none";
+  });
+}
     function renderReports(items) {
       const body = document.getElementById("reports-body");
       body.innerHTML = "";
@@ -1795,6 +1813,8 @@ setText("issue-timeline-resolved", issue.resolved_at ? formatDate(issue.resolved
       goToView(lastNonDetailView || "issues-view");
     });
 
+    document.getElementById("qr-search-input")?.addEventListener("input", filterQRRecords);
+    
     loadDashboard();
   </script>
 </body>
