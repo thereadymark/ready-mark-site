@@ -274,6 +274,13 @@
       text-align: center;
     }
 
+    .card.alert {
+      border-top: 3px solid var(--danger);
+    }
+    .card.good {
+      border-top: 3px solid var(--success);
+    }
+    
     .section-card {
   background: var(--panel);
   border: 1px solid #ddd7ca;
@@ -1247,7 +1254,18 @@ function setText(id, value) {
     metrics.sameDayRate !== null ? `${metrics.sameDayRate}%` : "—"
   );
   setText("open-issues-count", metrics.openIssues ?? 0);
+      const openIssuesCard = document.getElementById("open-issues-count");
+const openIssuesCardWrapper = openIssuesCard?.closest(".card");
 
+if (openIssuesCard && openIssuesCardWrapper) {
+  openIssuesCard.classList.remove("good", "alert");
+  openIssuesCardWrapper.classList.remove("good", "alert");
+
+  const isZero = (metrics.openIssues ?? 0) === 0;
+
+  openIssuesCard.classList.add(isZero ? "good" : "alert");
+  openIssuesCardWrapper.classList.add(isZero ? "good" : "alert");
+}
       const openIssuesCard = document.getElementById("open-issues-count");
 if (openIssuesCard) {
   openIssuesCard.classList.remove("good", "alert");
