@@ -1266,11 +1266,7 @@ if (openIssuesCard && openIssuesCardWrapper) {
   openIssuesCard.classList.add(isZero ? "good" : "alert");
   openIssuesCardWrapper.classList.add(isZero ? "good" : "alert");
 }
-      const openIssuesCard = document.getElementById("open-issues-count");
-if (openIssuesCard) {
-  openIssuesCard.classList.remove("good", "alert");
-  openIssuesCard.classList.add((metrics.openIssues ?? 0) === 0 ? "good" : "alert");
-}      
+      
   setText(
     "property-location",
     `${property.city || "—"}${property.city && property.state ? ", " : ""}${property.state || ""}`
@@ -1280,9 +1276,6 @@ if (openIssuesCard) {
   setText("latest-inspection-date", formatDate(summary.latest_inspection_date));
   setText("latest-inspection-room", summary.latest_inspection_room || "—");
   setText("topbar-chip", property.property_name || "Property Access");
-
-    const banner = document.getElementById("no-issues-banner");
-  
   } 
 
     function renderDashboardIssues() {
