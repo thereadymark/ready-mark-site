@@ -1247,14 +1247,48 @@ function setText(id, value) {
         : "—";
   }
   } 
+function renderSection(title, items) {
+  if (!items.length) {
+    return `
+      <div class="section-card">
+        <div class="section-header">
+          <h3>${title}</h3>
+        </div>
+        <div style="padding:16px; color:var(--muted);">
+          No items in this section.
+        </div>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="section-card">
+      <div class="section-header">
+        <h3>${title}</h3>
+      </div>
+      <table class="data-table">
+        <tbody>
+          ${items.map(item => renderIssueRow(item)).join("")}
+        </tbody>
+      </table>
+    </div>
+  `;
+}    
     function renderDashboardIssues() {
       const body = document.getElementById("dashboard-issues-body");
       body.innerHTML = "";
 
-      const combined = [
-        ...(Array.isArray(dashboardData.awaiting_response) ? dashboardData.awaiting_response : []),
-        ...(Array.isArray(dashboardData.remediation_submitted) ? dashboardData.remediation_submitted : [])
-      ].slice(0, 6);
+     const awaiting = Array.isArray(dashboardData.awaiting_response)
+  ? dashboardData.awaiting_response
+  : [];
+
+const inProgress = Array.isArray(dashboardData.remediation_submitted)
+  ? dashboardData.remediation_submitted
+  : [];
+
+const resolved = Array.isArray(dashboardData.resolved_issues)
+  ? dashboardData.resolved_issues.slice(0, 3)
+  : [];
 
      if (!combined.length) {
   body.innerHTML = `
@@ -1272,41 +1306,11 @@ if (bannerTime) {
       ? formatMinutesLabel(metrics.avgResolution)
       : "—";
 }
-      body.innerHTML = combined.map(item => {
-        const timeToProperty = minutesBetween(item.reported_at, item.hotel_notified_at);
-        const timeToRemediation = minutesBetween(item.hotel_notified_at, item.remediation_submitted_at);
-        const openFor = minutesBetween(item.reported_at, new Date().toISOString());
-
-        return `
-          <tr>
-            <td>${escapeHtml(item.confirmation_number || "—")}</td>
-            <td>${escapeHtml(item.room_number || "—")}</td>
-            <td>
-              <span class="status-pill ${getIssueStatusClass(item.status)}">${escapeHtml(item.status || "—")}</span>
-              <div class="report-meta">
-                ${item.reported_at ? `Reported: ${escapeHtml(formatDate(item.reported_at))}<br>` : ""}
-                ${item.hotel_notified_at ? `Sent to Property: ${escapeHtml(formatDate(item.hotel_notified_at))}<br>` : ""}
-                ${item.under_review_at ? `Under Review: ${escapeHtml(formatDate(item.under_review_at))}<br>` : ""}
-                ${item.escalated_at ? `Escalated: ${escapeHtml(formatDate(item.escalated_at))}<br>` : ""}
-                ${item.remediation_submitted_at ? `Remediation Submitted: ${escapeHtml(formatDate(item.remediation_submitted_at))}` : ""}
-              </div>
-            </td>
-            <td>
-              <span class="priority-badge priority-${(item.priority || "normal").toLowerCase()}">
-                 ${escapeHtml(item.priority || "Normal")}
-                  </span>
-                <div class="report-meta">
-                ${timeToProperty !== null ? `To Property: ${escapeHtml(formatMinutesLabel(timeToProperty))}<br>` : ""}
-                ${timeToRemediation !== null ? `To Remediation: ${escapeHtml(formatMinutesLabel(timeToRemediation))}<br>` : ""}
-               <br>Open For: ${escapeHtml(formatMinutesLabel(openFor))}
-              </div>
-            </td>
-            <td>${escapeHtml(formatDate(item.reported_at))}</td>
-            <td><button class="text-btn issue-open-btn" type="button" data-issue-id="${escapeHtml(item.id)}">Open</button></td>
-          </tr>
-        `;
-      }).join("");
-
+     body.innerHTML = `
+  ${renderSection("Awaiting Response", awaiting)}
+  ${renderSection("In Progress", inProgress)}
+  ${renderSection("Recently Resolved", resolved)}
+`;
       bindIssueButtons();
     }
 
