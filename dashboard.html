@@ -924,10 +924,39 @@
             </div>
 
             <div class="detail-block full">
-              <h3>Guest Notes & Timeline</h3>
+              <h3>Guest Notes</h3>
               <p id="issue-detail-note">No guest note provided.</p>
             </div>
 
+            <div class="detail-block full">
+  <h3>Issue Timeline</h3>
+  <div class="meta-list">
+    <div class="meta-item">
+      <div class="meta-label">Reported</div>
+      <div class="meta-value" id="issue-timeline-reported">—</div>
+    </div>
+    <div class="meta-item">
+      <div class="meta-label">Sent to Property</div>
+      <div class="meta-value" id="issue-timeline-property">—</div>
+    </div>
+    <div class="meta-item">
+      <div class="meta-label">Under Review</div>
+      <div class="meta-value" id="issue-timeline-review">—</div>
+    </div>
+    <div class="meta-item">
+      <div class="meta-label">Escalated</div>
+      <div class="meta-value" id="issue-timeline-escalated">—</div>
+    </div>
+    <div class="meta-item">
+      <div class="meta-label">Remediation Submitted</div>
+      <div class="meta-value" id="issue-timeline-remediation">—</div>
+    </div>
+    <div class="meta-item">
+      <div class="meta-label">Resolved</div>
+      <div class="meta-value" id="issue-timeline-resolved">—</div>
+    </div>
+  </div>
+</div>
             <div class="detail-block full">
               <h3>Photo Evidence</h3>
               <div id="issue-detail-photo-wrap" class="empty-note">No photo evidence attached.</div>
@@ -940,6 +969,15 @@
                   <div class="meta-label">Resolution Note</div>
                   <div class="meta-value" id="issue-detail-resolution-note">No resolution submitted yet.</div>
                 </div>
+
+               <div class="meta-item">
+       <div class="meta-label">Time to Property</div>
+      <div class="meta-value" id="issue-detail-time-to-property">—</div>
+     </div>
+      <div class="meta-item">
+       <div class="meta-label">Time to Resolution</div>
+         <div class="meta-value" id="issue-detail-time-to-resolution">—</div>
+          </div>
                 <div class="meta-item">
                   <div class="meta-label">Resolved By</div>
                   <div class="meta-value" id="issue-detail-resolved-by">—</div>
@@ -1218,11 +1256,14 @@ function setText(id, value) {
         ...(Array.isArray(dashboardData.remediation_submitted) ? dashboardData.remediation_submitted : [])
       ].slice(0, 6);
 
-      if (!combined.length) {
-        body.innerHTML = '<tr><td colspan="6">No active property-side issues to display.</td></tr>';
-        return;
-      }
-
+     if (!combined.length) {
+  body.innerHTML = `
+    <div style="padding:20px; text-align:center; color:var(--muted);">
+      No active issues right now.
+    </div>
+  `;
+  return;
+}
       const bannerTime = document.getElementById("banner-resolution-time");
 
 if (bannerTime) {
@@ -1251,11 +1292,13 @@ if (bannerTime) {
               </div>
             </td>
             <td>
-              ${escapeHtml(item.priority || "Normal")}
-              <div class="report-meta">
+              <span class="priority-badge priority-${(item.priority || "normal").toLowerCase()}">
+                 ${escapeHtml(item.priority || "Normal")}
+                  </span>
+                <div class="report-meta">
                 ${timeToProperty !== null ? `To Property: ${escapeHtml(formatMinutesLabel(timeToProperty))}<br>` : ""}
                 ${timeToRemediation !== null ? `To Remediation: ${escapeHtml(formatMinutesLabel(timeToRemediation))}<br>` : ""}
-                Open For: ${escapeHtml(formatMinutesLabel(openFor))}
+               <br>Open For: ${escapeHtml(formatMinutesLabel(openFor))}
               </div>
             </td>
             <td>${escapeHtml(formatDate(item.reported_at))}</td>
@@ -1522,6 +1565,23 @@ if (bannerTime) {
       const issue = getAllIssues().find(item => String(item.id) === String(issueId));
       if (!issue) return;
 
+       const timeToProperty = issue.hotel_notified_at
+  ? minutesBetween(issue.reported_at, issue.hotel_notified_at)
+  : null;
+
+const timeToResolution = issue.resolved_at
+  ? minutesBetween(issue.reported_at, issue.resolved_at)
+  : null;
+      
+setText(
+  "issue-detail-time-to-property",
+  timeToProperty !== null ? formatMinutesLabel(timeToProperty) : "—"
+);
+
+setText(
+  "issue-detail-time-to-resolution",
+  timeToResolution !== null ? formatMinutesLabel(timeToResolution) : "—"
+);            
       currentIssueRecord = issue;
 
       document.getElementById("issue-detail-title").textContent = `Guest Issue — Room ${issue.room_number || "—"}`;
@@ -1546,18 +1606,16 @@ if (bannerTime) {
       document.getElementById("issue-detail-resolved-at").textContent = issue.resolved_at ? formatDate(issue.resolved_at) : "—";
       document.getElementById("issue-detail-response-minutes").textContent = issue.response_minutes ?? "—";
 
-      const timeline = [
-        issue.reported_at ? `Reported: ${formatDate(issue.reported_at)}` : null,
-        issue.hotel_notified_at ? `Sent to Property: ${formatDate(issue.hotel_notified_at)}` : null,
-        issue.under_review_at ? `Under Review: ${formatDate(issue.under_review_at)}` : null,
-        issue.escalated_at ? `Escalated: ${formatDate(issue.escalated_at)}` : null,
-        issue.remediation_submitted_at ? `Remediation Submitted: ${formatDate(issue.remediation_submitted_at)}` : null,
-        issue.resolved_at ? `Resolved: ${formatDate(issue.resolved_at)}` : null
-      ].filter(Boolean).join("\n");
+    document.getElementById("issue-detail-note").textContent =
+  issue.guest_note || issue.details || "No guest note provided.";
 
-      document.getElementById("issue-detail-note").textContent =
-        `${issue.guest_note || issue.details || "No guest note provided."}\n\n${timeline ? `Timeline:\n${timeline}` : ""}`;
-
+setText("issue-timeline-reported", issue.reported_at ? formatDate(issue.reported_at) : "—");
+setText("issue-timeline-property", issue.hotel_notified_at ? formatDate(issue.hotel_notified_at) : "—");
+setText("issue-timeline-review", issue.under_review_at ? formatDate(issue.under_review_at) : "—");
+setText("issue-timeline-escalated", issue.escalated_at ? formatDate(issue.escalated_at) : "—");
+setText("issue-timeline-remediation", issue.remediation_submitted_at ? formatDate(issue.remediation_submitted_at) : "—");
+setText("issue-timeline-resolved", issue.resolved_at ? formatDate(issue.resolved_at) : "—");
+      
       const photoWrap = document.getElementById("issue-detail-photo-wrap");
       if (issue.photo_url) {
         photoWrap.innerHTML = `
