@@ -1340,7 +1340,13 @@ if (openIssuesCard && openIssuesCardWrapper) {
       body.innerHTML = "";
 
       if (!items.length) {
-        body.innerHTML = '<tr><td colspan="5">No inspection history found.</td></tr>';
+        body.innerHTML = `
+  <tr>
+    <td colspan="5" style="text-align:center; padding:30px; color:#6d6a64;">
+      No records found for this property.
+    </td>
+  </tr>
+`;        
         return;
       }
 
@@ -1362,7 +1368,13 @@ if (openIssuesCard && openIssuesCardWrapper) {
       body.innerHTML = "";
 
       if (!items.length) {
-        body.innerHTML = '<tr><td colspan="7">No issues currently awaiting a property response.</td></tr>';
+        body.innerHTML = `
+  <tr>
+    <td colspan="5" style="text-align:center; padding:30px; color:#6d6a64;">
+      No records found for this property.
+    </td>
+  </tr>
+`;        
         return;
       }
 
@@ -1405,7 +1417,13 @@ if (openIssuesCard && openIssuesCardWrapper) {
       body.innerHTML = "";
 
       if (!items.length) {
-        body.innerHTML = '<tr><td colspan="6">No remediation responses awaiting review.</td></tr>';
+       body.innerHTML = `
+  <tr>
+    <td colspan="5" style="text-align:center; padding:30px; color:#6d6a64;">
+      No records found for this property.
+    </td>
+  </tr>
+`;      
         return;
       }
 
@@ -1448,7 +1466,13 @@ if (openIssuesCard && openIssuesCardWrapper) {
       body.innerHTML = "";
 
       if (!items.length) {
-        body.innerHTML = '<tr><td colspan="6">No resolved issues yet.</td></tr>';
+       body.innerHTML = `
+  <tr>
+    <td colspan="5" style="text-align:center; padding:30px; color:#6d6a64;">
+      No records found for this property.
+    </td>
+  </tr>
+`;      
         return;
       }
 
@@ -1492,7 +1516,13 @@ if (openIssuesCard && openIssuesCardWrapper) {
       body.innerHTML = "";
 
       if (!items.length) {
-        body.innerHTML = '<tr><td colspan="5">No QR records found.</td></tr>';
+       body.innerHTML = `
+  <tr>
+    <td colspan="5" style="text-align:center; padding:30px; color:#6d6a64;">
+      No records found for this property.
+    </td>
+  </tr>
+`;        
         return;
       }
 
@@ -1522,7 +1552,13 @@ function filterQRRecords() {
       body.innerHTML = "";
 
       if (!items.length) {
-        body.innerHTML = '<tr><td colspan="5">No reports found.</td></tr>';
+       body.innerHTML = `
+  <tr>
+    <td colspan="5" style="text-align:center; padding:30px; color:#6d6a64;">
+      No records found for this property.
+    </td>
+  </tr>
+`;        
         return;
       }
 
