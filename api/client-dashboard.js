@@ -83,12 +83,12 @@ export default async function handler(req, res) {
 
     const { property_slug } = req.query || {};
 
-    if (!property_slug || typeof property_slug !== "string") {
-      return res.status(400).json({
-        error: "Missing property_slug"
-      });
-    }
-
+   if (!property_slug || typeof property_slug !== "string") {
+  res.writeHead(302, {
+    Location: "/dashboard.html?property_slug=crown-plaza-hotel-stl"
+  });
+  return res.end();
+}
     const normalizedPropertySlug = String(property_slug).trim().toLowerCase();
 
     const { data: property, error: propertyError } = await supabase
