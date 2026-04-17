@@ -1727,24 +1727,34 @@ setText("issue-timeline-resolved", issue.resolved_at ? formatDate(issue.resolved
     }
 
     function showLoadError(message) {
-      const safeMessage =
-        typeof message === "string"
-          ? message
-          : JSON.stringify(message, null, 2);
+  const safeMessage =
+    typeof message === "string"
+      ? message
+      : JSON.stringify(message, null, 2);
 
-      document.getElementById("portal-content").innerHTML = `
-        <div class="section-card">
-          <div class="section-header">
-            <h2>Unable to Load Dashboard</h2>
-            <p>Please review the current property configuration or API response.</p>
-          </div>
-          <div class="section-body">
-            <div class="status-box">${escapeHtml(safeMessage)}</div>
-          </div>
+  document.getElementById("portal-content").innerHTML = `
+    <div class="section-card" style="max-width:760px; margin:40px auto;">
+      <div class="section-header">
+        <h2>Unable to Load Dashboard</h2>
+        <p>We couldn’t load this property portal.</p>
+      </div>
+      <div class="section-body">
+        <div class="status-box error" style="margin-bottom:16px;">
+          ${escapeHtml(safeMessage)}
         </div>
-      `;
-    }
 
+        <div style="display:flex; gap:12px; flex-wrap:wrap;">
+          <a href="/dashboard.html?property_slug=${encodeURIComponent(PROPERTY_SLUG)}" class="btn btn-primary">
+            Reload Portal
+          </a>
+          <a href="/" class="btn btn-secondary">
+            Back to Main Site
+          </a>
+        </div>
+      </div>
+    </div>
+  `;
+}
     async function loadDashboard() {
       try {
         const portalContent = document.getElementById("portal-content");
