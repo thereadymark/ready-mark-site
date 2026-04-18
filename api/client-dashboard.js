@@ -279,12 +279,12 @@ if (normalizedRequestedSlug !== normalizedAllowedSlug) {
       resolved_issues: resolvedIssues,
       inspection_history: inspectionHistory
     });
-  } catch (err) {
-    console.error("CLIENT DASHBOARD ERROR:", err);
+ } catch (err) {
+  console.error("CLIENT DASHBOARD ERROR:", err);
 
-    return res.status(500).json({
-      error: err.message || "Internal server error",
-      stack: err.stack || null
-    });
-  }
+  return res.status(500).json({
+    error: err?.message || err || "UNKNOWN ERROR",
+    full: err
+  });
+}
 }
