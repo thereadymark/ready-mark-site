@@ -1879,8 +1879,9 @@ const errorMessage =
 throw new Error(errorMessage);
           
         dashboardData = data;
-
-        renderTopLevel(data);
+        console.log("FULL DASHBOARD RESPONSE:", data);
+          
+          renderTopLevel(data);
         renderDashboardIssues();
         renderRecentInspections(Array.isArray(data.inspection_history) ? data.inspection_history : []);
         renderAwaitingResponse(Array.isArray(data.awaiting_response) ? data.awaiting_response : []);
