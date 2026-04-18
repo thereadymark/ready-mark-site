@@ -1,3 +1,4 @@
+import { getAuthorizedClientUser } from "./_clientAuth";
 import { createClient } from "@supabase/supabase-js";
 
 const ACTIVE_STATUSES = ["New", "Under Review", "Escalated", "Sent to Property"];
@@ -82,13 +83,25 @@ export default async function handler(req, res) {
     }
 
     const { property_slug } = req.query || {};
+    const authResult = await getAuthorizedClientUser(req);
 
-   if (!property_slug || typeof property_slug !== "string") {
-  res.writeHead(302, {
-    Location: "/dashboard.html?property_slug=crown-plaza-hotel-stl"
-  });
-  return res.end();
+if (authResult.error) {
+  return res.status(authResult.status).json({ error: authResult.error });
 }
+
+const { clientUser } = authResult;
+
+if (!property_slug || typeof property_slug !== "string") {
+  return res.status(400).json({ error: "Missing property_slug" });
+}
+
+const normalizedRequestedSlug = String(property_slug).trim().toLowerCase();
+const normalizedAllowedSlug = String(clientUser.property_slug).trim().toLowerCase();
+
+if (normalizedRequestedSlug !== normalizedAllowedSlug) {
+  return res.status(403).json({ error: "You are not authorized for this property" });
+}
+
     const normalizedPropertySlug = String(property_slug).trim().toLowerCase();
 
     const { data: property, error: propertyError } = await supabase
