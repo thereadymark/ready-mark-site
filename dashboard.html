@@ -1827,6 +1827,23 @@ async function resolveLoggedInPropertySlug() {
   return data.client_user.property_slug;
 }
 
+    async function getAccessToken() {
+  const {
+    data: { session },
+    error
+  } = await supabaseClient.auth.getSession();
+
+  if (error) {
+    throw new Error(error.message || "Unable to get session.");
+  }
+
+  if (!session || !session.access_token) {
+    window.location.href = "/login.html";
+    return null;
+  }
+
+  return session.access_token;
+}
     async function loadDashboard() {
       try {
         const portalContent = document.getElementById("portal-content");
@@ -1843,11 +1860,19 @@ if (!PROPERTY_SLUG) {
   window.history.replaceState({}, "", newUrl);
 }
 
-        const res = await fetch(`${DASHBOARD_API}?property_slug=${encodeURIComponent(PROPERTY_SLUG)}`, {
-          method: "GET",
-          headers: { "Accept": "application/json" }
-        });
+const accessToken = await getAccessToken();
 
+if (!accessToken) {
+  return;
+}
+
+const res = await fetch(`${DASHBOARD_API}?property_slug=${encodeURIComponent(PROPERTY_SLUG)}`, {
+  method: "GET",
+  headers: {
+    "Accept": "application/json",
+    "Authorization": `Bearer ${accessToken}`
+  }
+});        
         const data = await res.json().catch(() => null);
 
         if (!res.ok || data?.error) {
