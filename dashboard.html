@@ -1864,12 +1864,12 @@ const res = await fetch(`${DASHBOARD_API}?property_slug=${encodeURIComponent(PRO
         const data = await res.json().catch(() => null);
 
         if (!res.ok || data?.error) {
-          const errorMessage =
-            typeof data?.error === "string"
-              ? data.error
-              : data?.error?.message ||
-                data?.details?.message ||
-                JSON.stringify(data?.error || data?.details || data || "Failed to load dashboard.");
+          
+const errorMessage =
+  data?.error ||
+  data?.full ||
+  JSON.stringify(data, null, 2) ||
+  "Unknown error";
           throw new Error(errorMessage);
         }
 
