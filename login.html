@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Client Login | The Ready Mark</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600&family=Lato:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root {
+      --bg: #f7f7f5;
+      --panel: #ffffff;
+      --text: #111315;
+      --muted: #6d6a64;
+      --line: #e8e4dc;
+      --gold: #c7a257;
+      --gold-dark: #b08c42;
+      --success: #2f8f57;
+      --danger: #b44c4c;
+      --shadow: 0 16px 40px rgba(0,0,0,0.06);
+      --radius: 22px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Lato", sans-serif;
+    }
+
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .login-card {
+      width: 100%;
+      max-width: 520px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .login-header {
+      padding: 28px 28px 18px;
+      border-bottom: 1px solid var(--line);
+      background: #fff;
+    }
+
+    .login-header h1 {
+      margin: 0;
+      font-family: "Cinzel", serif;
+      font-size: 28px;
+      line-height: 1.2;
+    }
+
+    .login-header p {
+      margin: 10px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .login-body {
+      padding: 28px;
+    }
+
+    .form-group + .form-group {
+      margin-top: 18px;
+    }
+
+    .form-label {
+      display: block;
+      margin-bottom: 10px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 14px 16px;
+      border: 1px solid rgba(199,162,87,0.22);
+      border-radius: 14px;
+      font-size: 16px;
+      font-family: "Lato", sans-serif;
+      outline: none;
+      background: rgba(255,255,255,0.98);
+      color: var(--text);
+    }
+
+    .form-input:focus {
+      border-color: var(--gold);
+    }
+
+    .btn {
+      width: 100%;
+      min-height: 48px;
+      border: none;
+      border-radius: 14px;
+      padding: 12px 16px;
+      cursor: pointer;
+      font-family: "Lato", sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      transition: 0.2s ease;
+    }
+
+    .btn-primary {
+      background: linear-gradient(180deg, #d8ba73, #b8934c);
+      color: #111315;
+      box-shadow: 0 10px 20px rgba(199, 162, 87, 0.18);
+    }
+
+    .btn-primary:hover {
+      filter: brightness(1.02);
+    }
+
+    .btn:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+    }
+
+    .status-box {
+      margin-top: 18px;
+      border-radius: 14px;
+      padding: 14px 16px;
+      font-size: 14px;
+      line-height: 1.7;
+      border: 1px solid var(--line);
+      background: #fbfaf7;
+      color: var(--muted);
+      display: none;
+      white-space: pre-wrap;
+    }
+
+    .status-box.success {
+      display: block;
+      color: var(--success);
+      border-color: rgba(47,143,87,0.22);
+      background: rgba(47,143,87,0.06);
+    }
+
+    .status-box.error {
+      display: block;
+      color: var(--danger);
+      border-color: rgba(180,76,76,0.22);
+      background: rgba(180,76,76,0.06);
+    }
+
+    .status-box.info {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-card">
+    <div class="login-header">
+      <h1>Client Portal Access</h1>
+      <p>Enter your approved email address and we’ll send you a secure sign-in link.</p>
+    </div>
+
+    <div class="login-body">
+      <div class="form-group">
+        <label class="form-label" for="email-input">Email Address</label>
+        <input
+          id="email-input"
+          class="form-input"
+          type="email"
+          placeholder="name@property.com"
+          autocomplete="email"
+        />
+      </div>
+
+      <div class="form-group">
+        <button id="send-link-btn" class="btn btn-primary" type="button">Send Magic Link</button>
+      </div>
+
+      <div id="status-box" class="status-box"></div>
+    </div>
+  </div>
+
+  <script>
+    const SUPABASE_URL = "https://zbecvxcefxxhqijakxxj.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpiZWN2eGNlZnh4aHFpamFreHhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM2ODU3MzMsImV4cCI6MjA4OTI2MTczM30.o1yZpO87ffeNCUNe-6wrimMw5D7esTzAivna9lVBv2k";
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    const emailInput = document.getElementById("email-input");
+    const sendLinkBtn = document.getElementById("send-link-btn");
+    const statusBox = document.getElementById("status-box");
+
+    function showStatus(message, type = "info") {
+      statusBox.className = `status-box ${type}`;
+      statusBox.textContent = message;
+    }
+
+    async function sendMagicLink() {
+      const email = emailInput.value.trim().toLowerCase();
+
+      if (!email) {
+        showStatus("Please enter your email address.", "error");
+        return;
+      }
+
+      sendLinkBtn.disabled = true;
+      showStatus("Sending secure sign-in link...", "info");
+
+      try {
+        const { error } = await supabaseClient.auth.signInWithOtp({
+          email,
+          options: {
+            emailRedirectTo: "https://verify.thereadymarkgroup.com/dashboard.html"
+          }
+        });
+
+        if (error) {
+          throw error;
+        }
+
+        showStatus(
+          "Your magic link has been sent. Check your email and use the secure link to sign in.",
+          "success"
+        );
+      } catch (error) {
+        showStatus(error.message || "Unable to send magic link.", "error");
+      } finally {
+        sendLinkBtn.disabled = false;
+      }
+    }
+
+    sendLinkBtn.addEventListener("click", sendMagicLink);
+  </script>
+</body>
+</html>
