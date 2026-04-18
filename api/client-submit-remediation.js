@@ -1,5 +1,5 @@
+import { getAuthorizedClientUser } from "./_clientAuth";
 import { createClient } from "@supabase/supabase-js";
-
 export default async function handler(req, res) {
   const allowedOrigin = "https://verify.thereadymarkgroup.com";
 
@@ -31,6 +31,14 @@ export default async function handler(req, res) {
       });
     }
 
+    const authResult = await getAuthorizedClientUser(req);
+
+if (authResult.error) {
+  return res.status(authResult.status).json({ error: authResult.error });
+}
+
+const { clientUser } = authResult;
+
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
     const {
@@ -41,19 +49,26 @@ export default async function handler(req, res) {
       resolved_by
     } = req.body || {};
 
+    
+if (!property_slug || typeof property_slug !== "string") {
+  return res.status(400).json({ error: "Missing property_slug" });
+}
+
+const normalizedRequestedSlug = String(property_slug).trim().toLowerCase();
+const normalizedAllowedSlug = String(clientUser.property_slug).trim().toLowerCase();
+
+if (normalizedRequestedSlug !== normalizedAllowedSlug) {
+  return res.status(403).json({ error: "You are not authorized for this property" });
+}
     if (!report_id) {
       return res.status(400).json({ error: "Missing report_id" });
-    }
-
-    if (!property_slug || typeof property_slug !== "string") {
-      return res.status(400).json({ error: "Missing property_slug" });
     }
 
     if (!resolution_note || !String(resolution_note).trim()) {
       return res.status(400).json({ error: "Resolution note is required" });
     }
 
-    const normalizedPropertySlug = String(property_slug).trim().toLowerCase();
+    const normalizedPropertySlug = normalizedRequestedSlug;
     const cleanedResolutionNote = String(resolution_note).trim();
     const cleanedResolvedBy = resolved_by ? String(resolved_by).trim() : "Property Team";
     const cleanedPhotoUrl = resolution_photo_url ? String(resolution_photo_url).trim() : null;
