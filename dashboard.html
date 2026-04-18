@@ -21,7 +21,7 @@
       --shadow: 0 12px 34px rgba(0,0,0,0.05);
       --radius: 18px;
     }
-
+    
     * { box-sizing: border-box; }
 
     html, body {
@@ -614,6 +614,7 @@
       }
     }
   </style>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
   <div class="app-shell">
@@ -1107,11 +1108,17 @@
   </div>
 
   <script>
-    const params = new URLSearchParams(window.location.search);
-    const PROPERTY_SLUG = params.get("property_slug") || "crown-plaza-hotel-stl";
-    const DASHBOARD_API = "/api/client-dashboard";
-    const REMEDIATION_API = "/api/client-submit-remediation";
+  const params = new URLSearchParams(window.location.search);
+let PROPERTY_SLUG = params.get("property_slug") || "";
+const DASHBOARD_API = "/api/client-dashboard";
+const REMEDIATION_API = "/api/client-submit-remediation";
+const CLIENT_USER_API = "/api/client-user";
 
+const SUPABASE_URL = "https://zbecvxcefxxhqijakxxj.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpiZWN2eGNlZnh4aHFpamFreHhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM2ODU3MzMsImV4cCI6MjA4OTI2MTczM30.o1yZpO87ffeNCUNe-6wrimMw5D7esTzAivna9lVBv2k";
+
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    
     let dashboardData = null;
     let lastNonDetailView = "dashboard-view";
     let currentIssueRecord = null;
@@ -1786,14 +1793,55 @@ setText("issue-timeline-resolved", issue.resolved_at ? formatDate(issue.resolved
     </div>
   `;
 }
+   
+async function resolveLoggedInPropertySlug() {
+  const {
+    data: { session },
+    error: sessionError
+  } = await supabaseClient.auth.getSession();
+
+  if (sessionError) {
+    throw new Error(sessionError.message || "Unable to verify session.");
+  }
+
+  if (!session || !session.user || !session.user.email) {
+    window.location.href = "/login.html";
+    return null;
+  }
+
+  const email = String(session.user.email).trim().toLowerCase();
+
+  const res = await fetch(`${CLIENT_USER_API}?email=${encodeURIComponent(email)}`, {
+    method: "GET",
+    headers: {
+      "Accept": "application/json"
+    }
+  });
+
+  const data = await res.json().catch(() => null);
+
+  if (!res.ok || data?.error || !data?.client_user?.property_slug) {
+    throw new Error(data?.error || "Unable to determine client property access.");
+  }
+
+  return data.client_user.property_slug;
+}
+
     async function loadDashboard() {
       try {
         const portalContent = document.getElementById("portal-content");
         portalContent.classList.add("loading");
 
-        if (!PROPERTY_SLUG || PROPERTY_SLUG === "your-property-slug") {
-          throw new Error("Set a real property_slug in the URL like ?property_slug=hotel-name or replace the fallback in dashboard.html.");
-        }
+if (!PROPERTY_SLUG) {
+  PROPERTY_SLUG = await resolveLoggedInPropertySlug();
+
+  if (!PROPERTY_SLUG) {
+    return;
+  }
+
+  const newUrl = `${window.location.pathname}?property_slug=${encodeURIComponent(PROPERTY_SLUG)}`;
+  window.history.replaceState({}, "", newUrl);
+}
 
         const res = await fetch(`${DASHBOARD_API}?property_slug=${encodeURIComponent(PROPERTY_SLUG)}`, {
           method: "GET",
