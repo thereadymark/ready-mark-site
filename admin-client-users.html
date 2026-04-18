@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Create Client User | The Ready Mark</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600&family=Lato:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f7f7f5;
+      --panel: #ffffff;
+      --text: #111315;
+      --muted: #6d6a64;
+      --line: #e8e4dc;
+      --gold: #c7a257;
+      --success: #2f8f57;
+      --danger: #b44c4c;
+      --shadow: 0 16px 40px rgba(0,0,0,0.06);
+      --radius: 22px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Lato", sans-serif;
+    }
+
+    body {
+      padding: 24px;
+    }
+
+    .wrap {
+      max-width: 760px;
+      margin: 0 auto;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .card-header {
+      padding: 28px 28px 18px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .card-header h1 {
+      margin: 0;
+      font-family: "Cinzel", serif;
+      font-size: 28px;
+    }
+
+    .card-header p {
+      margin: 10px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .card-body {
+      padding: 28px;
+    }
+
+    .form-group + .form-group {
+      margin-top: 18px;
+    }
+
+    .form-label {
+      display: block;
+      margin-bottom: 10px;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--muted);
+    }
+
+    .form-input,
+    .form-select {
+      width: 100%;
+      padding: 14px 16px;
+      border: 1px solid rgba(199,162,87,0.22);
+      border-radius: 14px;
+      font-size: 16px;
+      font-family: "Lato", sans-serif;
+      background: #fff;
+      color: var(--text);
+      outline: none;
+    }
+
+    .checkbox-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 4px;
+    }
+
+    .btn {
+      min-height: 48px;
+      border: none;
+      border-radius: 14px;
+      padding: 12px 18px;
+      cursor: pointer;
+      font-family: "Lato", sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .btn-primary {
+      background: linear-gradient(180deg, #d8ba73, #b8934c);
+      color: #111315;
+    }
+
+    .status-box {
+      margin-top: 18px;
+      border-radius: 14px;
+      padding: 14px 16px;
+      font-size: 14px;
+      line-height: 1.7;
+      border: 1px solid var(--line);
+      background: #fbfaf7;
+      color: var(--muted);
+      display: none;
+      white-space: pre-wrap;
+    }
+
+    .status-box.success {
+      display: block;
+      color: var(--success);
+      border-color: rgba(47,143,87,0.22);
+      background: rgba(47,143,87,0.06);
+    }
+
+    .status-box.error {
+      display: block;
+      color: var(--danger);
+      border-color: rgba(180,76,76,0.22);
+      background: rgba(180,76,76,0.06);
+    }
+
+    .status-box.info {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <div class="card-header">
+        <h1>Create Client User</h1>
+        <p>Add an approved portal user for a property without opening Supabase.</p>
+      </div>
+
+      <div class="card-body">
+        <div class="form-group">
+          <label class="form-label" for="admin-password">Admin Password</label>
+          <input id="admin-password" class="form-input" type="password" placeholder="Enter internal admin password" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="full-name">Full Name</label>
+          <input id="full-name" class="form-input" type="text" placeholder="Jane Manager" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="email">Email</label>
+          <input id="email" class="form-input" type="email" placeholder="manager@property.com" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="property-slug">Property Slug</label>
+          <input id="property-slug" class="form-input" type="text" placeholder="crown-plaza-hotel-stl" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="role">Role</label>
+          <select id="role" class="form-select">
+            <option value="manager">manager</option>
+            <option value="staff">staff</option>
+            <option value="admin">admin</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Active</label>
+          <div class="checkbox-row">
+            <input id="is-active" type="checkbox" checked />
+            <label for="is-active">User is active</label>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <button id="create-user-btn" class="btn btn-primary" type="button">Create Client User</button>
+        </div>
+
+        <div id="status-box" class="status-box"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_URL = "/api/admin-create-client-user";
+
+    const adminPasswordInput = document.getElementById("admin-password");
+    const fullNameInput = document.getElementById("full-name");
+    const emailInput = document.getElementById("email");
+    const propertySlugInput = document.getElementById("property-slug");
+    const roleInput = document.getElementById("role");
+    const isActiveInput = document.getElementById("is-active");
+    const createUserBtn = document.getElementById("create-user-btn");
+    const statusBox = document.getElementById("status-box");
+
+    function showStatus(message, type = "info") {
+      statusBox.className = `status-box ${type}`;
+      statusBox.textContent = message;
+    }
+
+    async function createClientUser() {
+      const adminPassword = adminPasswordInput.value.trim();
+      const fullName = fullNameInput.value.trim();
+      const email = emailInput.value.trim().toLowerCase();
+      const propertySlug = propertySlugInput.value.trim().toLowerCase();
+      const role = roleInput.value;
+      const isActive = !!isActiveInput.checked;
+
+      if (!adminPassword) {
+        showStatus("Admin password is required.", "error");
+        return;
+      }
+
+      if (!email) {
+        showStatus("Email is required.", "error");
+        return;
+      }
+
+      if (!propertySlug) {
+        showStatus("Property slug is required.", "error");
+        return;
+      }
+
+      createUserBtn.disabled = true;
+      showStatus("Creating client user...", "info");
+
+      try {
+        const res = await fetch(API_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+            "x-admin-password": adminPassword
+          },
+          body: JSON.stringify({
+            full_name: fullName,
+            email,
+            property_slug: propertySlug,
+            role,
+            is_active: isActive
+          })
+        });
+
+        const data = await res.json().catch(() => null);
+
+        if (!res.ok || data?.error) {
+          throw new Error(data?.error || "Unable to create client user.");
+        }
+
+        showStatus(
+          `Client user created.\n\nEmail: ${data.client_user?.email}\nProperty: ${data.client_user?.property_slug}`,
+          "success"
+        );
+
+        fullNameInput.value = "";
+        emailInput.value = "";
+        propertySlugInput.value = "";
+        roleInput.value = "manager";
+        isActiveInput.checked = true;
+      } catch (error) {
+        showStatus(error.message || "Unable to create client user.", "error");
+      } finally {
+        createUserBtn.disabled = false;
+      }
+    }
+
+    createUserBtn.addEventListener("click", createClientUser);
+  </script>
+</body>
+</html>
