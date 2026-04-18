@@ -1866,13 +1866,18 @@ const res = await fetch(`${DASHBOARD_API}?property_slug=${encodeURIComponent(PRO
         if (!res.ok || data?.error) {
           
 const errorMessage =
-  data?.error ||
-  data?.full ||
-  JSON.stringify(data, null, 2) ||
-  "Unknown error";
-          throw new Error(errorMessage);
-        }
+  typeof data?.error === "string"
+    ? data.error
+    : data?.error
+      ? JSON.stringify(data.error, null, 2)
+      : typeof data?.full === "string"
+        ? data.full
+        : data?.full
+          ? JSON.stringify(data.full, null, 2)
+          : JSON.stringify(data, null, 2) || "Unknown error";
 
+throw new Error(errorMessage);
+          
         dashboardData = data;
 
         renderTopLevel(data);
