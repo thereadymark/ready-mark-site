@@ -1832,71 +1832,70 @@ async function resolveLoggedInPropertySlug() {
 
   return session.access_token;
 }
-    async function loadDashboard() {
-      try {
-        const portalContent = document.getElementById("portal-content");
-        portalContent.classList.add("loading");
+   async function loadDashboard() {
+  try {
+    const portalContent = document.getElementById("portal-content");
+    portalContent.classList.add("loading");
 
-if (!PROPERTY_SLUG) {
-  PROPERTY_SLUG = await resolveLoggedInPropertySlug();
+    if (!PROPERTY_SLUG) {
+      PROPERTY_SLUG = await resolveLoggedInPropertySlug();
 
-  if (!PROPERTY_SLUG) {
-    return;
-  }
-
-  const newUrl = `${window.location.pathname}?property_slug=${encodeURIComponent(PROPERTY_SLUG)}`;
-  window.history.replaceState({}, "", newUrl);
-}
-
-const accessToken = await getAccessToken();
-
-if (!accessToken) {
-  return;
-}
-
-const res = await fetch(`${DASHBOARD_API}?property_slug=${encodeURIComponent(PROPERTY_SLUG)}`, {
-  method: "GET",
-  headers: {
-    "Accept": "application/json",
-    "Authorization": `Bearer ${accessToken}`
-  }
-});        
-        const data = await res.json().catch(() => null);
-
-        if (!res.ok || data?.error) {
-          
-const errorMessage =
-  typeof data?.error === "string"
-    ? data.error
-    : data?.error
-      ? JSON.stringify(data.error, null, 2)
-      : typeof data?.full === "string"
-        ? data.full
-        : data?.full
-          ? JSON.stringify(data.full, null, 2)
-          : JSON.stringify(data, null, 2) || "Unknown error";
-
-throw new Error(errorMessage);
-          
-        dashboardData = data;
-        console.log("FULL DASHBOARD RESPONSE:", data);
-          
-          renderTopLevel(data);
-        renderDashboardIssues();
-        renderRecentInspections(Array.isArray(data.inspection_history) ? data.inspection_history : []);
-        renderAwaitingResponse(Array.isArray(data.awaiting_response) ? data.awaiting_response : []);
-        renderRemediationSubmitted(Array.isArray(data.remediation_submitted) ? data.remediation_submitted : []);
-        renderResolvedIssues(Array.isArray(data.resolved_issues) ? data.resolved_issues : []);
-        renderQRRecords(Array.isArray(data.qr_records) ? data.qr_records : []);
-        renderReports(Array.isArray(data.inspection_history) ? data.inspection_history : []);
-      } catch (error) {
-        showLoadError(error.message || "Dashboard failed to load.");
-      } finally {
-        const portal = document.getElementById("portal-content");
-        if (portal) portal.classList.remove("loading");
+      if (!PROPERTY_SLUG) {
+        return;
       }
+
+      const newUrl = `${window.location.pathname}?property_slug=${encodeURIComponent(PROPERTY_SLUG)}`;
+      window.history.replaceState({}, "", newUrl);
     }
 
+    const accessToken = await getAccessToken();
+
+    if (!accessToken) {
+      return;
+    }
+
+    const res = await fetch(`${DASHBOARD_API}?property_slug=${encodeURIComponent(PROPERTY_SLUG)}`, {
+      method: "GET",
+      headers: {
+        "Accept": "application/json",
+        "Authorization": `Bearer ${accessToken}`
+      }
+    });
+
+    const data = await res.json().catch(() => null);
+
+    if (!res.ok || data?.error) {
+      const errorMessage =
+        typeof data?.error === "string"
+          ? data.error
+          : data?.error
+            ? JSON.stringify(data.error, null, 2)
+            : typeof data?.full === "string"
+              ? data.full
+              : data?.full
+                ? JSON.stringify(data.full, null, 2)
+                : JSON.stringify(data, null, 2) || "Unknown error";
+
+      throw new Error(errorMessage);
+    }
+
+    dashboardData = data;
+
+    renderTopLevel(data);
+    renderDashboardIssues();
+    renderRecentInspections(Array.isArray(data.inspection_history) ? data.inspection_history : []);
+    renderAwaitingResponse(Array.isArray(data.awaiting_response) ? data.awaiting_response : []);
+    renderRemediationSubmitted(Array.isArray(data.remediation_submitted) ? data.remediation_submitted : []);
+    renderResolvedIssues(Array.isArray(data.resolved_issues) ? data.resolved_issues : []);
+    renderQRRecords(Array.isArray(data.qr_records) ? data.qr_records : []);
+    renderReports(Array.isArray(data.inspection_history) ? data.inspection_history : []);
+  } catch (error) {
+    showLoadError(error.message || "Dashboard failed to load.");
+  } finally {
+    const portal = document.getElementById("portal-content");
+    if (portal) portal.classList.remove("loading");
+  }
+}
     document.querySelectorAll(".nav-btn").forEach(btn => {
       btn.addEventListener("click", () => {
         goToView(btn.dataset.viewTarget);
