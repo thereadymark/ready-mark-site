@@ -91,22 +91,19 @@ if (authResult.error) {
 
 const { clientUser } = authResult;
 
-if (!property_slug || typeof property_slug !== "string") {
+if (!requestedSlug) {
   return res.status(400).json({ error: "Missing property_slug" });
 }
 
-const normalizedRequestedSlug = String(property_slug).trim().toLowerCase();
 const normalizedAllowedSlug = String(clientUser.property_slug).trim().toLowerCase();
 
-if (normalizedRequestedSlug !== normalizedAllowedSlug) {
+if (requestedSlug !== normalizedAllowedSlug) {
   return res.status(403).json({ error: "You are not authorized for this property" });
 }
-
-
     const { data: property, error: propertyError } = await supabase
       .from("properties")
       .select("id, property_name, property_slug, city, state, property_type")
-      .eq("property_slug", requestedSlug)
+      .ilike("property_slug", requestedSlug)
       .maybeSingle();
 
     if (propertyError) {
@@ -186,7 +183,7 @@ if (normalizedRequestedSlug !== normalizedAllowedSlug) {
   response_minutes,
   reservation_last_name
 `)
-      .eq("property_slug", requestedSlug)
+      .ilike("property_slug", requestedSlug)
       .not("hotel_notified_at", "is", null)
       .order("reported_at", { ascending: false });
 
