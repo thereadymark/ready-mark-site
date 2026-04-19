@@ -197,12 +197,13 @@ if (requestedSlug !== normalizedAllowedSlug) {
       ACTIVE_STATUSES.includes(report.status)
     );
 
-    const awaitingResponse = reports.filter(report =>
-      report.status === "Sent to Property" &&
-      !report.resolution_note &&
-      !report.resolved_at
-    );
+   const CLIENT_VISIBLE_OPEN_STATUSES = ["Sent to Property", "Under Review", "Escalated"];
 
+const awaitingResponse = reports.filter(report =>
+  CLIENT_VISIBLE_OPEN_STATUSES.includes(report.status) &&
+  !report.resolution_note &&
+  !report.resolved_at
+);
     const remediationSubmitted = reports.filter(report =>
       report.resolution_note &&
       !report.resolved_at
