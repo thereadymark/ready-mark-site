@@ -82,7 +82,7 @@ export default async function handler(req, res) {
       return res.status(405).json({ error: "Method not allowed" });
     }
 
-    const { property_slug } = req.query || {};
+    const requestedSlug = (req.query.property_slug || "").trim().toLowerCase();
     const authResult = await getAuthorizedClientUser(req);
 
 if (authResult.error) {
@@ -102,12 +102,11 @@ if (normalizedRequestedSlug !== normalizedAllowedSlug) {
   return res.status(403).json({ error: "You are not authorized for this property" });
 }
 
-    const normalizedPropertySlug = String(property_slug).trim().toLowerCase();
 
     const { data: property, error: propertyError } = await supabase
       .from("properties")
       .select("id, property_name, property_slug, city, state, property_type")
-      .eq("property_slug", normalizedPropertySlug)
+      .eq("property_slug", requestedSlug)
       .maybeSingle();
 
     if (propertyError) {
@@ -187,7 +186,7 @@ if (normalizedRequestedSlug !== normalizedAllowedSlug) {
   response_minutes,
   reservation_last_name
 `)
-      .eq("property_slug", normalizedPropertySlug)
+      .eq("property_slug", requestedSlug)
       .not("hotel_notified_at", "is", null)
       .order("reported_at", { ascending: false });
 
