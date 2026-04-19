@@ -1717,62 +1717,77 @@ setText("issue-timeline-resolved", issue.resolved_at ? formatDate(issue.resolved
       goToView("issue-detail-view");
     }
 
-    async function submitRemediation() {
-      if (!currentIssueRecord) return;
+   async function submitRemediation() {
+  if (!currentIssueRecord) return;
 
-      const submitBtn = document.getElementById("submit-remediation-btn");
-      const note = document.getElementById("resolution-note-input").value.trim();
-      const resolvedBy = document.getElementById("resolved-by-input").value.trim();
-      const statusBox = document.getElementById("remediation-status-box");
+  const submitBtn = document.getElementById("submit-remediation-btn");
+  const note = document.getElementById("resolution-note-input").value.trim();
+  const resolvedBy = document.getElementById("resolved-by-input").value.trim();
+  const statusBox = document.getElementById("remediation-status-box");
 
-      if (!note) {
-        showStatusBox(statusBox, "Please enter a remediation note before submitting.", "error");
-        return;
-      }
+  if (!note) {
+    showStatusBox(statusBox, "Please enter a remediation note before submitting.", "error");
+    return;
+  }
 
-      submitBtn.disabled = true;
-      showStatusBox(statusBox, "Submitting remediation...", "");
+  submitBtn.disabled = true;
+  showStatusBox(statusBox, "Submitting remediation...", "");
 
-      const { 
-        data: { session } 
-      } = await supabaseClient.auth.getSession();
-      const token = session?.access_token;
+  try {
+    const {
+      data: { session },
+      error: sessionError
+    } = await supabaseClient.auth.getSession();
 
-if (!token) {
-  throw new Error("Missing session token. Please log in again.");
-}
-      
-const res = await fetch(REMEDIATION_API, {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json",
-    "Accept": "application/json",
-    "Authorization": `Bearer ${token}`
-  },
-  body: JSON.stringify({
-    report_id: currentIssueRecord.id,
-    property_slug: dashboardData?.property?.property_slug,
-    resolution_note: note,
-    resolved_by: resolvedBy || "Property"
-  })
-});
-        const data = await res.json().catch(() => null);
-
-        if (!res.ok || data?.error) {
-          throw new Error(data?.error || "Failed to submit remediation.");
-        }
-
-        showStatusBox(statusBox, data?.message || "Remediation submitted successfully.", "success");
-        await loadDashboard();
-        openIssueById(currentIssueRecord.id);
-      } catch (error) {
-        showStatusBox(statusBox, error.message || "Failed to submit remediation.", "error");
-      } finally {
-        submitBtn.disabled = false;
-      }
+    if (sessionError) {
+      throw new Error(sessionError.message || "Unable to verify session.");
     }
 
-   function showLoadError(message) {
+    const token = session?.access_token;
+
+    if (!token) {
+      throw new Error("Missing session token. Please log in again.");
+    }
+
+    const res = await fetch(REMEDIATION_API, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        report_id: currentIssueRecord.id,
+        property_slug: dashboardData?.property?.property_slug,
+        resolution_note: note,
+        resolved_by: resolvedBy || "Property"
+      })
+    });
+
+    const data = await res.json().catch(() => null);
+
+    if (!res.ok || data?.error) {
+      throw new Error(
+        typeof data?.error === "string"
+          ? data.error
+          : JSON.stringify(data?.error || data || "Failed to submit remediation.")
+      );
+    }
+
+    showStatusBox(statusBox, data?.message || "Remediation submitted successfully.", "success");
+    await loadDashboard();
+    openIssueById(currentIssueRecord.id);
+  } catch (error) {
+    showStatusBox(
+      statusBox,
+      error?.message || JSON.stringify(error) || "Failed to submit remediation.",
+      "error"
+    );
+  } finally {
+    submitBtn.disabled = false;
+  }
+}
+    function showLoadError(message) {
   const safeMessage =
     typeof message === "string"
       ? message
