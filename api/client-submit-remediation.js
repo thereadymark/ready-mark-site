@@ -1,4 +1,4 @@
-import { getAuthorizedClientUser } from "./_clientAuth";
+import { getAuthorizedClientUser } from "./_clientAuth.js";
 import { createClient } from "@supabase/supabase-js";
 export default async function handler(req, res) {
   const allowedOrigin = "https://verify.thereadymarkgroup.com";
