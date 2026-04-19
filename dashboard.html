@@ -1733,21 +1733,29 @@ setText("issue-timeline-resolved", issue.resolved_at ? formatDate(issue.resolved
       submitBtn.disabled = true;
       showStatusBox(statusBox, "Submitting remediation...", "");
 
-      try {
-        const res = await fetch(REMEDIATION_API, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Accept": "application/json"
-          },
-          body: JSON.stringify({
-            report_id: currentIssueRecord.id,
-            property_slug: dashboardData?.property?.property_slug || PROPERTY_SLUG,
-            resolution_note: note,
-            resolved_by: resolvedBy || "Property"
-          })
-        });
+      const { 
+        data: { session } 
+      } = await supabaseClient.auth.getSession();
+      const token = session?.access_token;
 
+if (!token) {
+  throw new Error("Missing session token. Please log in again.");
+}
+      
+const res = await fetch(REMEDIATION_API, {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+    "Authorization": `Bearer ${token}`
+  },
+  body: JSON.stringify({
+    report_id: currentIssueRecord.id,
+    property_slug: dashboardData?.property?.property_slug,
+    resolution_note: note,
+    resolved_by: resolvedBy || "Property"
+  })
+});
         const data = await res.json().catch(() => null);
 
         if (!res.ok || data?.error) {
