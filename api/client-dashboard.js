@@ -1,4 +1,4 @@
-import { getAuthorizedClientUser } from "./_clientAuth";
+import { getAuthorizedClientUser } from "./_clientAuth.js";
 import { createClient } from "@supabase/supabase-js";
 
 const ACTIVE_STATUSES = ["New", "Under Review", "Escalated", "Sent to Property"];
