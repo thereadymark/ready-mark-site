@@ -193,26 +193,55 @@ if (requestedSlug !== normalizedAllowedSlug) {
 
     const reports = Array.isArray(guestReports) ? guestReports : [];
 
-    const activeIssues = reports.filter(report =>
-      ACTIVE_STATUSES.includes(report.status)
-    );
+    
+const reportsWithSignedPhotos = await Promise.all(
+  reports.map(async (report) => {
+    const rawPhotoValue = String(report.photo_url || "").trim();
 
-   const CLIENT_VISIBLE_OPEN_STATUSES = ["Sent to Property", "Under Review", "Escalated"];
+    if (!rawPhotoValue) {
+      return report;
+    }
 
-const awaitingResponse = reports.filter(report =>
+    if (rawPhotoValue.startsWith("http://") || rawPhotoValue.startsWith("https://")) {
+      return report;
+    }
+
+    const { data: signedData, error: signedError } = await supabase.storage
+      .from("guest-reports")
+      .createSignedUrl(rawPhotoValue, 60 * 60);
+
+    if (signedError || !signedData?.signedUrl) {
+      return {
+        ...report,
+        photo_url: null
+      };
+    }
+
+    return {
+      ...report,
+      photo_url: signedData.signedUrl
+    };
+  })
+);
+
+    const activeIssues = reportsWithSignedPhotos.filter(report =>
+  ACTIVE_STATUSES.includes(report.status)
+);
+
+const awaitingResponse = reportsWithSignedPhotos.filter(report =>
   CLIENT_VISIBLE_OPEN_STATUSES.includes(report.status) &&
   !report.resolution_note &&
   !report.resolved_at
 );
-    const remediationSubmitted = reports.filter(report =>
-      report.resolution_note &&
-      !report.resolved_at
-    );
 
-    const resolvedIssues = reports.filter(report =>
-      report.resolved_at || report.status === RESOLVED_STATUS
-    );
+const remediationSubmitted = reportsWithSignedPhotos.filter(report =>
+  report.resolution_note &&
+  !report.resolved_at
+);
 
+const resolvedIssues = reportsWithSignedPhotos.filter(report =>
+  report.resolved_at || report.status === RESOLVED_STATUS
+);
     const inspectionHistory = inspections
       .slice()
       .sort((a, b) => sortByDateDesc(a, b, "created_at"))
@@ -263,7 +292,7 @@ const awaitingResponse = reports.filter(report =>
         total_awaiting_response: awaitingResponse.length,
         total_remediation_submitted: remediationSubmitted.length,
         total_resolved_issues: resolvedIssues.length,
-        total_reports: reports.length,
+        total_reports: reportsWithSignedPhotos.length,
         latest_inspection_date: latestInspectionOverall?.created_at || null,
         latest_inspection_room: latestInspectionOverall?.room_number || null
       },
