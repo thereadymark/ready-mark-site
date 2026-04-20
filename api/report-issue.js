@@ -455,6 +455,13 @@ export default async function handler(req, res) {
       uploadedPhotoPath = filePath;
     }
 
+    const isPriority = issue_types.includes("Severe") || issue_types.includes("Safety") || issue_types.includes("Biohazard");
+
+if (isPriority && !uploadedPhotoPath) {
+  return res.status(400).json({
+    error: "Photo evidence is required for priority issues."
+  });
+}
     const insertPayload = {
       verification_id: normalizedVerificationId,
       confirmation_number: confirmationNumber,
@@ -466,7 +473,7 @@ export default async function handler(req, res) {
       details: normalizedGuestNote,
       photo_url: uploadedPhotoPath || null,
       status: "New",
-      priority: uploadedPhotoPath ? "Urgent" : "Normal",
+      priority: isPriority ? "Urgent" : "Normal",
       reported_at: new Date().toISOString(),
       guest_user_id: guestUser.id,
       guest_email: guestUser.email,
