@@ -49,8 +49,27 @@ const { clientUser } = authResult;
       resolved_by
     } = req.body || {};
 
-    
-if (!property_slug || typeof property_slug !== "string") {
+const resolvedByClean = String(resolved_by || "").trim();
+
+if (!resolvedByClean || resolvedByClean.length < 5 || !resolvedByClean.includes(" ")) {
+  return res.status(400).json({
+    error: "Resolved By must include both title and full name."
+  });
+}
+
+const parts = resolvedByClean.includes("–")
+  ? resolvedByClean.split("–")
+  : resolvedByClean.split("-");
+
+const resolvedByTitle = parts[0]?.trim();
+const resolvedByName = parts.slice(1).join("-").trim();
+
+if (!resolvedByTitle || !resolvedByName) {
+  return res.status(400).json({
+    error: "Use format: Title – Full Name"
+  });
+}
+    if (!property_slug || typeof property_slug !== "string") {
   return res.status(400).json({ error: "Missing property_slug" });
 }
 
@@ -114,7 +133,9 @@ if (normalizedRequestedSlug !== normalizedAllowedSlug) {
       resolution_note: cleanedResolutionNote,
       resolution_photo_url: cleanedPhotoUrl,
       remediation_submitted_at: submittedAt,
-      resolved_by: cleanedResolvedBy,
+      resolved_by: `${resolvedByTitle} – ${resolvedByName}`,
+      resolved_by_title: resolvedByTitle,
+      resolved_by_name: resolvedByName,      
       status: "Remediation Submitted",
       verification_status: "pending"
     };
