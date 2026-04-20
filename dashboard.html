@@ -1040,7 +1040,9 @@
 
               <div class="form-group">
                 <label class="form-label" for="resolved-by-input">Resolved By</label>
-                <input class="form-input" id="resolved-by-input" placeholder="Example: Housekeeping Manager">
+                <input class="form-input" id="resolved-by-input" placeholder="Example: Housekeeping Manager - Evelyn Carter"
+                  required
+                  >
               </div>
 
               <div class="button-row">
@@ -1725,6 +1727,16 @@ setText("issue-timeline-resolved", issue.resolved_at ? formatDate(issue.resolved
   const resolvedBy = document.getElementById("resolved-by-input").value.trim();
   const statusBox = document.getElementById("remediation-status-box");
 
+if (!resolvedBy || !resolvedBy.includes(" ")) {
+  showStatusBox(
+    statusBox,
+    "Please enter both title and full name (e.g., Housekeeping Manager – Evelyn Carter).",
+    "error"
+  );
+  submitBtn.disabled = false;
+  return;
+}
+     
   if (!note) {
     showStatusBox(statusBox, "Please enter a remediation note before submitting.", "error");
     return;
