@@ -1038,13 +1038,25 @@
                 <textarea class="form-textarea" id="resolution-note-input" placeholder="Describe what was done to address the issue."></textarea>
               </div>
 
-              <div class="form-group">
-                <label class="form-label" for="resolved-by-input">Resolved By</label>
-                <input class="form-input" id="resolved-by-input" placeholder="Example: Housekeeping Manager - Evelyn Carter"
-                  required
-                  >
-              </div>
+             <div class="form-group">
+  <label class="form-label" for="resolved-by-title-input">Resolved By Title</label>
+  <input 
+    class="form-input" 
+    id="resolved-by-title-input" 
+    placeholder="Example: Housekeeping Manager"
+    required
+  >
+</div>
 
+<div class="form-group">
+  <label class="form-label" for="resolved-by-name-input">Resolved By Name</label>
+  <input 
+    class="form-input" 
+    id="resolved-by-name-input" 
+    placeholder="Example: Evelyn Carter"
+    required
+  >
+</div>
               <div class="button-row">
                 <button class="btn btn-primary" type="button" id="submit-remediation-btn">Submit Remediation</button>
                 <button class="btn btn-secondary" type="button" id="cancel-remediation-btn">Cancel</button>
@@ -1703,7 +1715,8 @@ setText("issue-timeline-resolved", issue.resolved_at ? formatDate(issue.resolved
       }
 
       const noteInput = document.getElementById("resolution-note-input");
-      const resolvedByInput = document.getElementById("resolved-by-input");
+      const resolvedByTitleInput = document.getElementById("resolved-by-title-input");
+      const resolvedByNameInput = document.getElementById("resolved-by-name-input");     
       const remediationStatus = document.getElementById("remediation-status-box");
 
       remediationStatus.style.display = "none";
@@ -1711,8 +1724,9 @@ setText("issue-timeline-resolved", issue.resolved_at ? formatDate(issue.resolved
       remediationStatus.className = "status-box";
 
       noteInput.value = issue.resolution_note || "";
-      resolvedByInput.value = issue.resolved_by || "";
-
+      resolvedByTitleInput.value = issue.resolved_by_title || "";
+      resolvedByNameInput.value = issue.resolved_by_name || "";
+      
       const canSubmitRemediation = !issue.resolved_at && issue.status !== "Resolved";
       document.getElementById("remediation-form-block").style.display = canSubmitRemediation ? "block" : "none";
 
@@ -1724,18 +1738,20 @@ setText("issue-timeline-resolved", issue.resolved_at ? formatDate(issue.resolved
 
   const submitBtn = document.getElementById("submit-remediation-btn");
   const note = document.getElementById("resolution-note-input").value.trim();
-  const resolvedBy = document.getElementById("resolved-by-input").value.trim();
+  const resolvedByTitle = document.getElementById("resolved-by-title-input").value.trim();
+  const resolvedByName = document.getElementById("resolved-by-name-input").value.trim();
   const statusBox = document.getElementById("remediation-status-box");
 
-if (!resolvedBy || !resolvedBy.includes(" ")) {
+if (!resolvedByTitle || !resolvedByName) {
   showStatusBox(
     statusBox,
-    "Please enter both title and full name (e.g., Housekeeping Manager – Evelyn Carter).",
+    "Please enter both the resolver title and full name.",
     "error"
   );
   submitBtn.disabled = false;
   return;
 }
+const resolvedBy = `${resolvedByTitle} – ${resolvedByName}`;
      
   if (!note) {
     showStatusBox(statusBox, "Please enter a remediation note before submitting.", "error");
