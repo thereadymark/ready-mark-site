@@ -3,6 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 
 const ACTIVE_STATUSES = ["New", "Under Review", "Escalated", "Sent to Property"];
 const RESOLVED_STATUS = "Resolved";
+const CLIENT_VISIBLE_OPEN_STATUSES = ["Sent to Property", "Under Review", "Escalated"];
 
 function sortByDateDesc(a, b, field) {
   const aTime = a?.[field] ? new Date(a[field]).getTime() : 0;
