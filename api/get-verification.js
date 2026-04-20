@@ -156,11 +156,12 @@ export default async function handler(req, res) {
       }
     }
 
-   const currentInspectionUrl =
+const currentInspectionUrl =
   `${supabaseUrl}/rest/v1/${INSPECTION_TABLE}` +
   `?room_id=eq.${encodeURIComponent(room.id)}` +
+  `&is_current=eq.true` +
   `&select=id,inspector_id,created_at,certification_tier,verification_id,score,notes,photo_url,photo_urls,log_file_url,is_current` +
-  `&order=created_at.desc.nullslast` +
+  `&order=is_current.desc,created_at.desc.nullslast` +
   `&limit=1`;
 
 const { response: inspectionRes, json: inspectionData } = await fetchJson(currentInspectionUrl);
@@ -169,11 +170,30 @@ if (!inspectionRes.ok) {
   return res.status(500).json({ error: "Inspection lookup failed" });
 }
 
-const inspection =
+let inspection =
   Array.isArray(inspectionData) && inspectionData.length > 0
     ? inspectionData[0]
     : null;
 
+if (!inspection) {
+  const fallbackInspectionUrl =
+    `${supabaseUrl}/rest/v1/${INSPECTION_TABLE}` +
+    `?room_id=eq.${encodeURIComponent(room.id)}` +
+    `&select=id,inspector_id,created_at,certification_tier,verification_id,score,notes,photo_url,photo_urls,log_file_url,is_current` +
+    `&order=created_at.desc.nullslast` +
+    `&limit=1`;
+
+  const { response: fallbackRes, json: fallbackData } = await fetchJson(fallbackInspectionUrl);
+
+  if (!fallbackRes.ok) {
+    return res.status(500).json({ error: "Inspection lookup failed" });
+  }
+
+  inspection =
+    Array.isArray(fallbackData) && fallbackData.length > 0
+      ? fallbackData[0]
+      : null;
+}    
 const historyUrl =
   `${supabaseUrl}/rest/v1/${INSPECTION_TABLE}` +
   `?room_id=eq.${encodeURIComponent(room.id)}` +
@@ -259,26 +279,8 @@ return res.status(200).json({
   logFileUrl: signedLogFileUrl,
   inspectionHistory
 });
-    return res.status(200).json({
-      property: property?.property_name ?? "",
-      property_slug: property?.property_slug ?? propertySlug ?? "",
-      room: room?.room_number ?? roomNumber ?? "",
-      qrSlug: room?.qr_slug ?? "",
-      qrUrl: room?.qr_url ?? "",
-      inspectorId: inspection?.inspector_id ?? "",
-      inspectionDate: inspection?.created_at ?? "",
-      certificationTier: inspection?.certification_tier ?? "Not verified",
-      verificationId: inspection?.verification_id ?? "",
-      score: inspection?.score ?? "",
-      status: inspection?.certification_tier ?? "Not verified",
-      notes: inspection?.notes ?? "",
-      photoPath,
-      logFilePath,
-      photoUrl: signedPhotoUrl,
-      photoUrls: signedPhotoUrls,
-      logFileUrl: signedLogFileUrl
-    });
-  } catch (error) {
+  } 
+  catch (error) {
     return res.status(500).json({
       error: error?.message || "Server error"
     });
