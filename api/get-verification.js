@@ -213,7 +213,6 @@ if (historyError) {
 }
 
 const inspectionHistory = Array.isArray(historyData) ? historyData : [];
-const inspectionHistory = Array.isArray(historyData) ? historyData : [];
 
 let signedPhotoUrl = "";
 let signedLogFileUrl = "";
