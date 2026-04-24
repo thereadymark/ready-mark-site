@@ -160,7 +160,7 @@ const currentInspectionUrl =
   `${supabaseUrl}/rest/v1/${INSPECTION_TABLE}` +
   `?room_id=eq.${encodeURIComponent(room.id)}` +
   `&is_current=eq.true` +
-  `&select=id,inspector_id,created_at,certification_tier,verification_id,score,notes,photo_url,photo_urls,log_file_url,is_current` +
+  `select=id,inspector_id,created_at,inspection_date,certification_tier,verification_id,score,notes,photo_url,photo_urls,log_file_url,is_current` +
   `&order=is_current.desc,created_at.desc.nullslast` +
   `&limit=1`;
 
@@ -197,7 +197,7 @@ if (!inspection) {
 const historyUrl =
   `${supabaseUrl}/rest/v1/${INSPECTION_TABLE}` +
   `?room_id=eq.${encodeURIComponent(room.id)}` +
-  `&select=id,created_at,certification_tier,verification_id,score,is_current` +
+  `&select=id,created_at,inspection_date,certification_tier,verification_id,score,is_current` +
   `&order=created_at.desc.nullslast` +
   `&limit=5`;
     
@@ -266,7 +266,7 @@ return res.status(200).json({
   qrSlug: room?.qr_slug ?? "",
   qrUrl: room?.qr_url ?? "",
   inspectorId: inspection?.inspector_id ?? "",
-  inspectionDate: inspection?.created_at ?? "",
+  inspectionDate: inspection?.inspection_date ?? inspection?.created_at ?? "",
   certificationTier: inspection?.certification_tier ?? "Not verified",
   verificationId: inspection?.verification_id ?? "",
   score: inspection?.score ?? "",
