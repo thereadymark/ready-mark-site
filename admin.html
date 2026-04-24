@@ -1639,8 +1639,13 @@ tbody.innerHTML = rows.map((inspection) => `
       </span>
     </td>
     <td>
- onclick="console.log('inspection id:', '${String(inspection.id).replace(/'/g, "\\'")}'); viewInspectionRecord('${String(inspection.id).replace(/'/g, "\\'")}')"
-      </td>
+ <td>
+  <button class="text-btn" type="button"
+    onclick="viewInspectionRecord('${inspection.id}')">
+    View Record
+  </button>
+</td>
+</td>
   </tr>
 `).join("");
     }
