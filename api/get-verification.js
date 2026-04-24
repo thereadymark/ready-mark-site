@@ -179,7 +179,7 @@ if (!inspection) {
   const fallbackInspectionUrl =
     `${supabaseUrl}/rest/v1/${INSPECTION_TABLE}` +
     `?room_id=eq.${encodeURIComponent(room.id)}` +
-    `&select=id,inspector_id,created_at,certification_tier,verification_id,score,notes,photo_url,photo_urls,log_file_url,is_current` +
+    `&select=id,inspector_id,created_at,inspection_date,certification_tier,verification_id,score,notes,photo_url,photo_urls,log_file_url,is_current` +
     `&order=created_at.desc.nullslast` +
     `&limit=1`;
 
