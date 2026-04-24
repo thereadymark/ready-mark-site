@@ -906,10 +906,11 @@
                       <th>Score</th>
                       <th>Verification ID</th>
                       <th>Current</th>
+                      <th>Action</th>
                     </tr>
                   </thead>
                   <tbody id="inspection-history-body">
-                    <tr><td colspan="7">Loading inspection history...</td></tr>
+                    <tr><td colspan="8">Loading inspection history...</td></tr>
                   </tbody>
                 </table>
               </div>
@@ -942,7 +943,7 @@
       </table>
     </div>
   </div>
-
+   <div id="inspection-detail-panel" class="status-box" style="display:none;margin-top:18px;"></div>
   <div class="section-card">
     <div class="section-header">
       <h2>Resolved Issues</h2>
@@ -1615,31 +1616,33 @@ function renderGuestReports() {
       }
 
       if (!rows.length) {
-        tbody.innerHTML = `<tr><td colspan="7">No inspection history matches your filters.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="8">No inspection history matches your filters.</td></tr>`;
         return;
       }
-
-      tbody.innerHTML = rows.map((inspection) => `
-        <tr>
-          <td>
-            ${escapeHtml(inspection.property_name || "—")}
-            <div class="report-meta">${escapeHtml(inspection.property_slug || "")}</div>
-          </td>
-          <td>${escapeHtml(inspection.room_number || "—")}</td>
-          <td>${escapeHtml(formatDateTime(inspection.created_at))}</td>
-          <td><span class="status-pill ${getStatusPillClass(inspection.certification_tier)}">${escapeHtml(inspection.certification_tier || "—")}</span></td>
-          <td>${escapeHtml(String(inspection.score ?? "—"))}</td>
-          <td>
-            ${escapeHtml(inspection.verification_id || "—")}
-            <div class="report-meta">${escapeHtml(inspection.inspector_id || "")}</div>
-          </td>
-          <td>
-            <span class="status-pill ${inspection.is_current ? "status-verified" : "status-issues"}">
-              ${inspection.is_current ? "Current" : "Archived"}
-            </span>
-          </td>
-        </tr>
-      `).join("");
+tbody.innerHTML = rows.map((inspection) => `
+  <tr>
+    <td>
+      ${escapeHtml(inspection.property_name || "—")}
+      <div class="report-meta">${escapeHtml(inspection.property_slug || "")}</div>
+    </td>
+    <td>${escapeHtml(inspection.room_number || "—")}</td>
+    <td>${escapeHtml(formatDateTime(inspection.inspection_date || inspection.created_at))}</td>
+    <td><span class="status-pill ${getStatusPillClass(inspection.certification_tier)}">${escapeHtml(inspection.certification_tier || "—")}</span></td>
+    <td>${escapeHtml(String(inspection.score ?? "—"))}</td>
+    <td>
+      ${escapeHtml(inspection.verification_id || "—")}
+      <div class="report-meta">${escapeHtml(inspection.inspector_id || "")}</div>
+    </td>
+    <td>
+      <span class="status-pill ${inspection.is_current ? "status-verified" : "status-issues"}">
+        ${inspection.is_current ? "Current" : "Archived"}
+      </span>
+    </td>
+    <td>
+      <button class="text-btn" type="button" onclick="viewInspectionRecord('${escapeHtml(inspection.id)}')">View Record</button>
+    </td>
+  </tr>
+`).join("");
     }
 
    function renderDashboard() {
@@ -1936,6 +1939,48 @@ if (logFile) {
       document.getElementById("upload-evidence-form").addEventListener("submit", handleUploadEvidence);
     }
 
+    function viewInspectionRecord(inspectionId) {
+  const panel = document.getElementById("inspection-detail-panel");
+  const inspection = state.inspections.find(item => String(item.id) === String(inspectionId));
+
+  if (!panel || !inspection) return;
+
+  const propertySlug = inspection.property_slug || "";
+  const roomNumber = inspection.room_number || "";
+  const verificationUrl =
+    propertySlug && roomNumber
+      ? `https://verify.thereadymarkgroup.com/${propertySlug}-room-${roomNumber}`
+      : "";
+
+  panel.style.display = "block";
+  panel.innerHTML = `
+    <strong style="font-family:Cinzel,serif;font-size:18px;">Inspection Record</strong>
+
+    <div style="margin-top:14px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;">
+      <div><strong>Property:</strong><br>${escapeHtml(inspection.property_name || "—")}</div>
+      <div><strong>Room:</strong><br>${escapeHtml(roomNumber || "—")}</div>
+      <div><strong>Inspection Date:</strong><br>${escapeHtml(formatDateTime(inspection.inspection_date || inspection.created_at))}</div>
+      <div><strong>Inspector:</strong><br>${escapeHtml(inspection.inspector_id || "—")}</div>
+      <div><strong>Tier:</strong><br>${escapeHtml(inspection.certification_tier || "—")}</div>
+      <div><strong>Score:</strong><br>${escapeHtml(String(inspection.score ?? "—"))}</div>
+      <div><strong>Verification ID:</strong><br>${escapeHtml(inspection.verification_id || "—")}</div>
+      <div><strong>Status:</strong><br>${inspection.is_current ? "Current" : "Archived"}</div>
+    </div>
+
+    <div style="margin-top:14px;">
+      <strong>Notes:</strong><br>
+      ${escapeHtml(inspection.notes || "No notes available.")}
+    </div>
+
+    <div style="margin-top:14px;display:flex;gap:12px;flex-wrap:wrap;">
+      ${verificationUrl ? `<a class="btn btn-primary btn-small" href="${escapeHtml(verificationUrl)}" target="_blank" rel="noopener noreferrer" style="text-decoration:none;">Open Verification Page</a>` : ""}
+      <button class="btn btn-secondary btn-small" type="button" onclick="document.getElementById('inspection-detail-panel').style.display='none'">Close</button>
+    </div>
+  `;
+}
+
+window.viewInspectionRecord = viewInspectionRecord;
+    
     async function boot() {
       wireEvents();
 
