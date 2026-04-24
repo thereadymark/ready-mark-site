@@ -1639,7 +1639,7 @@ tbody.innerHTML = rows.map((inspection) => `
       </span>
     </td>
     <td>
-<button class="text-btn" type="button" onclick="alert('clicked')">View Record</button>
+ onclick="console.log('inspection id:', '${String(inspection.id).replace(/'/g, "\\'")}'); viewInspectionRecord('${String(inspection.id).replace(/'/g, "\\'")}')"
       </td>
   </tr>
 `).join("");
@@ -1940,6 +1940,8 @@ if (logFile) {
     }
 
     function viewInspectionRecord(inspectionId) {
+    console.log("viewInspectionRecord fired:", inspectionId);
+      
   const panel = document.getElementById("inspection-detail-panel");
   const inspection = state.inspections.find(item => String(item.id) === String(inspectionId));
 
