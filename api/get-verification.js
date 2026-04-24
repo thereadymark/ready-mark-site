@@ -287,8 +287,9 @@ return res.status(200).json({
 });
   } 
   catch (error) {
-    return res.status(500).json({
-      error: error?.message || "Server error"
-    });
-  }
+  return res.status(500).json({
+    error: error?.message || "Server error",
+    stack: error?.stack || null
+  });
+ }
 }
