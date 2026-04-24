@@ -156,18 +156,19 @@ export default async function handler(req, res) {
       }
     }
 
-const currentInspectionUrl =
-  `${supabaseUrl}/rest/v1/${INSPECTION_TABLE}` +
-  `?room_id=eq.${encodeURIComponent(room.id)}` +
-  `&is_current=eq.true` +
-  `select=id,inspector_id,created_at,inspection_date,certification_tier,verification_id,score,notes,photo_url,photo_urls,log_file_url,is_current` +
-  `&order=is_current.desc,created_at.desc.nullslast` +
-  `&limit=1`;
+let { data: inspectionData, error: inspectionError } = await supabase
+  .from("Inspections")
+  .select("id, inspector_id, created_at, inspection_date, certification_tier, verification_id, score, notes, photo_url, photo_urls, log_file_url, is_current")
+  .eq("room_id", room.id)
+  .eq("is_current", true)
+  .order("created_at", { ascending: false })
+  .limit(1);
 
-const { response: inspectionRes, json: inspectionData } = await fetchJson(currentInspectionUrl);
-
-if (!inspectionRes.ok) {
-  return res.status(500).json({ error: "Inspection lookup failed" });
+if (inspectionError) {
+  return res.status(500).json({
+    error: "Inspection lookup failed",
+    details: inspectionError.message
+  });
 }
 
 let inspection =
@@ -176,37 +177,42 @@ let inspection =
     : null;
 
 if (!inspection) {
-  const fallbackInspectionUrl =
-    `${supabaseUrl}/rest/v1/${INSPECTION_TABLE}` +
-    `?room_id=eq.${encodeURIComponent(room.id)}` +
-    `&select=id,inspector_id,created_at,inspection_date,certification_tier,verification_id,score,notes,photo_url,photo_urls,log_file_url,is_current` +
-    `&order=created_at.desc.nullslast` +
-    `&limit=1`;
+  const { data: fallbackData, error: fallbackError } = await supabase
+    .from("Inspections")
+    .select("id, inspector_id, created_at, inspection_date, certification_tier, verification_id, score, notes, photo_url, photo_urls, log_file_url, is_current")
+    .eq("room_id", room.id)
+    .order("created_at", { ascending: false })
+    .limit(1);
 
-  const { response: fallbackRes, json: fallbackData } = await fetchJson(fallbackInspectionUrl);
-
-  if (!fallbackRes.ok) {
-    return res.status(500).json({ error: "Inspection lookup failed" });
+  if (fallbackError) {
+    return res.status(500).json({
+      error: "Inspection lookup failed",
+      details: fallbackError.message
+    });
   }
 
   inspection =
     Array.isArray(fallbackData) && fallbackData.length > 0
       ? fallbackData[0]
       : null;
-}    
-const historyUrl =
-  `${supabaseUrl}/rest/v1/${INSPECTION_TABLE}` +
-  `?room_id=eq.${encodeURIComponent(room.id)}` +
-  `&select=id,created_at,inspection_date,certification_tier,verification_id,score,is_current` +
-  `&order=created_at.desc.nullslast` +
-  `&limit=5`;
-    
-const { response: historyRes, json: historyData } = await fetchJson(historyUrl);
-
-if (!historyRes.ok) {
-  return res.status(500).json({ error: "Inspection history lookup failed" });
 }
 
+const { data: historyData, error: historyError } = await supabase
+  .from("Inspections")
+  .select("id, created_at, inspection_date, certification_tier, verification_id, score, is_current")
+  .eq("room_id", room.id)
+  .order("is_current", { ascending: false })
+  .order("created_at", { ascending: false })
+  .limit(5);
+
+if (historyError) {
+  return res.status(500).json({
+    error: "Inspection history lookup failed",
+    details: historyError.message
+  });
+}
+
+const inspectionHistory = Array.isArray(historyData) ? historyData : [];
 const inspectionHistory = Array.isArray(historyData) ? historyData : [];
 
 let signedPhotoUrl = "";
