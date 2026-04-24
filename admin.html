@@ -1639,8 +1639,8 @@ tbody.innerHTML = rows.map((inspection) => `
       </span>
     </td>
     <td>
-      <button class="text-btn" type="button" onclick="viewInspectionRecord('${escapeHtml(inspection.id)}')">View Record</button>
-    </td>
+      <button class="text-btn" type="button" onclick="viewInspectionRecord('${String(inspection.id).replace(/'/g, "\\'")}')">View Record</button>  
+      </td>
   </tr>
 `).join("");
     }
