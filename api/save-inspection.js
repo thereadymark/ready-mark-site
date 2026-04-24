@@ -170,22 +170,21 @@ export default async function handler(req, res) {
     }
 
     const inspectionRes = await fetch(`${supabaseUrl}/rest/v1/Inspections`, {
-      method: "POST",
-      headers,
-      body: JSON.stringify([
-        {
-          room_id: room.id,
-          inspector_id: normalizedInspectorId,
-          created_at: inspectionIsoDate,
-          certification_tier: normalizedCertificationTier,
-          verification_id: normalizedVerificationId,
-          score: score ? Number(score) : null,
-          notes: normalizedNotes,
-          is_current: true
-        }
-      ])
-    });
-
+  method: "POST",
+  headers,
+  body: JSON.stringify([
+    {
+      room_id: room.id,
+      inspector_id: normalizedInspectorId,
+      inspection_date: inspectionIsoDate, // ✅ NEW FIELD
+      certification_tier: normalizedCertificationTier,
+      verification_id: normalizedVerificationId,
+      score: score ? Number(score) : null,
+      notes: normalizedNotes,
+      is_current: true
+    }
+  ])
+});
     const inspectionData = await inspectionRes.json().catch(() => null);
 
     if (!inspectionRes.ok) {
