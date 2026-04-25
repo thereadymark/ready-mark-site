@@ -982,6 +982,7 @@
                     <div class="full-width">
                       <label for="evidence-verification-id">Verification ID</label>
                       <input id="evidence-verification-id" type="text" placeholder="Enter verification ID" />
+                    <input id="evidence-inspection-id" type="hidden" />
                     </div>
                     <div>
                       <label for="evidence-photo-file">Inspection Photo</label>
@@ -1778,6 +1779,7 @@ tbody.innerHTML = rows.map((inspection) => `
         });
 
         state.lastInspectionResult = data;
+        document.getElementById("evidence-inspection-id").value = data.id;
         document.getElementById("evidence-verification-id").value = verificationId;
 
         if (data.public_url) {
