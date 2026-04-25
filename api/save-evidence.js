@@ -196,7 +196,7 @@ export default async function handler(req, res) {
 
     const verificationId = String(verification_id).trim();
     const inspectionId = String(inspection_id).trim();
-    const folder = sanitizeFolderName(verificationId);
+    const folder = sanitizeFolderName(inspectionId);
 
     if (!folder) {
       return res.status(400).json({ error: "Invalid verification_id" });
