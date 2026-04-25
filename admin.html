@@ -1856,7 +1856,7 @@ if (logFile) {
     const data = await res.json().catch(() => null);
 
     if (!res.ok) {
-      throw new Error(data?.error || "Upload failed");
+      throw new Error(data?.details || data?.error || "Upload failed");
     }
 
     setStatusBox("evidence-status-box", "Evidence uploaded successfully ✅");
