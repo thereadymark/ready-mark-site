@@ -279,8 +279,8 @@ export default async function handler(req, res) {
       .map((photo) => photo.url)
       .filter(Boolean);
 
-    const mergedPhotoUrls = [...existingPhotoUrls, ...newPhotoUrls];
-
+   const mergedPhotoUrls = [...new Set([...existingPhotoUrls, ...newPhotoUrls])];
+    
     const updatePayload = {};
 
     if (newPhotoUrls.length) {
