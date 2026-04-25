@@ -79,8 +79,8 @@ async function loadReport() {
 
   document.getElementById("report-content").innerHTML = `
     <div class="grid">
-      <div><div class="label">Property</div><div class="value">${data.property_name}</div></div>
-      <div><div class="label">Room</div><div class="value">${data.room_number}</div></div>
+      <div><div class="label">Property</div><div class="value">${data.Rooms?.properties?.property_name || "—"}</div></div>
+      <div><div class="label">Room</div><div class="value">${data.Rooms?.room_number || "—"}</div></div>
       <div><div class="label">Score</div><div class="value">${data.score}</div></div>
       <div><div class="label">Tier</div><div class="value">${data.certification_tier}</div></div>
       <div><div class="label">Inspection Date</div><div class="value">${data.created_at}</div></div>
@@ -92,7 +92,33 @@ async function loadReport() {
       <div class="label">Notes</div>
       <div class="value">${data.notes || "—"}</div>
     </div>
-  `;
+
+    <div class="section">
+  <div class="label">Evidence Photos</div>
+  <div class="value">
+    ${
+      Array.isArray(data.photo_urls) && data.photo_urls.length
+        ? data.photo_urls.map(url => `
+            <img src="${url}" style="max-width:180px;border-radius:12px;margin:8px;border:1px solid #e8e4dc;" />
+          `).join("")
+        : data.photo_url
+          ? `<img src="${data.photo_url}" style="max-width:180px;border-radius:12px;margin:8px;border:1px solid #e8e4dc;" />`
+          : "—"
+    }
+  </div>
+</div>
+
+<div class="section">
+  <div class="label">Physical Inspection Log</div>
+  <div class="value">
+    ${
+      data.log_file_url
+        ? `<a href="${data.log_file_url}" target="_blank">Open Inspection Log</a>`
+        : "—"
+    }
+  </div>
+</div>
+`;
 }
 
 loadReport();
