@@ -1879,7 +1879,12 @@ let logPayload = null;
 if (logFile) {
   logPayload = await fileToBase64(logFile);
 }
-    
+
+    const inspectionId =
+  document.getElementById("evidence-inspection-id").value.trim() ||
+  state.lastInspectionResult?.inspection_id;
+
+alert("Uploading with ID: " + inspectionId);
     // 🚀 Send request
     const res = await fetch("/api/save-evidence", {
       method: "POST",
