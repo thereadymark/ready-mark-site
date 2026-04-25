@@ -15,7 +15,16 @@ export default async function handler(req, res) {
 
     const { data, error } = await supabase
       .from("Inspections")
-      .select("*")
+     .select(`
+  *,
+  Rooms (
+    room_number,
+    properties (
+      property_name,
+      property_slug
+    )
+  )
+`)
       .eq("id", id)
       .single();
 
