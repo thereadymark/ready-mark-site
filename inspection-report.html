@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Inspection Report</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=Lato:wght@300;400;600&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      margin:0;
+      background:#f7f7f5;
+      font-family:Lato,sans-serif;
+      color:#111;
+      padding:20px;
+    }
+
+    .card {
+      max-width:700px;
+      margin:auto;
+      background:#fff;
+      border:1px solid #e8e4dc;
+      border-radius:18px;
+      padding:24px;
+    }
+
+    h1 {
+      font-family:Cinzel,serif;
+      margin:0 0 16px;
+    }
+
+    .grid {
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:14px;
+    }
+
+    .section {
+      margin-top:20px;
+    }
+
+    .label {
+      font-size:12px;
+      color:#777;
+      text-transform:uppercase;
+    }
+
+    .value {
+      font-weight:600;
+    }
+  </style>
+</head>
+<body>
+
+<div class="card">
+  <h1>Inspection Report</h1>
+
+  <div id="report-content">Loading...</div>
+</div>
+
+<script>
+const params = new URLSearchParams(window.location.search);
+const id = params.get("id");
+
+async function loadReport() {
+  if (!id) {
+    document.getElementById("report-content").innerText = "Missing ID";
+    return;
+  }
+
+  const res = await fetch(`/api/get-inspection-report?id=${id}`);
+  const data = await res.json();
+
+  if (!data) {
+    document.getElementById("report-content").innerText = "Not found";
+    return;
+  }
+
+  document.getElementById("report-content").innerHTML = `
+    <div class="grid">
+      <div><div class="label">Property</div><div class="value">${data.property_name}</div></div>
+      <div><div class="label">Room</div><div class="value">${data.room_number}</div></div>
+      <div><div class="label">Score</div><div class="value">${data.score}</div></div>
+      <div><div class="label">Tier</div><div class="value">${data.certification_tier}</div></div>
+      <div><div class="label">Inspection Date</div><div class="value">${data.created_at}</div></div>
+      <div><div class="label">Inspector</div><div class="value">${data.inspector_id}</div></div>
+      <div><div class="label">Verification ID</div><div class="value">${data.verification_id}</div></div>
+    </div>
+
+    <div class="section">
+      <div class="label">Notes</div>
+      <div class="value">${data.notes || "—"}</div>
+    </div>
+  `;
+}
+
+loadReport();
+</script>
+
+</body>
+</html>
+
+
+
