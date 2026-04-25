@@ -184,13 +184,18 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { verification_id, photo_file, log_file } = req.body || {};
+    const { inspection_id, verification_id, photo_file, log_file } = req.body || {};
 
     if (!verification_id) {
       return res.status(400).json({ error: "Missing verification_id" });
     }
 
+    if (!inspection_id) {
+  return res.status(400).json({ error: "Missing inspection_id" });
+}
+
     const verificationId = String(verification_id).trim();
+    const inspectionId = String(inspection_id).trim();
     const folder = sanitizeFolderName(verificationId);
 
     if (!folder) {
@@ -247,7 +252,7 @@ export default async function handler(req, res) {
     const { data: inspectionRows, error: lookupError } = await supabase
       .from("Inspections")
       .select("id, verification_id, photo_url, photo_urls, log_file_url, created_at")
-      .eq("verification_id", verificationId)
+      .eq("id", inspectionId)
       .order("created_at", { ascending: false })
       .limit(1);
 
