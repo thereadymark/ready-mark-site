@@ -1884,10 +1884,11 @@ if (logFile) {
         "x-admin-token": sessionStorage.getItem(STORAGE_KEY)
       },
       body: JSON.stringify({
-        verification_id: verificationId,
-        photo_file: processedPhotos,
-        log_file: logPayload
-      })
+  inspection_id: document.getElementById("evidence-inspection-id").value,
+  verification_id: verificationId,
+  photo_file: processedPhotos,
+  log_file: logPayload
+})
     });
 
     const data = await res.json().catch(() => null);
