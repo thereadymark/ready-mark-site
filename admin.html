@@ -1837,7 +1837,9 @@ function compressImage(file) {
   event.preventDefault();
 
   const verificationId = document.getElementById("evidence-verification-id").value.trim();
-  const processedPhotos = [];
+  const photoFiles = document.getElementById("evidence-photo-file").files; 
+      
+    const processedPhotos = [];
 
 for (let i = 0; i < photoFiles.length; i++) {
   const file = photoFiles[i];
