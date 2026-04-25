@@ -1779,6 +1779,8 @@ tbody.innerHTML = rows.map((inspection) => `
         });
 
         state.lastInspectionResult = data;
+        alert("inspection_id returned: " + data.inspection_id);
+        
         document.getElementById("evidence-inspection-id").value = data.inspection_id;
         document.getElementById("evidence-verification-id").value = verificationId;
 
