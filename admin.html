@@ -1779,7 +1779,7 @@ tbody.innerHTML = rows.map((inspection) => `
         });
 
         state.lastInspectionResult = data;
-        alert("inspection_id returned: " + data.inspection_id);
+        
         
         document.getElementById("evidence-inspection-id").value = data.inspection_id;
         document.getElementById("evidence-verification-id").value = verificationId;
@@ -1837,31 +1837,25 @@ function compressImage(file) {
     reader.readAsDataURL(file);
   });
 }
-    async function handleUploadEvidence(event) {
+   async function handleUploadEvidence(event) {
   event.preventDefault();
 
   const verificationId = document.getElementById("evidence-verification-id").value.trim();
-  const photoFiles = document.getElementById("evidence-photo-file").files; 
-  const inspectionId = document.getElementById("evidence-inspection-id").value.trim();
-  console.log("Sending inspection_id:", inspectionId);
-      
-    const processedPhotos = [];
+  const inspectionId =
+    document.getElementById("evidence-inspection-id").value.trim() ||
+    state.lastInspectionResult?.inspection_id ||
+    "";
 
-for (let i = 0; i < photoFiles.length; i++) {
-  const file = photoFiles[i];
-
-  const compressed = await compressImage(file);
-
-  processedPhotos.push({
-    base64: compressed.split(",")[1],
-    type: "image/jpeg",
-    name: file.name
-  });
-}
+  const photoFiles = document.getElementById("evidence-photo-file").files;
   const logFile = document.getElementById("evidence-log-file").files[0] || null;
 
   if (!verificationId) {
     setStatusBox("evidence-status-box", "Enter a verification ID.");
+    return;
+  }
+
+  if (!inspectionId) {
+    setStatusBox("evidence-status-box", "No inspection ID found. Save the inspection first, then upload evidence.");
     return;
   }
 
@@ -1872,20 +1866,26 @@ for (let i = 0; i < photoFiles.length; i++) {
 
   try {
     setStatusBox("evidence-status-box", "Uploading evidence...");
-    
- // 📄 Convert log file
-let logPayload = null;
 
-if (logFile) {
-  logPayload = await fileToBase64(logFile);
-}
+    const processedPhotos = [];
 
-    const inspectionId =
-  document.getElementById("evidence-inspection-id").value.trim() ||
-  state.lastInspectionResult?.inspection_id;
+    for (let i = 0; i < photoFiles.length; i++) {
+      const file = photoFiles[i];
+      const compressed = await compressImage(file);
 
-alert("Uploading with ID: " + inspectionId);
-    // 🚀 Send request
+      processedPhotos.push({
+        base64: compressed.split(",")[1],
+        type: "image/jpeg",
+        name: file.name
+      });
+    }
+
+    let logPayload = null;
+
+    if (logFile) {
+      logPayload = await fileToBase64(logFile);
+    }
+
     const res = await fetch("/api/save-evidence", {
       method: "POST",
       headers: {
@@ -1893,11 +1893,11 @@ alert("Uploading with ID: " + inspectionId);
         "x-admin-token": sessionStorage.getItem(STORAGE_KEY)
       },
       body: JSON.stringify({
-  inspection_id: inspectionId,
-  verification_id: verificationId,
-  photo_file: processedPhotos,
-  log_file: logPayload
-})
+        inspection_id: inspectionId,
+        verification_id: verificationId,
+        photo_file: processedPhotos,
+        log_file: logPayload
+      })
     });
 
     const data = await res.json().catch(() => null);
@@ -1908,27 +1908,14 @@ alert("Uploading with ID: " + inspectionId);
 
     setStatusBox("evidence-status-box", "Evidence uploaded successfully ✅");
 
-    // optional reset
     document.getElementById("evidence-photo-file").value = "";
     document.getElementById("evidence-log-file").value = "";
 
+    await refreshAdminData();
   } catch (err) {
     setStatusBox("evidence-status-box", `Error: ${err.message}`);
   }
 }
-    async function sendReportToProperty(reportId) {
-      try {
-        await apiFetch(API.sendReportToProperty, {
-          method: "POST",
-          body: JSON.stringify({ report_id: reportId })
-        });
-
-        await refreshAdminData();
-      } catch (error) {
-        alert(error.message);
-      }
-    }
-
     async function updateGuestReportStatus(reportId, status) {
       try {
         await apiFetch(API.updateReportStatus, {
