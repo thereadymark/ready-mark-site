@@ -1640,9 +1640,9 @@ tbody.innerHTML = rows.map((inspection) => `
     </td>
     <td>
  <td>
-  <button class="text-btn inspection-view-btn" type="button" data-inspection-id="${escapeHtml(inspection.id)}">
-    View Record
-  </button>
+  <a class="text-btn" href="/inspection-report.html?id=${inspection.id}" target="_blank">
+    Open Report
+  </a>
 </td>
 </td>
   </tr>
