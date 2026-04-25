@@ -226,18 +226,18 @@ export default async function handler(req, res) {
       uploadedLog = result;
     }
 
-    const updatePayload = {};
+   const updatePayload = {};
 
-    if (uploadedPhoto?.url) {
-      updatePayload.photo_url = uploadedPhoto.url;
-      updatePayload.photo_path = uploadedPhoto.path;
-    }
+if (uploadedPhoto?.url) {
+  updatePayload.photo_url = uploadedPhoto.url;
 
-    if (uploadedLog?.url) {
-      updatePayload.log_file_url = uploadedLog.url;
-      updatePayload.log_file_path = uploadedLog.path;
-    }
+  // If you want to support multiple photos later
+  updatePayload.photo_urls = [uploadedPhoto.url];
+}
 
+if (uploadedLog?.url) {
+  updatePayload.log_file_url = uploadedLog.url;
+}
     if (Object.keys(updatePayload).length > 0) {
       const { error: updateError } = await supabase
         .from("inspections")
