@@ -13,6 +13,8 @@ export const config = {
   }
 };
 
+const ALLOWED_ORIGIN = "https://verify.thereadymarkgroup.com";
+
 const PHOTO_BUCKET = "inspection-photos";
 const DOC_BUCKET = "inspection-docs";
 
@@ -37,9 +39,28 @@ const ALLOWED_DOC_TYPES = new Set([
   "image/heif"
 ]);
 
+function setCorsHeaders(res) {
+  res.setHeader("Access-Control-Allow-Origin", ALLOWED_ORIGIN);
+  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.setHeader(
+    "Access-Control-Allow-Headers",
+    "Content-Type, Authorization, x-admin-token"
+  );
+}
+
+function cleanBase64(base64String) {
+  if (!base64String || typeof base64String !== "string") return null;
+
+  return base64String.includes("base64,")
+    ? base64String.split("base64,")[1]
+    : base64String;
+}
+
 function bufferFromBase64(base64String) {
   try {
-    return Buffer.from(base64String, "base64");
+    const cleaned = cleanBase64(base64String);
+    if (!cleaned) return null;
+    return Buffer.from(cleaned, "base64");
   } catch {
     return null;
   }
@@ -52,8 +73,16 @@ function sanitizeFileName(name) {
     .toLowerCase();
 }
 
-function validateFile({ type, buffer, allowedTypes, maxBytes, label }) {
-  if (!type || !allowedTypes.has(type)) {
+function sanitizeFolderName(value) {
+  return String(value || "")
+    .trim()
+    .replace(/\s+/g, "-")
+    .replace(/[^a-zA-Z0-9._-]/g, "")
+    .toLowerCase();
+}
+
+function validateFile({ file, buffer, allowedTypes, maxBytes, label }) {
+  if (!file?.type || !allowedTypes.has(file.type)) {
     return `${label} must be a supported file type.`;
   }
 
@@ -72,28 +101,62 @@ function normalizePhotoFiles(photoFileInput) {
   if (!photoFileInput) return [];
 
   if (Array.isArray(photoFileInput)) {
-    return photoFileInput.filter(file => file && file.base64);
+    return photoFileInput.filter((file) => file?.base64);
   }
 
-  if (photoFileInput.base64) {
+  if (photoFileInput?.base64) {
     return [photoFileInput];
   }
 
   return [];
 }
 
-export default async function handler(req, res) {
-  const allowedOrigin = "https://verify.thereadymarkgroup.com";
+async function uploadFileToStorage({ bucket, folder, file, index, label }) {
+  const buffer = bufferFromBase64(file.base64);
 
-  const corsHeaders = {
-    "Access-Control-Allow-Origin": allowedOrigin,
-    "Access-Control-Allow-Methods": "POST, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type, Authorization, x-admin-token"
-  };
-
-  Object.entries(corsHeaders).forEach(([key, value]) => {
-    res.setHeader(key, value);
+  const validationError = validateFile({
+    file,
+    buffer,
+    allowedTypes: bucket === PHOTO_BUCKET ? ALLOWED_PHOTO_TYPES : ALLOWED_DOC_TYPES,
+    maxBytes: bucket === PHOTO_BUCKET ? MAX_PHOTO_BYTES : MAX_DOC_BYTES,
+    label
   });
+
+  if (validationError) {
+    return { error: validationError, status: 400 };
+  }
+
+  const fileName = sanitizeFileName(file.name);
+  const prefix = index ? `${Date.now()}-${index}` : `${Date.now()}`;
+  const filePath = `${folder}/${prefix}-${fileName}`;
+
+  const { error: uploadError } = await supabase.storage
+    .from(bucket)
+    .upload(filePath, buffer, {
+      contentType: file.type,
+      upsert: false
+    });
+
+  if (uploadError) {
+    return {
+      error: `${label} upload failed.`,
+      details: uploadError.message,
+      status: 500
+    };
+  }
+
+  const { data: publicUrlData } = supabase.storage
+    .from(bucket)
+    .getPublicUrl(filePath);
+
+  return {
+    path: filePath,
+    url: publicUrlData?.publicUrl || filePath
+  };
+}
+
+export default async function handler(req, res) {
+  setCorsHeaders(res);
 
   if (req.method === "OPTIONS") {
     return res.status(200).end();
@@ -103,8 +166,14 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const adminToken = req.headers["x-admin-token"];
   const expectedToken = process.env.ADMIN_TOKEN;
+  const adminToken = req.headers["x-admin-token"];
+
+  if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    return res.status(500).json({
+      error: "Missing Supabase environment variables"
+    });
+  }
 
   if (!expectedToken) {
     return res.status(500).json({ error: "Missing ADMIN_TOKEN" });
@@ -121,9 +190,16 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Missing verification_id" });
     }
 
+    const verificationId = String(verification_id).trim();
+    const folder = sanitizeFolderName(verificationId);
+
+    if (!folder) {
+      return res.status(400).json({ error: "Invalid verification_id" });
+    }
+
     const photoFiles = normalizePhotoFiles(photo_file);
 
-    if (!photoFiles.length && !log_file) {
+    if (!photoFiles.length && !log_file?.base64) {
       return res.status(400).json({ error: "No files provided" });
     }
 
@@ -133,146 +209,123 @@ export default async function handler(req, res) {
       });
     }
 
-    const verificationId = String(verification_id).trim();
+    const uploadedPhotos = [];
+    let uploadedLog = null;
 
-    let uploadedLogPath = null;
-    const uploadedPhotoPaths = [];
-
-    // Upload one or many photos
     for (let i = 0; i < photoFiles.length; i += 1) {
-      const currentPhoto = photoFiles[i];
-      const buffer = bufferFromBase64(currentPhoto.base64);
-
-      const error = validateFile({
-        type: currentPhoto.type,
-        buffer,
-        allowedTypes: ALLOWED_PHOTO_TYPES,
-        maxBytes: MAX_PHOTO_BYTES,
+      const result = await uploadFileToStorage({
+        bucket: PHOTO_BUCKET,
+        folder,
+        file: photoFiles[i],
+        index: i + 1,
         label: `Inspection photo ${i + 1}`
       });
 
-      if (error) {
-        return res.status(400).json({ error });
+      if (result.error) {
+        return res.status(result.status || 500).json(result);
       }
 
-      const fileName = sanitizeFileName(currentPhoto.name);
-      const filePath = `${verificationId}/${Date.now()}-${i + 1}-${fileName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from(PHOTO_BUCKET)
-        .upload(filePath, buffer, {
-          contentType: currentPhoto.type,
-          upsert: false
-        });
-
-      if (uploadError) {
-        return res.status(500).json({
-          error: `Photo upload failed`,
-          details: uploadError.message
-        });
-      }
-
-      uploadedPhotoPaths.push(filePath);
+      uploadedPhotos.push(result);
     }
 
-    // Upload log
     if (log_file?.base64) {
-      const buffer = bufferFromBase64(log_file.base64);
-
-      const error = validateFile({
-        type: log_file.type,
-        buffer,
-        allowedTypes: ALLOWED_DOC_TYPES,
-        maxBytes: MAX_DOC_BYTES,
+      const result = await uploadFileToStorage({
+        bucket: DOC_BUCKET,
+        folder,
+        file: log_file,
+        index: null,
         label: "Inspection log"
       });
 
-      if (error) {
-        return res.status(400).json({ error });
+      if (result.error) {
+        return res.status(result.status || 500).json(result);
       }
 
-      const fileName = sanitizeFileName(log_file.name);
-      const filePath = `${verificationId}/${Date.now()}-${fileName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from(DOC_BUCKET)
-        .upload(filePath, buffer, {
-          contentType: log_file.type,
-          upsert: false
-        });
-
-      if (uploadError) {
-        return res.status(500).json({
-          error: "Log upload failed",
-          details: uploadError.message
-        });
-      }
-
-      uploadedLogPath = filePath;
+      uploadedLog = result;
     }
 
-    // Load current inspection record first so we can merge photo arrays
-    const { data: existingInspection, error: existingInspectionError } = await supabase
-      .from("Inspections")
-      .select("id, verification_id, photo_url, photo_urls, log_file_url")
+    const { data: inspectionRows, error: lookupError } = await supabase
+      .from("inspections")
+      .select("id, verification_id, photo_url, photo_urls, log_file_url, created_at")
       .eq("verification_id", verificationId)
-      .single();
+      .order("created_at", { ascending: false })
+      .limit(1);
 
-    if (existingInspectionError) {
+    if (lookupError) {
       return res.status(500).json({
-        error: "Files uploaded but failed to load inspection record",
-        details: existingInspectionError.message
+        error: "Files uploaded, but inspection lookup failed.",
+        details: lookupError.message
       });
     }
 
-    const existingPhotoUrls = Array.isArray(existingInspection.photo_urls)
-      ? existingInspection.photo_urls.filter(Boolean)
+    const inspection = inspectionRows?.[0];
+
+    if (!inspection?.id) {
+      return res.status(404).json({
+        error: "Files uploaded, but no matching inspection record was found.",
+        verification_id: verificationId,
+        uploaded: {
+          photos: uploadedPhotos,
+          log: uploadedLog
+        }
+      });
+    }
+
+    const existingPhotoUrls = Array.isArray(inspection.photo_urls)
+      ? inspection.photo_urls.filter(Boolean)
       : [];
 
-    const mergedPhotoUrls = [...existingPhotoUrls, ...uploadedPhotoPaths];
+    const newPhotoUrls = uploadedPhotos
+      .map((photo) => photo.url)
+      .filter(Boolean);
+
+    const mergedPhotoUrls = [...existingPhotoUrls, ...newPhotoUrls];
 
     const updatePayload = {};
 
-    if (uploadedPhotoPaths.length) {
-      updatePayload.photo_url = mergedPhotoUrls[0] || uploadedPhotoPaths[0];
+    if (newPhotoUrls.length) {
+      updatePayload.photo_url = newPhotoUrls[newPhotoUrls.length - 1];
       updatePayload.photo_urls = mergedPhotoUrls;
     }
 
-    if (uploadedLogPath) {
-      updatePayload.log_file_url = uploadedLogPath;
+    if (uploadedLog?.url) {
+      updatePayload.log_file_url = uploadedLog.url;
     }
 
+    let updatedInspection = inspection;
+
     if (Object.keys(updatePayload).length > 0) {
-      const { data: updatedInspection, error: updateError } = await supabase
-        .from("Inspections")
+      const { data: updatedRows, error: updateError } = await supabase
+        .from("inspections")
         .update(updatePayload)
-        .eq("verification_id", verificationId)
-        .select("id, verification_id, photo_url, photo_urls, log_file_url")
-        .single();
+        .eq("id", inspection.id)
+        .select("id, verification_id, photo_url, photo_urls, log_file_url, created_at");
 
       if (updateError) {
         return res.status(500).json({
-          error: "Files uploaded but failed to update inspection record",
-          details: updateError.message
+          error: "Files uploaded, but inspection update failed.",
+          details: updateError.message,
+          uploaded: {
+            photos: uploadedPhotos,
+            log: uploadedLog
+          }
         });
       }
 
-      return res.status(200).json({
-        success: true,
-        verification_id: verificationId,
-        photo_path: uploadedPhotoPaths[0] || null,
-        photo_paths: uploadedPhotoPaths,
-        log_file_path: uploadedLogPath,
-        inspection: updatedInspection
-      });
+      updatedInspection = updatedRows?.[0] || inspection;
     }
 
     return res.status(200).json({
       success: true,
       verification_id: verificationId,
-      photo_path: uploadedPhotoPaths[0] || null,
-      photo_paths: uploadedPhotoPaths,
-      log_file_path: uploadedLogPath
+      photo_url: newPhotoUrls[newPhotoUrls.length - 1] || null,
+      photo_urls: mergedPhotoUrls,
+      log_file_url: uploadedLog?.url || null,
+      uploaded: {
+        photos: uploadedPhotos,
+        log: uploadedLog
+      },
+      inspection: updatedInspection
     });
   } catch (error) {
     return res.status(500).json({
