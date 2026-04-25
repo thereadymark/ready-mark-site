@@ -227,47 +227,60 @@ export default async function handler(req, res) {
     }
 
    const updatePayload = {};
+// AFTER this part:
+// uploadedPhoto = result;
+// uploadedLog = result;
+
+let existingPhotoUrls = [];
+
+if (uploadedPhoto?.url) {
+  const { data: existingInspection, error: fetchError } = await supabase
+    .from("inspections")
+    .select("photo_urls")
+    .eq("verification_id", verificationId)
+    .single();
+
+  if (fetchError) {
+    return res.status(500).json({
+      error: "Files uploaded, but existing photo list could not be checked.",
+      details: fetchError.message,
+      uploaded: {
+        photo: uploadedPhoto,
+        log: uploadedLog
+      }
+    });
+  }
+
+  if (Array.isArray(existingInspection?.photo_urls)) {
+    existingPhotoUrls = existingInspection.photo_urls;
+  }
+}
+
+const updatePayload = {};
 
 if (uploadedPhoto?.url) {
   updatePayload.photo_url = uploadedPhoto.url;
-
-  // If you want to support multiple photos later
-  updatePayload.photo_urls = [uploadedPhoto.url];
+  updatePayload.photo_urls = [...existingPhotoUrls, uploadedPhoto.url];
 }
 
 if (uploadedLog?.url) {
   updatePayload.log_file_url = uploadedLog.url;
 }
-    if (Object.keys(updatePayload).length > 0) {
-      const { error: updateError } = await supabase
-        .from("inspections")
-        .update(updatePayload)
-        .eq("verification_id", verificationId);
 
-      if (updateError) {
-        return res.status(500).json({
-          error: "Files uploaded, but inspection update failed.",
-          details: updateError.message,
-          uploaded: {
-            photo: uploadedPhoto,
-            log: uploadedLog
-          }
-        });
-      }
-    }
+if (Object.keys(updatePayload).length > 0) {
+  const { error: updateError } = await supabase
+    .from("inspections")
+    .update(updatePayload)
+    .eq("verification_id", verificationId);
 
-    return res.status(200).json({
-      success: true,
-      verification_id: verificationId,
-      photo_path: uploadedPhoto?.path || null,
-      photo_url: uploadedPhoto?.url || null,
-      log_file_path: uploadedLog?.path || null,
-      log_file_url: uploadedLog?.url || null
-    });
-  } catch (error) {
+  if (updateError) {
     return res.status(500).json({
-      error: "Server error",
-      details: error.message
+      error: "Files uploaded, but inspection update failed.",
+      details: updateError.message,
+      uploaded: {
+        photo: uploadedPhoto,
+        log: uploadedLog
+      }
     });
   }
 }
