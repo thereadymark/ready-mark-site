@@ -1866,17 +1866,6 @@ for (let i = 0; i < photoFiles.length; i++) {
 
   try {
     setStatusBox("evidence-status-box", "Uploading evidence...");
-
-    // 🔥 Convert ALL selected photos to base64
-    let photoPayload = [];
-
-if (photoFiles.length) {
-  for (let i = 0; i < photoFiles.length; i += 1) {
-    const file = photoFiles[i];
-    const filePayload = await fileToBase64(file);
-    photoPayload.push(filePayload);
-  }
-}     
     
  // 📄 Convert log file
 let logPayload = null;
