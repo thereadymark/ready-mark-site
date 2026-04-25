@@ -1842,6 +1842,8 @@ function compressImage(file) {
 
   const verificationId = document.getElementById("evidence-verification-id").value.trim();
   const photoFiles = document.getElementById("evidence-photo-file").files; 
+  const inspectionId = document.getElementById("evidence-inspection-id").value.trim();
+  console.log("Sending inspection_id:", inspectionId);
       
     const processedPhotos = [];
 
@@ -1886,7 +1888,7 @@ if (logFile) {
         "x-admin-token": sessionStorage.getItem(STORAGE_KEY)
       },
       body: JSON.stringify({
-  inspection_id: document.getElementById("evidence-inspection-id").value,
+  inspection_id: inspectionId,
   verification_id: verificationId,
   photo_file: processedPhotos,
   log_file: logPayload
