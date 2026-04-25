@@ -245,7 +245,7 @@ export default async function handler(req, res) {
     }
 
     const { data: inspectionRows, error: lookupError } = await supabase
-      .from("inspections")
+      .from("Inspections")
       .select("id, verification_id, photo_url, photo_urls, log_file_url, created_at")
       .eq("verification_id", verificationId)
       .order("created_at", { ascending: false })
@@ -296,7 +296,7 @@ export default async function handler(req, res) {
 
     if (Object.keys(updatePayload).length > 0) {
       const { data: updatedRows, error: updateError } = await supabase
-        .from("inspections")
+        .from("Inspections")
         .update(updatePayload)
         .eq("id", inspection.id)
         .select("id, verification_id, photo_url, photo_urls, log_file_url, created_at");
