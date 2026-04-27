@@ -423,10 +423,47 @@ h1 {
 
     @media (max-width: 760px) {
       .record-shell { padding: 28px 16px; }
-      .details-grid, .activity-row, .lookup { grid-template-columns: 1fr; }
+      .details-grid, .activity-row  { 
+        grid-template-columns: 1fr; 
+      }
       .eyebrow::before, .eyebrow::after { width: 54px; }
       .score-pill { justify-self: start; }
     }
+.card {
+  background: linear-gradient(180deg, #fffdf9, #f6f1e8);
+  box-shadow:
+    0 30px 80px rgba(0,0,0,0.08),
+    inset 0 0 0 1px rgba(199,162,87,0.2);
+}    
+.header {
+  animation: fadeUp 0.8s ease forwards;
+}
+
+.logo {
+  animation: crestIn 0.7s ease forwards;
+}
+
+.pill {
+  animation: pillGlow 1s ease forwards;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes crestIn {
+  from { opacity: 0; transform: translateY(-10px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes pillGlow {
+  from { opacity: 0; box-shadow: 0 0 0 rgba(199,162,87,0); }
+  to {
+    opacity: 1;
+    box-shadow: 0 0 22px rgba(199,162,87,0.35);
+  }
+}
   </style>
 </head>
 
@@ -441,11 +478,6 @@ h1 {
         <p class="hero-text">
           This room has been independently inspected and verified under The Ready Mark Cleanliness Standard.
         </p>
-
-        <div id="lookup" class="lookup">
-          <input id="slug-input" placeholder="Enter QR slug, e.g. crown-plaza-hotel-stl-room-200" />
-          <button class="btn" id="lookup-btn" type="button">Verify Room</button>
-        </div>
 
         <div id="status-box" class="status-box">Loading verification record...</div>
       </section>
@@ -555,12 +587,10 @@ h1 {
     const slugFromQuery = params.get("slug") || params.get("qr") || params.get("room");
     const initialSlug = slugFromQuery || (pathSlug && pathSlug !== "verify.html" ? pathSlug : "");
 
-    const slugInput = document.getElementById("slug-input");
-    const lookupBtn = document.getElementById("lookup-btn");
+   
     const statusBox = document.getElementById("status-box");
     const result = document.getElementById("result");
-    const lookup = document.getElementById("lookup");
-
+  
     function escapeHtml(value) {
       return String(value ?? "")
         .replace(/&/g, "&amp;")
@@ -587,11 +617,11 @@ h1 {
       return String(score).includes("/") ? String(score) : `${score} / 100`;
     }
 
-    function showStatus(message, showLookup = true) {
+    function showStatus(message) {
       statusBox.style.display = "block";
       statusBox.textContent = message;
       result.classList.remove("active");
-      lookup.classList.toggle("show", showLookup);
+     
     }
 
     function renderPhotos(data) {
@@ -662,7 +692,6 @@ h1 {
 
     function renderVerification(data) {
       statusBox.style.display = "none";
-      lookup.classList.remove("show");
       result.classList.add("active");
 
       document.getElementById("cert-pill").textContent = `🏆 ${normalizeTier(data.certificationTier || data.status)}`;
@@ -698,12 +727,11 @@ h1 {
       const cleanSlug = String(slug || "").trim();
 
       if (!cleanSlug) {
-        showStatus("Enter a room QR slug to verify a room.");
+        showStatus("Verification Record Unavailable.");
         return;
       }
 
-      slugInput.value = cleanSlug;
-      showStatus("Loading verification record...", false);
+      showStatus("Loading verification record...");
 
       try {
         const res = await fetch(`/api/get-verification?slug=${encodeURIComponent(cleanSlug)}`);
@@ -719,14 +747,6 @@ h1 {
       }
     }
 
-    lookupBtn.addEventListener("click", () => loadVerification(slugInput.value));
-
-    slugInput.addEventListener("keydown", (event) => {
-      if (event.key === "Enter") {
-        event.preventDefault();
-        loadVerification(slugInput.value);
-      }
-    });
 
     if (initialSlug) {
       loadVerification(initialSlug);
