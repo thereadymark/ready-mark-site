@@ -1142,11 +1142,11 @@
             </div>
 
             <div class="detail-block full">
-              <h3>Internal Notes</h3>
+              <h3>Inspection Notes</h3>
               <p id="report-detail-notes">No notes available.</p>
             </div>
             <div class="detail-block full">
-  <h3>Evidence Photos</h3>
+  <h3>Verification Evidence</h3>
   <div id="report-detail-photo-wrap" class="empty-note">No photo evidence attached.</div>
 </div>
 
@@ -1654,8 +1654,8 @@ function filterQRRecords() {
 
       document.getElementById("report-detail-title").textContent = `Inspection Report — Room ${report.room_number || "—"}`;
       document.getElementById("report-detail-subtitle").textContent =
-        `${dashboardData.property?.property_name || "Property"} • ${formatDate(report.created_at)} • Inspector ${report.inspector_id || "—"}`;
-
+     `${dashboardData.property?.property_name || "Property"} • Verified ${formatDate(report.created_at)}`;
+      
       const statusEl = document.getElementById("report-detail-status");
       statusEl.textContent = report.certification_tier || "—";
       statusEl.className = `status-pill ${getInspectionStatusClass(report.certification_tier)}`;
