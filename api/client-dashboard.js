@@ -29,27 +29,18 @@ function cleanStoragePath(value) {
   return text;
 }
 
-function publicStorageUrl(supabase, bucket, value) {
+async function signedStorageUrl(supabase, bucket, value) {
   const path = cleanStoragePath(value);
   if (!path) return "";
 
-  return supabase.storage.from(bucket).getPublicUrl(path).data.publicUrl;
+  const { data, error } = await supabase.storage
+    .from(bucket)
+    .createSignedUrl(path, 60 * 60);
+
+  if (error || !data?.signedUrl) return "";
+
+  return data.signedUrl;
 }
-
-function normalizePhotoUrls(supabase, value) {
-  if (Array.isArray(value)) {
-    return value
-      .map((path) => publicStorageUrl(supabase, "inspection-photos", path))
-      .filter(Boolean);
-  }
-
-  if (typeof value === "string" && value.trim()) {
-    return [publicStorageUrl(supabase, "inspection-photos", value)].filter(Boolean);
-  }
-
-  return [];
-}
-
 function buildRoomInspectionMap(inspections) {
   const grouped = new Map();
 
@@ -265,10 +256,53 @@ export default async function handler(req, res) {
       report.resolved_at || report.status === RESOLVED_STATUS
     );
 
-    const inspectionHistory = inspections
-      .slice()
-      .sort((a, b) => sortByDateDesc(a, b, "created_at"))
-      .map((inspection) => {
+const inspectionHistory = await Promise.all(
+  inspections
+    .slice()
+    .sort((a, b) => sortByDateDesc(a, b, "created_at"))
+    .map(async (inspection) => {
+      const room = roomList.find((r) => r.id === inspection.room_id);
+
+      const singlePhotoUrl = await signedStorageUrl(
+        supabase,
+        "inspection-photos",
+        inspection.photo_url
+      );
+
+      const multiPhotoUrls = Array.isArray(inspection.photo_urls)
+        ? await Promise.all(
+            inspection.photo_urls.map((path) =>
+              signedStorageUrl(supabase, "inspection-photos", path)
+            )
+          )
+        : typeof inspection.photo_urls === "string"
+          ? [await signedStorageUrl(supabase, "inspection-photos", inspection.photo_urls)]
+          : [];
+
+      const logFileUrl = await signedStorageUrl(
+        supabase,
+        "inspection-docs",
+        inspection.log_file_url
+      );
+
+      return {
+        id: inspection.id,
+        room_id: inspection.room_id,
+        room_number: room?.room_number || "",
+        verification_id: inspection.verification_id || "",
+        certification_tier: inspection.certification_tier || "",
+        score: inspection.score ?? null,
+        notes: inspection.notes || "",
+        inspector_id: inspection.inspector_id || "",
+        created_at: inspection.created_at || "",
+        qr_url: room?.qr_url || "",
+        qr_slug: room?.qr_slug || "",
+        photo_url: singlePhotoUrl,
+        photo_urls: multiPhotoUrls.filter(Boolean),
+        log_file_url: logFileUrl
+      };
+    })
+);    
         const room = roomList.find((r) => r.id === inspection.room_id);
 
         return {
