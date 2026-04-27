@@ -16,29 +16,37 @@ function cleanStoragePath(value) {
 
   let text = String(value).trim();
 
-  // If it is a full Supabase public URL, strip everything before the bucket path.
   if (text.includes("/storage/v1/object/public/")) {
     text = text.split("/storage/v1/object/public/")[1] || "";
   }
 
-  // Remove wrong or existing bucket prefix if stored in the DB.
   text = text
     .replace(/^inspection-photos\//, "")
+    .replace(/^inspection-docs\//, "")
     .replace(/^inspection\//, "")
     .replace(/^public\//, "");
 
   return text;
 }
 
-function publicStorageUrl(bucket, value) {
+function publicStorageUrl(supabase, bucket, value) {
   const path = cleanStoragePath(value);
   if (!path) return "";
 
   return supabase.storage.from(bucket).getPublicUrl(path).data.publicUrl;
 }
-function normalizeArray(value) {
-  if (Array.isArray(value)) return value.filter(Boolean);
-  if (typeof value === "string" && value.trim()) return [value.trim()];
+
+function normalizePhotoUrls(supabase, value) {
+  if (Array.isArray(value)) {
+    return value
+      .map((path) => publicStorageUrl(supabase, "inspection-photos", path))
+      .filter(Boolean);
+  }
+
+  if (typeof value === "string" && value.trim()) {
+    return [publicStorageUrl(supabase, "inspection-photos", value)].filter(Boolean);
+  }
+
   return [];
 }
 
@@ -131,10 +139,7 @@ export default async function handler(req, res) {
       .maybeSingle();
 
     if (propertyError) throw new Error(propertyError.message);
-
-    if (!property) {
-      return res.status(404).json({ error: "Property not found" });
-    }
+    if (!property) return res.status(404).json({ error: "Property not found" });
 
     const { data: rooms, error: roomsError } = await supabase
       .from("Rooms")
@@ -149,7 +154,7 @@ export default async function handler(req, res) {
 
     let inspections = [];
 
-    if (roomIds.length) {
+    if (roomIds.length > 0) {
       const { data: inspectionData, error: inspectionsError } = await supabase
         .from("Inspections")
         .select(`
@@ -177,7 +182,8 @@ export default async function handler(req, res) {
 
     const roomSummaries = roomList.map((room) => {
       const roomInspections = inspectionsByRoom.get(room.id) || [];
-      return buildRoomSummary(room, roomInspections[0] || null);
+      const latestInspection = roomInspections[0] || null;
+      return buildRoomSummary(room, latestInspection);
     });
 
     const { data: guestReports, error: guestReportsError } = await supabase
@@ -265,31 +271,22 @@ export default async function handler(req, res) {
       .map((inspection) => {
         const room = roomList.find((r) => r.id === inspection.room_id);
 
-       return {
-  id: inspection.id,
-  room_id: inspection.room_id,
-  room_number: room?.room_number || "",
-  verification_id: inspection.verification_id || "",
-  certification_tier: inspection.certification_tier || "",
-  score: inspection.score ?? null,
-  notes: inspection.notes || "",
-  inspector_id: inspection.inspector_id || "",
-  created_at: inspection.created_at || "",
-  qr_url: room?.qr_url || "",
-  qr_slug: room?.qr_slug || "",
-
-  photo_url: publicStorageUrl("inspection-photos", inspection.photo_url),
-
-photo_urls: Array.isArray(inspection.photo_urls)
-  ? inspection.photo_urls
-      .map(path => publicStorageUrl("inspection-photos", path))
-      .filter(Boolean)
-  : typeof inspection.photo_urls === "string"
-    ? [publicStorageUrl("inspection-photos", inspection.photo_urls)].filter(Boolean)
-    : [],
-
-log_file_url: publicStorageUrl("inspection-docs", inspection.log_file_url)
-       };      
+        return {
+          id: inspection.id,
+          room_id: inspection.room_id,
+          room_number: room?.room_number || "",
+          verification_id: inspection.verification_id || "",
+          certification_tier: inspection.certification_tier || "",
+          score: inspection.score ?? null,
+          notes: inspection.notes || "",
+          inspector_id: inspection.inspector_id || "",
+          created_at: inspection.created_at || "",
+          qr_url: room?.qr_url || "",
+          qr_slug: room?.qr_slug || "",
+          photo_url: publicStorageUrl(supabase, "inspection-photos", inspection.photo_url),
+          photo_urls: normalizePhotoUrls(supabase, inspection.photo_urls),
+          log_file_url: publicStorageUrl(supabase, "inspection-docs", inspection.log_file_url)
+        };
       });
 
     const qrRecords = roomSummaries.map((room) => ({
