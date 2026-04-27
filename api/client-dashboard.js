@@ -240,22 +240,42 @@ export default async function handler(req, res) {
       .map((inspection) => {
         const room = roomList.find((r) => r.id === inspection.room_id);
 
-        return {
-          id: inspection.id,
-          room_id: inspection.room_id,
-          room_number: room?.room_number || "",
-          verification_id: inspection.verification_id || "",
-          certification_tier: inspection.certification_tier || "",
-          score: inspection.score ?? null,
-          notes: inspection.notes || "",
-          inspector_id: inspection.inspector_id || "",
-          created_at: inspection.created_at || "",
-          qr_url: room?.qr_url || "",
-          qr_slug: room?.qr_slug || "",
-          photo_url: inspection.photo_url || "",
-          photo_urls: normalizeArray(inspection.photo_urls),
-          log_file_url: inspection.log_file_url || ""
-        };
+       return {
+  id: inspection.id,
+  room_id: inspection.room_id,
+  room_number: room?.room_number || "",
+  verification_id: inspection.verification_id || "",
+  certification_tier: inspection.certification_tier || "",
+  score: inspection.score ?? null,
+  notes: inspection.notes || "",
+  inspector_id: inspection.inspector_id || "",
+  created_at: inspection.created_at || "",
+  qr_url: room?.qr_url || "",
+  qr_slug: room?.qr_slug || "",
+
+  // ✅ FIXED SINGLE PHOTO
+  photo_url: inspection.photo_url
+    ? supabase.storage
+        .from("inspection-photos")
+        .getPublicUrl(inspection.photo_url).data.publicUrl
+    : "",
+
+  // ✅ FIX MULTIPLE PHOTOS
+  photo_urls: Array.isArray(inspection.photo_urls)
+    ? inspection.photo_urls.map(path =>
+        supabase.storage
+          .from("inspection-photos")
+          .getPublicUrl(path).data.publicUrl
+      )
+    : [],
+
+  // ✅ FIX LOG FILE
+  log_file_url: inspection.log_file_url
+    ? supabase.storage
+        .from("inspection-docs")
+        .getPublicUrl(inspection.log_file_url).data.publicUrl
+    : ""
+};      
       });
 
     const qrRecords = roomSummaries.map((room) => ({
