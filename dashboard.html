@@ -1892,7 +1892,8 @@ async function resolveLoggedInPropertySlug() {
   }
 
   const email = String(session.user.email).trim().toLowerCase();
-
+  alert("Logged in as: " + email);
+  
   const res = await fetch(`${CLIENT_USER_API}?email=${encodeURIComponent(email)}`, {
     method: "GET",
     headers: {
