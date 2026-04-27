@@ -134,8 +134,7 @@ if (requestedSlug !== normalizedAllowedSlug) {
     if (roomIds.length > 0) {
       const { data: inspectionData, error: inspectionsError } = await supabase
         .from("Inspections")
-        .select("id, room_id, inspector_id, created_at, certification_tier, verification_id, score, notes, photo_url, log_file_url")
-        .in("room_id", roomIds)
+        .select("id, room_id, inspector_id, created_at, certification_tier, verification_id, score, notes, photo_url, log_file_url")        .in("room_id", roomIds)
         .order("created_at", { ascending: false });
 
       if (inspectionsError) {
@@ -261,8 +260,7 @@ const resolvedIssues = reportsWithSignedPhotos.filter(report =>
           created_at: inspection.created_at || "",
           qr_url: room?.qr_url || "",
           qr_slug: room?.qr_slug || ""
-          photo_url: inspection.photo_url || "",
-          photo_urls: Array.isArray(inspection.photo_urls) ? inspection.photo_urls : [],
+         
           log_file_url: inspection.log_file_url || "",          
         };
       });
