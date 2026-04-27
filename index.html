@@ -134,6 +134,27 @@
 </head>
 
 <body>
+
+<script>
+  const path = window.location.pathname.replace(/^\/+|\/+$/g, "");
+
+  const knownPages = [
+    "",
+    "index.html",
+    "admin.html",
+    "admin-client-users.html",
+    "login.html",
+    "dashboard.html",
+    "property-dashboard.html",
+    "inspection-report.html",
+    "report-issue.html",
+    "verify.html"
+  ];
+
+  if (path && !knownPages.includes(path) && !path.startsWith("api/")) {
+    window.location.href = `/verify.html?slug=${encodeURIComponent(path)}`;
+  }
+</script>  
   <div class="container">
     <img src="/readymarkseal(best)nobackground.PNG" class="logo" alt="The Ready Mark" />
 
