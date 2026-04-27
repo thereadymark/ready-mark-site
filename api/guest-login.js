@@ -28,23 +28,22 @@ async function sendVerificationEmail(resend, email, code) {
     html: `
 <!DOCTYPE html>
 <html>
-  <body style="margin:0;padding:0;background-color:#f7f6f3;background:#f7f6f3;font-family:Georgia,serif;color:#111315;">
-    <div style="margin:0;padding:32px 16px;background-color:#f7f6f3;background:#f7f6f3;">
-      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;">
+  <body style="margin:0;padding:0;background-color:#f7f6f3;font-family:Georgia,serif;color:#111315;">
+    <div style="margin:0;padding:32px 16px;background-color:#f7f6f3;">
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
         <tr>
           <td align="center">
-            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width:640px;border-collapse:collapse;">
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width:640px;">
               <tr>
-                <td style="background-color:#ffffff;background:#ffffff;border:1px solid #e3d3aa;border-radius:18px;padding:32px 28px;text-align:center;">
-
+                <td style="background:#ffffff;border:1px solid #e3d3aa;border-radius:18px;padding:32px 28px;text-align:center;">
                   <img
                     src="https://verify.thereadymarkgroup.com/readymarkseal(best)nobackground.PNG"
                     alt="The Ready Mark"
                     width="80"
-                    style="display:block;margin:0 auto 12px auto;border:0;outline:none;text-decoration:none;"
+                    style="display:block;margin:0 auto 12px auto;border:0;"
                   />
 
-                  <div style="font-size:13px;line-height:1.4;letter-spacing:3px;text-transform:uppercase;font-weight:700;color:#c7a257;margin:0 0 8px 0;">
+                  <div style="font-size:13px;letter-spacing:3px;text-transform:uppercase;font-weight:700;color:#c7a257;margin-bottom:8px;">
                     The Ready Mark
                   </div>
 
@@ -56,7 +55,7 @@ async function sendVerificationEmail(resend, email, code) {
                     Use the verification code below to complete your account setup.
                   </p>
 
-                  <div style="margin:0 auto 22px auto;max-width:240px;background-color:#fbfaf7;background:#fbfaf7;border:1px solid #e7d8b4;border-radius:14px;padding:18px 16px;">
+                  <div style="margin:0 auto 22px auto;max-width:240px;background:#fbfaf7;border:1px solid #e7d8b4;border-radius:14px;padding:18px 16px;">
                     <div style="font-size:28px;line-height:1.2;letter-spacing:6px;font-weight:700;color:#111315;">
                       ${code}
                     </div>
@@ -69,7 +68,6 @@ async function sendVerificationEmail(resend, email, code) {
                   <p style="margin:0;font-size:13px;line-height:1.7;color:#958d82;">
                     Do not share this code with anyone.
                   </p>
-
                 </td>
               </tr>
 
@@ -95,12 +93,6 @@ async function createGuestSession(supabaseUrl, serviceRoleKey, user) {
   const sessionToken = generateSessionToken();
   const expiresAt = new Date(Date.now() + SESSION_DAYS * 24 * 60 * 60 * 1000).toISOString();
 
-  const sessionPayload = {
-    guest_user_id: user.id,
-    session_token: sessionToken,
-    expires_at: expiresAt
-  };
-
   const sessionRes = await fetch(`${supabaseUrl}/rest/v1/guest_sessions`, {
     method: "POST",
     headers: {
@@ -109,7 +101,11 @@ async function createGuestSession(supabaseUrl, serviceRoleKey, user) {
       "Content-Type": "application/json",
       Prefer: "return=representation"
     },
-    body: JSON.stringify(sessionPayload)
+    body: JSON.stringify({
+      guest_user_id: user.id,
+      session_token: sessionToken,
+      expires_at: expiresAt
+    })
   });
 
   const sessionData = await sessionRes.json().catch(() => null);
@@ -163,23 +159,12 @@ async function patchGuestUser(supabaseUrl, serviceRoleKey, userId, payload) {
 export default async function handler(req, res) {
   const allowedOrigin = "https://verify.thereadymarkgroup.com";
 
-  const corsHeaders = {
-    "Access-Control-Allow-Origin": allowedOrigin,
-    "Access-Control-Allow-Methods": "POST, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type, Authorization"
-  };
+  res.setHeader("Access-Control-Allow-Origin", allowedOrigin);
+  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
 
-  Object.entries(corsHeaders).forEach(([key, value]) => {
-    res.setHeader(key, value);
-  });
-
-  if (req.method === "OPTIONS") {
-    return res.status(200).end();
-  }
-
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
-  }
+  if (req.method === "OPTIONS") return res.status(200).end();
+  if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
   try {
     const { email, password } = req.body || {};
@@ -251,12 +236,28 @@ export default async function handler(req, res) {
       });
     }
 
-    const currentFailedAttempts = Number(user.failed_login_attempts || 0);
+    const lockoutExpired =
+      user.login_locked_until &&
+      !Number.isNaN(lockedUntilMs) &&
+      lockedUntilMs <= Date.now();
+
+    if (lockoutExpired) {
+      await patchGuestUser(supabaseUrl, serviceRoleKey, user.id, {
+        failed_login_attempts: 0,
+        login_locked_until: null
+      });
+    }
+
+    const currentFailedAttempts = lockoutExpired
+      ? 0
+      : Number(user.failed_login_attempts || 0);
+
     const passwordMatches = user.password_hash === passwordHash;
 
     if (!passwordMatches) {
       const nextFailedAttempts = currentFailedAttempts + 1;
       const shouldLock = nextFailedAttempts >= MAX_FAILED_LOGIN_ATTEMPTS;
+
       const loginLockedUntil = shouldLock
         ? new Date(Date.now() + LOGIN_LOCK_MINUTES * 60 * 1000).toISOString()
         : null;
