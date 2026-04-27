@@ -1,124 +1,126 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <title>The Ready Mark Portal</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<style>
+  :root {
+    --bg: #f6f2ea;
+    --panel: rgba(255,255,255,0.86);
+    --text: #111315;
+    --muted: #6f6a61;
+    --gold: #c7a257;
+    --gold-dark: #9d7b34;
+    --line: #e3d3aa;
+    --shadow: 0 22px 60px rgba(17,19,21,0.08);
+  }
 
-  <style>
-    body {
-      margin: 0;
-      font-family: Georgia, serif;
-      background: #f7f6f3;
-      color: #111315;
-    }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: Georgia, serif;
+    background:
+      radial-gradient(circle at top, rgba(199,162,87,0.16), transparent 34%),
+      linear-gradient(180deg, #fbfaf6 0%, var(--bg) 100%);
+    color: var(--text);
+  }
 
-    .container {
-      max-width: 900px;
-      margin: 0 auto;
-      padding: 40px 20px;
-      text-align: center;
-    }
+  .container {
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 56px 22px;
+    text-align: center;
+  }
 
-    .logo {
-      width: 90px;
-      margin-bottom: 10px;
-    }
+  .logo {
+    width: 96px;
+    margin-bottom: 14px;
+    filter: drop-shadow(0 12px 18px rgba(0,0,0,0.12));
+  }
 
-    .title {
-      font-size: 28px;
-      margin-bottom: 30px;
-      letter-spacing: 2px;
-    }
+  .eyebrow {
+    font-size: 12px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--gold-dark);
+    font-weight: 700;
+    margin-bottom: 10px;
+  }
 
+  .title {
+    font-size: clamp(30px, 5vw, 48px);
+    margin: 0 0 10px;
+    letter-spacing: 2.5px;
+    font-weight: 500;
+  }
+
+  .subtitle {
+    max-width: 620px;
+    margin: 0 auto 34px;
+    color: var(--muted);
+    font-size: 15px;
+    line-height: 1.7;
+    font-family: Arial, sans-serif;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+
+  .card {
+    position: relative;
+    background: var(--panel);
+    border: 1px solid rgba(199,162,87,0.38);
+    border-radius: 18px;
+    padding: 24px 22px;
+    text-decoration: none;
+    color: var(--text);
+    box-shadow: var(--shadow);
+    transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    overflow: hidden;
+  }
+
+  .card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(199,162,87,0.15), transparent 38%);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+
+  .card:hover {
+    transform: translateY(-3px);
+    border-color: var(--gold);
+    box-shadow: 0 26px 70px rgba(17,19,21,0.12);
+  }
+
+  .card:hover::before {
+    opacity: 1;
+  }
+
+  .card-title {
+    position: relative;
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+
+  .card-sub {
+    position: relative;
+    font-size: 13px;
+    color: var(--muted);
+    font-family: Arial, sans-serif;
+  }
+
+  .footer-note {
+    margin-top: 34px;
+    font-size: 12px;
+    color: #928a7e;
+    font-family: Arial, sans-serif;
+    letter-spacing: 0.4px;
+  }
+
+  @media (min-width: 700px) {
     .grid {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 16px;
+      grid-template-columns: 1fr 1fr;
     }
-
-    .card {
-      background: #ffffff;
-      border: 1px solid #e3d3aa;
-      border-radius: 14px;
-      padding: 18px;
-      text-decoration: none;
-      color: #111315;
-      transition: 0.2s ease;
-    }
-
-    .card:hover {
-      transform: translateY(-2px);
-      border-color: #c7a257;
-    }
-
-    .card-title {
-      font-size: 16px;
-      font-weight: 600;
-    }
-
-    .card-sub {
-      font-size: 13px;
-      color: #6f6a61;
-      margin-top: 4px;
-    }
-
-    @media (min-width: 700px) {
-      .grid {
-        grid-template-columns: 1fr 1fr;
-      }
-    }
-  </style>
-</head>
-
-<body>
-  <div class="container">
-
-    <img src="/readymarkseal(best)nobackground.PNG" class="logo" />
-
-    <div class="title">THE READY MARK PORTAL</div>
-
-    <div class="grid">
-
-      <!-- ADMIN -->
-      <a href="/admin.html" class="card">
-        <div class="card-title">Admin Dashboard</div>
-        <div class="card-sub">Internal management & inspections</div>
-      </a>
-
-      <a href="/admin-client-users.html" class="card">
-        <div class="card-title">Create Client User</div>
-        <div class="card-sub">Add property/client access</div>
-      </a>
-
-      <!-- CLIENT -->
-      <a href="/login.html" class="card">
-        <div class="card-title">Client Login</div>
-        <div class="card-sub">Access your property dashboard</div>
-      </a>
-
-      <a href="/property-dashboard.html" class="card">
-        <div class="card-title">Client Dashboard</div>
-        <div class="card-sub">View inspections & reports</div>
-      </a>
-
-      <!-- GUEST -->
-      <a href="/verify.html" class="card">
-        <div class="card-title">Guest Verification</div>
-        <div class="card-sub">Scan QR & verify room</div>
-      </a>
-
-      <a href="/inspection-report.html" class="card">
-        <div class="card-title">Inspection Report</div>
-        <div class="card-sub">View inspection details</div>
-      </a>
-
-      <a href="/report-issue.html" class="card">
-        <div class="card-title">Report an Issue</div>
-        <div class="card-sub">Guest cleanliness concerns</div>
-      </a>
-
-    </div>
-  </div>
-</body>
-</html>
+  }
+</style>
