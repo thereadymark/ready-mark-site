@@ -11,6 +11,31 @@ function sortByDateDesc(a, b, field) {
   return bTime - aTime;
 }
 
+function cleanStoragePath(value) {
+  if (!value) return "";
+
+  let text = String(value).trim();
+
+  // If it is a full Supabase public URL, strip everything before the bucket path.
+  if (text.includes("/storage/v1/object/public/")) {
+    text = text.split("/storage/v1/object/public/")[1] || "";
+  }
+
+  // Remove wrong or existing bucket prefix if stored in the DB.
+  text = text
+    .replace(/^inspection-photos\//, "")
+    .replace(/^inspection\//, "")
+    .replace(/^public\//, "");
+
+  return text;
+}
+
+function publicStorageUrl(bucket, value) {
+  const path = cleanStoragePath(value);
+  if (!path) return "";
+
+  return supabase.storage.from(bucket).getPublicUrl(path).data.publicUrl;
+}
 function normalizeArray(value) {
   if (Array.isArray(value)) return value.filter(Boolean);
   if (typeof value === "string" && value.trim()) return [value.trim()];
@@ -253,29 +278,18 @@ export default async function handler(req, res) {
   qr_url: room?.qr_url || "",
   qr_slug: room?.qr_slug || "",
 
-  // ✅ FIXED SINGLE PHOTO
-  photo_url: inspection.photo_url
-    ? supabase.storage
-        .from("inspection-photos")
-        .getPublicUrl(inspection.photo_url).data.publicUrl
-    : "",
+  photo_url: publicStorageUrl("inspection-photos", inspection.photo_url),
 
-  // ✅ FIX MULTIPLE PHOTOS
-  photo_urls: Array.isArray(inspection.photo_urls)
-    ? inspection.photo_urls.map(path =>
-        supabase.storage
-          .from("inspection-photos")
-          .getPublicUrl(path).data.publicUrl
-      )
+photo_urls: Array.isArray(inspection.photo_urls)
+  ? inspection.photo_urls
+      .map(path => publicStorageUrl("inspection-photos", path))
+      .filter(Boolean)
+  : typeof inspection.photo_urls === "string"
+    ? [publicStorageUrl("inspection-photos", inspection.photo_urls)].filter(Boolean)
     : [],
 
-  // ✅ FIX LOG FILE
-  log_file_url: inspection.log_file_url
-    ? supabase.storage
-        .from("inspection-docs")
-        .getPublicUrl(inspection.log_file_url).data.publicUrl
-    : ""
-};      
+log_file_url: publicStorageUrl("inspection-docs", inspection.log_file_url)
+       };      
       });
 
     const qrRecords = roomSummaries.map((room) => ({
