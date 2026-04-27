@@ -20,6 +20,11 @@ function cleanStoragePath(value) {
     text = text.split("/storage/v1/object/public/")[1] || "";
   }
 
+  if (text.includes("/storage/v1/object/sign/")) {
+    text = text.split("/storage/v1/object/sign/")[1] || "";
+    text = text.split("?")[0] || "";
+  }
+
   text = text
     .replace(/^inspection-photos\//, "")
     .replace(/^inspection-docs\//, "")
@@ -41,16 +46,29 @@ async function signedStorageUrl(supabase, bucket, value) {
 
   return data.signedUrl;
 }
+
+async function signedInspectionPhotoUrls(supabase, value) {
+  if (Array.isArray(value)) {
+    const urls = await Promise.all(
+      value.map((path) => signedStorageUrl(supabase, "inspection-photos", path))
+    );
+    return urls.filter(Boolean);
+  }
+
+  if (typeof value === "string" && value.trim()) {
+    const url = await signedStorageUrl(supabase, "inspection-photos", value);
+    return url ? [url] : [];
+  }
+
+  return [];
+}
+
 function buildRoomInspectionMap(inspections) {
   const grouped = new Map();
 
   for (const inspection of inspections) {
     if (!inspection.room_id) continue;
-
-    if (!grouped.has(inspection.room_id)) {
-      grouped.set(inspection.room_id, []);
-    }
-
+    if (!grouped.has(inspection.room_id)) grouped.set(inspection.room_id, []);
     grouped.get(inspection.room_id).push(inspection);
   }
 
@@ -96,22 +114,13 @@ export default async function handler(req, res) {
     res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
     res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
 
-    if (req.method === "OPTIONS") {
-      return res.status(200).end();
-    }
-
-    if (req.method !== "GET") {
-      return res.status(405).json({ error: "Method not allowed" });
-    }
+    if (req.method === "OPTIONS") return res.status(200).end();
+    if (req.method !== "GET") return res.status(405).json({ error: "Method not allowed" });
 
     const requestedSlug = String(req.query.property_slug || "").trim().toLowerCase();
-
-    if (!requestedSlug) {
-      return res.status(400).json({ error: "Missing property_slug" });
-    }
+    if (!requestedSlug) return res.status(400).json({ error: "Missing property_slug" });
 
     const authResult = await getAuthorizedClientUser(req);
-
     if (authResult.error) {
       return res.status(authResult.status || 401).json({ error: authResult.error });
     }
@@ -165,7 +174,6 @@ export default async function handler(req, res) {
         .order("created_at", { ascending: false });
 
       if (inspectionsError) throw new Error(inspectionsError.message);
-
       inspections = Array.isArray(inspectionData) ? inspectionData : [];
     }
 
@@ -173,8 +181,7 @@ export default async function handler(req, res) {
 
     const roomSummaries = roomList.map((room) => {
       const roomInspections = inspectionsByRoom.get(room.id) || [];
-      const latestInspection = roomInspections[0] || null;
-      return buildRoomSummary(room, latestInspection);
+      return buildRoomSummary(room, roomInspections[0] || null);
     });
 
     const { data: guestReports, error: guestReportsError } = await supabase
@@ -221,7 +228,6 @@ export default async function handler(req, res) {
         const rawPhotoValue = String(report.photo_url || "").trim();
 
         if (!rawPhotoValue) return report;
-
         if (rawPhotoValue.startsWith("http://") || rawPhotoValue.startsWith("https://")) {
           return report;
         }
@@ -256,72 +262,48 @@ export default async function handler(req, res) {
       report.resolved_at || report.status === RESOLVED_STATUS
     );
 
-const inspectionHistory = await Promise.all(
-  inspections
-    .slice()
-    .sort((a, b) => sortByDateDesc(a, b, "created_at"))
-    .map(async (inspection) => {
-      const room = roomList.find((r) => r.id === inspection.room_id);
+    const inspectionHistory = await Promise.all(
+      inspections
+        .slice()
+        .sort((a, b) => sortByDateDesc(a, b, "created_at"))
+        .map(async (inspection) => {
+          const room = roomList.find((r) => r.id === inspection.room_id);
 
-      const singlePhotoUrl = await signedStorageUrl(
-        supabase,
-        "inspection-photos",
-        inspection.photo_url
-      );
+          const singlePhotoUrl = await signedStorageUrl(
+            supabase,
+            "inspection-photos",
+            inspection.photo_url
+          );
 
-      const multiPhotoUrls = Array.isArray(inspection.photo_urls)
-        ? await Promise.all(
-            inspection.photo_urls.map((path) =>
-              signedStorageUrl(supabase, "inspection-photos", path)
-            )
-          )
-        : typeof inspection.photo_urls === "string"
-          ? [await signedStorageUrl(supabase, "inspection-photos", inspection.photo_urls)]
-          : [];
+          const multiPhotoUrls = await signedInspectionPhotoUrls(
+            supabase,
+            inspection.photo_urls
+          );
 
-      const logFileUrl = await signedStorageUrl(
-        supabase,
-        "inspection-docs",
-        inspection.log_file_url
-      );
+          const logFileUrl = await signedStorageUrl(
+            supabase,
+            "inspection-docs",
+            inspection.log_file_url
+          );
 
-      return {
-        id: inspection.id,
-        room_id: inspection.room_id,
-        room_number: room?.room_number || "",
-        verification_id: inspection.verification_id || "",
-        certification_tier: inspection.certification_tier || "",
-        score: inspection.score ?? null,
-        notes: inspection.notes || "",
-        inspector_id: inspection.inspector_id || "",
-        created_at: inspection.created_at || "",
-        qr_url: room?.qr_url || "",
-        qr_slug: room?.qr_slug || "",
-        photo_url: singlePhotoUrl,
-        photo_urls: multiPhotoUrls.filter(Boolean),
-        log_file_url: logFileUrl
-      };
-    })
-);    
-        const room = roomList.find((r) => r.id === inspection.room_id);
-
-        return {
-          id: inspection.id,
-          room_id: inspection.room_id,
-          room_number: room?.room_number || "",
-          verification_id: inspection.verification_id || "",
-          certification_tier: inspection.certification_tier || "",
-          score: inspection.score ?? null,
-          notes: inspection.notes || "",
-          inspector_id: inspection.inspector_id || "",
-          created_at: inspection.created_at || "",
-          qr_url: room?.qr_url || "",
-          qr_slug: room?.qr_slug || "",
-          photo_url: publicStorageUrl(supabase, "inspection-photos", inspection.photo_url),
-          photo_urls: normalizePhotoUrls(supabase, inspection.photo_urls),
-          log_file_url: publicStorageUrl(supabase, "inspection-docs", inspection.log_file_url)
-        };
-      });
+          return {
+            id: inspection.id,
+            room_id: inspection.room_id,
+            room_number: room?.room_number || "",
+            verification_id: inspection.verification_id || "",
+            certification_tier: inspection.certification_tier || "",
+            score: inspection.score ?? null,
+            notes: inspection.notes || "",
+            inspector_id: inspection.inspector_id || "",
+            created_at: inspection.created_at || "",
+            qr_url: room?.qr_url || "",
+            qr_slug: room?.qr_slug || "",
+            photo_url: singlePhotoUrl,
+            photo_urls: multiPhotoUrls,
+            log_file_url: logFileUrl
+          };
+        })
+    );
 
     const qrRecords = roomSummaries.map((room) => ({
       room_id: room.room_id,
