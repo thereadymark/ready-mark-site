@@ -526,16 +526,46 @@
       pointer-events: none;
     }
 
-    .evidence-image {
-      width: 100%;
-      max-width: 520px;
-      border-radius: 16px;
-      border: 1px solid var(--line);
-      display: block;
-      box-shadow: var(--shadow);
-      background: #fff;
-    }
+  .evidence-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+}
 
+.evidence-card {
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: #fff;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+
+.evidence-image {
+  width: 100%;
+  height: 220px;
+  object-fit: cover;
+  display: block;
+  background: #fff;
+}
+
+.evidence-caption {
+  padding: 12px 14px;
+  border-top: 1px solid var(--line);
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.empty-note {
+  color: var(--muted);
+  background: var(--panel-soft);
+  border: 1px dashed var(--line);
+  border-radius: 14px;
+  padding: 16px;
+}
     .form-group + .form-group { margin-top: 16px; }
 
     .form-label {
@@ -1647,11 +1677,21 @@ const evidencePhotos = Array.isArray(report.photo_urls) && report.photo_urls.len
 
 if (photoWrap) {
   if (evidencePhotos.length) {
-    photoWrap.innerHTML = evidencePhotos.map((url) => `
-      <a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">
-        <img class="evidence-image" src="${escapeHtml(url)}" alt="Inspection evidence" style="margin:8px 8px 8px 0;">
-      </a>
-    `).join("");
+    photoWrap.innerHTML = `
+  <div class="evidence-grid">
+    ${evidencePhotos.map((url, index) => `
+      <div class="evidence-card">
+        <a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">
+          <img class="evidence-image" src="${escapeHtml(url)}" alt="Inspection evidence ${index + 1}">
+        </a>
+        <div class="evidence-caption">
+          <span>Evidence ${index + 1}</span>
+          <a class="text-btn" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">Open Full Image</a>
+        </div>
+      </div>
+    `).join("")}
+  </div>
+`;
   } else {
     photoWrap.textContent = "No photo evidence attached.";
   }
@@ -1892,7 +1932,7 @@ async function resolveLoggedInPropertySlug() {
   }
 
   const email = String(session.user.email).trim().toLowerCase();
-  alert("Logged in as: " + email);
+  
   
   const res = await fetch(`${CLIENT_USER_API}?email=${encodeURIComponent(email)}`, {
     method: "GET",
