@@ -1115,6 +1115,16 @@
               <h3>Internal Notes</h3>
               <p id="report-detail-notes">No notes available.</p>
             </div>
+            <div class="detail-block full">
+  <h3>Evidence Photos</h3>
+  <div id="report-detail-photo-wrap" class="empty-note">No photo evidence attached.</div>
+</div>
+
+<div class="detail-block full">
+  <h3>Physical Inspection Log</h3>
+  <div id="report-detail-log-wrap" class="empty-note">No inspection log attached.</div>
+</div>
+
           </div>
         </section>
       </div>
@@ -1625,6 +1635,39 @@ function filterQRRecords() {
       document.getElementById("report-detail-score").textContent = report.score ?? "—";
       document.getElementById("report-detail-inspector").textContent = report.inspector_id || "—";
       document.getElementById("report-detail-notes").textContent = report.notes || "No internal notes available for this record.";
+
+      const photoWrap = document.getElementById("report-detail-photo-wrap");
+const logWrap = document.getElementById("report-detail-log-wrap");
+
+const evidencePhotos = Array.isArray(report.photo_urls) && report.photo_urls.length
+  ? report.photo_urls
+  : report.photo_url
+    ? [report.photo_url]
+    : [];
+
+if (photoWrap) {
+  if (evidencePhotos.length) {
+    photoWrap.innerHTML = evidencePhotos.map((url) => `
+      <a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">
+        <img class="evidence-image" src="${escapeHtml(url)}" alt="Inspection evidence" style="margin:8px 8px 8px 0;">
+      </a>
+    `).join("");
+  } else {
+    photoWrap.textContent = "No photo evidence attached.";
+  }
+}
+
+if (logWrap) {
+  if (report.log_file_url) {
+    logWrap.innerHTML = `
+      <a class="btn btn-secondary" href="${escapeHtml(report.log_file_url)}" target="_blank" rel="noopener noreferrer">
+        Open Inspection Log
+      </a>
+    `;
+  } else {
+    logWrap.textContent = "No inspection log attached.";
+  }
+}
 
       const qrLink = document.getElementById("report-detail-qr-link");
       if (report.qr_url) {
