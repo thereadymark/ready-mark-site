@@ -2,345 +2,580 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Room Verification | The Ready Mark</title>
+  <title>Verification Record | The Ready Mark</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <style>
+    :root {
+      --bg: #f6f2ea;
+      --panel: rgba(255,255,255,0.82);
+      --panel-soft: rgba(255,255,255,0.56);
+      --text: #171717;
+      --muted: #6f6a61;
+      --gold: #c7a257;
+      --gold-dark: #9d7b34;
+      --line: #e3d3aa;
+      --green: #5f8f65;
+      --danger: #b85d5d;
+      --shadow: 0 22px 60px rgba(17,19,21,0.08);
+    }
+
+    * { box-sizing: border-box; }
+
     body {
       margin: 0;
       min-height: 100vh;
       font-family: Arial, sans-serif;
       background:
         radial-gradient(circle at top, rgba(199,162,87,0.16), transparent 34%),
-        linear-gradient(180deg, #fbfaf6 0%, #f6f2ea 100%);
-      color: #111315;
+        linear-gradient(180deg, #fbfaf6 0%, var(--bg) 100%);
+      color: var(--text);
     }
 
-    .wrap {
-      max-width: 820px;
+    .page {
+      max-width: 1120px;
       margin: 0 auto;
-      padding: 42px 18px;
+      padding: 42px 18px 70px;
     }
 
-    .card {
-      background: rgba(255,255,255,0.92);
-      border: 1px solid rgba(199,162,87,0.4);
-      border-radius: 24px;
-      box-shadow: 0 24px 70px rgba(17,19,21,0.1);
+    .record-shell {
+      background: rgba(255,255,255,0.48);
+      border: 1px solid rgba(227,211,170,0.75);
+      border-radius: 28px;
+      box-shadow: var(--shadow);
+      padding: 42px 30px;
       overflow: hidden;
     }
 
-    .header {
+    .hero {
       text-align: center;
-      padding: 34px 28px 24px;
-      border-bottom: 1px solid #e8dfca;
+      padding: 22px 10px 42px;
+      border-bottom: 1px solid rgba(227,211,170,0.55);
     }
 
     .logo {
-      width: 86px;
-      margin-bottom: 12px;
-      filter: drop-shadow(0 12px 18px rgba(0,0,0,0.12));
+      width: 104px;
+      margin: 0 auto 22px;
+      display: block;
+      filter: drop-shadow(0 12px 18px rgba(0,0,0,0.14));
     }
 
     .eyebrow {
-      font-size: 12px;
-      letter-spacing: 3px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      color: var(--gold-dark);
+      letter-spacing: 4px;
       text-transform: uppercase;
-      color: #9d7b34;
+      font-size: 13px;
       font-weight: 800;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
+    }
+
+    .eyebrow::before,
+    .eyebrow::after {
+      content: "";
+      width: 130px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(157,123,52,0.55), transparent);
     }
 
     h1 {
       margin: 0;
       font-family: Georgia, serif;
-      font-size: 36px;
+      font-size: clamp(42px, 6vw, 70px);
       font-weight: 500;
-      letter-spacing: 1.4px;
+      line-height: 1;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
     }
 
-    .sub {
-      margin: 10px auto 0;
-      color: #6f6a61;
-      line-height: 1.7;
-      max-width: 600px;
-      font-size: 14px;
+    .tier-pill {
+      margin: 22px auto 22px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 230px;
+      min-height: 42px;
+      padding: 10px 22px;
+      border-radius: 999px;
+      background: rgba(245,247,252,0.9);
+      border: 1px solid rgba(199,162,87,0.16);
+      color: #526b9f;
+      font-size: 13px;
+      font-weight: 900;
+      letter-spacing: .8px;
+      text-transform: uppercase;
+      box-shadow: 0 12px 30px rgba(17,19,21,0.06);
     }
 
-    .body {
-      padding: 28px;
+    .hero-text {
+      max-width: 700px;
+      margin: 0 auto;
+      color: #55524d;
+      font-size: 16px;
+      line-height: 1.8;
     }
 
     .lookup {
-      display: grid;
+      display: none;
       grid-template-columns: 1fr auto;
       gap: 12px;
-      margin-bottom: 22px;
+      max-width: 760px;
+      margin: 28px auto 0;
     }
+
+    .lookup.show { display: grid; }
 
     input {
       width: 100%;
-      box-sizing: border-box;
       border: 1px solid #e1d4b8;
       border-radius: 14px;
       padding: 14px 15px;
       font-size: 15px;
       background: #fff;
-      color: #111315;
       outline: none;
-    }
-
-    input:focus {
-      border-color: #c7a257;
-      box-shadow: 0 0 0 3px rgba(199,162,87,0.14);
     }
 
     .btn {
       border: 0;
       border-radius: 14px;
-      padding: 14px 18px;
+      padding: 14px 20px;
       cursor: pointer;
       background: linear-gradient(180deg, #d8ba73, #b8934c);
       color: #111315;
-      font-weight: 800;
+      font-weight: 900;
       font-size: 14px;
       text-decoration: none;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      min-height: 44px;
+      min-height: 46px;
     }
 
     .btn.secondary {
-      background: #fff;
+      background: rgba(255,255,255,0.7);
       border: 1px solid #e1d4b8;
-      color: #111315;
+      color: #9d7b34;
     }
 
     .status-box {
-      padding: 16px;
+      margin: 28px auto 0;
+      max-width: 760px;
+      padding: 18px;
       border-radius: 16px;
       border: 1px solid #e1d4b8;
-      background: #fbfaf7;
-      color: #6f6a61;
-      line-height: 1.6;
+      background: rgba(255,255,255,0.75);
+      color: var(--muted);
+      line-height: 1.7;
+      text-align: center;
     }
 
-    .result {
-      display: none;
+    .result { display: none; }
+    .result.active { display: block; }
+
+    .details-card,
+    .section-card {
+      margin-top: 28px;
+      background: var(--panel);
+      border: 1px solid rgba(227,211,170,0.64);
+      border-radius: 24px;
+      box-shadow: 0 12px 36px rgba(17,19,21,0.04);
+      padding: 26px;
     }
 
-    .result.active {
-      display: block;
-    }
-
-    .result-header {
-      margin-bottom: 18px;
-      padding: 20px;
-      border-radius: 18px;
-      background: linear-gradient(135deg, rgba(199,162,87,0.14), rgba(255,255,255,0.9));
-      border: 1px solid rgba(199,162,87,0.35);
-    }
-
-    .result-header h2 {
-      margin: 0 0 8px;
-      font-family: Georgia, serif;
-      font-size: 28px;
-      font-weight: 500;
-    }
-
-    .pill {
-      display: inline-flex;
-      padding: 7px 12px;
-      border-radius: 999px;
-      font-size: 12px;
-      font-weight: 800;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      background: rgba(47,143,87,0.1);
-      color: #2f8f57;
-      border: 1px solid rgba(47,143,87,0.22);
-      margin-top: 8px;
-    }
-
-    .grid {
+    .details-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 14px;
-      margin: 18px 0;
     }
 
-    .item {
-      padding: 15px;
-      border: 1px solid #e8dfca;
-      border-radius: 16px;
-      background: #fff;
+    .detail-item {
+      background: rgba(255,255,255,0.55);
+      border: 1px solid rgba(227,211,170,0.55);
+      border-radius: 18px;
+      padding: 20px;
+      min-height: 90px;
     }
 
     .label {
-      font-size: 11px;
-      letter-spacing: 1.2px;
+      font-size: 12px;
+      letter-spacing: 1.5px;
       text-transform: uppercase;
-      color: #7c7468;
-      font-weight: 800;
-      margin-bottom: 6px;
+      color: #7d766c;
+      font-weight: 900;
+      margin-bottom: 10px;
     }
 
     .value {
-      font-size: 15px;
+      font-size: 18px;
       font-weight: 700;
-      line-height: 1.5;
+      line-height: 1.45;
       word-break: break-word;
+    }
+
+    .section-title {
+      margin: 0 0 18px;
+      text-align: center;
+      font-family: Georgia, serif;
+      font-size: clamp(30px, 4vw, 44px);
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: .6px;
+    }
+
+    .section-title::after {
+      content: "";
+      display: block;
+      width: 94px;
+      height: 1px;
+      margin: 14px auto 0;
+      background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    }
+
+    .condition-empty {
+      text-align: center;
+      padding: 42px 20px;
+      border: 1px solid rgba(227,211,170,0.5);
+      border-radius: 22px;
+      background: rgba(255,255,255,0.42);
+    }
+
+    .condition-icon {
+      width: 58px;
+      height: 58px;
+      border-radius: 999px;
+      margin: 0 auto 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(199,162,87,0.16);
+      color: var(--gold-dark);
+      font-size: 24px;
+    }
+
+    .condition-empty h3 {
+      margin: 0 0 12px;
+      font-family: Georgia, serif;
+      font-size: 28px;
+      font-weight: 500;
+      text-transform: uppercase;
+    }
+
+    .condition-empty p {
+      max-width: 520px;
+      margin: 0 auto 16px;
+      color: var(--muted);
+      line-height: 1.8;
+    }
+
+    .doc-status {
+      color: var(--gold-dark);
+      text-transform: uppercase;
+      font-size: 13px;
+      font-weight: 900;
+      letter-spacing: 1.3px;
     }
 
     .photos {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
-      gap: 14px;
-      margin-top: 12px;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 16px;
+      margin-top: 18px;
     }
 
     .photo-card {
       border: 1px solid #e8dfca;
-      border-radius: 16px;
+      border-radius: 18px;
       overflow: hidden;
-      background: #fff;
+      background: rgba(255,255,255,0.75);
     }
 
     .photo-card img {
       width: 100%;
-      height: 180px;
+      height: 230px;
       object-fit: cover;
       display: block;
     }
 
     .photo-card a {
       display: block;
-      padding: 10px 12px;
+      padding: 12px 14px;
       color: #9d7b34;
       font-size: 13px;
-      font-weight: 800;
+      font-weight: 900;
       text-decoration: none;
       border-top: 1px solid #e8dfca;
+      text-align: center;
     }
 
-    .actions {
-      display: flex;
+    .activity-list {
+      display: grid;
+      gap: 14px;
+      margin-top: 18px;
+    }
+
+    .activity-row {
+      display: grid;
+      grid-template-columns: 1.1fr 1fr .75fr;
+      gap: 16px;
+      align-items: center;
+      padding: 18px;
+      border: 1px solid rgba(227,211,170,0.55);
+      border-radius: 18px;
+      background: rgba(255,255,255,0.48);
+    }
+
+    .activity-date {
+      font-weight: 900;
+      margin-bottom: 4px;
+    }
+
+    .activity-sub {
+      color: var(--muted);
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: .7px;
+    }
+
+    .small-pill {
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 34px;
+      border-radius: 999px;
+      padding: 8px 16px;
+      font-weight: 900;
+      text-transform: uppercase;
+      font-size: 12px;
+      letter-spacing: .6px;
+      border: 1px solid rgba(199,162,87,0.22);
+      background: rgba(255,255,255,0.7);
+    }
+
+    .small-pill.current {
+      color: var(--green);
+      background: rgba(95,143,101,0.12);
+    }
+
+    .score-pill {
+      justify-self: end;
+      background: rgba(255,255,255,0.8);
+      border-radius: 999px;
+      padding: 9px 16px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .video-frame {
+      margin-top: 18px;
+      overflow: hidden;
+      border-radius: 22px;
+      border: 1px solid rgba(227,211,170,0.65);
+      background: #000;
+      aspect-ratio: 16 / 9;
+    }
+
+    .video-frame iframe {
+      width: 100%;
+      height: 100%;
+      border: 0;
+      display: block;
+    }
+
+    .process-list {
+      margin-top: 18px;
+      display: grid;
+      gap: 14px;
+      text-align: left;
+    }
+
+    .process-item {
+      padding: 16px 18px;
+      border-radius: 16px;
+      background: rgba(255,255,255,0.52);
+      border: 1px solid rgba(227,211,170,0.55);
+      line-height: 1.65;
+    }
+
+    .process-item strong {
+      display: block;
+      margin-bottom: 3px;
+    }
+
+    .help-card {
+      text-align: center;
+      padding: 34px 24px;
+    }
+
+    .help-card p {
+      max-width: 760px;
+      margin: 0 auto 18px;
+      color: var(--muted);
+      line-height: 1.8;
+    }
+
+    .signin-chip {
+      display: none;
+      margin: 0 auto 18px;
+      max-width: 520px;
+      border-radius: 999px;
+      padding: 10px 12px 10px 20px;
+      background: rgba(95,143,101,0.12);
+      border: 1px solid rgba(95,143,101,0.18);
+      color: var(--green);
+      align-items: center;
+      justify-content: center;
       gap: 12px;
-      flex-wrap: wrap;
-      margin-top: 22px;
-    }
-
-    .actions .btn {
-      flex: 1;
-      min-width: 210px;
-    }
-
-    .back-link {
-      display: inline-block;
-      margin-bottom: 16px;
-      color: #9d7b34;
-      text-decoration: none;
-      font-weight: 700;
       font-size: 14px;
     }
 
-    .back-link:hover {
-      text-decoration: underline;
+    .footer {
+      margin-top: 28px;
+      text-align: center;
+      color: var(--muted);
+      line-height: 1.8;
+      padding: 28px 18px;
+      border-radius: 22px;
+      background: rgba(255,255,255,0.42);
     }
 
-    @media (max-width: 700px) {
-      .lookup,
-      .grid {
-        grid-template-columns: 1fr;
-      }
+    .footer a {
+      display: block;
+      color: var(--gold-dark);
+      text-decoration: none;
+      font-weight: 800;
+      margin: 12px 0;
+    }
 
-      h1 {
-        font-size: 30px;
-      }
+    @media (max-width: 760px) {
+      .record-shell { padding: 28px 16px; }
+      .details-grid, .activity-row, .lookup { grid-template-columns: 1fr; }
+      .eyebrow::before, .eyebrow::after { width: 54px; }
+      .score-pill { justify-self: start; }
     }
   </style>
 </head>
 
 <body>
-  <div class="wrap">
-    <a href="/" class="back-link">← Back to Portal</a>
-
-    <div class="card">
-      <div class="header">
+  <main class="page">
+    <div class="record-shell">
+      <section class="hero">
         <img src="/readymarkseal(best)nobackground.PNG" class="logo" alt="The Ready Mark" />
-        <div class="eyebrow">Verified Room Record</div>
-        <h1>Room Verification</h1>
-        <p class="sub">
-          View the current Ready Mark verification record for this room, including certification status, inspection details, and supporting evidence.
+        <div class="eyebrow">The Ready Mark</div>
+        <h1>Verification Record</h1>
+        <div id="cert-pill" class="tier-pill">Loading</div>
+        <p class="hero-text">
+          This room has been independently inspected and verified under The Ready Mark Cleanliness Standard.
         </p>
-      </div>
 
-      <div class="body">
-        <div class="lookup">
-          <input id="slug-input" placeholder="Enter QR slug, e.g. south-county-fairfield-inn-room-204" />
+        <div id="lookup" class="lookup">
+          <input id="slug-input" placeholder="Enter QR slug, e.g. crown-plaza-hotel-stl-room-200" />
           <button class="btn" id="lookup-btn" type="button">Verify Room</button>
         </div>
 
         <div id="status-box" class="status-box">Loading verification record...</div>
+      </section>
 
-        <div id="result" class="result">
-          <div class="result-header">
-            <h2 id="result-title">Verified Room</h2>
-            <div id="result-subtitle" class="sub"></div>
-            <div id="cert-pill" class="pill">Verified</div>
-          </div>
-
-          <div class="grid">
-            <div class="item">
+      <div id="result" class="result">
+        <section class="details-card">
+          <div class="details-grid">
+            <div class="detail-item">
               <div class="label">Property</div>
               <div class="value" id="property-value">—</div>
             </div>
 
-            <div class="item">
+            <div class="detail-item">
               <div class="label">Room</div>
               <div class="value" id="room-value">—</div>
             </div>
 
-            <div class="item">
-              <div class="label">Verification ID</div>
-              <div class="value" id="verification-value">—</div>
+            <div class="detail-item">
+              <div class="label">Inspector</div>
+              <div class="value" id="inspector-value">—</div>
             </div>
 
-            <div class="item">
-              <div class="label">Score</div>
-              <div class="value" id="score-value">—</div>
-            </div>
-
-            <div class="item">
+            <div class="detail-item">
               <div class="label">Inspection Date</div>
               <div class="value" id="date-value">—</div>
             </div>
 
-            <div class="item">
-              <div class="label">Inspector</div>
-              <div class="value" id="inspector-value">—</div>
+            <div class="detail-item">
+              <div class="label">Score</div>
+              <div class="value" id="score-value">—</div>
+            </div>
+
+            <div class="detail-item">
+              <div class="label">Verification ID</div>
+              <div class="value" id="verification-value">—</div>
             </div>
           </div>
+        </section>
 
-          <div class="item">
-            <div class="label">Notes</div>
-            <div class="value" id="notes-value">—</div>
+        <section class="section-card">
+          <h2 class="section-title">Verified Room Condition</h2>
+          <div id="photos-wrap"></div>
+        </section>
+
+        <section class="section-card">
+          <h2 class="section-title">Recent Verification Activity</h2>
+          <p style="text-align:center;color:var(--muted);margin-top:-4px;">Updated regularly through ongoing inspections.</p>
+          <div id="activity-list" class="activity-list"></div>
+          <p style="text-align:center;color:var(--muted);margin-top:20px;">
+            This room is actively monitored through recurring inspections to maintain verified cleanliness standards.
+          </p>
+        </section>
+
+        <section class="section-card">
+          <h2 class="section-title">How This Room Was Verified</h2>
+
+          <div class="video-frame">
+            <iframe
+              src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+              title="The Ready Mark Cleanliness Verification"
+              allowfullscreen>
+            </iframe>
           </div>
 
-          <div class="item" style="margin-top:14px;">
-            <div class="label">Verification Evidence</div>
-            <div id="photos-wrap" class="photos">—</div>
+          <div class="process-list">
+            <div class="process-item">
+              <strong>🔎 Perform Certified Inspection</strong>
+              A room-specific inspection is completed and documented against The Ready Mark standard.
+            </div>
+            <div class="process-item">
+              <strong>🏷️ Assign Verification Record</strong>
+              The inspection is tied to the room record and published through the Ready Mark verification system.
+            </div>
+            <div class="process-item">
+              <strong>✅ Scan & View Results</strong>
+              Guests can scan and view the live verification record connected to the room they are occupying.
+            </div>
           </div>
+        </section>
 
-          <div class="actions">
-            <a href="#" id="report-issue-link" class="btn">Report an Issue</a>
-            <a href="/" class="btn secondary">Return to Portal</a>
-          </div>
-        </div>
+        <section class="section-card help-card">
+          <h2 class="section-title">Need Help With Room Cleanliness?</h2>
+          <p>
+            If something about this room’s cleanliness does not meet expectations, you can report it privately here for direct follow-up.
+          </p>
+
+          <div id="signed-in-chip" class="signin-chip"></div>
+
+          <a href="#" id="report-issue-link" class="btn">Report an Issue</a>
+        </section>
+
+        <section class="footer">
+          <p>
+            This room has been inspected under The Ready Mark Cleanliness Standard. High-touch surfaces, linens, bathrooms, and guest areas were reviewed according to The Ready Mark inspection protocol.
+          </p>
+          <a href="/privacy.html">Privacy Policy</a>
+          <a href="/">Back to Home</a>
+          <p>Verified through The Ready Mark system.</p>
+        </section>
       </div>
     </div>
-  </div>
+  </main>
 
   <script>
     const params = new URLSearchParams(window.location.search);
@@ -348,12 +583,11 @@
     const slugFromQuery = params.get("slug") || params.get("qr") || params.get("room");
     const initialSlug = slugFromQuery || (pathSlug && pathSlug !== "verify.html" ? pathSlug : "");
 
-    let currentData = null;
-
     const slugInput = document.getElementById("slug-input");
     const lookupBtn = document.getElementById("lookup-btn");
     const statusBox = document.getElementById("status-box");
     const result = document.getElementById("result");
+    const lookup = document.getElementById("lookup");
 
     function escapeHtml(value) {
       return String(value ?? "")
@@ -368,51 +602,107 @@
       if (!value) return "—";
       const date = new Date(value);
       if (Number.isNaN(date.getTime())) return value;
-      return date.toLocaleString();
+      return date.toLocaleDateString();
     }
 
-    function showStatus(message) {
+    function normalizeTier(value) {
+      const tier = String(value || "").trim();
+      return tier || "Verified Record";
+    }
+
+    function scoreLabel(score) {
+      if (score === null || score === undefined || score === "") return "—";
+      return String(score).includes("/") ? String(score) : `${score} / 100`;
+    }
+
+    function showStatus(message, showLookup = true) {
       statusBox.style.display = "block";
       statusBox.textContent = message;
       result.classList.remove("active");
+      lookup.classList.toggle("show", showLookup);
     }
 
-    function renderVerification(data) {
-      currentData = data;
-
-      statusBox.style.display = "none";
-      result.classList.add("active");
-
-      document.getElementById("result-title").textContent = `${data.property || "Property"} — Room ${data.room || "—"}`;
-      document.getElementById("result-subtitle").textContent = data.property_slug || "";
-      document.getElementById("cert-pill").textContent = data.certificationTier || data.status || "Verified";
-
-      document.getElementById("property-value").textContent = data.property || "—";
-      document.getElementById("room-value").textContent = data.room || "—";
-      document.getElementById("verification-value").textContent = data.verificationId || "—";
-      document.getElementById("score-value").textContent = data.score || "—";
-      document.getElementById("date-value").textContent = formatDate(data.inspectionDate);
-      document.getElementById("inspector-value").textContent = data.inspectorId || "—";
-      document.getElementById("notes-value").textContent = data.notes || "No notes available.";
-
+    function renderPhotos(data) {
       const photos = Array.isArray(data.photoUrls) && data.photoUrls.length
         ? data.photoUrls
         : data.photoUrl
           ? [data.photoUrl]
           : [];
 
-      const photosWrap = document.getElementById("photos-wrap");
+      const wrap = document.getElementById("photos-wrap");
 
       if (photos.length) {
-        photosWrap.innerHTML = photos.map((url, index) => `
-          <div class="photo-card">
-            <img src="${escapeHtml(url)}" alt="Verification evidence ${index + 1}">
-            <a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">Open Evidence ${index + 1}</a>
+        wrap.innerHTML = `
+          <div class="photos">
+            ${photos.map((url, index) => `
+              <div class="photo-card">
+                <img src="${escapeHtml(url)}" alt="Verification evidence ${index + 1}">
+                <a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">Open Full Image</a>
+              </div>
+            `).join("")}
           </div>
-        `).join("");
-      } else {
-        photosWrap.textContent = "No photo evidence attached.";
+        `;
+        return;
       }
+
+      wrap.innerHTML = `
+        <div class="condition-empty">
+          <div class="condition-icon">📷</div>
+          <h3>Inspection Image Pending</h3>
+          <p>
+            Verified inspection imagery will appear here once supporting documentation has been uploaded to this room record.
+          </p>
+          <div class="doc-status">Documentation Status: Pending Upload</div>
+        </div>
+      `;
+    }
+
+    function renderHistory(data) {
+      const list = document.getElementById("activity-list");
+      const history = Array.isArray(data.inspectionHistory) && data.inspectionHistory.length
+        ? data.inspectionHistory
+        : [{
+            created_at: data.inspectionDate,
+            verification_id: data.verificationId,
+            certification_tier: data.certificationTier,
+            score: data.score,
+            is_current: true
+          }];
+
+      list.innerHTML = history.map((item, index) => `
+        <div class="activity-row">
+          <div>
+            <div class="activity-date">${escapeHtml(formatDate(item.created_at || item.inspection_date))}</div>
+            <div class="activity-sub">Verification ID: ${escapeHtml(item.verification_id || "—")}</div>
+          </div>
+          <div>
+            <span class="small-pill">${escapeHtml(normalizeTier(item.certification_tier))}</span>
+          </div>
+          <div style="display:flex;gap:10px;align-items:center;justify-content:flex-end;flex-wrap:wrap;">
+            <span class="small-pill ${item.is_current || index === 0 ? "current" : ""}">
+              ${item.is_current || index === 0 ? "Current Record" : "Archived"}
+            </span>
+            <span class="score-pill">${escapeHtml(scoreLabel(item.score))}</span>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    function renderVerification(data) {
+      statusBox.style.display = "none";
+      lookup.classList.remove("show");
+      result.classList.add("active");
+
+      document.getElementById("cert-pill").textContent = `🏆 ${normalizeTier(data.certificationTier || data.status)}`;
+      document.getElementById("property-value").textContent = data.property || "—";
+      document.getElementById("room-value").textContent = data.room || "—";
+      document.getElementById("verification-value").textContent = data.verificationId || "—";
+      document.getElementById("score-value").textContent = scoreLabel(data.score);
+      document.getElementById("date-value").textContent = formatDate(data.inspectionDate);
+      document.getElementById("inspector-value").textContent = data.inspectorId || "—";
+
+      renderPhotos(data);
+      renderHistory(data);
 
       const reportUrl =
         `/report-issue.html?property_slug=${encodeURIComponent(data.property_slug || "")}` +
@@ -420,6 +710,16 @@
         `&verification_id=${encodeURIComponent(data.verificationId || "")}`;
 
       document.getElementById("report-issue-link").href = reportUrl;
+
+      const guestEmail = localStorage.getItem("readymark_guest_email");
+      const chip = document.getElementById("signed-in-chip");
+
+      if (guestEmail) {
+        chip.style.display = "inline-flex";
+        chip.innerHTML = `Signed in as ${escapeHtml(guestEmail)} <button type="button" class="btn secondary" style="min-height:32px;padding:6px 12px;border-radius:999px;" onclick="localStorage.removeItem('readymark_guest_email'); location.reload();">Logout</button>`;
+      } else {
+        chip.style.display = "none";
+      }
     }
 
     async function loadVerification(slug) {
@@ -431,7 +731,7 @@
       }
 
       slugInput.value = cleanSlug;
-      showStatus("Loading verification record...");
+      showStatus("Loading verification record...", false);
 
       try {
         const res = await fetch(`/api/get-verification?slug=${encodeURIComponent(cleanSlug)}`);
@@ -447,9 +747,7 @@
       }
     }
 
-    lookupBtn.addEventListener("click", () => {
-      loadVerification(slugInput.value);
-    });
+    lookupBtn.addEventListener("click", () => loadVerification(slugInput.value));
 
     slugInput.addEventListener("keydown", (event) => {
       if (event.key === "Enter") {
