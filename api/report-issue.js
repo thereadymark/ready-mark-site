@@ -392,15 +392,30 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Please select at least one issue type." });
     }
 
-    const normalizedVerificationId = String(verification_id).trim();
-    const normalizedPropertySlug = property_slug ? String(property_slug).trim() : null;
-    const normalizedPropertyName = formatPropertyName(property_name);
-    const normalizedRoomNumber = String(room_number).trim();
-    const normalizedGuestNote = guest_note ? String(guest_note).trim() : null;
-    const normalizedReservationLastName = reservation_last_name
+   const normalizedVerificationId = String(verification_id).trim();
+   const normalizedPropertySlug = property_slug ? String(property_slug).trim() : null;
+   let normalizedPropertyName = formatPropertyName(property_name);
+   const normalizedRoomNumber = String(room_number).trim();
+   const normalizedGuestNote = guest_note ? String(guest_note).trim() : null;
+   const normalizedReservationLastName = reservation_last_name
       ? String(reservation_last_name).trim()
       : "";
 
+if (!normalizedPropertyName && normalizedPropertySlug) {
+  const { data: propertyRecord, error: propertyLookupError } = await supabase
+    .from("properties")
+    .select("property_name")
+    .eq("property_slug", normalizedPropertySlug)
+    .maybeSingle();
+
+  if (propertyLookupError) {
+    return res.status(500).json({
+      error: `Property lookup failed: ${propertyLookupError.message}`
+    });
+  }
+
+  normalizedPropertyName = formatPropertyName(propertyRecord?.property_name);
+}    
     const duplicateCheck = await supabase
       .from("guest_reports")
       .select("id, confirmation_number, status, reported_at")
