@@ -7,28 +7,16 @@
 
   <style>
     :root {
-      --bg:#f6f2ea;
-      --paper:#fffdf8;
-      --paper2:#f3eadb;
-      --text:#171717;
-      --muted:#6f6a61;
-      --gold:#c7a257;
-      --gold-dark:#9d7b34;
-      --line:#e3d3aa;
-      --danger:#b44c4c;
-      --success:#2f8f57;
+      --bg:#f6f2ea; --paper:#fffdf8; --paper2:#f3eadb; --text:#171717;
+      --muted:#6f6a61; --gold:#c7a257; --gold-dark:#9d7b34;
+      --line:#e3d3aa; --danger:#b44c4c; --success:#2f8f57;
     }
 
     * { box-sizing:border-box; }
 
     body {
-      margin:0;
-      min-height:100vh;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      padding:24px;
-      font-family:Arial,sans-serif;
+      margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center;
+      padding:24px; font-family:Arial,sans-serif;
       background:
         radial-gradient(circle at top, rgba(199,162,87,0.16), transparent 34%),
         linear-gradient(180deg,#fbfaf6 0%,var(--bg) 100%);
@@ -36,69 +24,43 @@
     }
 
     .card {
-      width:100%;
-      max-width:520px;
+      width:100%; max-width:520px;
       background:linear-gradient(180deg,var(--paper),var(--paper2));
       border:1px solid rgba(227,211,170,0.85);
       border-radius:28px;
-      box-shadow:
-        0 28px 80px rgba(17,19,21,0.10),
-        inset 0 0 0 1px rgba(199,162,87,0.18);
-      padding:34px 28px;
-      text-align:center;
+      box-shadow:0 28px 80px rgba(17,19,21,0.10), inset 0 0 0 1px rgba(199,162,87,0.18);
+      padding:34px 28px; text-align:center;
     }
 
     .logo {
-      width:105px;
-      margin-bottom:18px;
-      filter:
-        drop-shadow(0 16px 22px rgba(0,0,0,0.18))
-        drop-shadow(0 0 20px rgba(199,162,87,0.25));
+      width:105px; margin-bottom:18px;
+      filter:drop-shadow(0 16px 22px rgba(0,0,0,0.18)) drop-shadow(0 0 20px rgba(199,162,87,0.25));
     }
 
     .eyebrow {
-      color:var(--gold-dark);
-      text-transform:uppercase;
-      letter-spacing:4px;
-      font-size:12px;
-      font-weight:900;
-      margin-bottom:8px;
+      color:var(--gold-dark); text-transform:uppercase; letter-spacing:4px;
+      font-size:12px; font-weight:900; margin-bottom:8px;
     }
 
     h1 {
-      font-family:Georgia,serif;
-      font-weight:500;
-      font-size:34px;
-      margin:0 0 10px;
-      text-transform:uppercase;
+      font-family:Georgia,serif; font-weight:500; font-size:34px;
+      margin:0 0 10px; text-transform:uppercase;
     }
 
     .sub {
-      color:var(--muted);
-      line-height:1.7;
-      font-size:14px;
-      margin:0 0 24px;
+      color:var(--muted); line-height:1.7; font-size:14px; margin:0 0 24px;
     }
 
     label {
-      display:block;
-      text-align:left;
-      margin:16px 0 8px;
-      font-size:12px;
-      letter-spacing:1px;
-      text-transform:uppercase;
-      font-weight:900;
-      color:var(--muted);
+      display:block; text-align:left; margin:16px 0 8px;
+      font-size:12px; letter-spacing:1px; text-transform:uppercase;
+      font-weight:900; color:var(--muted);
     }
 
     input {
-      width:100%;
-      padding:14px 15px;
-      border-radius:14px;
+      width:100%; padding:14px 15px; border-radius:14px;
       border:1px solid rgba(199,162,87,0.26);
-      background:rgba(255,255,255,0.82);
-      font-size:15px;
-      outline:none;
+      background:rgba(255,255,255,0.82); font-size:15px; outline:none;
     }
 
     input:focus {
@@ -106,68 +68,51 @@
       box-shadow:0 0 0 3px rgba(199,162,87,0.12);
     }
 
-    .btn {
-      width:100%;
-      margin-top:20px;
-      min-height:48px;
-      border:0;
-      border-radius:14px;
-      background:linear-gradient(180deg,#d8ba73,#b8934c);
-      color:#171717;
-      font-weight:900;
-      cursor:pointer;
-      font-size:15px;
+    .password-field { position: relative; }
+
+    .password-field input { padding-right: 54px; }
+
+    .toggle-password {
+      position:absolute; right:12px; top:50%; transform:translateY(-50%);
+      border:1px solid rgba(199,162,87,0.16);
+      background:rgba(255,255,255,0.78);
+      border-radius:999px; padding:6px 9px; cursor:pointer;
+      font-size:14px; line-height:1; color:var(--muted);
     }
 
-    .btn:disabled {
-      opacity:.65;
-      cursor:not-allowed;
+    .btn {
+      width:100%; margin-top:20px; min-height:48px; border:0;
+      border-radius:14px; background:linear-gradient(180deg,#d8ba73,#b8934c);
+      color:#171717; font-weight:900; cursor:pointer; font-size:15px;
     }
+
+    .btn:disabled { opacity:.65; cursor:not-allowed; }
 
     .links {
-      margin-top:18px;
-      display:flex;
-      justify-content:center;
-      gap:14px;
-      flex-wrap:wrap;
-      font-size:13px;
+      margin-top:18px; display:flex; justify-content:center;
+      gap:14px; flex-wrap:wrap; font-size:13px;
     }
 
-    .links a {
-      color:var(--gold-dark);
-      font-weight:800;
-      text-decoration:none;
-    }
+    .links a { color:var(--gold-dark); font-weight:800; text-decoration:none; }
 
     .status {
-      display:none;
-      margin-top:18px;
-      padding:14px;
-      border-radius:14px;
-      font-size:14px;
-      line-height:1.6;
-      text-align:left;
+      display:none; margin-top:18px; padding:14px; border-radius:14px;
+      font-size:14px; line-height:1.6; text-align:left;
     }
 
     .status.info {
-      display:block;
-      color:var(--muted);
-      background:rgba(255,255,255,0.64);
-      border:1px solid var(--line);
+      display:block; color:var(--muted);
+      background:rgba(255,255,255,0.64); border:1px solid var(--line);
     }
 
     .status.success {
-      display:block;
-      color:var(--success);
-      background:rgba(47,143,87,0.08);
-      border:1px solid rgba(47,143,87,0.22);
+      display:block; color:var(--success);
+      background:rgba(47,143,87,0.08); border:1px solid rgba(47,143,87,0.22);
     }
 
     .status.error {
-      display:block;
-      color:var(--danger);
-      background:rgba(180,76,76,0.08);
-      border:1px solid rgba(180,76,76,0.22);
+      display:block; color:var(--danger);
+      background:rgba(180,76,76,0.08); border:1px solid rgba(180,76,76,0.22);
     }
   </style>
 </head>
@@ -187,7 +132,10 @@
     <input id="email" type="email" autocomplete="email" placeholder="you@email.com" />
 
     <label for="password">Password</label>
-    <input id="password" type="password" autocomplete="current-password" placeholder="Enter your password" />
+    <div class="password-field">
+      <input id="password" type="password" autocomplete="current-password" placeholder="Enter your password" />
+      <button type="button" class="toggle-password" data-target="password">👁</button>
+    </div>
 
     <button id="login-btn" class="btn" type="button">Continue</button>
 
@@ -220,6 +168,16 @@
       if (url.startsWith("http://") || url.startsWith("https://")) return "/";
       return url;
     }
+
+    document.querySelectorAll(".toggle-password").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const input = document.getElementById(btn.dataset.target);
+        if (!input) return;
+
+        input.type = input.type === "password" ? "text" : "password";
+        btn.textContent = input.type === "password" ? "👁" : "🙈";
+      });
+    });
 
     async function loginGuest() {
       const email = emailInput.value.trim().toLowerCase();
@@ -268,7 +226,6 @@
         localStorage.setItem("readymark_guest_name", `${data.guest?.first_name || ""} ${data.guest?.last_name || ""}`.trim());
 
         showStatus("Signed in. Redirecting...", "success");
-
         window.location.href = safeRedirect(redirectTarget);
       } catch (error) {
         showStatus(error.message || "Unable to sign in.", "error");
@@ -302,12 +259,3 @@
   </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
