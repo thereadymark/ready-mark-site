@@ -819,13 +819,20 @@
 
       renderPhotos(data);
       renderHistory(data);
+ 
+      const reportUrl =
+  `/report-issue.html?property_slug=${encodeURIComponent(data.property_slug || "")}` +
+  `&room_number=${encodeURIComponent(data.room || "")}` +
+  `&verification_id=${encodeURIComponent(data.verificationId || "")}`;
 
-      document.getElementById("report-issue-link").href =
-        `/report-issue.html?property_slug=${encodeURIComponent(data.property_slug || "")}` +
-        `&room_number=${encodeURIComponent(data.room || "")}` +
-        `&verification_id=${encodeURIComponent(data.verificationId || "")}`;
+    const guestEmail = localStorage.getItem("readymark_guest_email");
 
-      const guestEmail = localStorage.getItem("readymark_guest_email");
+    const finalReportUrl = guestEmail
+    ? reportUrl
+    : `/guest-login.html?redirect=${encodeURIComponent(reportUrl)}`;
+
+     document.getElementById("report-issue-link").href = finalReportUrl;
+
       const chip = document.getElementById("signed-in-chip");
 
       if (guestEmail) {
