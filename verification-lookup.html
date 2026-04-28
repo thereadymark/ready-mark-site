@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Verify Your Room | The Ready Mark</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+<style>
+:root {
+  --bg: #f6f2ea;
+  --gold: #c7a257;
+  --gold-dark: #9d7b34;
+  --text: #171717;
+  --muted: #6f6a61;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: Arial, sans-serif;
+  background:
+    radial-gradient(circle at top, rgba(199,162,87,0.16), transparent 34%),
+    linear-gradient(180deg, #fbfaf6 0%, var(--bg) 100%);
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.wrap {
+  width: 100%;
+  max-width: 640px;
+  padding: 30px 18px;
+}
+
+.card {
+  background: linear-gradient(180deg, #fffdf9, #f6f1e8);
+  border-radius: 28px;
+  padding: 40px 28px;
+  box-shadow:
+    0 30px 80px rgba(0,0,0,0.08),
+    inset 0 0 0 1px rgba(199,162,87,0.2);
+  text-align: center;
+}
+
+.logo {
+  width: 110px;
+  margin-bottom: 24px;
+  filter:
+    drop-shadow(0 16px 22px rgba(0,0,0,0.18))
+    drop-shadow(0 0 20px rgba(199,162,87,0.25));
+}
+
+.eyebrow {
+  letter-spacing: 4px;
+  font-size: 13px;
+  text-transform: uppercase;
+  color: var(--gold-dark);
+  font-weight: 800;
+  margin-bottom: 10px;
+}
+
+h1 {
+  font-family: Georgia, serif;
+  font-size: 40px;
+  margin: 0 0 16px;
+  font-weight: 500;
+}
+
+.sub {
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.7;
+  margin-bottom: 28px;
+}
+
+.input-wrap {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+input {
+  flex: 1;
+  border-radius: 14px;
+  border: 1px solid #e1d4b8;
+  padding: 14px;
+  font-size: 15px;
+}
+
+input:focus {
+  outline: none;
+  border-color: var(--gold);
+}
+
+button {
+  border: none;
+  border-radius: 14px;
+  padding: 14px 18px;
+  font-weight: 800;
+  cursor: pointer;
+  background: linear-gradient(180deg, #d8ba73, #b8934c);
+}
+
+.hint {
+  margin-top: 14px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.footer {
+  margin-top: 24px;
+  font-size: 12px;
+  color: var(--muted);
+}
+</style>
+</head>
+
+<body>
+
+<div class="wrap">
+  <div class="card">
+
+    <img src="/readymarkseal(best)nobackground.PNG" class="logo" />
+
+    <div class="eyebrow">The Ready Mark</div>
+
+    <h1>Verify Your Room</h1>
+
+    <p class="sub">
+      Enter your room’s verification code to view its official cleanliness record,
+      inspection details, and certification status.
+    </p>
+
+    <div class="input-wrap">
+      <input id="slug" placeholder="e.g. crown-plaza-hotel-stl-room-200" />
+      <button onclick="go()">Verify</button>
+    </div>
+
+    <div class="hint">
+      You can also scan the QR code located inside your room.
+    </div>
+
+    <div class="footer">
+      Powered by The Ready Mark
+    </div>
+
+  </div>
+</div>
+
+<script>
+function go() {
+  const value = document.getElementById("slug").value.trim();
+
+  if (!value) return;
+
+  window.location.href = `/verify.html?slug=${encodeURIComponent(value)}`;
+}
+
+document.getElementById("slug").addEventListener("keydown", (e) => {
+  if (e.key === "Enter") go();
+});
+</script>
+
+</body>
+</html>
