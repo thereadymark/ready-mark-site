@@ -209,66 +209,100 @@
     </div>
   </div>
 
-  <script>
-    const API_URL = "/api/report-issue";
+ <script>
+  const API_URL = "/api/report-issue";
 
-    const statusBox = document.getElementById("status-box");
-    const submitBtn = document.getElementById("submit-btn");
+  const params = new URLSearchParams(window.location.search);
+  const currentPath = window.location.pathname + window.location.search;
 
-    function showStatus(message, type) {
-      statusBox.className = "status " + type;
-      statusBox.textContent = message;
+  const statusBox = document.getElementById("status-box");
+  const submitBtn = document.getElementById("submit-btn");
+
+  const guestToken = localStorage.getItem("readymark_guest_token");
+  const guestEmail = localStorage.getItem("readymark_guest_email");
+
+  if (!guestToken) {
+    window.location.href = `/guest-login.html?redirect=${encodeURIComponent(currentPath)}`;
+  }
+
+  function showStatus(message, type) {
+    statusBox.className = "status " + type;
+    statusBox.textContent = message;
+  }
+
+  // Auto-fill from verification page URL
+  const propertyParam = params.get("property_slug") || params.get("property");
+  const roomParam = params.get("room_number") || params.get("room");
+
+  if (propertyParam) {
+    document.getElementById("property-slug").value = propertyParam.trim().toLowerCase();
+  }
+
+  if (roomParam) {
+    document.getElementById("room-number").value = roomParam.trim();
+  }
+
+  if (guestEmail) {
+    showStatus(`Signed in as ${guestEmail}. You may submit your cleanliness report below.`, "success");
+  }
+
+  submitBtn.addEventListener("click", async () => {
+    const latestGuestToken = localStorage.getItem("readymark_guest_token");
+
+    if (!latestGuestToken) {
+      window.location.href = `/guest-login.html?redirect=${encodeURIComponent(currentPath)}`;
+      return;
     }
 
-    submitBtn.addEventListener("click", async () => {
-      const property_slug = document.getElementById("property-slug").value.trim().toLowerCase();
-      const room_number = document.getElementById("room-number").value.trim();
-      const reservation_last_name = document.getElementById("reservation-last-name").value.trim();
-      const issue_type = document.getElementById("issue-type").value;
-      const guest_note = document.getElementById("guest-note").value.trim();
+    const property_slug = document.getElementById("property-slug").value.trim().toLowerCase();
+    const room_number = document.getElementById("room-number").value.trim();
+    const reservation_last_name = document.getElementById("reservation-last-name").value.trim();
+    const issue_type = document.getElementById("issue-type").value;
+    const guest_note = document.getElementById("guest-note").value.trim();
 
-      if (!property_slug || !room_number || !issue_type || !guest_note) {
-        showStatus("Please complete the property, room, issue type, and details.", "error");
-        return;
+    if (!property_slug || !room_number || !issue_type || !guest_note) {
+      showStatus("Please complete the property, room, issue type, and details.", "error");
+      return;
+    }
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Submitting...";
+
+    try {
+      const res = await fetch(API_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json",
+          "x-guest-token": latestGuestToken
+        },
+        body: JSON.stringify({
+          property_slug,
+          room_number,
+          reservation_last_name,
+          issue_types: [issue_type],
+          guest_note
+        })
+      });
+
+      const data = await res.json().catch(() => null);
+
+      if (!res.ok || data?.error) {
+        throw new Error(data?.error || "Unable to submit issue.");
       }
 
-      submitBtn.disabled = true;
-      submitBtn.textContent = "Submitting...";
+      showStatus("Issue submitted successfully. Thank you.", "success");
 
-      try {
-        const res = await fetch(API_URL, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Accept": "application/json"
-          },
-          body: JSON.stringify({
-            property_slug,
-            room_number,
-            reservation_last_name,
-            issue_types: [issue_type],
-            guest_note
-          })
-        });
-
-        const data = await res.json().catch(() => null);
-
-        if (!res.ok || data?.error) {
-          throw new Error(data?.error || "Unable to submit issue.");
-        }
-
-        showStatus("Issue submitted successfully. Thank you.", "success");
-
-        document.getElementById("reservation-last-name").value = "";
-        document.getElementById("issue-type").value = "";
-        document.getElementById("guest-note").value = "";
-      } catch (error) {
-        showStatus(error.message || "Unable to submit issue.", "error");
-      } finally {
-        submitBtn.disabled = false;
-        submitBtn.textContent = "Submit Issue";
-      }
-    });
-  </script>
+      document.getElementById("reservation-last-name").value = "";
+      document.getElementById("issue-type").value = "";
+      document.getElementById("guest-note").value = "";
+    } catch (error) {
+      showStatus(error.message || "Unable to submit issue.", "error");
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Submit Issue";
+    }
+  });
+</script>
 </body>
 </html>
