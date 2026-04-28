@@ -8,16 +8,15 @@
   <style>
     :root {
       --bg: #f6f2ea;
-      --panel: rgba(255,255,255,0.82);
-      --panel-soft: rgba(255,255,255,0.56);
+      --paper: #fffdf8;
+      --paper2: #f7f0e4;
       --text: #171717;
       --muted: #6f6a61;
       --gold: #c7a257;
       --gold-dark: #9d7b34;
       --line: #e3d3aa;
       --green: #5f8f65;
-      --danger: #b85d5d;
-      --shadow: 0 22px 60px rgba(17,19,21,0.08);
+      --shadow: 0 28px 80px rgba(17,19,21,0.10);
     }
 
     * { box-sizing: border-box; }
@@ -39,124 +38,168 @@
     }
 
     .record-shell {
-      background: rgba(255,255,255,0.48);
-      border: 1px solid rgba(227,211,170,0.75);
-      border-radius: 28px;
-      box-shadow: var(--shadow);
-      padding: 42px 30px;
+      position: relative;
+      background: linear-gradient(180deg, var(--paper), var(--paper2));
+      border: 1px solid rgba(227,211,170,0.85);
+      border-radius: 30px;
+      box-shadow: var(--shadow), inset 0 0 0 1px rgba(199,162,87,0.18);
+      padding: 46px 32px;
       overflow: hidden;
+    }
+
+    .record-shell::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at top center, rgba(255,255,255,0.85), transparent 42%),
+        linear-gradient(90deg, rgba(255,255,255,0.2), transparent 20%, transparent 80%, rgba(255,255,255,0.22));
+      opacity: .72;
+    }
+
+    .hero,
+    .result,
+    .footer {
+      position: relative;
+      z-index: 1;
     }
 
     .hero {
       text-align: center;
-      padding: 22px 10px 42px;
+      padding: 20px 10px 42px;
       border-bottom: 1px solid rgba(227,211,170,0.55);
     }
 
-.logo {
-  width: 150px;
-  margin: 0 auto 28px;
-  display: block;
-  filter:
-    drop-shadow(0 18px 22px rgba(0,0,0,0.20))
-    drop-shadow(0 0 22px rgba(199,162,87,0.28));
-  transition: transform 0.22s ease, filter 0.22s ease;
-  cursor: default;
-}
+    .logo {
+      width: 150px;
+      margin: 0 auto 30px;
+      display: block;
+      filter:
+        drop-shadow(0 20px 24px rgba(0,0,0,0.22))
+        drop-shadow(0 0 24px rgba(199,162,87,0.30));
+      transition: transform 0.22s ease, filter 0.22s ease;
+    }
 
-.logo:hover {
-  transform: translateY(-4px) scale(1.035);
-  filter:
-    drop-shadow(0 24px 28px rgba(0,0,0,0.24))
-    drop-shadow(0 0 30px rgba(199,162,87,0.38));
-}
-.eyebrow {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 18px;
-  color: var(--gold-dark);
-  letter-spacing: 5px;
-  text-transform: uppercase;
-  font-size: 16px;
-  font-weight: 800;
-  margin-bottom: 8px;
-}
+    .logo:hover {
+      transform: translateY(-4px) scale(1.03);
+      filter:
+        drop-shadow(0 26px 30px rgba(0,0,0,0.25))
+        drop-shadow(0 0 32px rgba(199,162,87,0.40));
+    }
 
-.eyebrow::before,
-.eyebrow::after {
-  content: "";
-  width: 155px;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(157,123,52,0.72), transparent);
-}
+    .eyebrow {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 18px;
+      color: var(--gold-dark);
+      letter-spacing: 5px;
+      text-transform: uppercase;
+      font-size: 16px;
+      font-weight: 800;
+      margin-bottom: 10px;
+    }
 
-h1 {
-  margin: 0;
-  font-family: Georgia, serif;
-  font-size: clamp(48px, 5vw, 62px);
-  font-weight: 500;
-  line-height: 1.05;
-  letter-spacing: 1.2px;
-  text-transform: uppercase;
-}
+    .eyebrow::before,
+    .eyebrow::after {
+      content: "";
+      width: 155px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(157,123,52,0.72), transparent);
+    }
 
-.tier-pill {
-  margin: 24px auto 26px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 260px;
-  min-height: 44px;
-  padding: 10px 26px;
-  border-radius: 999px;
-  background: rgba(245,247,252,0.92);
-  border: 1px solid rgba(199,162,87,0.16);
-  color: #526b9f;
-  font-size: 13px;
-  font-weight: 900;
-  letter-spacing: .8px;
-  text-transform: uppercase;
-  box-shadow:
-    0 0 24px rgba(135,160,210,0.32),
-    0 12px 30px rgba(17,19,21,0.06);
-  animation: tierGlow 1.2s ease both;
-}
+    h1 {
+      margin: 0;
+      font-family: Georgia, serif;
+      font-size: clamp(44px, 5vw, 60px);
+      font-weight: 500;
+      line-height: 1.05;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
 
-@keyframes tierGlow {
-  0% {
-    opacity: 0;
-    transform: translateY(8px) scale(0.96);
-    box-shadow: 0 0 0 rgba(135,160,210,0);
-  }
-  60% {
-    opacity: 1;
-    transform: translateY(0) scale(1.02);
-    box-shadow: 0 0 34px rgba(135,160,210,0.42);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
+    .tier-pill {
+      margin: 24px auto 26px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 250px;
+      min-height: 44px;
+      padding: 10px 26px;
+      border-radius: 999px;
+      background: rgba(245,247,252,0.92);
+      border: 1px solid rgba(199,162,87,0.16);
+      color: #526b9f;
+      font-size: 13px;
+      font-weight: 900;
+      letter-spacing: .8px;
+      text-transform: uppercase;
+      box-shadow: 0 0 24px rgba(135,160,210,0.32), 0 12px 30px rgba(17,19,21,0.06);
+      animation: tierGlow 1.1s ease both;
+    }
 
-.details-card,
-.section-card {
-  margin-top: 28px;
-  background: var(--panel);
-  border: 1px solid rgba(227,211,170,0.64);
-  border-radius: 24px;
-  box-shadow: 0 12px 36px rgba(17,19,21,0.04);
-  padding: 26px;
-  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
-}
+    @keyframes tierGlow {
+      0% { opacity: 0; transform: translateY(7px); }
+      70% { opacity: 1; box-shadow: 0 0 34px rgba(135,160,210,0.44); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
 
-.details-card:hover,
-.section-card:hover {
-  transform: translateY(-3px);
-  border-color: rgba(199,162,87,0.8);
-  box-shadow: 0 26px 70px rgba(17,19,21,0.10);
-}
+    .hero-text {
+      max-width: 720px;
+      margin: 0 auto;
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.8;
+    }
+
+    .guide-trigger {
+      margin-top: 22px;
+      border: 1px solid rgba(199,162,87,0.42);
+      background: rgba(255,255,255,0.62);
+      color: var(--gold-dark);
+      border-radius: 999px;
+      padding: 10px 18px;
+      font-weight: 900;
+      cursor: pointer;
+      box-shadow: 0 10px 24px rgba(17,19,21,0.04);
+    }
+
+    .status-box {
+      margin: 22px auto 0;
+      max-width: 540px;
+      padding: 14px 18px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.72);
+      border: 1px solid rgba(227,211,170,0.62);
+      color: #4d5668;
+      font-weight: 900;
+      letter-spacing: .7px;
+      text-transform: uppercase;
+      box-shadow: 0 14px 34px rgba(17,19,21,0.06);
+    }
+
+    .result { display: none; }
+    .result.active { display: block; }
+
+    .details-card,
+    .section-card {
+      margin-top: 28px;
+      background: rgba(255,255,255,0.68);
+      border: 1px solid rgba(227,211,170,0.64);
+      border-radius: 24px;
+      box-shadow: 0 12px 36px rgba(17,19,21,0.04);
+      padding: 26px;
+      transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .details-card:hover,
+    .section-card:hover {
+      transform: translateY(-3px);
+      border-color: rgba(199,162,87,0.8);
+      box-shadow: 0 26px 70px rgba(17,19,21,0.10);
+    }
+
     .details-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -164,7 +207,7 @@ h1 {
     }
 
     .detail-item {
-      background: rgba(255,255,255,0.55);
+      background: rgba(255,255,255,0.58);
       border: 1px solid rgba(227,211,170,0.55);
       border-radius: 18px;
       padding: 20px;
@@ -191,7 +234,7 @@ h1 {
       margin: 0 0 18px;
       text-align: center;
       font-family: Georgia, serif;
-      font-size: clamp(30px, 4vw, 44px);
+      font-size: clamp(30px, 4vw, 42px);
       font-weight: 500;
       text-transform: uppercase;
       letter-spacing: .6px;
@@ -274,7 +317,7 @@ h1 {
     .photo-card a {
       display: block;
       padding: 12px 14px;
-      color: #9d7b34;
+      color: var(--gold-dark);
       font-size: 13px;
       font-weight: 900;
       text-decoration: none;
@@ -340,24 +383,7 @@ h1 {
       white-space: nowrap;
     }
 
-    .video-frame {
-      margin-top: 18px;
-      overflow: hidden;
-      border-radius: 22px;
-      border: 1px solid rgba(227,211,170,0.65);
-      background: #000;
-      aspect-ratio: 16 / 9;
-    }
-
-    .video-frame iframe {
-      width: 100%;
-      height: 100%;
-      border: 0;
-      display: block;
-    }
-
     .process-list {
-      margin-top: 18px;
       display: grid;
       gap: 14px;
       text-align: left;
@@ -403,6 +429,27 @@ h1 {
       font-size: 14px;
     }
 
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 44px;
+      padding: 12px 18px;
+      border-radius: 14px;
+      background: linear-gradient(180deg, #d8ba73, #b8934c);
+      color: #171717;
+      text-decoration: none;
+      font-weight: 900;
+      border: none;
+      cursor: pointer;
+    }
+
+    .btn.secondary {
+      background: rgba(255,255,255,0.78);
+      border: 1px solid rgba(227,211,170,0.72);
+      color: var(--gold-dark);
+    }
+
     .footer {
       margin-top: 28px;
       text-align: center;
@@ -421,56 +468,71 @@ h1 {
       margin: 12px 0;
     }
 
+    .guide-popover {
+      position: fixed;
+      z-index: 9999;
+      width: min(330px, calc(100vw - 32px));
+      background: #fffdf8;
+      border: 1px solid rgba(199,162,87,0.55);
+      border-radius: 18px;
+      box-shadow: 0 24px 70px rgba(0,0,0,0.18);
+      padding: 18px;
+      display: none;
+    }
+
+    .guide-popover.active { display: block; }
+
+    .guide-kicker {
+      color: var(--gold-dark);
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      font-size: 11px;
+      font-weight: 900;
+      margin-bottom: 6px;
+    }
+
+    .guide-title {
+      font-family: Georgia, serif;
+      font-size: 22px;
+      margin-bottom: 8px;
+    }
+
+    .guide-text {
+      color: var(--muted);
+      line-height: 1.6;
+      font-size: 14px;
+    }
+
+    .guide-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 14px;
+      justify-content: flex-end;
+    }
+
+    .guide-highlight {
+      outline: 2px solid rgba(199,162,87,0.8);
+      box-shadow: 0 0 0 8px rgba(199,162,87,0.12), 0 18px 45px rgba(0,0,0,0.08);
+      border-radius: 18px;
+      position: relative;
+      z-index: 4;
+    }
+
     @media (max-width: 760px) {
       .record-shell { padding: 28px 16px; }
-      .details-grid, .activity-row  { 
-        grid-template-columns: 1fr; 
-      }
+      .details-grid, .activity-row { grid-template-columns: 1fr; }
+      .eyebrow { font-size: 13px; gap: 10px; }
       .eyebrow::before, .eyebrow::after { width: 54px; }
       .score-pill { justify-self: start; }
+      h1 { font-size: clamp(38px, 13vw, 52px); }
     }
-.card {
-  background: linear-gradient(180deg, #fffdf9, #f6f1e8);
-  box-shadow:
-    0 30px 80px rgba(0,0,0,0.08),
-    inset 0 0 0 1px rgba(199,162,87,0.2);
-}    
-.header {
-  animation: fadeUp 0.8s ease forwards;
-}
-
-.logo {
-  animation: crestIn 0.7s ease forwards;
-}
-
-.pill {
-  animation: pillGlow 1s ease forwards;
-}
-
-@keyframes fadeUp {
-  from { opacity: 0; transform: translateY(18px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes crestIn {
-  from { opacity: 0; transform: translateY(-10px) scale(0.96); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
-}
-
-@keyframes pillGlow {
-  from { opacity: 0; box-shadow: 0 0 0 rgba(199,162,87,0); }
-  to {
-    opacity: 1;
-    box-shadow: 0 0 22px rgba(199,162,87,0.35);
-  }
-}
   </style>
 </head>
 
 <body>
   <main class="page">
     <div class="record-shell">
-      <section class="hero">
+      <section class="hero" id="guide-cert">
         <img src="/readymarkseal(best)nobackground.PNG" class="logo" alt="The Ready Mark" />
         <div class="eyebrow">The Ready Mark</div>
         <h1>Verification Record</h1>
@@ -478,51 +540,28 @@ h1 {
         <p class="hero-text">
           This room has been independently inspected and verified under The Ready Mark Cleanliness Standard.
         </p>
-
+        <button id="start-guide-btn" class="guide-trigger" type="button">New here? Guide me through this record</button>
         <div id="status-box" class="status-box">Loading verification record...</div>
       </section>
 
       <div id="result" class="result">
-        <section class="details-card">
+        <section class="details-card" id="guide-details">
           <div class="details-grid">
-            <div class="detail-item">
-              <div class="label">Property</div>
-              <div class="value" id="property-value">—</div>
-            </div>
-
-            <div class="detail-item">
-              <div class="label">Room</div>
-              <div class="value" id="room-value">—</div>
-            </div>
-
-            <div class="detail-item">
-              <div class="label">Inspector</div>
-              <div class="value" id="inspector-value">—</div>
-            </div>
-
-            <div class="detail-item">
-              <div class="label">Inspection Date</div>
-              <div class="value" id="date-value">—</div>
-            </div>
-
-            <div class="detail-item">
-              <div class="label">Score</div>
-              <div class="value" id="score-value">—</div>
-            </div>
-
-            <div class="detail-item">
-              <div class="label">Verification ID</div>
-              <div class="value" id="verification-value">—</div>
-            </div>
+            <div class="detail-item"><div class="label">Property</div><div class="value" id="property-value">—</div></div>
+            <div class="detail-item"><div class="label">Room</div><div class="value" id="room-value">—</div></div>
+            <div class="detail-item"><div class="label">Inspector</div><div class="value" id="inspector-value">—</div></div>
+            <div class="detail-item"><div class="label">Inspection Date</div><div class="value" id="date-value">—</div></div>
+            <div class="detail-item"><div class="label">Score</div><div class="value" id="score-value">—</div></div>
+            <div class="detail-item"><div class="label">Verification ID</div><div class="value" id="verification-value">—</div></div>
           </div>
         </section>
 
-        <section class="section-card">
+        <section class="section-card" id="guide-evidence">
           <h2 class="section-title">Verified Room Condition</h2>
           <div id="photos-wrap"></div>
         </section>
 
-        <section class="section-card">
+        <section class="section-card" id="guide-activity">
           <h2 class="section-title">Recent Verification Activity</h2>
           <p style="text-align:center;color:var(--muted);margin-top:-4px;">Updated regularly through ongoing inspections.</p>
           <div id="activity-list" class="activity-list"></div>
@@ -531,48 +570,24 @@ h1 {
           </p>
         </section>
 
-        <section class="section-card">
+        <section class="section-card" id="guide-process">
           <h2 class="section-title">How This Room Was Verified</h2>
-
-          <div class="video-frame">
-            <iframe
-              src="https://www.youtube.com/embed/dQw4w9WgXcQ"
-              title="The Ready Mark Cleanliness Verification"
-              allowfullscreen>
-            </iframe>
-          </div>
-
           <div class="process-list">
-            <div class="process-item">
-              <strong>🔎 Perform Certified Inspection</strong>
-              A room-specific inspection is completed and documented against The Ready Mark standard.
-            </div>
-            <div class="process-item">
-              <strong>🏷️ Assign Verification Record</strong>
-              The inspection is tied to the room record and published through the Ready Mark verification system.
-            </div>
-            <div class="process-item">
-              <strong>✅ Scan & View Results</strong>
-              Guests can scan and view the live verification record connected to the room they are occupying.
-            </div>
+            <div class="process-item"><strong>Perform Certified Inspection</strong>A room-specific inspection is completed and documented against The Ready Mark standard.</div>
+            <div class="process-item"><strong>Assign Verification Record</strong>The inspection is tied to the room record and published through the Ready Mark verification system.</div>
+            <div class="process-item"><strong>Scan & View Results</strong>Guests can scan and view the live verification record connected to the room they are occupying.</div>
           </div>
         </section>
 
-        <section class="section-card help-card">
+        <section class="section-card help-card" id="guide-report">
           <h2 class="section-title">Need Help With Room Cleanliness?</h2>
-          <p>
-            If something about this room’s cleanliness does not meet expectations, you can report it privately here for direct follow-up.
-          </p>
-
+          <p>If something about this room’s cleanliness does not meet expectations, you can report it privately here for direct follow-up.</p>
           <div id="signed-in-chip" class="signin-chip"></div>
-
           <a href="#" id="report-issue-link" class="btn">Report an Issue</a>
         </section>
 
         <section class="footer">
-          <p>
-            This room has been inspected under The Ready Mark Cleanliness Standard. High-touch surfaces, linens, bathrooms, and guest areas were reviewed according to The Ready Mark inspection protocol.
-          </p>
+          <p>This room has been inspected under The Ready Mark Cleanliness Standard. High-touch surfaces, linens, bathrooms, and guest areas were reviewed according to The Ready Mark inspection protocol.</p>
           <a href="/privacy.html">Privacy Policy</a>
           <a href="/">Back to Home</a>
           <p>Verified through The Ready Mark system.</p>
@@ -581,23 +596,29 @@ h1 {
     </div>
   </main>
 
+  <div id="guide-popover" class="guide-popover">
+    <div class="guide-kicker" id="guide-kicker">Step 1</div>
+    <div class="guide-title" id="guide-title">Certification Status</div>
+    <div class="guide-text" id="guide-text">This shows the room’s current Ready Mark verification status.</div>
+    <div class="guide-actions">
+      <button class="btn secondary" id="guide-skip" type="button">Skip</button>
+      <button class="btn" id="guide-next" type="button">Next</button>
+    </div>
+  </div>
+
   <script>
     const params = new URLSearchParams(window.location.search);
     const pathSlug = window.location.pathname.replace(/^\/+|\/+$/g, "");
     const slugFromQuery = params.get("slug") || params.get("qr") || params.get("room");
     const initialSlug = slugFromQuery || (pathSlug && pathSlug !== "verify.html" ? pathSlug : "");
 
-   
     const statusBox = document.getElementById("status-box");
     const result = document.getElementById("result");
-  
+
     function escapeHtml(value) {
       return String(value ?? "")
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
+        .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;").replace(/'/g, "&#039;");
     }
 
     function formatDate(value) {
@@ -621,29 +642,18 @@ h1 {
       statusBox.style.display = "block";
       statusBox.textContent = message;
       result.classList.remove("active");
-     
     }
 
     function renderPhotos(data) {
-      const photos = Array.isArray(data.photoUrls) && data.photoUrls.length
-        ? data.photoUrls
-        : data.photoUrl
-          ? [data.photoUrl]
-          : [];
-
+      const photos = Array.isArray(data.photoUrls) && data.photoUrls.length ? data.photoUrls : data.photoUrl ? [data.photoUrl] : [];
       const wrap = document.getElementById("photos-wrap");
 
       if (photos.length) {
-        wrap.innerHTML = `
-          <div class="photos">
-            ${photos.map((url, index) => `
-              <div class="photo-card">
-                <img src="${escapeHtml(url)}" alt="Verification evidence ${index + 1}">
-                <a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">Open Full Image</a>
-              </div>
-            `).join("")}
-          </div>
-        `;
+        wrap.innerHTML = `<div class="photos">${photos.map((url, index) => `
+          <div class="photo-card">
+            <img src="${escapeHtml(url)}" alt="Verification evidence ${index + 1}">
+            <a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">Open Full Image</a>
+          </div>`).join("")}</div>`;
         return;
       }
 
@@ -651,25 +661,16 @@ h1 {
         <div class="condition-empty">
           <div class="condition-icon">📷</div>
           <h3>Inspection Image Pending</h3>
-          <p>
-            Verified inspection imagery will appear here once supporting documentation has been uploaded to this room record.
-          </p>
+          <p>Verified inspection imagery will appear here once supporting documentation has been uploaded to this room record.</p>
           <div class="doc-status">Documentation Status: Pending Upload</div>
-        </div>
-      `;
+        </div>`;
     }
 
     function renderHistory(data) {
       const list = document.getElementById("activity-list");
       const history = Array.isArray(data.inspectionHistory) && data.inspectionHistory.length
         ? data.inspectionHistory
-        : [{
-            created_at: data.inspectionDate,
-            verification_id: data.verificationId,
-            certification_tier: data.certificationTier,
-            score: data.score,
-            is_current: true
-          }];
+        : [{ created_at: data.inspectionDate, verification_id: data.verificationId, certification_tier: data.certificationTier, score: data.score, is_current: true }];
 
       list.innerHTML = history.map((item, index) => `
         <div class="activity-row">
@@ -677,17 +678,12 @@ h1 {
             <div class="activity-date">${escapeHtml(formatDate(item.created_at || item.inspection_date))}</div>
             <div class="activity-sub">Verification ID: ${escapeHtml(item.verification_id || "—")}</div>
           </div>
-          <div>
-            <span class="small-pill">${escapeHtml(normalizeTier(item.certification_tier))}</span>
-          </div>
+          <div><span class="small-pill">${escapeHtml(normalizeTier(item.certification_tier))}</span></div>
           <div style="display:flex;gap:10px;align-items:center;justify-content:flex-end;flex-wrap:wrap;">
-            <span class="small-pill ${item.is_current || index === 0 ? "current" : ""}">
-              ${item.is_current || index === 0 ? "Current Record" : "Archived"}
-            </span>
+            <span class="small-pill ${item.is_current || index === 0 ? "current" : ""}">${item.is_current || index === 0 ? "Current Record" : "Archived"}</span>
             <span class="score-pill">${escapeHtml(scoreLabel(item.score))}</span>
           </div>
-        </div>
-      `).join("");
+        </div>`).join("");
     }
 
     function renderVerification(data) {
@@ -705,12 +701,10 @@ h1 {
       renderPhotos(data);
       renderHistory(data);
 
-      const reportUrl =
+      document.getElementById("report-issue-link").href =
         `/report-issue.html?property_slug=${encodeURIComponent(data.property_slug || "")}` +
         `&room_number=${encodeURIComponent(data.room || "")}` +
         `&verification_id=${encodeURIComponent(data.verificationId || "")}`;
-
-      document.getElementById("report-issue-link").href = reportUrl;
 
       const guestEmail = localStorage.getItem("readymark_guest_email");
       const chip = document.getElementById("signed-in-chip");
@@ -747,12 +741,63 @@ h1 {
       }
     }
 
+    const guideSteps = [
+      { id: "guide-cert", title: "Certification Status", text: "This shows the room’s current Ready Mark verification status." },
+      { id: "guide-details", title: "Room Record Details", text: "These fields tie the inspection to this specific property, room, score, inspector, and verification ID." },
+      { id: "guide-evidence", title: "Verified Room Condition", text: "Supporting inspection images appear here when evidence has been uploaded." },
+      { id: "guide-activity", title: "Recent Verification Activity", text: "This shows whether the room has been checked recently and which record is current." },
+      { id: "guide-report", title: "Report an Issue", text: "Use this if something in the room does not match the verification record." }
+    ];
+
+    let guideIndex = 0;
+    const popover = document.getElementById("guide-popover");
+
+    function clearGuide() {
+      document.querySelectorAll(".guide-highlight").forEach(el => el.classList.remove("guide-highlight"));
+      popover.classList.remove("active");
+    }
+
+    function showGuideStep(index) {
+      clearGuide();
+      guideIndex = index;
+      const step = guideSteps[index];
+      const target = document.getElementById(step.id);
+      if (!target) return;
+
+      target.classList.add("guide-highlight");
+      target.scrollIntoView({ behavior: "smooth", block: "center" });
+
+      document.getElementById("guide-kicker").textContent = `Step ${index + 1} of ${guideSteps.length}`;
+      document.getElementById("guide-title").textContent = step.title;
+      document.getElementById("guide-text").textContent = step.text;
+      document.getElementById("guide-next").textContent = index === guideSteps.length - 1 ? "Done" : "Next";
+
+      setTimeout(() => {
+        const rect = target.getBoundingClientRect();
+        const top = Math.min(window.innerHeight - 220, Math.max(16, rect.top + 20));
+        const left = Math.min(window.innerWidth - 350, Math.max(16, rect.left + 24));
+        popover.style.top = `${top}px`;
+        popover.style.left = `${left}px`;
+        popover.classList.add("active");
+      }, 250);
+    }
+
+    document.getElementById("start-guide-btn").addEventListener("click", () => showGuideStep(0));
+    document.getElementById("guide-skip").addEventListener("click", clearGuide);
+    document.getElementById("guide-next").addEventListener("click", () => {
+      if (guideIndex >= guideSteps.length - 1) {
+        clearGuide();
+      } else {
+        showGuideStep(guideIndex + 1);
+      }
+    });
 
     if (initialSlug) {
       loadVerification(initialSlug);
     } else {
-      showStatus("Enter a room QR slug to verify a room.");
+      showStatus("Verification Record Unavailable.");
     }
   </script>
 </body>
 </html>
+
