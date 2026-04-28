@@ -233,7 +233,8 @@
   // Auto-fill from verification page URL
   const propertyParam = params.get("property_slug") || params.get("property");
   const roomParam = params.get("room_number") || params.get("room");
-
+  const verificationParam = params.get("verification_id") || params.get("verificationId") || "";
+   
   if (propertyParam) {
     document.getElementById("property-slug").value = propertyParam.trim().toLowerCase();
   }
@@ -259,8 +260,9 @@
     const reservation_last_name = document.getElementById("reservation-last-name").value.trim();
     const issue_type = document.getElementById("issue-type").value;
     const guest_note = document.getElementById("guest-note").value.trim();
-
-    if (!property_slug || !room_number || !issue_type || !guest_note) {
+    const verification_id = verificationParam.trim();
+    
+    if (!property_slug || !room_number || !verification_id || !issue_type || !guest_note) {
       showStatus("Please complete the property, room, issue type, and details.", "error");
       return;
     }
@@ -279,6 +281,7 @@
         body: JSON.stringify({
           property_slug,
           room_number,
+          verification_id,
           reservation_last_name,
           issue_types: [issue_type],
           guest_note
