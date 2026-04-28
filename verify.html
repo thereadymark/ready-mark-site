@@ -182,7 +182,7 @@
     .result { display: none; }
     .result.active { display: block; }
 
-    .details-card,
+    .details-card
     .section-card {
       margin-top: 28px;
       background: rgba(255,255,255,0.68);
@@ -402,17 +402,24 @@
       margin-bottom: 3px;
     }
 
-    .help-card {
-      text-align: center;
-      padding: 34px 24px;
-    }
-
+   .help-card {
+  text-align: center;
+  padding: 36px 26px; /* slight upgrade */
+  cursor: default;
+}
     .help-card p {
       max-width: 760px;
       margin: 0 auto 18px;
       color: var(--muted);
       line-height: 1.8;
     }
+    .help-card .btn {
+  margin-top: 14px;
+}
+
+.help-card:hover {
+  transform: translateY(-4px) scale(1.01);
+}
 
     .signin-chip {
       display: none;
@@ -538,7 +545,7 @@
         <h1>Verification Record</h1>
         <div id="cert-pill" class="tier-pill">Loading</div>
         <p class="hero-text">
-          This room has been independently inspected and verified under The Ready Mark Cleanliness Standard.
+          This record shows the current cleanlinessstatus for this room, including inspection details, verification history, and supporting evidenxe hen available.  
         </p>
         <button id="start-guide-btn" class="guide-trigger" type="button">New here? Guide me through this record</button>
         <div id="status-box" class="status-box">Loading verification record...</div>
@@ -581,13 +588,12 @@
 
         <section class="section-card help-card" id="guide-report">
           <h2 class="section-title">Need Help With Room Cleanliness?</h2>
-          <p>If something about this room’s cleanliness does not meet expectations, you can report it privately here for direct follow-up.</p>
+          <p>If anything in this room does not meet your cleanliness expectations, you can report it here for immediate review and follow-up.</p>
           <div id="signed-in-chip" class="signin-chip"></div>
-          <a href="#" id="report-issue-link" class="btn">Report an Issue</a>
+          <a href="#" id="report-issue-link" class="btn">Report a Cleanliness Issue</a>
         </section>
 
-        <section class="footer">
-          <p>This room has been inspected under The Ready Mark Cleanliness Standard. High-touch surfaces, linens, bathrooms, and guest areas were reviewed according to The Ready Mark inspection protocol.</p>
+        <section class="foot
           <a href="/privacy.html">Privacy Policy</a>
           <a href="/">Back to Home</a>
           <p>Verified through The Ready Mark system.</p>
