@@ -32,9 +32,23 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Missing token or password" });
     }
 
-    if (String(password).length < 6) {
-      return res.status(400).json({ error: "Password must be at least 6 characters." });
-    }
+    
+const passwordError = validatePassword(password);
+
+if (passwordError) {
+  return res.status(400).json({ error: passwordError });
+}
+    function validatePassword(password) {
+  const value = String(password || "");
+
+  if (value.length < 8) return "Password must be at least 8 characters.";
+  if (!/[A-Z]/.test(value)) return "Password must include at least one uppercase letter.";
+  if (!/[a-z]/.test(value)) return "Password must include at least one lowercase letter.";
+  if (!/[0-9]/.test(value)) return "Password must include at least one number.";
+  if (!/[^A-Za-z0-9]/.test(value)) return "Password must include at least one special character.";
+
+  return null;
+}
 
     const supabaseUrl = process.env.SUPABASE_URL;
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
