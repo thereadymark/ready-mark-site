@@ -222,16 +222,18 @@
 
         <label for="issue-type">Issue Type</label>
         <select id="issue-type">
-         <option value="">Select an issue type</option>
-        <option>Cleanliness Concern</option>
-        <option>Bathroom Issue</option>
-        <option>Bedding / Linen Issue</option>
-        <option>Odor Concern</option>
-        <option>Damage or Maintenance Concern</option>
-        <option>Severe</option>
-        <option>Safety</option>
-        <option>Biohazard</option>
-        <option>Other</option>
+        <option value="">Select an issue type</option>
+<option>Cleanliness Concern</option>
+<option>Bathroom Issue</option>
+<option>Bedding / Linen Issue</option>
+<option>Missing / Soiled Linen</option>
+<option>Missing Towels or Supplies</option>
+<option>Damage or Maintenance Concern</option>
+<option>Odor Concern</option>
+<option>Noise Issue</option>
+<option>Temperature / AC Issue</option>
+<option>Unable to Capture Photo</option>
+<option>Other</option>
         </select>
 
         <label for="guest-note">Details</label>
@@ -256,6 +258,13 @@
 
   <script>
     const API_URL = "/api/report-issue";
+    
+const NON_VISUAL_ISSUES = [
+  "Odor Concern",
+  "Noise Issue",
+  "Temperature / AC Issue",
+  "Unable to Capture Photo"
+];
 
     const params = new URLSearchParams(window.location.search);
     const currentPath = window.location.pathname + window.location.search;
@@ -338,8 +347,12 @@
       const photoInput = document.getElementById("issue-photo");
       const photoFile = photoInput.files && photoInput.files[0] ? photoInput.files[0] : null;
 
-      const isPriority = ["Severe", "Safety", "Biohazard"].includes(issue_type);
+     const requiresPhoto = !NON_VISUAL_ISSUES.includes(issue_type);
 
+if (requiresPhoto && !photoFile) {
+  showStatus("Photo evidence is required for this issue.", "error");
+  return;
+}
       const guest_note = document.getElementById("guest-note").value.trim();
       const verification_id = verificationParam.trim();
 
