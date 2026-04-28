@@ -7,140 +7,70 @@
 
   <style>
     body {
-      margin:0;
-      min-height:100vh;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      padding:24px;
-      font-family:Arial,sans-serif;
-      background:linear-gradient(180deg,#fbfaf6,#f6f2ea);
-      color:#171717;
+      margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center;
+      padding:24px; font-family:Arial,sans-serif;
+      background:linear-gradient(180deg,#fbfaf6,#f6f2ea); color:#171717;
     }
-
     .card {
-      width:100%;
-      max-width:520px;
-      background:linear-gradient(180deg,#fffdf8,#f3eadb);
-      border:1px solid rgba(227,211,170,.85);
-      border-radius:28px;
-      box-shadow:0 28px 80px rgba(17,19,21,.10);
-      padding:34px 28px;
-      text-align:center;
+      width:100%; max-width:520px; background:linear-gradient(180deg,#fffdf8,#f3eadb);
+      border:1px solid rgba(227,211,170,.85); border-radius:28px;
+      box-shadow:0 28px 80px rgba(17,19,21,.10); padding:34px 28px; text-align:center;
     }
-
-    img {
-      width:100px;
-      margin-bottom:18px;
-    }
-
+    img { width:100px; margin-bottom:18px; }
     .eyebrow {
-      color:#9d7b34;
-      text-transform:uppercase;
-      letter-spacing:4px;
-      font-size:12px;
-      font-weight:900;
-      margin-bottom:8px;
+      color:#9d7b34; text-transform:uppercase; letter-spacing:4px;
+      font-size:12px; font-weight:900; margin-bottom:8px;
     }
-
-    h1 {
-      font-family:Georgia,serif;
-      font-size:34px;
-      margin:0 0 10px;
-      text-transform:uppercase;
-    }
-
-    p {
-      color:#6f6a61;
-      font-size:14px;
-      margin-bottom:20px;
-    }
-
+    h1 { font-family:Georgia,serif; font-size:34px; margin:0 0 10px; text-transform:uppercase; }
+    p { color:#6f6a61; font-size:14px; margin-bottom:20px; line-height:1.6; }
     label {
-      display:block;
-      text-align:left;
-      margin:16px 0 8px;
-      font-size:12px;
-      text-transform:uppercase;
-      font-weight:900;
-      color:#6f6a61;
+      display:block; text-align:left; margin:16px 0 8px;
+      font-size:12px; text-transform:uppercase; font-weight:900; color:#6f6a61;
     }
-
     input {
-      width:100%;
-      padding:14px;
-      border-radius:14px;
-      border:1px solid rgba(199,162,87,.26);
-      background:#fff;
-      font-size:15px;
+      width:100%; padding:14px; border-radius:14px;
+      border:1px solid rgba(199,162,87,.26); background:#fff; font-size:15px;
     }
-
-    .password-field {
-      position:relative;
+    .password-help {
+      margin-top:10px; color:#6f6a61; font-size:12px; line-height:1.5; text-align:left;
     }
-
-    .password-field input {
-      padding-right:50px;
-    }
-
-    .toggle-password {
-      position:absolute;
-      right:10px;
-      top:50%;
-      transform:translateY(-50%);
-      border:none;
-      background:none;
-      cursor:pointer;
-      font-size:16px;
-    }
-
     button {
-      width:100%;
-      margin-top:20px;
-      padding:14px;
-      border-radius:14px;
-      border:none;
+      width:100%; margin-top:20px; padding:14px; border-radius:14px; border:none;
       background:linear-gradient(180deg,#d8ba73,#b8934c);
-      font-weight:900;
-      cursor:pointer;
+      font-weight:900; cursor:pointer;
     }
-
+    button:disabled { opacity:.65; cursor:not-allowed; }
     .status {
-      margin-top:16px;
-      padding:12px;
-      border-radius:12px;
-      display:none;
+      margin-top:16px; padding:12px; border-radius:12px; display:none; line-height:1.5;
     }
-
     .status.error { background:#f8d7da; color:#721c24; display:block; }
     .status.success { background:#d4edda; color:#155724; display:block; }
+    .status.info { background:rgba(255,255,255,.7); color:#6f6a61; display:block; }
   </style>
 </head>
 
 <body>
   <div class="card">
-    <img src="/readymarkseal(best)nobackground.PNG" />
+    <img src="/readymarkseal(best)nobackground.PNG" alt="The Ready Mark" />
     <div class="eyebrow">The Ready Mark</div>
     <h1>Create Account</h1>
 
     <p>Create a guest account to report issues.</p>
 
-    <label>Email</label>
-    <input id="email" type="email" placeholder="you@email.com" />
+    <label for="email">Email</label>
+    <input id="email" type="email" placeholder="you@email.com" autocomplete="email" />
 
-    <label>Password</label>
-    <div class="password-field">
-      <input id="password" type="password" />
-      <button type="button" class="toggle-password" data-target="password">👁</button>
+    <label for="password">Password</label>
+    <input id="password" type="password" autocomplete="new-password" placeholder="Create password" />
+
+    <label for="confirm-password">Confirm Password</label>
+    <input id="confirm-password" type="password" autocomplete="new-password" placeholder="Confirm password" />
+
+    <div class="password-help">
+      Password must be at least 8 characters and include uppercase, lowercase, a number, and a special character.
     </div>
 
-    <label>Confirm Password</label>
-    <div class="password-field">
-      <input id="confirm-password" type="password" />
-      <button type="button" class="toggle-password" data-target="confirm-password">👁</button>
-    </div>
-
-    <button id="signup-btn">Create Account</button>
+    <button id="signup-btn" type="button">Create Account</button>
 
     <div id="status" class="status"></div>
   </div>
@@ -148,46 +78,88 @@
 <script>
 const API = "/api/guest-signup";
 
+const params = new URLSearchParams(window.location.search);
+const redirectTarget = params.get("redirect") || "/";
+
 const email = document.getElementById("email");
 const password = document.getElementById("password");
 const confirmPassword = document.getElementById("confirm-password");
+const signupBtn = document.getElementById("signup-btn");
 const status = document.getElementById("status");
 
 function show(msg,type){
-  status.className="status "+type;
-  status.textContent=msg;
+  status.className = "status " + type;
+  status.textContent = msg;
 }
 
-document.querySelectorAll(".toggle-password").forEach(btn=>{
-  btn.onclick=()=>{
-    const input=document.getElementById(btn.dataset.target);
-    input.type=input.type==="password"?"text":"password";
-  };
-});
+function validatePassword(value) {
+  if (value.length < 8) return "Password must be at least 8 characters.";
+  if (!/[A-Z]/.test(value)) return "Password must include at least one uppercase letter.";
+  if (!/[a-z]/.test(value)) return "Password must include at least one lowercase letter.";
+  if (!/[0-9]/.test(value)) return "Password must include at least one number.";
+  if (!/[^A-Za-z0-9]/.test(value)) return "Password must include at least one special character.";
+  return null;
+}
 
-document.getElementById("signup-btn").onclick=async()=>{
-  if(password.value!==confirmPassword.value){
-    show("Passwords do not match","error");
+signupBtn.onclick = async () => {
+  const cleanEmail = email.value.trim().toLowerCase();
+  const pass = password.value;
+  const confirmPass = confirmPassword.value;
+
+  if (!cleanEmail || !pass || !confirmPass) {
+    show("Please complete all fields.", "error");
     return;
   }
 
-  const res = await fetch(API,{
-    method:"POST",
-    headers:{ "Content-Type":"application/json" },
-    body:JSON.stringify({
-      email:email.value,
-      password:password.value
-    })
-  });
-
-  const data = await res.json();
-
-  if(!res.ok){
-    show(data.error || "Signup failed","error");
+  const passwordError = validatePassword(pass);
+  if (passwordError) {
+    show(passwordError, "error");
     return;
   }
 
-  show("Account created. Check your email for verification code.","success");
+  if (pass !== confirmPass) {
+    show("Passwords do not match.", "error");
+    return;
+  }
+
+  signupBtn.disabled = true;
+  signupBtn.textContent = "Creating...";
+  show("Creating account...", "info");
+
+  try {
+    const res = await fetch(API,{
+      method:"POST",
+      headers:{ "Content-Type":"application/json", "Accept":"application/json" },
+      body:JSON.stringify({
+        email: cleanEmail,
+        password: pass
+      })
+    });
+
+    const data = await res.json().catch(() => null);
+
+    if(!res.ok || data?.error){
+      throw new Error(data?.error || "Signup failed.");
+    }
+
+    if (data?.action === "login") {
+      show(data.message || "Account already exists. Please log in.", "error");
+      return;
+    }
+
+    localStorage.setItem("readymark_pending_guest_email", cleanEmail);
+
+    show("Account created. Redirecting to verification page...", "success");
+
+    setTimeout(() => {
+      window.location.href = `/guest-verify-email.html?redirect=${encodeURIComponent(redirectTarget)}`;
+    }, 900);
+  } catch (error) {
+    show(error.message || "Signup failed.", "error");
+  } finally {
+    signupBtn.disabled = false;
+    signupBtn.textContent = "Create Account";
+  }
 };
 </script>
 </body>
