@@ -360,10 +360,6 @@ if (requiresPhoto && !photoFile) {
         showStatus("Missing required room verification details. Please return to the verification page and try again.", "error");
         return;
       }
-if (isPriority && !photoFile) {
-  showStatus("Photo evidence is required for priority issues.", "error");
-  return;
-}
 
       submitBtn.disabled = true;
       submitBtn.textContent = "Submitting...";
