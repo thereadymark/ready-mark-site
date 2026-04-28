@@ -61,6 +61,42 @@
       padding: 28px;
     }
 
+    .signed-in-chip {
+      display: none;
+      margin-bottom: 18px;
+      padding: 12px 14px;
+      border-radius: 999px;
+      background: rgba(47,143,87,0.08);
+      border: 1px solid rgba(47,143,87,0.18);
+      color: #2f8f57;
+      font-size: 13px;
+      font-weight: 700;
+      text-align: center;
+    }
+
+    .room-summary {
+      margin-bottom: 20px;
+      padding: 16px;
+      border: 1px solid #e8dfca;
+      border-radius: 16px;
+      background: rgba(255,255,255,0.65);
+    }
+
+    .summary-label {
+      font-size: 11px;
+      letter-spacing: 1.3px;
+      text-transform: uppercase;
+      font-weight: 800;
+      color: #7c7468;
+      margin-bottom: 6px;
+    }
+
+    .summary-value {
+      font-size: 17px;
+      font-weight: 800;
+      color: #111315;
+    }
+
     label {
       display: block;
       margin: 18px 0 8px;
@@ -154,33 +190,6 @@
       font-weight: 700;
       font-size: 14px;
     }
-
-    .back-link:hover {
-      text-decoration: underline;
-    }
-
-.room-summary {
-  margin-bottom: 20px;
-  padding: 16px;
-  border: 1px solid #e8dfca;
-  border-radius: 16px;
-  background: rgba(255,255,255,0.65);
-}
-
-.summary-label {
-  font-size: 11px;
-  letter-spacing: 1.3px;
-  text-transform: uppercase;
-  font-weight: 800;
-  color: #7c7468;
-  margin-bottom: 6px;
-}
-
-.summary-value {
-  font-size: 17px;
-  font-weight: 800;
-  color: #111315;
-}    
   </style>
 </head>
 
@@ -193,20 +202,20 @@
         <img src="/readymarkseal(best)nobackground.PNG" class="logo" alt="The Ready Mark" />
         <h1>Report an Issue</h1>
         <p class="sub">
-          Use this form to notify The Ready Mark of a cleanliness or room-readiness concern tied to a verified property or room.
+          Report a cleanliness concern for this verified room. Your report will be tied to this room’s Ready Mark verification record.
         </p>
       </div>
-<input id="property-slug" type="hidden" />
 
-<div class="room-summary">
-  <div class="summary-label">Reporting Issue For</div>
-  <div class="summary-value">
-    Room <span id="room-display">—</span>
-  </div>
-</div>
+      <div class="body">
+        <div id="signed-in-chip" class="signed-in-chip"></div>
 
-        <label for="room-number">Room Number</label>
-        <input id="room-number" placeholder="Example: 204" />
+        <input id="property-slug" type="hidden" />
+        <input id="room-number" type="hidden" />
+
+        <div class="room-summary">
+          <div class="summary-label">Reporting Issue For</div>
+          <div class="summary-value">Room <span id="room-display">—</span></div>
+        </div>
 
         <label for="reservation-last-name">Reservation Last Name</label>
         <input id="reservation-last-name" placeholder="Guest last name" />
@@ -223,12 +232,12 @@
         </select>
 
         <label for="guest-note">Details</label>
-        <textarea id="guest-note" placeholder="Briefly describe the concern."></textarea>
+        <textarea id="guest-note" placeholder="Briefly describe the cleanliness concern."></textarea>
 
         <button class="btn" id="submit-btn" type="button">Submit Issue</button>
 
         <div class="note">
-          This report is used to help verify and resolve room-readiness concerns. For emergencies, contact the property directly.
+          This report is used to help document and resolve room-readiness concerns. For emergencies, contact the property directly.
         </div>
 
         <div id="status-box" class="status"></div>
@@ -236,104 +245,113 @@
     </div>
   </div>
 
- <script>
-  const API_URL = "/api/report-issue";
+  <script>
+    const API_URL = "/api/report-issue";
 
-  const params = new URLSearchParams(window.location.search);
-  const currentPath = window.location.pathname + window.location.search;
+    const params = new URLSearchParams(window.location.search);
+    const currentPath = window.location.pathname + window.location.search;
 
-  const statusBox = document.getElementById("status-box");
-  const submitBtn = document.getElementById("submit-btn");
+    const statusBox = document.getElementById("status-box");
+    const submitBtn = document.getElementById("submit-btn");
+    const signedInChip = document.getElementById("signed-in-chip");
 
-  const guestToken = localStorage.getItem("readymark_guest_token");
-  const guestEmail = localStorage.getItem("readymark_guest_email");
+    const guestToken = localStorage.getItem("readymark_guest_token");
+    const guestEmail = localStorage.getItem("readymark_guest_email");
 
-  if (!guestToken) {
-    window.location.href = `/guest-login.html?redirect=${encodeURIComponent(currentPath)}`;
-  }
+    const propertyParam = params.get("property_slug") || params.get("property") || "";
+    const roomParam = params.get("room_number") || params.get("room") || "";
+    const verificationParam = params.get("verification_id") || params.get("verificationId") || "";
 
-  function showStatus(message, type) {
-    statusBox.className = "status " + type;
-    statusBox.textContent = message;
-  }
+    function showStatus(message, type) {
+      statusBox.className = "status " + type;
+      statusBox.textContent = message;
+    }
 
-  // Auto-fill from verification page URL
-  const propertyParam = params.get("property_slug") || params.get("property");
-  const roomParam = params.get("room_number") || params.get("room");
-  const verificationParam = params.get("verification_id") || params.get("verificationId") || "";
-   
-  if (propertyParam) {
-    document.getElementById("property-slug").value = propertyParam.trim().toLowerCase();
-  }
-
-  if (roomParam) {
-    document.getElementById("room-display").textContent = roomParam ? roomParam.trim() : "—";
-    document.getElementById("room-number").value = roomParam.trim();
-  }
-
-  if (guestEmail) {
-    showStatus(`Signed in as ${guestEmail}. You may submit your cleanliness report below.`, "success");
-  }
-
-  submitBtn.addEventListener("click", async () => {
-    const latestGuestToken = localStorage.getItem("readymark_guest_token");
-
-    if (!latestGuestToken) {
+    if (!guestToken) {
       window.location.href = `/guest-login.html?redirect=${encodeURIComponent(currentPath)}`;
-      return;
     }
 
-    const property_slug = document.getElementById("property-slug").value.trim().toLowerCase();
-    const room_number = document.getElementById("room-number").value.trim();
-    const reservation_last_name = document.getElementById("reservation-last-name").value.trim();
-    const issue_type = document.getElementById("issue-type").value;
-    const guest_note = document.getElementById("guest-note").value.trim();
-    const verification_id = verificationParam.trim();
-    
-    if (!property_slug || !room_number || !verification_id || !issue_type || !guest_note) {
-      showStatus("Please complete the property, room, issue type, and details.", "error");
-      return;
+    if (guestEmail && signedInChip) {
+      signedInChip.style.display = "block";
+      signedInChip.textContent = `Signed in as ${guestEmail}`;
     }
 
-    submitBtn.disabled = true;
-    submitBtn.textContent = "Submitting...";
+    if (propertyParam) {
+      document.getElementById("property-slug").value = propertyParam.trim().toLowerCase();
+    }
 
-    try {
-      const res = await fetch(API_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Accept": "application/json",
-          "x-guest-token": latestGuestToken
-        },
-        body: JSON.stringify({
-          property_slug,
-          room_number,
-          verification_id,
-          reservation_last_name,
-          issue_types: [issue_type],
-          guest_note
-        })
-      });
+    if (roomParam) {
+      document.getElementById("room-display").textContent = roomParam.trim();
+      document.getElementById("room-number").value = roomParam.trim();
+    }
 
-      const data = await res.json().catch(() => null);
+    if (!verificationParam) {
+      submitBtn.disabled = true;
+      showStatus(
+        "This report must be started from a valid room verification record. Please return to the room verification page and choose Report a Cleanliness Issue.",
+        "error"
+      );
+    }
 
-      if (!res.ok || data?.error) {
-        throw new Error(data?.error || "Unable to submit issue.");
+    submitBtn.addEventListener("click", async () => {
+      const latestGuestToken = localStorage.getItem("readymark_guest_token");
+
+      if (!latestGuestToken) {
+        window.location.href = `/guest-login.html?redirect=${encodeURIComponent(currentPath)}`;
+        return;
       }
 
-      showStatus("Issue submitted successfully. Thank you.", "success");
+      const property_slug = document.getElementById("property-slug").value.trim().toLowerCase();
+      const room_number = document.getElementById("room-number").value.trim();
+      const reservation_last_name = document.getElementById("reservation-last-name").value.trim();
+      const issue_type = document.getElementById("issue-type").value;
+      const guest_note = document.getElementById("guest-note").value.trim();
+      const verification_id = verificationParam.trim();
 
-      document.getElementById("reservation-last-name").value = "";
-      document.getElementById("issue-type").value = "";
-      document.getElementById("guest-note").value = "";
-    } catch (error) {
-      showStatus(error.message || "Unable to submit issue.", "error");
-    } finally {
-      submitBtn.disabled = false;
-      submitBtn.textContent = "Submit Issue";
-    }
-  });
-</script>
+      if (!property_slug || !room_number || !verification_id || !issue_type || !guest_note) {
+        showStatus("Missing required room verification details. Please return to the verification page and try again.", "error");
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Submitting...";
+
+      try {
+        const res = await fetch(API_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+            "x-guest-token": latestGuestToken
+          },
+          body: JSON.stringify({
+            property_slug,
+            room_number,
+            verification_id,
+            reservation_last_name,
+            issue_types: [issue_type],
+            guest_note
+          })
+        });
+
+        const data = await res.json().catch(() => null);
+
+        if (!res.ok || data?.error) {
+          throw new Error(data?.error || "Unable to submit issue.");
+        }
+
+        showStatus("Issue submitted successfully. Thank you.", "success");
+
+        document.getElementById("reservation-last-name").value = "";
+        document.getElementById("issue-type").value = "";
+        document.getElementById("guest-note").value = "";
+      } catch (error) {
+        showStatus(error.message || "Unable to submit issue.", "error");
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Submit Issue";
+      }
+    });
+  </script>
 </body>
 </html>
