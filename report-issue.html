@@ -158,6 +158,29 @@
     .back-link:hover {
       text-decoration: underline;
     }
+
+.room-summary {
+  margin-bottom: 20px;
+  padding: 16px;
+  border: 1px solid #e8dfca;
+  border-radius: 16px;
+  background: rgba(255,255,255,0.65);
+}
+
+.summary-label {
+  font-size: 11px;
+  letter-spacing: 1.3px;
+  text-transform: uppercase;
+  font-weight: 800;
+  color: #7c7468;
+  margin-bottom: 6px;
+}
+
+.summary-value {
+  font-size: 17px;
+  font-weight: 800;
+  color: #111315;
+}    
   </style>
 </head>
 
@@ -173,10 +196,14 @@
           Use this form to notify The Ready Mark of a cleanliness or room-readiness concern tied to a verified property or room.
         </p>
       </div>
+<input id="property-slug" type="hidden" />
 
-      <div class="body">
-        <label for="property-slug">Property Slug</label>
-        <input id="property-slug" placeholder="example-property-slug" />
+<div class="room-summary">
+  <div class="summary-label">Reporting Issue For</div>
+  <div class="summary-value">
+    Room <span id="room-display">—</span>
+  </div>
+</div>
 
         <label for="room-number">Room Number</label>
         <input id="room-number" placeholder="Example: 204" />
@@ -240,6 +267,7 @@
   }
 
   if (roomParam) {
+    document.getElementById("room-display").textContent = roomParam ? roomParam.trim() : "—";
     document.getElementById("room-number").value = roomParam.trim();
   }
 
