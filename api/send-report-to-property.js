@@ -267,12 +267,18 @@ export default async function handler(req, res) {
       }
 
       const contact = Array.isArray(contactData) ? contactData[0] : null;
-
-      if (send_email_notification && !contact?.email) {
-  return res.status(404).json({
-    error: "No valid property contact email found"
+   if (send_email_notification && !contact?.email) {
+  return res.status(200).json({
+    success: true,
+    message: "Report routed to client portal. No property contact email was found, so no email notification was sent.",
+    property_slug: report.property_slug,
+    report_id: report.id,
+    status: "Sent to Property",
+    hotel_notified_at: sentAt,
+    notified_email: null
   });
-}
+}     
+
       if (contact?.email) {
   await sendPortalNotificationEmail({
     resendApiKey,
