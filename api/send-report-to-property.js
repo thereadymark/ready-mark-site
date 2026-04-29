@@ -23,30 +23,28 @@ async function sendPortalNotificationEmail({
   roomNumber,
   referenceNumber,
   propertySlug
-})
-{
+}) {
   const portalUrl = `https://verify.thereadymarkgroup.com/dashboard.html?property_slug=${encodeURIComponent(propertySlug)}`;
-  
+
   const html = `
 <!DOCTYPE html>
 <html>
   <body style="margin:0;padding:0;background:#f7f6f3;font-family:Georgia,serif;color:#111315;">
     <div style="padding:32px 16px;">
-      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
           <td align="center">
-            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width:640px;border-collapse:collapse;">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:640px;">
               <tr>
                 <td style="background:#ffffff;border:1px solid #e3d3aa;border-radius:18px;padding:32px 28px;text-align:center;">
-
                   <img
                     src="https://verify.thereadymarkgroup.com/readymarkseal(best)nobackground.PNG"
                     alt="The Ready Mark"
                     width="80"
-                    style="display:block;margin:0 auto 12px auto;border:0;outline:none;text-decoration:none;"
+                    style="display:block;margin:0 auto 12px auto;border:0;"
                   />
 
-                  <div style="font-size:13px;line-height:1.4;letter-spacing:3px;text-transform:uppercase;font-weight:700;color:#c7a257;margin:0 0 8px 0;">
+                  <div style="font-size:13px;letter-spacing:3px;text-transform:uppercase;font-weight:700;color:#c7a257;margin-bottom:8px;">
                     The Ready Mark
                   </div>
 
@@ -59,7 +57,7 @@ async function sendPortalNotificationEmail({
                   </p>
 
                   <div style="margin:0 auto 22px auto;max-width:440px;background:#fbfaf7;border:1px solid #e7d8b4;border-radius:14px;padding:18px 16px;text-align:left;">
-                    <p style="margin:0 0 10px 0;font-size:15px;color:#111315;"><strong>Property:</strong> ${escapeHtml(propertyName)}</p>
+                    <p style="margin:0 0 10px 0;font-size:15px;color:#111315;"><strong>Property:</strong> ${escapeHtml(propertyName || "Not available")}</p>
                     <p style="margin:0 0 10px 0;font-size:15px;color:#111315;"><strong>Room:</strong> ${escapeHtml(roomNumber || "N/A")}</p>
                     <p style="margin:0;font-size:15px;color:#111315;"><strong>Reference:</strong> ${escapeHtml(referenceNumber || "N/A")}</p>
                   </div>
@@ -74,7 +72,6 @@ async function sendPortalNotificationEmail({
                   <p style="margin:18px 0 0 0;font-size:13px;line-height:1.7;color:#958d82;">
                     Please log in to review the issue and submit remediation details.
                   </p>
-
                 </td>
               </tr>
 
@@ -92,9 +89,9 @@ async function sendPortalNotificationEmail({
     </div>
   </body>
 </html>
-  `;
+`;
 
-  const res = await fetch("https://api.resend.com/emails", {
+  const emailRes = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
       Authorization: `Bearer ${resendApiKey}`,
@@ -108,31 +105,27 @@ async function sendPortalNotificationEmail({
     })
   });
 
-  const data = await res.json().catch(() => null);
+  const emailData = await emailRes.json().catch(() => null);
 
-  if (!res.ok) {
-    throw new Error(data?.message || data?.error || "Failed to send portal notification email");
+  if (!emailRes.ok) {
+    throw new Error(
+      emailData?.message ||
+      emailData?.error ||
+      "Failed to send portal notification email"
+    );
   }
 
-  return data;
+  return emailData;
 }
 
 export default async function handler(req, res) {
   const allowedOrigin = "https://verify.thereadymarkgroup.com";
 
-  const corsHeaders = {
-    "Access-Control-Allow-Origin": allowedOrigin,
-    "Access-Control-Allow-Methods": "POST, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type, Authorization, x-admin-token"
-  };
+  res.setHeader("Access-Control-Allow-Origin", allowedOrigin);
+  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, x-admin-token");
 
-  Object.entries(corsHeaders).forEach(([key, value]) => {
-    res.setHeader(key, value);
-  });
-
-  if (req.method === "OPTIONS") {
-    return res.status(200).end();
-  }
+  if (req.method === "OPTIONS") return res.status(200).end();
 
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
@@ -152,17 +145,23 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Missing report_id" });
     }
 
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
     const resendApiKey = process.env.RESEND_API_KEY;
     const resendFromEmail = process.env.RESEND_FROM_EMAIL;
 
+    if (!supabaseUrl || !serviceRoleKey) {
+      return res.status(500).json({ error: "Missing Supabase environment variables" });
+    }
+
     const headers = {
-      apikey: process.env.SUPABASE_SERVICE_ROLE_KEY,
-      Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
+      apikey: serviceRoleKey,
+      Authorization: `Bearer ${serviceRoleKey}`,
       Accept: "application/json"
     };
 
     const reportRes = await fetch(
-      `${process.env.SUPABASE_URL}/rest/v1/guest_reports?id=eq.${encodeURIComponent(report_id)}&select=*`,
+      `${supabaseUrl}/rest/v1/guest_reports?id=eq.${encodeURIComponent(report_id)}&select=*&limit=1`,
       { headers }
     );
 
@@ -175,7 +174,7 @@ export default async function handler(req, res) {
       });
     }
 
-    const report = Array.isArray(reportData) ? reportData[0] : null;
+    const report = Array.isArray(reportData) && reportData.length ? reportData[0] : null;
 
     if (!report) {
       return res.status(404).json({ error: "Guest report not found" });
@@ -186,7 +185,7 @@ export default async function handler(req, res) {
     }
 
     const propertyRes = await fetch(
-      `${process.env.SUPABASE_URL}/rest/v1/properties?property_slug=eq.${encodeURIComponent(report.property_slug)}&select=id,property_name,property_slug,city,state,property_type&limit=1`,
+      `${supabaseUrl}/rest/v1/properties?property_slug=eq.${encodeURIComponent(report.property_slug)}&select=id,property_name,property_slug,city,state,property_type&limit=1`,
       { headers }
     );
 
@@ -199,7 +198,7 @@ export default async function handler(req, res) {
       });
     }
 
-    const property = Array.isArray(propertyData) ? propertyData[0] : null;
+    const property = Array.isArray(propertyData) && propertyData.length ? propertyData[0] : null;
 
     if (!property) {
       return res.status(404).json({ error: "Property not found" });
@@ -218,12 +217,12 @@ export default async function handler(req, res) {
     const sentAt = new Date().toISOString();
 
     const patchRes = await fetch(
-      `${process.env.SUPABASE_URL}/rest/v1/guest_reports?id=eq.${encodeURIComponent(report.id)}`,
+      `${supabaseUrl}/rest/v1/guest_reports?id=eq.${encodeURIComponent(report.id)}`,
       {
         method: "PATCH",
         headers: {
-          apikey: process.env.SUPABASE_SERVICE_ROLE_KEY,
-          Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
+          apikey: serviceRoleKey,
+          Authorization: `Bearer ${serviceRoleKey}`,
           "Content-Type": "application/json",
           Prefer: "return=representation"
         },
@@ -238,68 +237,88 @@ export default async function handler(req, res) {
 
     if (!patchRes.ok) {
       return res.status(500).json({
-        error: "Failed to update guest report for property visibility",
+        error: "Failed to route report to client dashboard",
         details: patchData
       });
     }
 
     let notifiedEmail = null;
+    let notificationMessage = "Report routed to client dashboard.";
 
     if (send_email_notification) {
       if (!resendApiKey || !resendFromEmail) {
-        return res.status(500).json({
-          error: "Report was routed to the client portal, but email notification configuration is missing."
+        return res.status(200).json({
+          success: true,
+          message: "Report routed to client dashboard. Email notification was not sent because email configuration is missing.",
+          property_slug: report.property_slug,
+          report_id: report.id,
+          status: "Sent to Property",
+          hotel_notified_at: sentAt,
+          notified_email: null
         });
       }
 
+      let contactEmail = null;
+      let contactName = "";
+
       const contactRes = await fetch(
-        `${process.env.SUPABASE_URL}/rest/v1/property_contacts?property_id=eq.${encodeURIComponent(property.id)}&active=eq.true&select=id,name,email,role,is_primary,created_at&order=is_primary.desc,created_at.asc`,
+        `${supabaseUrl}/rest/v1/property_contacts?property_id=eq.${encodeURIComponent(property.id)}&active=eq.true&select=id,name,email,role,is_primary,created_at&order=is_primary.desc,created_at.asc&limit=1`,
         { headers }
       );
 
       const contactData = await contactRes.json().catch(() => null);
 
-      if (!contactRes.ok) {
-        return res.status(500).json({
-          error: "Report was routed to the client portal, but property contact lookup failed",
-          details: contactData
+      if (contactRes.ok) {
+        const contact = Array.isArray(contactData) && contactData.length ? contactData[0] : null;
+        contactEmail = contact?.email || null;
+        contactName = contact?.name || "";
+      }
+
+      if (!contactEmail) {
+        const clientUserRes = await fetch(
+          `${supabaseUrl}/rest/v1/client_users?property_slug=eq.${encodeURIComponent(report.property_slug)}&is_active=eq.true&select=email,full_name,created_at&order=created_at.asc&limit=1`,
+          { headers }
+        );
+
+        const clientUserData = await clientUserRes.json().catch(() => null);
+
+        if (clientUserRes.ok) {
+          const clientUser = Array.isArray(clientUserData) && clientUserData.length ? clientUserData[0] : null;
+          contactEmail = clientUser?.email || null;
+          contactName = clientUser?.full_name || "";
+        }
+      }
+
+      if (!contactEmail) {
+        return res.status(200).json({
+          success: true,
+          message: "Report routed to client dashboard. No client email was found, so no email notification was sent.",
+          property_slug: report.property_slug,
+          report_id: report.id,
+          status: "Sent to Property",
+          hotel_notified_at: sentAt,
+          notified_email: null
         });
       }
 
-      const contact = Array.isArray(contactData) ? contactData[0] : null;
-   if (send_email_notification && !contact?.email) {
-  return res.status(200).json({
-    success: true,
-    message: "Report routed to client portal. No property contact email was found, so no email notification was sent.",
-    property_slug: report.property_slug,
-    report_id: report.id,
-    status: "Sent to Property",
-    hotel_notified_at: sentAt,
-    notified_email: null
-  });
-}     
+      await sendPortalNotificationEmail({
+        resendApiKey,
+        resendFromEmail,
+        to: contactEmail,
+        contactName,
+        propertyName: property.property_name || report.property_name || "",
+        roomNumber: report.room_number || "",
+        referenceNumber: report.confirmation_number || "",
+        propertySlug: report.property_slug
+      });
 
-      if (contact?.email) {
-  await sendPortalNotificationEmail({
-    resendApiKey,
-    resendFromEmail,
-    to: contact.email,
-    contactName: contact.name || "",
-    propertyName: property.property_name || report.property_name || "",
-    roomNumber: report.room_number || "",
-    referenceNumber: report.confirmation_number || "",
-    propertySlug: report.property_slug
-  });
-
-  notifiedEmail = contact.email;
-}
+      notifiedEmail = contactEmail;
+      notificationMessage = "Report routed to client dashboard and notification email sent.";
     }
 
     return res.status(200).json({
       success: true,
-      message: notifiedEmail
-        ? "Report routed to client portal and notification email sent."
-        : "Report routed to client portal successfully.",
+      message: notificationMessage,
       property_slug: report.property_slug,
       report_id: report.id,
       status: "Sent to Property",
