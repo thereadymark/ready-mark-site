@@ -1930,10 +1930,6 @@ async function sendReportToProperty(reportId) {
     alert(error.message);
   }
 }
-    } catch (error) {
-    alert(error.message);
-  }
-}    
     async function updateGuestReportStatus(reportId, status) {
       try {
         await apiFetch(API.updateReportStatus, {
