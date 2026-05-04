@@ -2,130 +2,742 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Inspection Report</title>
-
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=Lato:wght@300;400;600&display=swap" rel="stylesheet">
+  <title>Full Inspection Record | The Ready Mark</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Lato:wght@300;400;500;700&display=swap" rel="stylesheet">
 
   <style>
-    body {
-      margin:0;
-      background:#f7f7f5;
-      font-family:Lato,sans-serif;
-      color:#111;
-      padding:20px;
+    :root {
+      --bg:#f6f2ea;
+      --paper:#fffdf8;
+      --paper2:#f3eadb;
+      --text:#171717;
+      --muted:#6f6a61;
+      --gold:#c7a257;
+      --gold-dark:#9d7b34;
+      --line:#e3d3aa;
+      --green:#5f8f65;
+      --red:#b85d5d;
+      --blue:#526b9f;
+      --shadow:0 28px 80px rgba(17,19,21,0.10);
     }
 
-    .card {
-      max-width:700px;
-      margin:auto;
-      background:#fff;
-      border:1px solid #e8e4dc;
-      border-radius:18px;
-      padding:24px;
+    * { box-sizing:border-box; }
+
+    body {
+      margin:0;
+      min-height:100vh;
+      font-family:"Lato", Arial, sans-serif;
+      background:
+        radial-gradient(circle at top, rgba(199,162,87,0.16), transparent 34%),
+        linear-gradient(180deg, #fbfaf6 0%, var(--bg) 100%);
+      color:var(--text);
+    }
+
+    .page {
+      max-width:980px;
+      margin:0 auto;
+      padding:42px 18px 70px;
+    }
+
+    .shell {
+      background:linear-gradient(180deg, var(--paper), var(--paper2));
+      border:1px solid rgba(227,211,170,0.85);
+      border-radius:30px;
+      box-shadow:var(--shadow), inset 0 0 0 1px rgba(199,162,87,0.18);
+      padding:44px 28px;
+      overflow:hidden;
+      position:relative;
+    }
+
+    .shell::before {
+      content:"";
+      position:absolute;
+      inset:0;
+      pointer-events:none;
+      background:
+        radial-gradient(circle at top center, rgba(255,255,255,0.84), transparent 42%),
+        linear-gradient(90deg, rgba(255,255,255,0.22), transparent 18%, transparent 82%, rgba(255,255,255,0.25));
+      opacity:.72;
+    }
+
+    .inner { position:relative; z-index:1; }
+
+    .hero {
+      text-align:center;
+      padding-bottom:34px;
+      border-bottom:1px solid rgba(227,211,170,0.55);
+    }
+
+    .logo {
+      width:132px;
+      margin:0 auto 24px;
+      display:block;
+      filter:drop-shadow(0 20px 24px rgba(0,0,0,0.20)) drop-shadow(0 0 24px rgba(199,162,87,0.28));
+    }
+
+    .eyebrow {
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:16px;
+      color:var(--gold-dark);
+      letter-spacing:4px;
+      text-transform:uppercase;
+      font-size:14px;
+      font-weight:800;
+      margin-bottom:9px;
+    }
+
+    .eyebrow::before,
+    .eyebrow::after {
+      content:"";
+      width:115px;
+      height:1px;
+      background:linear-gradient(90deg, transparent, rgba(157,123,52,0.72), transparent);
     }
 
     h1 {
-      font-family:Cinzel,serif;
-      margin:0 0 16px;
+      margin:0;
+      font-family:"Cinzel", Georgia, serif;
+      font-size:clamp(34px, 5vw, 54px);
+      font-weight:600;
+      line-height:1.05;
+      letter-spacing:.6px;
+      text-transform:uppercase;
     }
 
-    .grid {
+    .hero-text {
+      max-width:680px;
+      margin:18px auto 0;
+      color:var(--muted);
+      font-size:15px;
+      line-height:1.8;
+    }
+
+    .tier-pill {
+      margin:24px auto 0;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-width:240px;
+      min-height:42px;
+      padding:10px 24px;
+      border-radius:999px;
+      font-size:13px;
+      font-weight:900;
+      letter-spacing:.75px;
+      text-transform:uppercase;
+      box-shadow:0 0 28px rgba(135,160,210,0.24), 0 12px 30px rgba(17,19,21,0.06);
+    }
+
+    .tier-premier { background:rgba(239,244,255,0.96); color:var(--blue); border:1px solid rgba(82,107,159,0.25); }
+    .tier-verified { background:rgba(232,248,235,0.96); color:#357a42; border:1px solid rgba(95,143,101,0.34); }
+    .tier-attention { background:rgba(255,247,218,0.96); color:#9a7620; border:1px solid rgba(199,162,87,0.42); }
+    .tier-notclean { background:rgba(255,235,235,0.96); color:var(--red); border:1px solid rgba(184,93,93,0.35); }
+
+    .status-box {
+      margin:28px auto 0;
+      max-width:520px;
+      padding:14px 18px;
+      border-radius:999px;
+      background:rgba(255,255,255,0.72);
+      border:1px solid rgba(227,211,170,0.62);
+      color:#4d5668;
+      font-weight:900;
+      letter-spacing:.7px;
+      text-transform:uppercase;
+      text-align:center;
+      box-shadow:0 14px 34px rgba(17,19,21,0.06);
+    }
+
+    .result { display:none; }
+    .result.active { display:block; }
+
+    .card {
+      margin-top:26px;
+      background:rgba(255,255,255,0.66);
+      border:1px solid rgba(227,211,170,0.64);
+      border-radius:24px;
+      box-shadow:0 12px 36px rgba(17,19,21,0.04);
+      padding:24px;
+    }
+
+    .section-title {
+      margin:0 0 18px;
+      text-align:center;
+      font-family:"Cinzel", Georgia, serif;
+      font-size:clamp(26px, 4vw, 38px);
+      font-weight:600;
+      text-transform:uppercase;
+      letter-spacing:.4px;
+    }
+
+    .section-title::after {
+      content:"";
+      display:block;
+      width:88px;
+      height:1px;
+      margin:12px auto 0;
+      background:linear-gradient(90deg, transparent, var(--gold), transparent);
+    }
+
+    .details-grid {
       display:grid;
       grid-template-columns:1fr 1fr;
       gap:14px;
     }
 
-    .section {
-      margin-top:20px;
+    .detail-item {
+      display:grid;
+      grid-template-columns:42px 1fr;
+      gap:12px;
+      align-items:center;
+      background:linear-gradient(180deg, rgba(255,255,255,0.76), rgba(244,238,226,0.54));
+      border:1px solid rgba(227,211,170,0.58);
+      border-radius:18px;
+      padding:18px;
+      min-height:88px;
+    }
+
+    .detail-icon {
+      width:42px;
+      height:42px;
+      border-radius:999px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:rgba(199,162,87,0.14);
+      border:1px solid rgba(199,162,87,0.22);
+      font-size:19px;
     }
 
     .label {
-      font-size:12px;
-      color:#777;
+      font-size:11px;
+      letter-spacing:1.45px;
       text-transform:uppercase;
+      color:#7d766c;
+      font-weight:900;
+      margin-bottom:6px;
     }
 
     .value {
-      font-weight:600;
+      font-size:17px;
+      font-weight:700;
+      line-height:1.42;
+      word-break:break-word;
+    }
+
+    .photos {
+      display:grid;
+      grid-template-columns:repeat(auto-fit, minmax(210px, 1fr));
+      gap:16px;
+      margin-top:18px;
+    }
+
+    .photo-card {
+      border:1px solid #e8dfca;
+      border-radius:18px;
+      overflow:hidden;
+      background:rgba(255,255,255,0.75);
+      box-shadow:0 12px 28px rgba(17,19,21,0.04);
+    }
+
+    .photo-card img {
+      width:100%;
+      height:230px;
+      object-fit:cover;
+      display:block;
+    }
+
+    .photo-card a {
+      display:block;
+      padding:12px 14px;
+      color:var(--gold-dark);
+      font-size:13px;
+      font-weight:900;
+      text-decoration:none;
+      border-top:1px solid #e8dfca;
+      text-align:center;
+    }
+
+    .empty {
+      text-align:center;
+      padding:34px 20px;
+      border:1px solid rgba(227,211,170,0.5);
+      border-radius:22px;
+      background:rgba(255,255,255,0.44);
+      color:var(--muted);
+      line-height:1.7;
+    }
+
+    .video-wrap {
+      position:relative;
+      width:100%;
+      padding-top:56.25%;
+      border-radius:18px;
+      overflow:hidden;
+      border:1px solid rgba(227,211,170,0.55);
+      background:#f5f3ee;
+      margin-top:16px;
+    }
+
+    .video-wrap iframe {
+      position:absolute;
+      inset:0;
+      width:100%;
+      height:100%;
+      border:0;
+    }
+
+    .process-list {
+      display:grid;
+      gap:14px;
+      text-align:left;
+    }
+
+    .process-item {
+      display:grid;
+      grid-template-columns:38px 1fr;
+      gap:12px;
+      padding:16px 18px;
+      border-radius:16px;
+      background:rgba(255,255,255,0.52);
+      border:1px solid rgba(227,211,170,0.55);
+      line-height:1.62;
+    }
+
+    .process-icon {
+      font-size:23px;
+      line-height:1;
+      padding-top:2px;
+    }
+
+    .process-item strong {
+      display:block;
+      margin-bottom:3px;
+    }
+
+    .activity-list {
+      display:grid;
+      gap:14px;
+      margin-top:18px;
+    }
+
+    .activity-row {
+      display:grid;
+      grid-template-columns:1.1fr 1fr .75fr;
+      gap:16px;
+      align-items:center;
+      padding:18px;
+      border:1px solid rgba(227,211,170,0.55);
+      border-radius:18px;
+      background:rgba(255,255,255,0.48);
+    }
+
+    .activity-date {
+      font-weight:900;
+      margin-bottom:4px;
+    }
+
+    .activity-sub {
+      color:var(--muted);
+      font-size:12px;
+      text-transform:uppercase;
+      letter-spacing:.7px;
+    }
+
+    .small-pill {
+      display:inline-flex;
+      justify-content:center;
+      align-items:center;
+      min-height:34px;
+      border-radius:999px;
+      padding:8px 16px;
+      font-weight:900;
+      text-transform:uppercase;
+      font-size:12px;
+      letter-spacing:.6px;
+      border:1px solid rgba(199,162,87,0.22);
+      background:rgba(255,255,255,0.7);
+    }
+
+    .small-pill.current {
+      color:var(--green);
+      background:rgba(95,143,101,0.12);
+    }
+
+    .score-pill {
+      justify-self:end;
+      background:rgba(255,255,255,0.8);
+      border-radius:999px;
+      padding:9px 16px;
+      font-weight:900;
+      white-space:nowrap;
+    }
+
+    .note {
+      color:var(--muted);
+      line-height:1.8;
+      text-align:center;
+      max-width:720px;
+      margin:0 auto;
+    }
+
+    .actions {
+      margin-top:24px;
+      display:flex;
+      gap:14px;
+      justify-content:center;
+      flex-wrap:wrap;
+    }
+
+    .btn {
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-height:46px;
+      padding:13px 20px;
+      border-radius:14px;
+      background:linear-gradient(180deg, #d8ba73, #b8934c);
+      color:#171717;
+      text-decoration:none;
+      font-weight:900;
+      border:none;
+      cursor:pointer;
+      min-width:210px;
+    }
+
+    .btn.secondary {
+      background:rgba(255,255,255,0.78);
+      border:1px solid rgba(227,211,170,0.72);
+      color:var(--gold-dark);
+    }
+
+    .footer {
+      margin-top:26px;
+      text-align:center;
+      color:#8a7350;
+      line-height:1.75;
+      padding:24px 18px 0;
+    }
+
+    .footer a {
+      color:var(--gold-dark);
+      text-decoration:none;
+      font-weight:800;
+      font-size:14px;
+    }
+
+    @media (max-width:760px) {
+      .page { padding:28px 12px 52px; }
+      .shell { padding:30px 14px; }
+      .details-grid, .activity-row { grid-template-columns:1fr; }
+      .eyebrow { font-size:12px; gap:10px; letter-spacing:3px; }
+      .eyebrow::before, .eyebrow::after { width:48px; }
+      .logo { width:118px; }
+      .score-pill { justify-self:start; }
+      .actions { flex-direction:column; }
+      .btn { width:100%; }
     }
   </style>
 </head>
+
 <body>
+  <main class="page">
+    <div class="shell">
+      <div class="inner">
+        <section class="hero">
+          <img src="/readymarkseal(best)nobackground.PNG" class="logo" alt="The Ready Mark" />
+          <div class="eyebrow">The Ready Mark</div>
+          <h1>Full Inspection Record</h1>
+          <div id="cert-pill" class="tier-pill tier-premier">Loading</div>
+          <p class="hero-text">
+            This expanded record includes inspection details, room evidence, verification activity, and how this room was reviewed under The Ready Mark Cleanliness Standard.
+          </p>
+          <div id="status-box" class="status-box">Loading full inspection record...</div>
+        </section>
 
-<div class="card">
-  <h1>Inspection Report</h1>
+        <div id="result" class="result">
+          <section class="card">
+            <h2 class="section-title">Inspection Details</h2>
+            <div class="details-grid">
+              <div class="detail-item"><div class="detail-icon">🏨</div><div><div class="label">Property</div><div class="value" id="property-value">—</div></div></div>
+              <div class="detail-item"><div class="detail-icon">🚪</div><div><div class="label">Room</div><div class="value" id="room-value">—</div></div></div>
+              <div class="detail-item"><div class="detail-icon">👤</div><div><div class="label">Inspector ID</div><div class="value" id="inspector-value">—</div></div></div>
+              <div class="detail-item"><div class="detail-icon">📅</div><div><div class="label">Inspection Date</div><div class="value" id="date-value">—</div></div></div>
+              <div class="detail-item"><div class="detail-icon">📊</div><div><div class="label">Score</div><div class="value" id="score-value">—</div></div></div>
+              <div class="detail-item"><div class="detail-icon">#</div><div><div class="label">Verification ID</div><div class="value" id="verification-value">—</div></div></div>
+            </div>
+          </section>
 
-  <div id="report-content">Loading...</div>
-</div>
+          <section class="card">
+            <h2 class="section-title">Verified Room Condition</h2>
+            <div id="photos-wrap"></div>
+            <div id="log-wrap" class="actions"></div>
+          </section>
 
-<script>
-const params = new URLSearchParams(window.location.search);
-const id = params.get("id");
+          <section class="card">
+            <h2 class="section-title">How This Room Was Verified</h2>
+            <p class="note">
+              This room record is tied to a specific property, room, inspection date, score, and verification ID.
+            </p>
 
-async function loadReport() {
-  if (!id) {
-    document.getElementById("report-content").innerText = "Missing ID";
-    return;
-  }
+            <div class="video-wrap">
+              <iframe
+                src="https://www.youtube.com/embed/s2mYUVarGx0?rel=0"
+                title="Ready Mark Verification Process"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowfullscreen>
+              </iframe>
+            </div>
 
-  const res = await fetch(`/api/get-inspection-report?id=${id}`);
-  const data = await res.json();
+            <div class="process-list" style="margin-top:18px;">
+              <div class="process-item">
+                <div class="process-icon">🧼</div>
+                <div><strong>Room Cleaned</strong>High-touch surfaces, linens, bathrooms, and guest areas were serviced according to Ready Mark standards.</div>
+              </div>
+              <div class="process-item">
+                <div class="process-icon">🔎</div>
+                <div><strong>Inspected</strong>A room-specific inspection was completed and reviewed against The Ready Mark protocol.</div>
+              </div>
+              <div class="process-item">
+                <div class="process-icon">✅</div>
+                <div><strong>Certified</strong>This verification record was logged, time-stamped, and connected to the room in the Ready Mark system.</div>
+              </div>
+            </div>
+          </section>
 
-  if (!data) {
-    document.getElementById("report-content").innerText = "Not found";
-    return;
-  }
+          <section class="card">
+            <h2 class="section-title">Recent Verification Activity</h2>
+            <p class="note">Updated regularly through ongoing inspections.</p>
+            <div id="activity-list" class="activity-list"></div>
+          </section>
 
-  document.getElementById("report-content").innerHTML = `
-    <div class="grid">
-      <div><div class="label">Property</div><div class="value">${data.Rooms?.properties?.property_name || "—"}</div></div>
-      <div><div class="label">Room</div><div class="value">${data.Rooms?.room_number || "—"}</div></div>
-      <div><div class="label">Score</div><div class="value">${data.score}</div></div>
-      <div><div class="label">Tier</div><div class="value">${data.certification_tier}</div></div>
-      <div><div class="label">Inspection Date</div><div class="value">${data.created_at}</div></div>
-      <div><div class="label">Inspector</div><div class="value">${data.inspector_id}</div></div>
-      <div><div class="label">Verification ID</div><div class="value">${data.verification_id}</div></div>
+          <section class="card">
+            <h2 class="section-title">Inspection Notes</h2>
+            <div id="notes-wrap" class="empty">No notes are currently attached to this record.</div>
+          </section>
+
+          <div class="actions">
+            <a href="#" id="report-issue-link" class="btn">Have an Issue?</a>
+            <a href="#" id="simple-record-link" class="btn secondary">Back to Simple Verification</a>
+          </div>
+
+          <section class="footer">
+            <p>
+              <a href="/privacy.html">Privacy Policy</a>
+              &nbsp; | &nbsp;
+              <a href="/">Back to Home</a>
+            </p>
+            <p>Verified through The Ready Mark system.</p>
+          </section>
+        </div>
+      </div>
     </div>
+  </main>
 
-    <div class="section">
-      <div class="label">Notes</div>
-      <div class="value">${data.notes || "—"}</div>
-    </div>
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const pathSlug = window.location.pathname.replace(/^\/+|\/+$/g, "");
+    const slugFromQuery = params.get("slug") || params.get("qr") || params.get("room");
+    const initialSlug = slugFromQuery || (pathSlug && pathSlug !== "inspection-report.html" ? pathSlug : "");
 
-    <div class="section">
-  <div class="label">Evidence Photos</div>
-  <div class="value">
-    ${
-      Array.isArray(data.photo_urls) && data.photo_urls.length
-        ? data.photo_urls.map(url => `
-            <img src="${url}" style="max-width:180px;border-radius:12px;margin:8px;border:1px solid #e8e4dc;" />
-          `).join("")
-        : data.photo_url
-          ? `<img src="${data.photo_url}" style="max-width:180px;border-radius:12px;margin:8px;border:1px solid #e8e4dc;" />`
-          : "—"
+    const statusBox = document.getElementById("status-box");
+    const result = document.getElementById("result");
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
     }
-  </div>
-</div>
 
-<div class="section">
-  <div class="label">Physical Inspection Log</div>
-  <div class="value">
-    ${
-      data.log_file_url
-        ? `<a href="${data.log_file_url}" target="_blank">Open Inspection Log</a>`
-        : "—"
+    function formatDate(value) {
+      if (!value) return "—";
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return value;
+      return date.toLocaleDateString();
     }
-  </div>
-</div>
-`;
-}
 
-loadReport();
-</script>
+    function normalizeTier(value) {
+      const tier = String(value || "").trim();
+      return tier || "Verified Record";
+    }
 
+    function getTierClass(value) {
+      const tier = String(value || "").toLowerCase();
+      if (tier.includes("premier")) return "tier-premier";
+      if (tier.includes("verified")) return "tier-verified";
+      if (tier.includes("attention")) return "tier-attention";
+      if (tier.includes("not clean")) return "tier-notclean";
+      return "tier-premier";
+    }
+
+    function getTierIcon(value) {
+      const tier = String(value || "").toLowerCase();
+      if (tier.includes("premier")) return "🏆";
+      if (tier.includes("verified")) return "✅";
+      if (tier.includes("attention")) return "⚠️";
+      if (tier.includes("not clean")) return "⛔";
+      return "🏆";
+    }
+
+    function scoreLabel(score) {
+      if (score === null || score === undefined || score === "") return "—";
+      return String(score).includes("/") ? String(score) : `${score} / 100`;
+    }
+
+    function showStatus(message) {
+      statusBox.style.display = "block";
+      statusBox.textContent = message;
+      result.classList.remove("active");
+    }
+
+    function renderPhotos(data) {
+      const photos = Array.isArray(data.photoUrls) && data.photoUrls.length
+        ? data.photoUrls
+        : data.photoUrl
+          ? [data.photoUrl]
+          : [];
+
+      const wrap = document.getElementById("photos-wrap");
+
+      if (photos.length) {
+        wrap.innerHTML = `
+          <div class="photos">
+            ${photos.map((url, index) => `
+              <div class="photo-card">
+                <img src="${escapeHtml(url)}" alt="Verification evidence ${index + 1}">
+                <a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">Open Full Image</a>
+              </div>
+            `).join("")}
+          </div>
+        `;
+        return;
+      }
+
+      wrap.innerHTML = `
+        <div class="empty">
+          <strong>Inspection Image Pending</strong><br>
+          Verified inspection imagery will appear here once supporting documentation has been uploaded to this room record.
+        </div>
+      `;
+    }
+
+    function renderHistory(data) {
+      const list = document.getElementById("activity-list");
+
+      const history =
+        Array.isArray(data.inspectionHistory) && data.inspectionHistory.length
+          ? data.inspectionHistory
+          : Array.isArray(data.inspection_history) && data.inspection_history.length
+            ? data.inspection_history
+            : [{
+                created_at: data.inspectionDate,
+                verification_id: data.verificationId,
+                certification_tier: data.certificationTier,
+                score: data.score,
+                is_current: true
+              }];
+
+      list.innerHTML = history.map((item, index) => `
+        <div class="activity-row">
+          <div>
+            <div class="activity-date">${escapeHtml(formatDate(item.created_at || item.inspection_date))}</div>
+            <div class="activity-sub">Verification ID: ${escapeHtml(item.verification_id || "—")}</div>
+          </div>
+
+          <div>
+            <span class="small-pill ${getTierClass(item.certification_tier)}">
+              ${getTierIcon(item.certification_tier)} ${escapeHtml(normalizeTier(item.certification_tier))}
+            </span>
+          </div>
+
+          <div style="display:flex;gap:10px;align-items:center;justify-content:flex-end;flex-wrap:wrap;">
+            <span class="small-pill ${item.is_current || index === 0 ? "current" : ""}">
+              ${item.is_current || index === 0 ? "Current Record" : "Archived"}
+            </span>
+            <span class="score-pill">${escapeHtml(scoreLabel(item.score))}</span>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    function renderVerification(data, slug) {
+      const cleanSlug = String(slug || "").trim();
+      const tier = normalizeTier(data.certificationTier || data.status);
+      const certPill = document.getElementById("cert-pill");
+
+      statusBox.style.display = "none";
+      result.classList.add("active");
+
+      certPill.className = `tier-pill ${getTierClass(tier)}`;
+      certPill.textContent = `${getTierIcon(tier)} ${tier}`;
+
+      document.getElementById("property-value").textContent = data.property || "—";
+      document.getElementById("room-value").textContent = data.room || "—";
+      document.getElementById("inspector-value").textContent = data.inspectorId || "—";
+      document.getElementById("date-value").textContent = formatDate(data.inspectionDate);
+      document.getElementById("score-value").textContent = scoreLabel(data.score);
+      document.getElementById("verification-value").textContent = data.verificationId || "—";
+
+      renderPhotos(data);
+      renderHistory(data);
+
+      const logWrap = document.getElementById("log-wrap");
+      if (data.logFileUrl) {
+        logWrap.innerHTML = `<a href="${escapeHtml(data.logFileUrl)}" target="_blank" rel="noopener noreferrer" class="btn secondary">Open Physical Inspection Log</a>`;
+      } else {
+        logWrap.innerHTML = "";
+      }
+
+      const notesWrap = document.getElementById("notes-wrap");
+      if (data.notes) {
+        notesWrap.textContent = data.notes;
+      }
+
+      const reportIssueUrl =
+        `/report-issue.html?slug=${encodeURIComponent(cleanSlug)}` +
+        `&property_slug=${encodeURIComponent(data.property_slug || "")}` +
+        `&room_number=${encodeURIComponent(data.room || "")}` +
+        `&verification_id=${encodeURIComponent(data.verificationId || "")}`;
+
+      document.getElementById("report-issue-link").href = reportIssueUrl;
+      document.getElementById("simple-record-link").href = `/verify.html?slug=${encodeURIComponent(cleanSlug)}`;
+    }
+
+    async function loadVerification(slug) {
+      const cleanSlug = String(slug || "").trim();
+
+      if (!cleanSlug) {
+        showStatus("Full Inspection Record Unavailable.");
+        return;
+      }
+
+      showStatus("Loading full inspection record...");
+
+      try {
+        const res = await fetch(`/api/get-verification?slug=${encodeURIComponent(cleanSlug)}`);
+        const data = await res.json().catch(() => null);
+
+        if (!res.ok || data?.error) {
+          throw new Error(data?.error || "Unable to load full inspection record.");
+        }
+
+        renderVerification(data || {}, cleanSlug);
+      } catch (error) {
+        showStatus(error.message || "Unable to load full inspection record.");
+      }
+    }
+
+    if (initialSlug) {
+      loadVerification(initialSlug);
+    } else {
+      showStatus("Full Inspection Record Unavailable.");
+    }
+  </script>
 </body>
 </html>
-
-
-
