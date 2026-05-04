@@ -22,29 +22,39 @@
       padding: 42px 18px;
     }
 
+    .back-link {
+      display: inline-block;
+      margin-bottom: 16px;
+      color: #9d7b34;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 14px;
+    }
+
     .card {
-      background: rgba(255,255,255,0.9);
+      background: rgba(255,255,255,0.92);
       border: 1px solid rgba(199,162,87,0.4);
-      border-radius: 22px;
+      border-radius: 24px;
       box-shadow: 0 24px 70px rgba(17,19,21,0.1);
       overflow: hidden;
     }
 
     .header {
       text-align: center;
-      padding: 34px 28px 22px;
+      padding: 36px 28px 24px;
       border-bottom: 1px solid #e8dfca;
     }
 
     .logo {
-      width: 82px;
+      width: 88px;
       margin-bottom: 12px;
+      filter: drop-shadow(0 12px 18px rgba(0,0,0,0.12));
     }
 
     h1 {
       margin: 0;
       font-family: Georgia, serif;
-      font-size: 34px;
+      font-size: 36px;
       font-weight: 500;
       letter-spacing: 1.4px;
     }
@@ -95,6 +105,7 @@
       font-size: 17px;
       font-weight: 800;
       color: #111315;
+      line-height: 1.5;
     }
 
     label {
@@ -181,15 +192,6 @@
       background: rgba(180,76,76,0.08);
       border: 1px solid rgba(180,76,76,0.22);
     }
-
-    .back-link {
-      display: inline-block;
-      margin-bottom: 16px;
-      color: #9d7b34;
-      text-decoration: none;
-      font-weight: 700;
-      font-size: 14px;
-    }
   </style>
 </head>
 
@@ -202,7 +204,7 @@
         <img src="/readymarkseal(best)nobackground.PNG" class="logo" alt="The Ready Mark" />
         <h1>Report an Issue</h1>
         <p class="sub">
-          Report a cleanliness concern for this verified room. Your report will be tied to this room’s Ready Mark verification record.
+          Report a cleanliness concern for this verified room. Your report will be tied to the room’s Ready Mark verification record.
         </p>
       </div>
 
@@ -211,10 +213,11 @@
 
         <input id="property-slug" type="hidden" />
         <input id="room-number" type="hidden" />
+        <input id="verification-id" type="hidden" />
 
         <div class="room-summary">
           <div class="summary-label">Reporting Issue For</div>
-          <div class="summary-value">Room <span id="room-display">—</span></div>
+          <div class="summary-value" id="room-display">Loading room details...</div>
         </div>
 
         <label for="reservation-last-name">Reservation Last Name</label>
@@ -222,33 +225,34 @@
 
         <label for="issue-type">Issue Type</label>
         <select id="issue-type">
-        <option value="">Select an issue type</option>
-<option>Cleanliness Concern</option>
-<option>Bathroom Issue</option>
-<option>Bedding / Linen Issue</option>
-<option>Missing / Soiled Linen</option>
-<option>Missing Towels or Supplies</option>
-<option>Damage or Maintenance Concern</option>
-<option>Odor Concern</option>
-<option>Noise Issue</option>
-<option>Temperature / AC Issue</option>
-<option>Unable to Capture Photo</option>
-<option>Other</option>
+          <option value="">Select an issue type</option>
+          <option>Cleanliness Concern</option>
+          <option>Bathroom Issue</option>
+          <option>Bedding / Linen Issue</option>
+          <option>Missing / Soiled Linen</option>
+          <option>Missing Towels or Supplies</option>
+          <option>Damage or Maintenance Concern</option>
+          <option>Odor Concern</option>
+          <option>Noise Issue</option>
+          <option>Temperature / AC Issue</option>
+          <option>Unable to Capture Photo</option>
+          <option>Other</option>
         </select>
 
         <label for="guest-note">Details</label>
-       <textarea id="guest-note" placeholder="Briefly describe the cleanliness concern."></textarea>
-         <label for="issue-photo">Photo Evidence</label>
-       <input id="issue-photo" type="file" accept="image/*" /> 
-        
-       <div class="note">
-       Photo evidence is strongly recommended. Required for severe, safety, or biohazard concerns.
-       </div>
-        
+        <textarea id="guest-note" placeholder="Briefly describe the concern."></textarea>
+
+        <label for="issue-photo">Photo Evidence</label>
+        <input id="issue-photo" type="file" accept="image/*" />
+
+        <div class="note">
+          Photo evidence is strongly recommended. It is required for most visible cleanliness concerns.
+        </div>
+
         <button class="btn" id="submit-btn" type="button">Submit Issue</button>
 
         <div class="note">
-          This report is used to help document and resolve room-readiness concerns. For emergencies, contact the property directly.
+          For emergencies, contact the property directly.
         </div>
 
         <div id="status-box" class="status"></div>
@@ -258,13 +262,13 @@
 
   <script>
     const API_URL = "/api/report-issue";
-    
-const NON_VISUAL_ISSUES = [
-  "Odor Concern",
-  "Noise Issue",
-  "Temperature / AC Issue",
-  "Unable to Capture Photo"
-];
+
+    const NON_VISUAL_ISSUES = [
+      "Odor Concern",
+      "Noise Issue",
+      "Temperature / AC Issue",
+      "Unable to Capture Photo"
+    ];
 
     const params = new URLSearchParams(window.location.search);
     const currentPath = window.location.pathname + window.location.search;
@@ -273,11 +277,9 @@ const NON_VISUAL_ISSUES = [
     const submitBtn = document.getElementById("submit-btn");
     const signedInChip = document.getElementById("signed-in-chip");
 
-    const guestToken = localStorage.getItem("readymark_guest_token");
-    const guestEmail = localStorage.getItem("readymark_guest_email");
-
+    const slugParam = params.get("slug") || params.get("qr") || params.get("room") || "";
     const propertyParam = params.get("property_slug") || params.get("property") || "";
-    const roomParam = params.get("room_number") || params.get("room") || "";
+    const roomParam = params.get("room_number") || params.get("room_number") || "";
     const verificationParam = params.get("verification_id") || params.get("verificationId") || "";
 
     function showStatus(message, type) {
@@ -285,55 +287,124 @@ const NON_VISUAL_ISSUES = [
       statusBox.textContent = message;
     }
 
-    if (!guestToken) {
-      window.location.href = `/guest-login.html?redirect=${encodeURIComponent(currentPath)}`;
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
     }
 
-    if (guestEmail && signedInChip) {
-      signedInChip.style.display = "block";
-      signedInChip.textContent = `Signed in as ${guestEmail}`;
+    function getGuestToken() {
+      return localStorage.getItem("readymark_guest_token") || sessionStorage.getItem("readymark_guest_token") || "";
     }
 
-    if (propertyParam) {
-      document.getElementById("property-slug").value = propertyParam.trim().toLowerCase();
+    function getGuestEmail() {
+      return localStorage.getItem("readymark_guest_email") || sessionStorage.getItem("readymark_guest_email") || "";
     }
 
-    if (roomParam) {
-      document.getElementById("room-display").textContent = roomParam.trim();
-      document.getElementById("room-number").value = roomParam.trim();
+    function setRoomDetails({ property_slug, property_name, room_number, verification_id }) {
+      document.getElementById("property-slug").value = property_slug || "";
+      document.getElementById("room-number").value = room_number || "";
+      document.getElementById("verification-id").value = verification_id || "";
+
+      document.getElementById("room-display").innerHTML = `
+        ${property_name ? escapeHtml(property_name) + "<br>" : ""}
+        Room ${escapeHtml(room_number || "—")}
+        ${verification_id ? `<br><span style="font-size:12px;color:#7c7468;">Verification ID: ${escapeHtml(verification_id)}</span>` : ""}
+      `;
     }
 
-    if (!verificationParam) {
-      submitBtn.disabled = true;
-      showStatus(
-        "This report must be started from a valid room verification record. Please return to the room verification page and choose Report a Cleanliness Issue.",
-        "error"
-      );
+    async function hydrateFromSlug(slug) {
+      if (!slug) return false;
+
+      try {
+        const res = await fetch(`/api/get-verification?slug=${encodeURIComponent(slug)}`);
+        const data = await res.json().catch(() => null);
+
+        if (!res.ok || data?.error) {
+          throw new Error(data?.error || "Unable to load room verification details.");
+        }
+
+        setRoomDetails({
+          property_slug: data.property_slug || "",
+          property_name: data.property || "",
+          room_number: data.room || "",
+          verification_id: data.verificationId || ""
+        });
+
+        return true;
+      } catch (error) {
+        showStatus(error.message || "Unable to load room details.", "error");
+        return false;
+      }
     }
 
     function fileToBase64Payload(file) {
-  return new Promise((resolve, reject) => {
-    if (!file) return resolve(null);
+      return new Promise((resolve, reject) => {
+        if (!file) return resolve(null);
 
-    const reader = new FileReader();
+        const reader = new FileReader();
 
-    reader.onload = () => {
-      const result = String(reader.result || "");
-      const base64 = result.includes(",") ? result.split(",")[1] : result;
+        reader.onload = () => {
+          const result = String(reader.result || "");
+          const base64 = result.includes(",") ? result.split(",")[1] : result;
 
-      resolve({
-        name: file.name,
-        type: file.type,
-        base64
+          resolve({
+            name: file.name,
+            type: file.type,
+            base64
+          });
+        };
+
+        reader.onerror = () => reject(new Error("Unable to read photo."));
+        reader.readAsDataURL(file);
       });
-    };
+    }
 
-    reader.onerror = () => reject(new Error("Unable to read photo."));
-    reader.readAsDataURL(file);
-  });
-}
+    async function initializePage() {
+      const guestToken = getGuestToken();
+      const guestEmail = getGuestEmail();
+
+      if (!guestToken) {
+        window.location.href = `/guest-login.html?redirect=${encodeURIComponent(currentPath)}`;
+        return;
+      }
+
+      if (guestEmail && signedInChip) {
+        signedInChip.style.display = "block";
+        signedInChip.textContent = `Signed in as ${guestEmail}`;
+      }
+
+      if (propertyParam || roomParam || verificationParam) {
+        setRoomDetails({
+          property_slug: propertyParam.trim().toLowerCase(),
+          property_name: "",
+          room_number: roomParam.trim(),
+          verification_id: verificationParam.trim()
+        });
+      }
+
+      if (slugParam) {
+        await hydrateFromSlug(slugParam);
+      }
+
+      const finalProperty = document.getElementById("property-slug").value.trim();
+      const finalRoom = document.getElementById("room-number").value.trim();
+      const finalVerification = document.getElementById("verification-id").value.trim();
+
+      if (!finalRoom || !finalVerification) {
+        submitBtn.disabled = true;
+        showStatus(
+          "This report must be started from a valid room verification record. Please return to the room verification page and choose Have an Issue.",
+          "error"
+        );
+      }
+    }
+
     submitBtn.addEventListener("click", async () => {
-      const latestGuestToken = localStorage.getItem("readymark_guest_token");
+      const latestGuestToken = getGuestToken();
 
       if (!latestGuestToken) {
         window.location.href = `/guest-login.html?redirect=${encodeURIComponent(currentPath)}`;
@@ -342,30 +413,47 @@ const NON_VISUAL_ISSUES = [
 
       const property_slug = document.getElementById("property-slug").value.trim().toLowerCase();
       const room_number = document.getElementById("room-number").value.trim();
+      const verification_id = document.getElementById("verification-id").value.trim();
       const reservation_last_name = document.getElementById("reservation-last-name").value.trim();
       const issue_type = document.getElementById("issue-type").value;
+      const guest_note = document.getElementById("guest-note").value.trim();
+
       const photoInput = document.getElementById("issue-photo");
       const photoFile = photoInput.files && photoInput.files[0] ? photoInput.files[0] : null;
 
-     const requiresPhoto = !NON_VISUAL_ISSUES.includes(issue_type);
+      if (!reservation_last_name) {
+        showStatus("Please enter the reservation last name.", "error");
+        return;
+      }
 
-if (requiresPhoto && !photoFile) {
-  showStatus("Photo evidence is required for this issue.", "error");
-  return;
-}
-      const guest_note = document.getElementById("guest-note").value.trim();
-      const verification_id = verificationParam.trim();
+      if (!issue_type) {
+        showStatus("Please select an issue type.", "error");
+        return;
+      }
 
-      if (!property_slug || !room_number || !verification_id || !issue_type || !guest_note) {
-        showStatus("Missing required room verification details. Please return to the verification page and try again.", "error");
+      if (!guest_note) {
+        showStatus("Please briefly describe the concern.", "error");
+        return;
+      }
+
+      const requiresPhoto = !NON_VISUAL_ISSUES.includes(issue_type);
+
+      if (requiresPhoto && !photoFile) {
+        showStatus("Photo evidence is required for this issue type.", "error");
+        return;
+      }
+
+      if (!room_number || !verification_id) {
+        showStatus("Missing room verification details. Please return to the verification page and try again.", "error");
         return;
       }
 
       submitBtn.disabled = true;
       submitBtn.textContent = "Submitting...";
-      
-   const photo_file = await fileToBase64Payload(photoFile);
+
       try {
+        const photo_file = await fileToBase64Payload(photoFile);
+
         const res = await fetch(API_URL, {
           method: "POST",
           headers: {
@@ -373,16 +461,16 @@ if (requiresPhoto && !photoFile) {
             "Accept": "application/json",
             "x-guest-token": latestGuestToken
           },
-         body: JSON.stringify({
-             property_slug,
-             room_number,
-             verification_id,
-             reservation_last_name,
-             issue_types: [issue_type],
-             guest_note,
-              photo_file
-            })
-         });
+          body: JSON.stringify({
+            property_slug,
+            room_number,
+            verification_id,
+            reservation_last_name,
+            issue_types: [issue_type],
+            guest_note,
+            photo_file
+          })
+        });
 
         const data = await res.json().catch(() => null);
 
@@ -390,11 +478,23 @@ if (requiresPhoto && !photoFile) {
           throw new Error(data?.error || "Unable to submit issue.");
         }
 
-        showStatus("Issue submitted successfully. Thank you.", "success");
+        const reference =
+          data?.reference ||
+          data?.confirmation_number ||
+          data?.report?.confirmation_number ||
+          "";
+
+        showStatus(
+          reference
+            ? `Issue submitted successfully. Reference number: ${reference}.`
+            : "Issue submitted successfully. Thank you.",
+          "success"
+        );
 
         document.getElementById("reservation-last-name").value = "";
         document.getElementById("issue-type").value = "";
         document.getElementById("guest-note").value = "";
+        document.getElementById("issue-photo").value = "";
       } catch (error) {
         showStatus(error.message || "Unable to submit issue.", "error");
       } finally {
@@ -402,6 +502,8 @@ if (requiresPhoto && !photoFile) {
         submitBtn.textContent = "Submit Issue";
       }
     });
+
+    initializePage();
   </script>
 </body>
 </html>
