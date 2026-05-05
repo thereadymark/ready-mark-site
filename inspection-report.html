@@ -429,6 +429,57 @@
       font-size:14px;
     }
 
+    .guide-popover {
+  position: fixed;
+  z-index: 9999;
+  width: min(330px, calc(100vw - 32px));
+  background: #fffdf8;
+  border: 1px solid rgba(199,162,87,0.55);
+  border-radius: 18px;
+  box-shadow: 0 24px 70px rgba(0,0,0,0.18);
+  padding: 18px;
+  display: none;
+}
+
+.guide-popover.active {
+  display: block;
+}
+
+.guide-kicker {
+  color: var(--gold-dark);
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  font-size: 11px;
+  font-weight: 900;
+  margin-bottom: 6px;
+}
+
+.guide-title {
+  font-family: "Cinzel", Georgia, serif;
+  font-size: 22px;
+  margin-bottom: 8px;
+}
+
+.guide-text {
+  color: var(--muted);
+  line-height: 1.6;
+  font-size: 14px;
+}
+
+.guide-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 14px;
+  justify-content: flex-end;
+}
+
+.guide-highlight {
+  outline: 2px solid rgba(199,162,87,0.8);
+  box-shadow: 0 0 0 8px rgba(199,162,87,0.12), 0 18px 45px rgba(0,0,0,0.08);
+  border-radius: 18px;
+  position: relative;
+  z-index: 4;
+}
     @media (max-width:760px) {
       .page { padding:28px 12px 52px; }
       .shell { padding:30px 14px; }
@@ -440,6 +491,7 @@
       .actions { flex-direction:column; }
       .btn { width:100%; }
     }
+    
   </style>
 </head>
 
