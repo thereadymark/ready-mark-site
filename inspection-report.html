@@ -447,19 +447,32 @@
   <main class="page">
     <div class="shell">
       <div class="inner">
-        <section class="hero">
-          <img src="/readymarkseal(best)nobackground.PNG" class="logo" alt="The Ready Mark" />
+
+        <!-- HERO -->
+        <section class="hero" id="guide-cert">
+          <img src="/readymarkseal(best)nobackground.PNG" class="logo" />
           <div class="eyebrow">The Ready Mark</div>
           <h1>Full Inspection Record</h1>
+
           <div id="cert-pill" class="tier-pill tier-premier">Loading</div>
+
           <p class="hero-text">
             This expanded record includes inspection details, room evidence, verification activity, and how this room was reviewed under The Ready Mark Cleanliness Standard.
           </p>
-          <div id="status-box" class="status-box">Loading full inspection record...</div>
+
+          <button id="start-guide-btn" class="btn secondary" style="margin-top:18px;">
+            New here? Guide me through this record
+          </button>
+
+          <div id="status-box" class="status-box">
+            Loading full inspection record...
+          </div>
         </section>
 
         <div id="result" class="result">
-          <section class="card">
+
+          <!-- DETAILS -->
+          <section class="card" id="guide-details">
             <h2 class="section-title">Inspection Details</h2>
             <div class="details-grid">
               <div class="detail-item"><div class="detail-icon">🏨</div><div><div class="label">Property</div><div class="value" id="property-value">—</div></div></div>
@@ -471,70 +484,116 @@
             </div>
           </section>
 
-          <section class="card">
+          <!-- PHOTOS -->
+          <section class="card" id="guide-evidence">
             <h2 class="section-title">Verified Room Condition</h2>
             <div id="photos-wrap"></div>
             <div id="log-wrap" class="actions"></div>
           </section>
 
-          <section class="card">
+          <!-- PROCESS -->
+          <section class="card" id="guide-process">
             <h2 class="section-title">How This Room Was Verified</h2>
-            <p class="note">
-              This room record is tied to a specific property, room, inspection date, score, and verification ID.
-            </p>
 
             <div class="video-wrap">
-              <iframe
-                src="https://www.youtube.com/embed/s2mYUVarGx0?rel=0"
-                title="Ready Mark Verification Process"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                allowfullscreen>
-              </iframe>
+              <iframe src="https://www.youtube.com/embed/s2mYUVarGx0?rel=0" allowfullscreen></iframe>
             </div>
 
             <div class="process-list" style="margin-top:18px;">
               <div class="process-item">
                 <div class="process-icon">🧼</div>
-                <div><strong>Room Cleaned</strong>High-touch surfaces, linens, bathrooms, and guest areas were serviced according to Ready Mark standards.</div>
+                <div><strong>Room Cleaned</strong>Serviced according to Ready Mark standards.</div>
               </div>
+
               <div class="process-item">
                 <div class="process-icon">🔎</div>
-                <div><strong>Inspected</strong>A room-specific inspection was completed and reviewed against The Ready Mark protocol.</div>
+                <div><strong>Inspected</strong>Checked against standardized inspection criteria.</div>
               </div>
+
               <div class="process-item">
                 <div class="process-icon">✅</div>
-                <div><strong>Certified</strong>This verification record was logged, time-stamped, and connected to the room in the Ready Mark system.</div>
+                <div><strong>Certified</strong>Logged, timestamped, and verified.</div>
               </div>
             </div>
           </section>
 
-          <section class="card">
+          <!-- 🔥 NEW: TIERS -->
+          <section class="card" id="guide-tiers">
+            <h2 class="section-title">Understanding Ready Mark Tiers</h2>
+
+            <div class="process-list">
+
+              <div class="process-item">
+                <div class="process-icon">🏆</div>
+                <div>
+                  <strong>Premier</strong>
+                  Exceeds The Ready Mark standard. Exceptional cleanliness and presentation.
+                </div>
+              </div>
+
+              <div class="process-item">
+                <div class="process-icon">✅</div>
+                <div>
+                  <strong>Verified Clean</strong>
+                  Meets required cleanliness standards.
+                </div>
+              </div>
+
+              <div class="process-item">
+                <div class="process-icon">⚠️</div>
+                <div>
+                  <strong>Needs Attention</strong>
+                  Issues identified that require follow-up.
+                </div>
+              </div>
+
+              <div class="process-item">
+                <div class="process-icon">⛔</div>
+                <div>
+                  <strong>Not Clean</strong>
+                  Did not meet cleanliness standards at time of inspection.
+                </div>
+              </div>
+
+            </div>
+          </section>
+
+          <!-- ACTIVITY -->
+          <section class="card" id="guide-activity">
             <h2 class="section-title">Recent Verification Activity</h2>
-            <p class="note">Updated regularly through ongoing inspections.</p>
             <div id="activity-list" class="activity-list"></div>
           </section>
 
+          <!-- NOTES -->
           <section class="card">
             <h2 class="section-title">Inspection Notes</h2>
-            <div id="notes-wrap" class="empty">No notes are currently attached to this record.</div>
+            <div id="notes-wrap" class="empty">
+              No notes are currently attached to this record.
+            </div>
           </section>
 
-          <div class="actions">
+          <!-- ACTIONS -->
+          <div class="actions" id="guide-report">
             <a href="#" id="report-issue-link" class="btn">Have an Issue?</a>
             <a href="#" id="simple-record-link" class="btn secondary">Back to Simple Verification</a>
           </div>
 
-          <section class="footer">
-            <p>
-              <a href="/privacy.html">Privacy Policy</a>
-              &nbsp; | &nbsp;
-              <a href="/">Back to Home</a>
-            </p>
-            <p>Verified through The Ready Mark system.</p>
-          </section>
         </div>
       </div>
     </div>
+  </main>
+
+  <!-- GUIDE POPOVER -->
+  <div id="guide-popover" class="guide-popover">
+    <div id="guide-kicker" class="guide-kicker"></div>
+    <div id="guide-title" class="guide-title"></div>
+    <div id="guide-text" class="guide-text"></div>
+
+    <div class="guide-actions">
+      <button id="guide-skip" class="btn secondary">Skip</button>
+      <button id="guide-next" class="btn">Next</button>
+    </div>
+  </div>
   </main>
 
   <script>
@@ -733,11 +792,65 @@
       }
     }
 
+    <script>
+
+const guideSteps = [
+  { id: "guide-cert", title: "Certification Status", text: "This shows the current cleanliness status of the room." },
+  { id: "guide-details", title: "Inspection Details", text: "These connect the record to the property, room, and inspection." },
+  { id: "guide-evidence", title: "Room Evidence", text: "Photos show the actual condition at inspection." },
+  { id: "guide-process", title: "Verification Process", text: "This explains how the room was cleaned, inspected, and certified." },
+  { id: "guide-tiers", title: "Ready Mark Tiers", text: "These tiers explain what the cleanliness status means." },
+  { id: "guide-activity", title: "Verification Activity", text: "This shows recent inspections and current status." },
+  { id: "guide-report", title: "Report an Issue", text: "If the room is not clean, report it here." }
+];
+
+let guideIndex = 0;
+const popover = document.getElementById("guide-popover");
+
+function clearGuide() {
+  document.querySelectorAll(".guide-highlight").forEach(el => el.classList.remove("guide-highlight"));
+  popover.classList.remove("active");
+}
+
+function showGuideStep(index) {
+  clearGuide();
+  guideIndex = index;
+
+  const step = guideSteps[index];
+  const target = document.getElementById(step.id);
+  if (!target) return;
+
+  target.classList.add("guide-highlight");
+  target.scrollIntoView({ behavior: "smooth", block: "center" });
+
+  document.getElementById("guide-kicker").textContent = `Step ${index + 1} of ${guideSteps.length}`;
+  document.getElementById("guide-title").textContent = step.title;
+  document.getElementById("guide-text").textContent = step.text;
+  document.getElementById("guide-next").textContent = index === guideSteps.length - 1 ? "Done" : "Next";
+
+  setTimeout(() => {
+    const rect = target.getBoundingClientRect();
+    popover.style.top = `${rect.top + 20}px`;
+    popover.style.left = `${rect.left + 20}px`;
+    popover.classList.add("active");
+  }, 200);
+}
+
+document.getElementById("start-guide-btn").onclick = () => showGuideStep(0);
+document.getElementById("guide-skip").onclick = clearGuide;
+document.getElementById("guide-next").onclick = () => {
+  if (guideIndex >= guideSteps.length - 1) clearGuide();
+  else showGuideStep(guideIndex + 1);
+};
+
+</script>
+  
     if (initialSlug) {
       loadVerification(initialSlug);
     } else {
       showStatus("Full Inspection Record Unavailable.");
     }
+    
   </script>
 </body>
 </html>
