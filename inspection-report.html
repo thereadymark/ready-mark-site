@@ -522,7 +522,9 @@
         </section>
 
         <div id="result" class="result">
-
+          <div class="actions" style="margin-top:18px;">
+  <button id="logout-test-btn" class="btn secondary" type="button">Logout Guest Session</button>
+</div>
           <!-- DETAILS -->
           <section class="card" id="guide-details">
             <h2 class="section-title">Inspection Details</h2>
@@ -624,9 +626,16 @@
             </div>
           </section>
 
+          <section class="card" id="guide-report">
+  <h2 class="section-title">Need Help With Room Cleanliness?</h2>
+  <p class="note">
+    If this room does not meet cleanliness expectations, you can report the issue here. Your report will be tied to this room’s Ready Mark verification record.
+  </p>
+</section>
+
           <!-- ACTIONS -->
-          <div class="actions" id="guide-report">
-            <a href="#" id="report-issue-link" class="btn">Have an Issue?</a>
+          <div class="actions">
+            <a href="#" id="report-issue-link" class="btn">Have a Problem With Room Cleanliness?</a>
             <a href="#" id="simple-record-link" class="btn secondary">Back to Simple Verification</a>
           </div>
 
@@ -876,22 +885,33 @@ function showGuideStep(index) {
   document.getElementById("guide-kicker").textContent = `Step ${index + 1} of ${guideSteps.length}`;
   document.getElementById("guide-title").textContent = step.title;
   document.getElementById("guide-text").textContent = step.text;
-  document.getElementById("guide-next").textContent = index === guideSteps.length - 1 ? "Done" : "Next";
+  document.getElementById("guide-next").textContent =
+    index === guideSteps.length - 1 ? "Done" : "Next";
 
   setTimeout(() => {
-    const rect = target.getBoundingClientRect();
-    popover.style.top = `${rect.top + 20}px`;
-    popover.style.left = `${rect.left + 20}px`;
+    popover.style.top = "50%";
+    popover.style.left = "50%";
+    popover.style.transform = "translate(-50%, -50%)";
     popover.classList.add("active");
   }, 200);
 }
-
 document.getElementById("start-guide-btn").onclick = () => showGuideStep(0);
 document.getElementById("guide-skip").onclick = clearGuide;
 document.getElementById("guide-next").onclick = () => {
   if (guideIndex >= guideSteps.length - 1) clearGuide();
   else showGuideStep(guideIndex + 1);
 };
+    const logoutBtn = document.getElementById("logout-test-btn");
+
+if (logoutBtn) {
+  logoutBtn.addEventListener("click", () => {
+    localStorage.removeItem("readymark_guest_token");
+    localStorage.removeItem("readymark_guest_email");
+    sessionStorage.removeItem("readymark_guest_token");
+    sessionStorage.removeItem("readymark_guest_email");
+    alert("Guest session cleared. You can now test login again.");
+  });
+}
 
     if (initialSlug) {
       loadVerification(initialSlug);
