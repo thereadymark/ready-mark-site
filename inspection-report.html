@@ -522,9 +522,7 @@
         </section>
 
         <div id="result" class="result">
-          <div class="actions" style="margin-top:18px;">
-  <button id="logout-test-btn" class="btn secondary" type="button">Logout Guest Session</button>
-</div>
+          
           <!-- DETAILS -->
           <section class="card" id="guide-details">
             <h2 class="section-title">Inspection Details</h2>
@@ -626,19 +624,29 @@
             </div>
           </section>
 
-          <section class="card" id="guide-report">
+         <section class="card" id="guide-report">
   <h2 class="section-title">Need Help With Room Cleanliness?</h2>
+
   <p class="note">
     If this room does not meet cleanliness expectations, you can report the issue here. Your report will be tied to this room’s Ready Mark verification record.
   </p>
+
+  <div id="guest-session-box" class="empty" style="margin-top:18px;">
+    <strong>Guest Session</strong><br>
+    <span id="guest-session-text">Checking login status...</span>
+
+    <div class="actions" style="margin-top:14px;">
+      <a href="#" id="report-issue-link" class="btn">Report a Room Cleanliness Problem</a>
+      <button id="logout-test-btn" class="btn secondary" type="button">Logout Guest Session</button>
+    </div>
+  </div>
 </section>
 
           <!-- ACTIONS -->
           <div class="actions">
-            <a href="#" id="report-issue-link" class="btn">Have a Problem With Room Cleanliness?</a>
-            <a href="#" id="simple-record-link" class="btn secondary">Back to Simple Verification</a>
-          </div>
-
+  <a href="#" id="simple-record-link" class="btn secondary">Back to Simple Verification</a>
+</div>
+          
 <section class="footer">
   <p>
     Guest reports are used to document and resolve room-readiness concerns. For emergencies, contact the property directly.
@@ -924,6 +932,44 @@ if (logoutBtn) {
   });
 }
 
+function getGuestEmailForDisplay() {
+  return localStorage.getItem("readymark_guest_email") ||
+    sessionStorage.getItem("readymark_guest_email") ||
+    "";
+}
+
+function updateGuestSessionBox() {
+  const text = document.getElementById("guest-session-text");
+  const logoutBtn = document.getElementById("logout-test-btn");
+
+  if (!text || !logoutBtn) return;
+
+  const email = getGuestEmailForDisplay();
+
+  if (email) {
+    text.textContent = `Signed in as ${email}.`;
+    logoutBtn.style.display = "inline-flex";
+  } else {
+    text.textContent = "You may be asked to sign in before submitting a cleanliness report.";
+    logoutBtn.style.display = "none";
+  }
+}
+
+const logoutBtn = document.getElementById("logout-test-btn");
+
+if (logoutBtn) {
+  logoutBtn.addEventListener("click", () => {
+    localStorage.removeItem("readymark_guest_token");
+    localStorage.removeItem("readymark_guest_email");
+    sessionStorage.removeItem("readymark_guest_token");
+    sessionStorage.removeItem("readymark_guest_email");
+    updateGuestSessionBox();
+    alert("Guest session cleared. You can now test login again.");
+  });
+}
+
+updateGuestSessionBox();
+    
     if (initialSlug) {
       loadVerification(initialSlug);
     } else {
