@@ -42,12 +42,10 @@ export default async function handler(req, res) {
       "Sent to Property",
       "Under Review",
       "Escalated",
-      "Resolved by Property",
-      "Confirmed with Guest",
-      "Still Needs Attention",
       "Remediation Submitted",
-      "Resolved",
-      "Fully Resolved"
+      "Still Needs Attention",
+      "Confirmed with Guest",
+      "Resolved"
     ];
 
     if (!allowedStatuses.includes(status)) {
@@ -71,7 +69,7 @@ export default async function handler(req, res) {
     };
 
     const existingRes = await fetch(
-      `${supabaseUrl}/rest/v1/guest_reports?id=eq.${encodeURIComponent(report_id)}&select=id,status,verification_status,resolved_at,verified_at,guest_confirmation_status,remediation_submitted_at,under_review_at,escalated_at&limit=1`,
+      `${supabaseUrl}/rest/v1/guest_reports?id=eq.${encodeURIComponent(report_id)}&select=id,status,verification_status,resolved_at,verified_at,verified_by,guest_confirmation_status,guest_confirmed_at,remediation_submitted_at,under_review_at,escalated_at,hotel_notified_at&limit=1`,
       { headers }
     );
 
@@ -97,74 +95,100 @@ export default async function handler(req, res) {
       status
     };
 
-    if (status === "Under Review") {
+    if (status === "New") {
       updatePayload = {
         ...updatePayload,
-        under_review_at: existingReport.under_review_at || now
-      };
-    }
-
-    if (status === "Escalated") {
-      updatePayload = {
-        ...updatePayload,
-        escalated_at: existingReport.escalated_at || now
-      };
-    }
-
-    if (status === "Sent to Property") {
-      updatePayload = {
-        ...updatePayload
-      };
-    }
-
-    if (status === "Resolved by Property" || status === "Remediation Submitted") {
-      updatePayload = {
-        ...updatePayload,
-        status: "Remediation Submitted",
-        verification_status: "pending",
-        remediation_submitted_at: existingReport.remediation_submitted_at || now,
+        verification_status: "new",
+        guest_confirmation_status: null,
         resolved_at: null,
         verified_at: null,
         verified_by: null
       };
     }
 
-   if (status === "Confirmed with Guest") {
-  updatePayload = {
-    ...updatePayload,
-    status: "Confirmed with Guest",
-    guest_confirmation_status: "satisfied",
-    guest_confirmed_at: now,
-    verification_status: "approved",
-    resolved_at: existingReport.resolved_at || now,
-    verified_at: existingReport.verified_at || now,
-    verified_by: existingReport.verified_by || verifiedBy
-  };
-}
+    if (status === "Sent to Property") {
+      updatePayload = {
+        ...updatePayload,
+        verification_status: "sent_to_property",
+        hotel_notified_at: existingReport.hotel_notified_at || now,
+        resolved_at: null,
+        verified_at: null,
+        verified_by: null
+      };
+    }
 
-if (status === "Still Needs Attention") {
-  updatePayload = {
-    ...updatePayload,
-    status: "Under Review",
-    guest_confirmation_status: "not_satisfied",
-    verification_status: "reopened",
-    under_review_at: now,
-    resolved_at: null,
-    verified_at: null,
-    verified_by: null
-  };
-}
-if (status === "Fully Resolved" || status === "Resolved") {
-  updatePayload = {
-    ...updatePayload,
-    status: "Fully Resolved",
-    verification_status: "approved",
-    verified_at: now,
-    verified_by: verifiedBy,
-    resolved_at: now,
-    guest_confirmation_status: "pending_guest_confirmation"
-  };
-}
+    if (status === "Under Review") {
+      updatePayload = {
+        ...updatePayload,
+        verification_status: "under_review",
+        under_review_at: existingReport.under_review_at || now,
+        resolved_at: null,
+        verified_at: null,
+        verified_by: null
+      };
+    }
+
+    if (status === "Escalated") {
+      updatePayload = {
+        ...updatePayload,
+        verification_status: "escalated",
+        escalated_at: existingReport.escalated_at || now,
+        resolved_at: null,
+        verified_at: null,
+        verified_by: null
+      };
+    }
+
+    if (status === "Remediation Submitted") {
+      updatePayload = {
+        ...updatePayload,
+        verification_status: "pending_ready_mark_review",
+        remediation_submitted_at: existingReport.remediation_submitted_at || now,
+        guest_confirmation_status: null,
+        resolved_at: null,
+        verified_at: null,
+        verified_by: null
+      };
+    }
+
+    if (status === "Still Needs Attention") {
+      updatePayload = {
+        ...updatePayload,
+        verification_status: "reopened",
+        guest_confirmation_status: "not_satisfied",
+        under_review_at: now,
+        resolved_at: null,
+        verified_at: null,
+        verified_by: null
+      };
+    }
+
+    if (status === "Confirmed with Guest") {
+      updatePayload = {
+        ...updatePayload,
+        verification_status: "guest_confirmed",
+        guest_confirmation_status: "satisfied",
+        guest_confirmed_at: now,
+        resolved_at: null,
+        verified_at: null,
+        verified_by: null
+      };
+    }
+
+    if (status === "Resolved") {
+      updatePayload = {
+        ...updatePayload,
+        verification_status: "approved",
+        guest_confirmation_status:
+          existingReport.guest_confirmation_status || "satisfied",
+        guest_confirmed_at:
+          existingReport.guest_confirmed_at || now,
+        verified_at: now,
+        verified_by: verifiedBy,
+        resolved_at: now
+      };
+    }
+
     const patchRes = await fetch(
       `${supabaseUrl}/rest/v1/guest_reports?id=eq.${encodeURIComponent(report_id)}`,
       {
