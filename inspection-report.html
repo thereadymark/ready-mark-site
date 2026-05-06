@@ -435,18 +435,18 @@
     }
 
     .guide-popover {
-      position: fixed;
-      z-index: 9999;
-      width: min(350px, calc(100vw - 32px));
-      background: #fffdf8;
-      border: 1px solid rgba(199,162,87,0.55);
-      border-radius: 18px;
-      box-shadow: 0 24px 70px rgba(0,0,0,0.18);
-      padding: 18px;
-      display: none;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
+      position:fixed;
+      z-index:9999;
+      width:min(360px, calc(100vw - 32px));
+      background:#fffdf8;
+      border:1px solid rgba(199,162,87,0.55);
+      border-radius:18px;
+      box-shadow:0 24px 70px rgba(0,0,0,0.18);
+      padding:18px;
+      display:none;
+      top:50%;
+      left:50%;
+      transform:translate(-50%, -50%);
     }
 
     .guide-popover.active { display:block; }
@@ -479,6 +479,31 @@
       justify-content:flex-end;
     }
 
+    .guide-btn {
+      min-width:0;
+      width:auto;
+      flex:1;
+      min-height:40px;
+      padding:10px 12px;
+      border-radius:12px;
+      border:none;
+      cursor:pointer;
+      font-family:"Lato", Arial, sans-serif;
+      font-size:13px;
+      font-weight:900;
+    }
+
+    .guide-btn.primary {
+      background:linear-gradient(180deg, #d8ba73, #b8934c);
+      color:#171717;
+    }
+
+    .guide-btn.secondary {
+      background:rgba(255,255,255,0.78);
+      border:1px solid rgba(227,211,170,0.72);
+      color:var(--gold-dark);
+    }
+
     .guide-highlight {
       outline:2px solid rgba(199,162,87,0.8);
       box-shadow:0 0 0 8px rgba(199,162,87,0.12), 0 18px 45px rgba(0,0,0,0.08);
@@ -497,6 +522,7 @@
       .score-pill { justify-self:start; }
       .actions { flex-direction:column; }
       .btn { width:100%; }
+      .guide-actions { flex-direction:row; }
     }
   </style>
 </head>
@@ -591,7 +617,7 @@
             <h2 class="section-title">Need Help With Room Cleanliness?</h2>
 
             <p class="note">
-              If this room does not meet cleanliness expectations, you can report the issue here. Your report will be tied to this room’s Ready Mark verification record.
+              If this room does not meet cleanliness expectations, report it here. Your report will be tied to this room’s Ready Mark verification record.
             </p>
 
             <div id="guest-session-box" class="empty session-box">
@@ -631,8 +657,8 @@
     <div id="guide-title" class="guide-title"></div>
     <div id="guide-text" class="guide-text"></div>
     <div class="guide-actions">
-      <button id="guide-skip" class="btn secondary" type="button">Skip</button>
-      <button id="guide-next" class="btn" type="button">Next</button>
+      <button id="guide-skip" class="guide-btn secondary" type="button">Skip</button>
+      <button id="guide-next" class="guide-btn primary" type="button">Next</button>
     </div>
   </div>
 
@@ -815,17 +841,20 @@
         logWrap.innerHTML = "";
       }
 
-      const notesWrap = document.getElementById("notes-wrap");
-      notesWrap.textContent = data.notes || "No notes are currently attached to this record.";
+      document.getElementById("notes-wrap").textContent =
+        data.notes || "No notes are currently attached to this record.";
+
+      const returnTo = `/verify.html?slug=${encodeURIComponent(cleanSlug)}`;
 
       const reportIssueUrl =
         `/report-issue.html?slug=${encodeURIComponent(cleanSlug)}` +
         `&property_slug=${encodeURIComponent(data.property_slug || "")}` +
         `&room_number=${encodeURIComponent(data.room || "")}` +
-        `&verification_id=${encodeURIComponent(data.verificationId || "")}`;
+        `&verification_id=${encodeURIComponent(data.verificationId || "")}` +
+        `&return_to=${encodeURIComponent(returnTo)}`;
 
       document.getElementById("report-issue-link").href = reportIssueUrl;
-      document.getElementById("simple-record-link").href = `/verify.html?slug=${encodeURIComponent(cleanSlug)}`;
+      document.getElementById("simple-record-link").href = returnTo;
 
       updateGuestSessionBox();
     }
@@ -888,9 +917,7 @@
       document.getElementById("guide-text").textContent = step.text;
       document.getElementById("guide-next").textContent = index === guideSteps.length - 1 ? "Done" : "Next";
 
-      setTimeout(() => {
-        popover.classList.add("active");
-      }, 200);
+      setTimeout(() => popover.classList.add("active"), 200);
     }
 
     document.getElementById("start-guide-btn").addEventListener("click", () => showGuideStep(0));
@@ -900,17 +927,14 @@
       else showGuideStep(guideIndex + 1);
     });
 
-    const logoutBtn = document.getElementById("logout-test-btn");
-    if (logoutBtn) {
-      logoutBtn.addEventListener("click", () => {
-        localStorage.removeItem("readymark_guest_token");
-        localStorage.removeItem("readymark_guest_email");
-        sessionStorage.removeItem("readymark_guest_token");
-        sessionStorage.removeItem("readymark_guest_email");
-        updateGuestSessionBox();
-        alert("Guest session cleared. You can now test login again.");
-      });
-    }
+    document.getElementById("logout-test-btn").addEventListener("click", () => {
+      localStorage.removeItem("readymark_guest_token");
+      localStorage.removeItem("readymark_guest_email");
+      sessionStorage.removeItem("readymark_guest_token");
+      sessionStorage.removeItem("readymark_guest_email");
+      updateGuestSessionBox();
+      alert("Guest session cleared. You can now test login again.");
+    });
 
     updateGuestSessionBox();
 
