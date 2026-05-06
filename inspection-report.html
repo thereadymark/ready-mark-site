@@ -15,7 +15,6 @@
       --muted:#6f6a61;
       --gold:#c7a257;
       --gold-dark:#9d7b34;
-      --line:#e3d3aa;
       --green:#5f8f65;
       --red:#b85d5d;
       --blue:#526b9f;
@@ -46,8 +45,8 @@
       border-radius:30px;
       box-shadow:var(--shadow), inset 0 0 0 1px rgba(199,162,87,0.18);
       padding:44px 28px;
-      overflow:hidden;
       position:relative;
+      overflow:hidden;
     }
 
     .shell::before {
@@ -406,12 +405,18 @@
       border:none;
       cursor:pointer;
       min-width:210px;
+      font-family:"Lato", Arial, sans-serif;
+      font-size:14px;
     }
 
     .btn.secondary {
       background:rgba(255,255,255,0.78);
       border:1px solid rgba(227,211,170,0.72);
       color:var(--gold-dark);
+    }
+
+    .session-box {
+      margin-top:18px;
     }
 
     .footer {
@@ -430,56 +435,58 @@
     }
 
     .guide-popover {
-  position: fixed;
-  z-index: 9999;
-  width: min(330px, calc(100vw - 32px));
-  background: #fffdf8;
-  border: 1px solid rgba(199,162,87,0.55);
-  border-radius: 18px;
-  box-shadow: 0 24px 70px rgba(0,0,0,0.18);
-  padding: 18px;
-  display: none;
-}
+      position: fixed;
+      z-index: 9999;
+      width: min(350px, calc(100vw - 32px));
+      background: #fffdf8;
+      border: 1px solid rgba(199,162,87,0.55);
+      border-radius: 18px;
+      box-shadow: 0 24px 70px rgba(0,0,0,0.18);
+      padding: 18px;
+      display: none;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
 
-.guide-popover.active {
-  display: block;
-}
+    .guide-popover.active { display:block; }
 
-.guide-kicker {
-  color: var(--gold-dark);
-  text-transform: uppercase;
-  letter-spacing: 1.2px;
-  font-size: 11px;
-  font-weight: 900;
-  margin-bottom: 6px;
-}
+    .guide-kicker {
+      color:var(--gold-dark);
+      text-transform:uppercase;
+      letter-spacing:1.2px;
+      font-size:11px;
+      font-weight:900;
+      margin-bottom:6px;
+    }
 
-.guide-title {
-  font-family: "Cinzel", Georgia, serif;
-  font-size: 22px;
-  margin-bottom: 8px;
-}
+    .guide-title {
+      font-family:"Cinzel", Georgia, serif;
+      font-size:22px;
+      margin-bottom:8px;
+    }
 
-.guide-text {
-  color: var(--muted);
-  line-height: 1.6;
-  font-size: 14px;
-}
+    .guide-text {
+      color:var(--muted);
+      line-height:1.6;
+      font-size:14px;
+    }
 
-.guide-actions {
-  display: flex;
-  gap: 10px;
-  margin-top: 14px;
-  justify-content: flex-end;
-}
+    .guide-actions {
+      display:flex;
+      gap:10px;
+      margin-top:14px;
+      justify-content:flex-end;
+    }
 
-.guide-highlight {
-  outline: 2px solid rgba(199,162,87,0.8);
-  box-shadow: 0 0 0 8px rgba(199,162,87,0.12), 0 18px 45px rgba(0,0,0,0.08);
-  border-radius: 18px;
-  position: relative;
-  z-index: 4;
-}
+    .guide-highlight {
+      outline:2px solid rgba(199,162,87,0.8);
+      box-shadow:0 0 0 8px rgba(199,162,87,0.12), 0 18px 45px rgba(0,0,0,0.08);
+      border-radius:18px;
+      position:relative;
+      z-index:4;
+    }
+
     @media (max-width:760px) {
       .page { padding:28px 12px 52px; }
       .shell { padding:30px 14px; }
@@ -491,7 +498,6 @@
       .actions { flex-direction:column; }
       .btn { width:100%; }
     }
-    
   </style>
 </head>
 
@@ -500,9 +506,8 @@
     <div class="shell">
       <div class="inner">
 
-        <!-- HERO -->
         <section class="hero" id="guide-cert">
-          <img src="/readymarkseal(best)nobackground.PNG" class="logo" />
+          <img src="/readymarkseal(best)nobackground.PNG" class="logo" alt="The Ready Mark" />
           <div class="eyebrow">The Ready Mark</div>
           <h1>Full Inspection Record</h1>
 
@@ -512,18 +517,15 @@
             This expanded record includes inspection details, room evidence, verification activity, and how this room was reviewed under The Ready Mark Cleanliness Standard.
           </p>
 
-          <button id="start-guide-btn" class="btn secondary" style="margin-top:18px;">
+          <button id="start-guide-btn" class="btn secondary" type="button" style="margin-top:18px;">
             New here? Guide me through this record
           </button>
 
-          <div id="status-box" class="status-box">
-            Loading full inspection record...
-          </div>
+          <div id="status-box" class="status-box">Loading full inspection record...</div>
         </section>
 
         <div id="result" class="result">
-          
-          <!-- DETAILS -->
+
           <section class="card" id="guide-details">
             <h2 class="section-title">Inspection Details</h2>
             <div class="details-grid">
@@ -536,144 +538,103 @@
             </div>
           </section>
 
-          <!-- PHOTOS -->
           <section class="card" id="guide-evidence">
             <h2 class="section-title">Verified Room Condition</h2>
             <div id="photos-wrap"></div>
             <div id="log-wrap" class="actions"></div>
           </section>
 
-          <!-- PROCESS -->
           <section class="card" id="guide-process">
             <h2 class="section-title">How This Room Was Verified</h2>
+            <p class="note">
+              This room record is tied to a specific property, room, inspection date, score, and verification ID.
+            </p>
 
             <div class="video-wrap">
-              <iframe src="https://www.youtube.com/embed/s2mYUVarGx0?rel=0" allowfullscreen></iframe>
+              <iframe
+                src="https://www.youtube.com/embed/s2mYUVarGx0?rel=0"
+                title="Ready Mark Verification Process"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowfullscreen>
+              </iframe>
             </div>
 
             <div class="process-list" style="margin-top:18px;">
-              <div class="process-item">
-                <div class="process-icon">🧼</div>
-                <div><strong>Room Cleaned</strong>Serviced according to Ready Mark standards.</div>
-              </div>
-
-              <div class="process-item">
-                <div class="process-icon">🔎</div>
-                <div><strong>Inspected</strong>Checked against standardized inspection criteria.</div>
-              </div>
-
-              <div class="process-item">
-                <div class="process-icon">✅</div>
-                <div><strong>Certified</strong>Logged, timestamped, and verified.</div>
-              </div>
+              <div class="process-item"><div class="process-icon">🧼</div><div><strong>Room Cleaned</strong>High-touch surfaces, linens, bathrooms, and guest areas were serviced according to Ready Mark standards.</div></div>
+              <div class="process-item"><div class="process-icon">🔎</div><div><strong>Inspected</strong>A room-specific inspection was completed and reviewed against The Ready Mark protocol.</div></div>
+              <div class="process-item"><div class="process-icon">✅</div><div><strong>Certified</strong>This verification record was logged, time-stamped, and connected to the room in the Ready Mark system.</div></div>
             </div>
           </section>
 
-          <!-- 🔥 NEW: TIERS -->
           <section class="card" id="guide-tiers">
             <h2 class="section-title">Understanding Ready Mark Tiers</h2>
-
             <div class="process-list">
-
-              <div class="process-item">
-                <div class="process-icon">🏆</div>
-                <div>
-                  <strong>Premier</strong>
-                  Exceeds The Ready Mark standard. Exceptional cleanliness and presentation.
-                </div>
-              </div>
-
-              <div class="process-item">
-                <div class="process-icon">✅</div>
-                <div>
-                  <strong>Verified Clean</strong>
-                  Meets required cleanliness standards.
-                </div>
-              </div>
-
-              <div class="process-item">
-                <div class="process-icon">⚠️</div>
-                <div>
-                  <strong>Needs Attention</strong>
-                  Issues identified that require follow-up.
-                </div>
-              </div>
-
-              <div class="process-item">
-                <div class="process-icon">⛔</div>
-                <div>
-                  <strong>Not Clean</strong>
-                  Did not meet cleanliness standards at time of inspection.
-                </div>
-              </div>
-
+              <div class="process-item"><div class="process-icon">🏆</div><div><strong>Premier</strong>Exceeds The Ready Mark standard. Exceptional cleanliness and presentation.</div></div>
+              <div class="process-item"><div class="process-icon">✅</div><div><strong>Verified Clean</strong>Meets required cleanliness standards.</div></div>
+              <div class="process-item"><div class="process-icon">⚠️</div><div><strong>Needs Attention</strong>Issues identified that require follow-up before full confidence can be given.</div></div>
+              <div class="process-item"><div class="process-icon">⛔</div><div><strong>Not Clean</strong>Did not meet cleanliness standards at the time of inspection.</div></div>
             </div>
           </section>
 
-          <!-- ACTIVITY -->
           <section class="card" id="guide-activity">
             <h2 class="section-title">Recent Verification Activity</h2>
+            <p class="note">Updated regularly through ongoing inspections.</p>
             <div id="activity-list" class="activity-list"></div>
           </section>
 
-          <!-- NOTES -->
           <section class="card">
             <h2 class="section-title">Inspection Notes</h2>
-            <div id="notes-wrap" class="empty">
-              No notes are currently attached to this record.
+            <div id="notes-wrap" class="empty">No notes are currently attached to this record.</div>
+          </section>
+
+          <section class="card" id="guide-report">
+            <h2 class="section-title">Need Help With Room Cleanliness?</h2>
+
+            <p class="note">
+              If this room does not meet cleanliness expectations, you can report the issue here. Your report will be tied to this room’s Ready Mark verification record.
+            </p>
+
+            <div id="guest-session-box" class="empty session-box">
+              <strong>Guest Session</strong><br>
+              <span id="guest-session-text">Checking login status...</span>
+
+              <div class="actions" style="margin-top:14px;">
+                <a href="#" id="report-issue-link" class="btn">Report a Room Cleanliness Problem</a>
+                <button id="logout-test-btn" class="btn secondary" type="button">Logout Guest Session</button>
+              </div>
             </div>
           </section>
 
-         <section class="card" id="guide-report">
-  <h2 class="section-title">Need Help With Room Cleanliness?</h2>
-
-  <p class="note">
-    If this room does not meet cleanliness expectations, you can report the issue here. Your report will be tied to this room’s Ready Mark verification record.
-  </p>
-
-  <div id="guest-session-box" class="empty" style="margin-top:18px;">
-    <strong>Guest Session</strong><br>
-    <span id="guest-session-text">Checking login status...</span>
-
-    <div class="actions" style="margin-top:14px;">
-      <a href="#" id="report-issue-link" class="btn">Report a Room Cleanliness Problem</a>
-      <button id="logout-test-btn" class="btn secondary" type="button">Logout Guest Session</button>
-    </div>
-  </div>
-</section>
-
-          <!-- ACTIONS -->
           <div class="actions">
-  <a href="#" id="simple-record-link" class="btn secondary">Back to Simple Verification</a>
-</div>
-          
-<section class="footer">
-  <p>
-    Guest reports are used to document and resolve room-readiness concerns. For emergencies, contact the property directly.
-  </p>
-  <p>
-    <a href="/privacy.html">Privacy Policy</a>
-    &nbsp; | &nbsp;
-    <a href="/">Back to Home</a>
-  </p>
-  <p>Verified through The Ready Mark system.</p>
-</section>
+            <a href="#" id="simple-record-link" class="btn secondary">Back to Simple Verification</a>
+          </div>
+
+          <section class="footer">
+            <p>
+              Guest reports are used to document and resolve room-readiness concerns. For emergencies, contact the property directly.
+            </p>
+            <p>
+              <a href="/privacy.html">Privacy Policy</a>
+              &nbsp; | &nbsp;
+              <a href="/">Back to Home</a>
+            </p>
+            <p>Verified through The Ready Mark system.</p>
+          </section>
+
         </div>
       </div>
     </div>
+  </main>
 
-  <!-- GUIDE POPOVER -->
   <div id="guide-popover" class="guide-popover">
     <div id="guide-kicker" class="guide-kicker"></div>
     <div id="guide-title" class="guide-title"></div>
     <div id="guide-text" class="guide-text"></div>
-
     <div class="guide-actions">
-      <button id="guide-skip" class="btn secondary">Skip</button>
-      <button id="guide-next" class="btn">Next</button>
+      <button id="guide-skip" class="btn secondary" type="button">Skip</button>
+      <button id="guide-next" class="btn" type="button">Next</button>
     </div>
   </div>
-  </main>
 
   <script>
     const params = new URLSearchParams(window.location.search);
@@ -726,6 +687,28 @@
     function scoreLabel(score) {
       if (score === null || score === undefined || score === "") return "—";
       return String(score).includes("/") ? String(score) : `${score} / 100`;
+    }
+
+    function getGuestEmailForDisplay() {
+      return localStorage.getItem("readymark_guest_email") ||
+        sessionStorage.getItem("readymark_guest_email") ||
+        "";
+    }
+
+    function updateGuestSessionBox() {
+      const text = document.getElementById("guest-session-text");
+      const logoutBtn = document.getElementById("logout-test-btn");
+      if (!text || !logoutBtn) return;
+
+      const email = getGuestEmailForDisplay();
+
+      if (email) {
+        text.textContent = `Signed in as ${email}.`;
+        logoutBtn.style.display = "inline-flex";
+      } else {
+        text.textContent = "You may be asked to sign in before submitting a cleanliness report.";
+        logoutBtn.style.display = "none";
+      }
     }
 
     function showStatus(message) {
@@ -833,9 +816,7 @@
       }
 
       const notesWrap = document.getElementById("notes-wrap");
-      if (data.notes) {
-        notesWrap.textContent = data.notes;
-      }
+      notesWrap.textContent = data.notes || "No notes are currently attached to this record.";
 
       const reportIssueUrl =
         `/report-issue.html?slug=${encodeURIComponent(cleanSlug)}` +
@@ -845,6 +826,8 @@
 
       document.getElementById("report-issue-link").href = reportIssueUrl;
       document.getElementById("simple-record-link").href = `/verify.html?slug=${encodeURIComponent(cleanSlug)}`;
+
+      updateGuestSessionBox();
     }
 
     async function loadVerification(slug) {
@@ -871,111 +854,71 @@
       }
     }
 
+    const guideSteps = [
+      { id: "guide-cert", title: "Certification Status", text: "This shows the current cleanliness status of the room." },
+      { id: "guide-details", title: "Inspection Details", text: "These connect the record to the property, room, inspection, score, and verification ID." },
+      { id: "guide-evidence", title: "Room Evidence", text: "Photos or documentation appear here when available." },
+      { id: "guide-process", title: "Verification Process", text: "This explains how the room was cleaned, inspected, and certified." },
+      { id: "guide-tiers", title: "Ready Mark Tiers", text: "These tiers explain what the cleanliness status means." },
+      { id: "guide-activity", title: "Verification Activity", text: "This shows recent room checks and which record is current." },
+      { id: "guide-report", title: "Room Cleanliness Concerns", text: "If the room does not meet cleanliness expectations, this is where a guest can report the issue." }
+    ];
 
-const guideSteps = [
-  { id: "guide-cert", title: "Certification Status", text: "This shows the current cleanliness status of the room." },
-  { id: "guide-details", title: "Inspection Details", text: "These connect the record to the property, room, and inspection." },
-  { id: "guide-evidence", title: "Room Evidence", text: "Photos show the actual condition at inspection." },
-  { id: "guide-process", title: "Verification Process", text: "This explains how the room was cleaned, inspected, and certified." },
-  { id: "guide-tiers", title: "Ready Mark Tiers", text: "These tiers explain what the cleanliness status means." },
-  { id: "guide-activity", title: "Verification Activity", text: "This shows recent inspections and current status." },
-  { id: "guide-report", title: "Report an Issue", text: "If the room is not clean, report it here." }
-];
+    let guideIndex = 0;
+    const popover = document.getElementById("guide-popover");
 
-let guideIndex = 0;
-const popover = document.getElementById("guide-popover");
+    function clearGuide() {
+      document.querySelectorAll(".guide-highlight").forEach(el => el.classList.remove("guide-highlight"));
+      popover.classList.remove("active");
+    }
 
-function clearGuide() {
-  document.querySelectorAll(".guide-highlight").forEach(el => el.classList.remove("guide-highlight"));
-  popover.classList.remove("active");
-}
+    function showGuideStep(index) {
+      clearGuide();
+      guideIndex = index;
 
-function showGuideStep(index) {
-  clearGuide();
-  guideIndex = index;
+      const step = guideSteps[index];
+      const target = document.getElementById(step.id);
+      if (!target) return;
 
-  const step = guideSteps[index];
-  const target = document.getElementById(step.id);
-  if (!target) return;
+      target.classList.add("guide-highlight");
+      target.scrollIntoView({ behavior: "smooth", block: "center" });
 
-  target.classList.add("guide-highlight");
-  target.scrollIntoView({ behavior: "smooth", block: "center" });
+      document.getElementById("guide-kicker").textContent = `Step ${index + 1} of ${guideSteps.length}`;
+      document.getElementById("guide-title").textContent = step.title;
+      document.getElementById("guide-text").textContent = step.text;
+      document.getElementById("guide-next").textContent = index === guideSteps.length - 1 ? "Done" : "Next";
 
-  document.getElementById("guide-kicker").textContent = `Step ${index + 1} of ${guideSteps.length}`;
-  document.getElementById("guide-title").textContent = step.title;
-  document.getElementById("guide-text").textContent = step.text;
-  document.getElementById("guide-next").textContent =
-    index === guideSteps.length - 1 ? "Done" : "Next";
+      setTimeout(() => {
+        popover.classList.add("active");
+      }, 200);
+    }
 
-  setTimeout(() => {
-    popover.style.top = "50%";
-    popover.style.left = "50%";
-    popover.style.transform = "translate(-50%, -50%)";
-    popover.classList.add("active");
-  }, 200);
-}
-document.getElementById("start-guide-btn").onclick = () => showGuideStep(0);
-document.getElementById("guide-skip").onclick = clearGuide;
-document.getElementById("guide-next").onclick = () => {
-  if (guideIndex >= guideSteps.length - 1) clearGuide();
-  else showGuideStep(guideIndex + 1);
-};
+    document.getElementById("start-guide-btn").addEventListener("click", () => showGuideStep(0));
+    document.getElementById("guide-skip").addEventListener("click", clearGuide);
+    document.getElementById("guide-next").addEventListener("click", () => {
+      if (guideIndex >= guideSteps.length - 1) clearGuide();
+      else showGuideStep(guideIndex + 1);
+    });
+
     const logoutBtn = document.getElementById("logout-test-btn");
+    if (logoutBtn) {
+      logoutBtn.addEventListener("click", () => {
+        localStorage.removeItem("readymark_guest_token");
+        localStorage.removeItem("readymark_guest_email");
+        sessionStorage.removeItem("readymark_guest_token");
+        sessionStorage.removeItem("readymark_guest_email");
+        updateGuestSessionBox();
+        alert("Guest session cleared. You can now test login again.");
+      });
+    }
 
-if (logoutBtn) {
-  logoutBtn.addEventListener("click", () => {
-    localStorage.removeItem("readymark_guest_token");
-    localStorage.removeItem("readymark_guest_email");
-    sessionStorage.removeItem("readymark_guest_token");
-    sessionStorage.removeItem("readymark_guest_email");
-    alert("Guest session cleared. You can now test login again.");
-  });
-}
-
-function getGuestEmailForDisplay() {
-  return localStorage.getItem("readymark_guest_email") ||
-    sessionStorage.getItem("readymark_guest_email") ||
-    "";
-}
-
-function updateGuestSessionBox() {
-  const text = document.getElementById("guest-session-text");
-  const logoutBtn = document.getElementById("logout-test-btn");
-
-  if (!text || !logoutBtn) return;
-
-  const email = getGuestEmailForDisplay();
-
-  if (email) {
-    text.textContent = `Signed in as ${email}.`;
-    logoutBtn.style.display = "inline-flex";
-  } else {
-    text.textContent = "You may be asked to sign in before submitting a cleanliness report.";
-    logoutBtn.style.display = "none";
-  }
-}
-
-const logoutBtn = document.getElementById("logout-test-btn");
-
-if (logoutBtn) {
-  logoutBtn.addEventListener("click", () => {
-    localStorage.removeItem("readymark_guest_token");
-    localStorage.removeItem("readymark_guest_email");
-    sessionStorage.removeItem("readymark_guest_token");
-    sessionStorage.removeItem("readymark_guest_email");
     updateGuestSessionBox();
-    alert("Guest session cleared. You can now test login again.");
-  });
-}
 
-updateGuestSessionBox();
-    
     if (initialSlug) {
       loadVerification(initialSlug);
     } else {
       showStatus("Full Inspection Record Unavailable.");
     }
-    
   </script>
 </body>
 </html>
