@@ -44,6 +44,7 @@ export default async function handler(req, res) {
       "Escalated",
       "Resolved by Property",
       "Confirmed with Guest",
+      "Still Needs Attention",
       "Remediation Submitted",
       "Resolved",
       "Fully Resolved"
@@ -128,25 +129,42 @@ export default async function handler(req, res) {
       };
     }
 
-    if (status === "Confirmed with Guest") {
-      updatePayload = {
-        ...updatePayload,
-        guest_confirmation_status: "satisfied",
-        guest_confirmed_at: now
-      };
-    }
+   if (status === "Confirmed with Guest") {
+  updatePayload = {
+    ...updatePayload,
+    status: "Confirmed with Guest",
+    guest_confirmation_status: "satisfied",
+    guest_confirmed_at: now,
+    verification_status: "approved",
+    resolved_at: existingReport.resolved_at || now,
+    verified_at: existingReport.verified_at || now,
+    verified_by: existingReport.verified_by || verifiedBy
+  };
+}
 
-    if (status === "Fully Resolved" || status === "Resolved") {
-      updatePayload = {
-        ...updatePayload,
-        status: "Resolved",
-        verification_status: "approved",
-        verified_at: now,
-        verified_by: verifiedBy,
-        resolved_at: now
-      };
-    }
-
+if (status === "Still Needs Attention") {
+  updatePayload = {
+    ...updatePayload,
+    status: "Under Review",
+    guest_confirmation_status: "not_satisfied",
+    verification_status: "reopened",
+    under_review_at: now,
+    resolved_at: null,
+    verified_at: null,
+    verified_by: null
+  };
+}
+if (status === "Fully Resolved" || status === "Resolved") {
+  updatePayload = {
+    ...updatePayload,
+    status: "Fully Resolved",
+    verification_status: "approved",
+    verified_at: now,
+    verified_by: verifiedBy,
+    resolved_at: now,
+    guest_confirmation_status: "pending_guest_confirmation"
+  };
+}
     const patchRes = await fetch(
       `${supabaseUrl}/rest/v1/guest_reports?id=eq.${encodeURIComponent(report_id)}`,
       {
