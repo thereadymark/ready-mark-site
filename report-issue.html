@@ -146,7 +146,7 @@
 
     .btn {
       width:100%;
-      margin-top:22px;
+      margin-top:14px;
       border:0;
       border-radius:14px;
       padding:15px 18px;
@@ -205,15 +205,67 @@
       border:1px solid rgba(180,76,76,0.22);
     }
 
-    .success-actions {
+    .success-panel {
       display:none;
-      margin-top:18px;
-      gap:12px;
-      flex-direction:column;
+      margin-top:22px;
+      padding:24px;
+      border-radius:20px;
+      background:rgba(255,255,255,0.72);
+      border:1px solid #e8dfca;
+      text-align:center;
     }
 
-    .success-actions.active {
+    .success-panel.active {
+      display:block;
+    }
+
+    .success-icon {
+      width:58px;
+      height:58px;
+      margin:0 auto 14px;
+      border-radius:999px;
       display:flex;
+      align-items:center;
+      justify-content:center;
+      background:rgba(47,143,87,0.10);
+      border:1px solid rgba(47,143,87,0.22);
+      color:#2f8f57;
+      font-size:26px;
+    }
+
+    .success-title {
+      font-family:Georgia, serif;
+      font-size:28px;
+      margin:0 0 10px;
+      font-weight:500;
+    }
+
+    .reference-box {
+      margin:16px auto;
+      padding:14px;
+      border-radius:14px;
+      background:#fff;
+      border:1px solid #e1d4b8;
+      font-weight:800;
+      color:#111315;
+      word-break:break-word;
+    }
+
+    .followup-box {
+      margin-top:18px;
+      padding:16px;
+      border-radius:16px;
+      background:rgba(199,162,87,0.08);
+      border:1px solid rgba(199,162,87,0.24);
+      color:#6f5a2e;
+      font-size:14px;
+      line-height:1.7;
+    }
+
+    .success-actions {
+      margin-top:18px;
+      display:grid;
+      gap:10px;
     }
   </style>
 </head>
@@ -282,9 +334,30 @@
 
         <div id="status-box" class="status"></div>
 
-        <div id="success-actions" class="success-actions">
-          <a href="#" id="return-verification-link" class="btn">Return to Room Verification</a>
-          <a href="#" id="return-full-link" class="btn secondary">View Full Inspection Record</a>
+        <div id="success-panel" class="success-panel">
+          <div class="success-icon">✓</div>
+          <h2 class="success-title">Report Submitted</h2>
+
+          <p class="note">
+            Your cleanliness report has been received and attached to this room’s Ready Mark verification record.
+          </p>
+
+          <div id="reference-box" class="reference-box">
+            Reference Number: —
+          </div>
+
+          <div class="followup-box">
+            After the property or Ready Mark team marks this issue resolved, you may receive a follow-up asking whether the issue was fully addressed.
+            <br><br>
+            Follow-up options will include:
+            <strong>Issue Resolved</strong> or <strong>Still Needs Attention</strong>.
+          </div>
+
+          <div class="success-actions">
+            <a href="#" id="return-verification-link" class="btn">Return to Room Verification</a>
+            <a href="#" id="return-full-link" class="btn secondary">View Full Inspection Record</a>
+            <a href="#" id="submit-another-link" class="btn secondary">Submit Another Cleanliness Report</a>
+          </div>
         </div>
       </div>
     </div>
@@ -314,6 +387,7 @@
       : "/";
 
     const returnUrl = returnToParam || defaultReturnUrl;
+
     const fullRecordUrl = slugParam
       ? `/inspection-report.html?slug=${encodeURIComponent(slugParam)}`
       : "/inspection-report.html";
@@ -322,11 +396,13 @@
     const submitBtn = document.getElementById("submit-btn");
     const signedInChip = document.getElementById("signed-in-chip");
     const formWrap = document.getElementById("form-wrap");
-    const successActions = document.getElementById("success-actions");
+    const successPanel = document.getElementById("success-panel");
+    const referenceBox = document.getElementById("reference-box");
 
     document.getElementById("back-link").href = returnUrl;
     document.getElementById("return-verification-link").href = returnUrl;
     document.getElementById("return-full-link").href = fullRecordUrl;
+    document.getElementById("submit-another-link").href = currentPath;
 
     function showStatus(message, type) {
       statusBox.className = "status " + type;
@@ -531,21 +607,16 @@
           data?.reference ||
           data?.confirmation_number ||
           data?.report?.confirmation_number ||
-          "";
+          "Pending";
 
-        showStatus(
-          reference
-            ? `Cleanliness report submitted successfully. Reference number: ${reference}. Returning to room verification...`
-            : "Cleanliness report submitted successfully. Returning to room verification...",
-          "success"
-        );
+        referenceBox.textContent = `Reference Number: ${reference}`;
+
+        showStatus("Cleanliness report submitted successfully.", "success");
 
         formWrap.style.display = "none";
-        successActions.classList.add("active");
+        successPanel.classList.add("active");
 
-        setTimeout(() => {
-          window.location.href = returnUrl;
-        }, 2200);
+        window.scrollTo({ top: 0, behavior: "smooth" });
       } catch (error) {
         showStatus(error.message || "Unable to submit issue.", "error");
         submitBtn.disabled = false;
