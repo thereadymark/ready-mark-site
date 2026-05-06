@@ -2,209 +2,232 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Report an Issue | The Ready Mark</title>
+  <title>Report Room Cleanliness Problem | The Ready Mark</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <style>
     body {
-      margin: 0;
-      min-height: 100vh;
-      font-family: Arial, sans-serif;
+      margin:0;
+      min-height:100vh;
+      font-family:Arial, sans-serif;
       background:
         radial-gradient(circle at top, rgba(199,162,87,0.16), transparent 34%),
         linear-gradient(180deg, #fbfaf6 0%, #f6f2ea 100%);
-      color: #111315;
+      color:#111315;
     }
 
     .wrap {
-      max-width: 760px;
-      margin: 0 auto;
-      padding: 42px 18px;
+      max-width:760px;
+      margin:0 auto;
+      padding:42px 18px;
     }
 
     .back-link {
-      display: inline-block;
-      margin-bottom: 16px;
-      color: #9d7b34;
-      text-decoration: none;
-      font-weight: 700;
-      font-size: 14px;
+      display:inline-block;
+      margin-bottom:16px;
+      color:#9d7b34;
+      text-decoration:none;
+      font-weight:700;
+      font-size:14px;
     }
 
     .card {
-      background: rgba(255,255,255,0.92);
-      border: 1px solid rgba(199,162,87,0.4);
-      border-radius: 24px;
-      box-shadow: 0 24px 70px rgba(17,19,21,0.1);
-      overflow: hidden;
+      background:rgba(255,255,255,0.92);
+      border:1px solid rgba(199,162,87,0.4);
+      border-radius:24px;
+      box-shadow:0 24px 70px rgba(17,19,21,0.1);
+      overflow:hidden;
     }
 
     .header {
-      text-align: center;
-      padding: 36px 28px 24px;
-      border-bottom: 1px solid #e8dfca;
+      text-align:center;
+      padding:36px 28px 24px;
+      border-bottom:1px solid #e8dfca;
     }
 
     .logo {
-      width: 88px;
-      margin-bottom: 12px;
-      filter: drop-shadow(0 12px 18px rgba(0,0,0,0.12));
+      width:88px;
+      margin-bottom:12px;
+      filter:drop-shadow(0 12px 18px rgba(0,0,0,0.12));
     }
 
     h1 {
-      margin: 0;
-      font-family: Georgia, serif;
-      font-size: 36px;
-      font-weight: 500;
-      letter-spacing: 1.4px;
+      margin:0;
+      font-family:Georgia, serif;
+      font-size:34px;
+      font-weight:500;
+      letter-spacing:1.2px;
     }
 
     .sub {
-      margin: 10px auto 0;
-      color: #6f6a61;
-      line-height: 1.7;
-      max-width: 560px;
-      font-size: 14px;
+      margin:10px auto 0;
+      color:#6f6a61;
+      line-height:1.7;
+      max-width:560px;
+      font-size:14px;
     }
 
     .body {
-      padding: 28px;
+      padding:28px;
     }
 
     .signed-in-chip {
-      display: none;
-      margin-bottom: 18px;
-      padding: 12px 14px;
-      border-radius: 999px;
-      background: rgba(47,143,87,0.08);
-      border: 1px solid rgba(47,143,87,0.18);
-      color: #2f8f57;
-      font-size: 13px;
-      font-weight: 700;
-      text-align: center;
+      display:none;
+      margin-bottom:18px;
+      padding:12px 14px;
+      border-radius:999px;
+      background:rgba(47,143,87,0.08);
+      border:1px solid rgba(47,143,87,0.18);
+      color:#2f8f57;
+      font-size:13px;
+      font-weight:700;
+      text-align:center;
     }
 
     .room-summary {
-      margin-bottom: 20px;
-      padding: 16px;
-      border: 1px solid #e8dfca;
-      border-radius: 16px;
-      background: rgba(255,255,255,0.65);
+      margin-bottom:20px;
+      padding:16px;
+      border:1px solid #e8dfca;
+      border-radius:16px;
+      background:rgba(255,255,255,0.65);
     }
 
     .summary-label {
-      font-size: 11px;
-      letter-spacing: 1.3px;
-      text-transform: uppercase;
-      font-weight: 800;
-      color: #7c7468;
-      margin-bottom: 6px;
+      font-size:11px;
+      letter-spacing:1.3px;
+      text-transform:uppercase;
+      font-weight:800;
+      color:#7c7468;
+      margin-bottom:6px;
     }
 
     .summary-value {
-      font-size: 17px;
-      font-weight: 800;
-      color: #111315;
-      line-height: 1.5;
+      font-size:17px;
+      font-weight:800;
+      color:#111315;
+      line-height:1.5;
     }
 
     label {
-      display: block;
-      margin: 18px 0 8px;
-      font-size: 12px;
-      letter-spacing: 1.3px;
-      text-transform: uppercase;
-      font-weight: 700;
-      color: #6f6a61;
+      display:block;
+      margin:18px 0 8px;
+      font-size:12px;
+      letter-spacing:1.3px;
+      text-transform:uppercase;
+      font-weight:700;
+      color:#6f6a61;
     }
 
     input,
     select,
     textarea {
-      width: 100%;
-      box-sizing: border-box;
-      border: 1px solid #e1d4b8;
-      border-radius: 14px;
-      padding: 14px 15px;
-      font-size: 15px;
-      background: #fff;
-      color: #111315;
-      outline: none;
+      width:100%;
+      box-sizing:border-box;
+      border:1px solid #e1d4b8;
+      border-radius:14px;
+      padding:14px 15px;
+      font-size:15px;
+      background:#fff;
+      color:#111315;
+      outline:none;
     }
 
     textarea {
-      min-height: 130px;
-      resize: vertical;
+      min-height:130px;
+      resize:vertical;
     }
 
     input:focus,
     select:focus,
     textarea:focus {
-      border-color: #c7a257;
-      box-shadow: 0 0 0 3px rgba(199,162,87,0.14);
+      border-color:#c7a257;
+      box-shadow:0 0 0 3px rgba(199,162,87,0.14);
     }
 
     .btn {
-      width: 100%;
-      margin-top: 22px;
-      border: 0;
-      border-radius: 14px;
-      padding: 15px 18px;
-      cursor: pointer;
-      background: linear-gradient(180deg, #d8ba73, #b8934c);
-      color: #111315;
-      font-weight: 800;
-      font-size: 15px;
+      width:100%;
+      margin-top:22px;
+      border:0;
+      border-radius:14px;
+      padding:15px 18px;
+      cursor:pointer;
+      background:linear-gradient(180deg, #d8ba73, #b8934c);
+      color:#111315;
+      font-weight:800;
+      font-size:15px;
+      text-decoration:none;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-height:48px;
+      box-sizing:border-box;
+    }
+
+    .btn.secondary {
+      background:rgba(255,255,255,0.78);
+      border:1px solid #e1d4b8;
+      color:#9d7b34;
     }
 
     .btn:disabled {
-      opacity: 0.65;
-      cursor: not-allowed;
+      opacity:0.65;
+      cursor:not-allowed;
     }
 
     .note {
-      margin-top: 16px;
-      color: #7c7468;
-      font-size: 13px;
-      line-height: 1.6;
-      text-align: center;
+      margin-top:16px;
+      color:#7c7468;
+      font-size:13px;
+      line-height:1.6;
+      text-align:center;
     }
 
     .status {
-      display: none;
-      margin-top: 18px;
-      padding: 14px;
-      border-radius: 14px;
-      font-size: 14px;
-      line-height: 1.6;
+      display:none;
+      margin-top:18px;
+      padding:14px;
+      border-radius:14px;
+      font-size:14px;
+      line-height:1.6;
     }
 
     .status.success {
-      display: block;
-      color: #2f8f57;
-      background: rgba(47,143,87,0.08);
-      border: 1px solid rgba(47,143,87,0.22);
+      display:block;
+      color:#2f8f57;
+      background:rgba(47,143,87,0.08);
+      border:1px solid rgba(47,143,87,0.22);
     }
 
     .status.error {
-      display: block;
-      color: #b44c4c;
-      background: rgba(180,76,76,0.08);
-      border: 1px solid rgba(180,76,76,0.22);
+      display:block;
+      color:#b44c4c;
+      background:rgba(180,76,76,0.08);
+      border:1px solid rgba(180,76,76,0.22);
+    }
+
+    .success-actions {
+      display:none;
+      margin-top:18px;
+      gap:12px;
+      flex-direction:column;
+    }
+
+    .success-actions.active {
+      display:flex;
     }
   </style>
 </head>
 
 <body>
   <div class="wrap">
-    <a href="/" class="back-link">← Back to Portal</a>
+    <a href="#" id="back-link" class="back-link">← Back to Room Verification</a>
 
     <div class="card">
       <div class="header">
         <img src="/readymarkseal(best)nobackground.PNG" class="logo" alt="The Ready Mark" />
-        <h1>Report an Issue</h1>
+        <h1>Report Room Cleanliness Problem</h1>
         <p class="sub">
-          Report a cleanliness concern for this verified room. Your report will be tied to the room’s Ready Mark verification record.
+          Report a cleanliness concern for this verified room. Your report will be tied directly to the room’s Ready Mark verification record.
         </p>
       </div>
 
@@ -216,46 +239,53 @@
         <input id="verification-id" type="hidden" />
 
         <div class="room-summary">
-          <div class="summary-label">Reporting Issue For</div>
+          <div class="summary-label">Reporting Cleanliness Problem For</div>
           <div class="summary-value" id="room-display">Loading room details...</div>
         </div>
 
-        <label for="reservation-last-name">Reservation Last Name</label>
-        <input id="reservation-last-name" placeholder="Guest last name" />
+        <div id="form-wrap">
+          <label for="reservation-last-name">Reservation Last Name</label>
+          <input id="reservation-last-name" placeholder="Guest last name" />
 
-        <label for="issue-type">Issue Type</label>
-        <select id="issue-type">
-          <option value="">Select an issue type</option>
-          <option>Cleanliness Concern</option>
-          <option>Bathroom Issue</option>
-          <option>Bedding / Linen Issue</option>
-          <option>Missing / Soiled Linen</option>
-          <option>Missing Towels or Supplies</option>
-          <option>Damage or Maintenance Concern</option>
-          <option>Odor Concern</option>
-          <option>Noise Issue</option>
-          <option>Temperature / AC Issue</option>
-          <option>Unable to Capture Photo</option>
-          <option>Other</option>
-        </select>
+          <label for="issue-type">Issue Type</label>
+          <select id="issue-type">
+            <option value="">Select an issue type</option>
+            <option>Cleanliness Concern</option>
+            <option>Bathroom Issue</option>
+            <option>Bedding / Linen Issue</option>
+            <option>Missing / Soiled Linen</option>
+            <option>Missing Towels or Supplies</option>
+            <option>Damage or Maintenance Concern</option>
+            <option>Odor Concern</option>
+            <option>Noise Issue</option>
+            <option>Temperature / AC Issue</option>
+            <option>Unable to Capture Photo</option>
+            <option>Other</option>
+          </select>
 
-        <label for="guest-note">Details</label>
-        <textarea id="guest-note" placeholder="Briefly describe the concern."></textarea>
+          <label for="guest-note">Details</label>
+          <textarea id="guest-note" placeholder="Briefly describe the cleanliness concern."></textarea>
 
-        <label for="issue-photo">Photo Evidence</label>
-        <input id="issue-photo" type="file" accept="image/*" />
+          <label for="issue-photo">Photo Evidence</label>
+          <input id="issue-photo" type="file" accept="image/*" />
 
-        <div class="note">
-          Photo evidence is strongly recommended. It is required for most visible cleanliness concerns.
-        </div>
+          <div class="note">
+            Photo evidence is strongly recommended. It is required for most visible cleanliness concerns.
+          </div>
 
-        <button class="btn" id="submit-btn" type="button">Submit Issue</button>
+          <button class="btn" id="submit-btn" type="button">Submit Cleanliness Report</button>
 
-        <div class="note">
-          For emergencies, contact the property directly.
+          <div class="note">
+            For emergencies, contact the property directly.
+          </div>
         </div>
 
         <div id="status-box" class="status"></div>
+
+        <div id="success-actions" class="success-actions">
+          <a href="#" id="return-verification-link" class="btn">Return to Room Verification</a>
+          <a href="#" id="return-full-link" class="btn secondary">View Full Inspection Record</a>
+        </div>
       </div>
     </div>
   </div>
@@ -273,14 +303,30 @@
     const params = new URLSearchParams(window.location.search);
     const currentPath = window.location.pathname + window.location.search;
 
+    const slugParam = params.get("slug") || params.get("qr") || params.get("room") || "";
+    const propertyParam = params.get("property_slug") || params.get("property") || "";
+    const roomParam = params.get("room_number") || params.get("room") || "";
+    const verificationParam = params.get("verification_id") || params.get("verificationId") || "";
+    const returnToParam = params.get("return_to") || "";
+
+    const defaultReturnUrl = slugParam
+      ? `/verify.html?slug=${encodeURIComponent(slugParam)}`
+      : "/";
+
+    const returnUrl = returnToParam || defaultReturnUrl;
+    const fullRecordUrl = slugParam
+      ? `/inspection-report.html?slug=${encodeURIComponent(slugParam)}`
+      : "/inspection-report.html";
+
     const statusBox = document.getElementById("status-box");
     const submitBtn = document.getElementById("submit-btn");
     const signedInChip = document.getElementById("signed-in-chip");
+    const formWrap = document.getElementById("form-wrap");
+    const successActions = document.getElementById("success-actions");
 
-    const slugParam = params.get("slug") || params.get("qr") || params.get("room") || "";
-    const propertyParam = params.get("property_slug") || params.get("property") || "";
-    const roomParam = params.get("room_number") || params.get("room_number") || "";
-    const verificationParam = params.get("verification_id") || params.get("verificationId") || "";
+    document.getElementById("back-link").href = returnUrl;
+    document.getElementById("return-verification-link").href = returnUrl;
+    document.getElementById("return-full-link").href = fullRecordUrl;
 
     function showStatus(message, type) {
       statusBox.className = "status " + type;
@@ -297,11 +343,15 @@
     }
 
     function getGuestToken() {
-      return localStorage.getItem("readymark_guest_token") || sessionStorage.getItem("readymark_guest_token") || "";
+      return localStorage.getItem("readymark_guest_token") ||
+        sessionStorage.getItem("readymark_guest_token") ||
+        "";
     }
 
     function getGuestEmail() {
-      return localStorage.getItem("readymark_guest_email") || sessionStorage.getItem("readymark_guest_email") || "";
+      return localStorage.getItem("readymark_guest_email") ||
+        sessionStorage.getItem("readymark_guest_email") ||
+        "";
     }
 
     function setRoomDetails({ property_slug, property_name, room_number, verification_id }) {
@@ -328,10 +378,10 @@
         }
 
         setRoomDetails({
-          property_slug: data.property_slug || "",
+          property_slug: data.property_slug || propertyParam || "",
           property_name: data.property || "",
-          room_number: data.room || "",
-          verification_id: data.verificationId || ""
+          room_number: data.room || roomParam || "",
+          verification_id: data.verificationId || verificationParam || ""
         });
 
         return true;
@@ -390,14 +440,13 @@
         await hydrateFromSlug(slugParam);
       }
 
-      const finalProperty = document.getElementById("property-slug").value.trim();
       const finalRoom = document.getElementById("room-number").value.trim();
       const finalVerification = document.getElementById("verification-id").value.trim();
 
       if (!finalRoom || !finalVerification) {
         submitBtn.disabled = true;
         showStatus(
-          "This report must be started from a valid room verification record. Please return to the room verification page and choose Have an Issue.",
+          "This report must be started from a valid room verification record. Please return to the room verification page and choose Report a Room Cleanliness Problem.",
           "error"
         );
       }
@@ -432,7 +481,7 @@
       }
 
       if (!guest_note) {
-        showStatus("Please briefly describe the concern.", "error");
+        showStatus("Please briefly describe the cleanliness concern.", "error");
         return;
       }
 
@@ -486,20 +535,21 @@
 
         showStatus(
           reference
-            ? `Issue submitted successfully. Reference number: ${reference}.`
-            : "Issue submitted successfully. Thank you.",
+            ? `Cleanliness report submitted successfully. Reference number: ${reference}. Returning to room verification...`
+            : "Cleanliness report submitted successfully. Returning to room verification...",
           "success"
         );
 
-        document.getElementById("reservation-last-name").value = "";
-        document.getElementById("issue-type").value = "";
-        document.getElementById("guest-note").value = "";
-        document.getElementById("issue-photo").value = "";
+        formWrap.style.display = "none";
+        successActions.classList.add("active");
+
+        setTimeout(() => {
+          window.location.href = returnUrl;
+        }, 2200);
       } catch (error) {
         showStatus(error.message || "Unable to submit issue.", "error");
-      } finally {
         submitBtn.disabled = false;
-        submitBtn.textContent = "Submit Issue";
+        submitBtn.textContent = "Submit Cleanliness Report";
       }
     });
 
