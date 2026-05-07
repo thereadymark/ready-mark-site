@@ -4,37 +4,72 @@
   <meta charset="UTF-8" />
   <title>Confirm Resolution | The Ready Mark</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
   <style>
     body {
       margin: 0;
       min-height: 100vh;
       font-family: Arial, sans-serif;
-      background: radial-gradient(circle at top, rgba(199,162,87,.16), transparent 34%),
+      background:
+        radial-gradient(circle at top, rgba(199,162,87,.16), transparent 34%),
         linear-gradient(180deg, #fbfaf6 0%, #f6f2ea 100%);
       color: #111315;
     }
 
-    .wrap { max-width: 720px; margin: 0 auto; padding: 42px 18px; }
+    .wrap {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 42px 18px;
+    }
 
     .card {
-      background: rgba(255,255,255,.92);
+      background: rgba(255,255,255,.94);
       border: 1px solid rgba(199,162,87,.42);
       border-radius: 24px;
       box-shadow: 0 24px 70px rgba(17,19,21,.1);
       overflow: hidden;
     }
 
-    .header, .body, .footer { text-align: center; padding: 30px; }
-    .header { border-bottom: 1px solid #e8dfca; }
-    .footer { border-top: 1px solid #e8dfca; color: #8a7350; font-size: 13px; }
+    .header,
+    .body,
+    .footer {
+      text-align: center;
+      padding: 30px;
+    }
 
-    .logo { width: 90px; margin-bottom: 14px; }
+    .header {
+      border-bottom: 1px solid #e8dfca;
+    }
 
-    h1, h2 { font-family: Georgia, serif; font-weight: 500; margin: 0; }
-    h1 { font-size: 34px; }
-    h2 { font-size: 28px; margin-bottom: 12px; }
+    .footer {
+      border-top: 1px solid #e8dfca;
+    }
 
-    p { color: #6f6a61; line-height: 1.7; }
+    .logo {
+      width: 90px;
+      margin-bottom: 14px;
+    }
+
+    h1,
+    h2 {
+      font-family: Georgia, serif;
+      font-weight: 500;
+      margin: 0;
+    }
+
+    h1 {
+      font-size: 34px;
+    }
+
+    h2 {
+      font-size: 28px;
+      margin-bottom: 12px;
+    }
+
+    p {
+      color: #6f6a61;
+      line-height: 1.7;
+    }
 
     textarea {
       width: 100%;
@@ -46,6 +81,12 @@
       padding: 14px;
       font-size: 15px;
       resize: vertical;
+      outline: none;
+      transition: border-color .2s ease;
+    }
+
+    textarea:focus {
+      border-color: #c7a257;
     }
 
     .actions {
@@ -55,14 +96,7 @@
       margin-top: 20px;
     }
 
-    .footer-actions {
-      display: flex;
-      justify-content: center;
-      gap: 14px;
-      flex-wrap: wrap;
-    }
-
-    .btn, .footer-btn {
+    .btn {
       border: 0;
       border-radius: 14px;
       padding: 15px 18px;
@@ -70,18 +104,31 @@
       font-weight: 800;
       font-size: 15px;
       min-height: 54px;
-      text-decoration: none;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
+      transition: all .18s ease;
     }
 
-    .btn-primary { background: linear-gradient(180deg, #d8ba73, #b8934c); color: #111315; }
-    .btn-secondary, .footer-btn { background: #fff; color: #9d7b34; border: 1px solid #e1d4b8; }
+    .btn:hover {
+      transform: translateY(-1px);
+    }
 
     .btn:disabled {
-      opacity: .6;
+      opacity: .65;
       cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-primary {
+      background: linear-gradient(180deg, #d8ba73, #b8934c);
+      color: #111315;
+      box-shadow: 0 10px 20px rgba(184,147,76,.22);
+    }
+
+    .btn-secondary,
+    .footer-btn {
+      background: linear-gradient(180deg, #ffffff, #f4ead8);
+      color: #8a6424;
+      border: 1px solid #d8c28e;
+      box-shadow: 0 8px 18px rgba(17,19,21,.06);
     }
 
     .status {
@@ -91,13 +138,7 @@
       border-radius: 14px;
       line-height: 1.6;
       font-size: 14px;
-    }
-
-    .status.loading {
-      display: block;
-      background: rgba(199,162,87,.10);
-      border: 1px solid rgba(199,162,87,.28);
-      color: #8a6a24;
+      font-weight: 600;
     }
 
     .status.success {
@@ -114,11 +155,46 @@
       color: #b44c4c;
     }
 
-    a { color: #9d7b34; font-weight: 800; text-decoration: none; }
+    .footer-actions {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+
+    .footer-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      min-width: 220px;
+      min-height: 52px;
+      border-radius: 14px;
+      font-weight: 800;
+      padding: 0 18px;
+      box-sizing: border-box;
+    }
+
+    .footer-link {
+      color: #9d7b34;
+      font-weight: 800;
+      text-decoration: none;
+      font-size: 14px;
+    }
+
+    .footer-link:hover {
+      text-decoration: underline;
+    }
 
     @media (max-width: 640px) {
-      .actions { grid-template-columns: 1fr; }
-      .footer-actions { flex-direction: column; }
+      .actions {
+        grid-template-columns: 1fr;
+      }
+
+      .footer-btn {
+        width: 100%;
+      }
     }
   </style>
 </head>
@@ -126,142 +202,221 @@
 <body>
   <div class="wrap">
     <div class="card">
+
       <div class="header">
-        <img src="/readymarkseal(best)nobackground.PNG" class="logo" alt="The Ready Mark" />
+        <img
+          src="/readymarkseal(best)nobackground.PNG"
+          class="logo"
+          alt="The Ready Mark"
+        />
+
         <h1>Confirm Resolution</h1>
-        <p>Please let us know whether your room cleanliness issue has been resolved.</p>
+
+        <p>
+          Please let us know whether your room cleanliness issue has been resolved.
+        </p>
       </div>
 
       <div class="body">
-        <h2>Was your issue resolved?</h2>
-        <p>Your response helps The Ready Mark confirm whether the property fully addressed the concern or whether the issue needs to be reopened.</p>
 
-        <textarea id="guest-note" placeholder="Optional: Add a short note about what happened."></textarea>
+        <h2>Was your issue resolved?</h2>
+
+        <p>
+          Your response helps The Ready Mark confirm whether the property fully addressed the concern or whether the issue needs to be reopened.
+        </p>
+
+        <textarea
+          id="guest-note"
+          placeholder="Optional: Add a short note about what happened."
+        ></textarea>
 
         <div class="actions">
-          <button id="resolved-btn" class="btn btn-primary" type="button">Yes, Issue Resolved</button>
-          <button id="attention-btn" class="btn btn-secondary" type="button">No, Still Needs Attention</button>
+          <button
+            id="resolved-btn"
+            class="btn btn-primary"
+            type="button"
+          >
+            Yes, Issue Resolved
+          </button>
+
+          <button
+            id="attention-btn"
+            class="btn btn-secondary"
+            type="button"
+          >
+            No, Still Needs Attention
+          </button>
         </div>
 
         <div id="status-box" class="status"></div>
+
       </div>
 
       <div class="footer">
+
         <div class="footer-actions">
-          <a id="verification-link" class="footer-btn" href="/verify.html">Back to Verification Page</a>
-          <button id="logout-btn" class="footer-btn" type="button">Logout Guest Session</button>
-          <a class="footer-btn" href="/privacy.html">Privacy Policy</a>
+
+          <a
+            id="verification-link"
+            class="footer-btn"
+            href="/verify.html"
+          >
+            Back to Verification Page
+          </a>
+
+          <button
+            id="logout-btn"
+            class="footer-btn"
+            type="button"
+          >
+            Logout Guest Session
+          </button>
+
         </div>
+
+        <a class="footer-link" href="/privacy.html">
+          Privacy Policy
+        </a>
+
       </div>
+
     </div>
   </div>
 
   <script>
     const params = new URLSearchParams(window.location.search);
-    const reportId = params.get("report_id") || params.get("id") || "";
-    const token = params.get("token") || "";
-    const slug = params.get("slug") || "";
 
-    const statusBox = document.getElementById("status-box");
-    const noteInput = document.getElementById("guest-note");
-    const resolvedBtn = document.getElementById("resolved-btn");
-    const attentionBtn = document.getElementById("attention-btn");
-    const logoutBtn = document.getElementById("logout-btn");
-    const verificationLink = document.getElementById("verification-link");
+    const reportId =
+      params.get("report_id") ||
+      params.get("id") ||
+      "";
 
-    if (slug) {
-      verificationLink.href = `/verify.html?slug=${encodeURIComponent(slug)}`;
-    }
+    const token =
+      params.get("token") ||
+      "";
+
+    const statusBox =
+      document.getElementById("status-box");
+
+    const noteInput =
+      document.getElementById("guest-note");
+
+    const resolvedBtn =
+      document.getElementById("resolved-btn");
+
+    const attentionBtn =
+      document.getElementById("attention-btn");
+
+    const logoutBtn =
+      document.getElementById("logout-btn");
 
     function showStatus(message, type) {
       statusBox.className = "status " + type;
       statusBox.textContent = message;
     }
 
-    function setLoading(isLoading, activeButtonText) {
+    function setLoading(isLoading) {
       resolvedBtn.disabled = isLoading;
       attentionBtn.disabled = isLoading;
-
-      if (isLoading) {
-        if (activeButtonText === "resolved") resolvedBtn.textContent = "Submitting...";
-        if (activeButtonText === "attention") attentionBtn.textContent = "Submitting...";
-      } else {
-        resolvedBtn.textContent = "Yes, Issue Resolved";
-        attentionBtn.textContent = "No, Still Needs Attention";
-      }
     }
-
-    function clearGuestSession() {
-      localStorage.removeItem("readymark_guest_token");
-      localStorage.removeItem("readymark_guest_email");
-      sessionStorage.removeItem("readymark_guest_token");
-      sessionStorage.removeItem("readymark_guest_email");
-    }
-
-    logoutBtn.addEventListener("click", () => {
-      clearGuestSession();
-      showStatus("Guest session cleared. You are logged out on this device.", "success");
-    });
 
     async function submitGuestResponse(guestResolutionStatus) {
+
       if (!reportId || !token) {
-        showStatus("Missing report link details. Please use the follow-up link sent to you.", "error");
+        showStatus(
+          "Missing report link details. Please use the follow-up link sent to you.",
+          "error"
+        );
         return;
       }
 
-      const activeButtonText =
-        guestResolutionStatus === "guest_confirmed_resolved" ? "resolved" : "attention";
+      setLoading(true);
 
-      setLoading(true, activeButtonText);
-      showStatus("Submitting your response...", "loading");
-
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 15000);
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => {
+          reject(new Error(
+            "This is taking too long. Please try again, or return to the verification page."
+          ));
+        }, 15000);
+      });
 
       try {
-        const res = await fetch("/api/guest-confirm-resolution", {
-          method: "POST",
-          signal: controller.signal,
-          headers: {
-            "Content-Type": "application/json",
-            "Accept": "application/json"
-          },
-          body: JSON.stringify({
-            report_id: reportId,
-            token: token,
-            guest_resolution_status: guestResolutionStatus,
-            guest_resolution_note: noteInput.value.trim()
-          })
-        });
 
-        clearTimeout(timeout);
+        const fetchPromise = fetch(
+          "/api/guest-confirm-resolution",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Accept": "application/json"
+            },
+            body: JSON.stringify({
+              report_id: reportId,
+              token: token,
+              guest_resolution_status: guestResolutionStatus,
+              guest_resolution_note: noteInput.value.trim()
+            })
+          }
+        );
+
+        const res = await Promise.race([
+          fetchPromise,
+          timeoutPromise
+        ]);
 
         const data = await res.json().catch(() => null);
 
         if (!res.ok || data?.error) {
-          throw new Error(data?.error || "Unable to submit your response.");
+          throw new Error(
+            data?.error ||
+            "Unable to submit your response."
+          );
         }
 
         if (guestResolutionStatus === "guest_confirmed_resolved") {
-          showStatus("Thank you. Your issue has been confirmed with the guest. The Ready Mark team will complete final closure.", "success");
-        } else {
-          showStatus("Thank you. Your report has been reopened and marked as still needing attention.", "success");
-        }
-      } catch (error) {
-        clearTimeout(timeout);
 
-        if (error.name === "AbortError") {
-          showStatus("This is taking too long. Please try again, or return to the verification page.", "error");
+          showStatus(
+            "Thank you. Your issue has been confirmed. The Ready Mark team will complete final review and closure.",
+            "success"
+          );
+
         } else {
-          showStatus(error.message || "Unable to submit your response.", "error");
+
+          showStatus(
+            "Thank you. Your issue has been reopened and marked as still needing attention.",
+            "success"
+          );
         }
+
+      } catch (error) {
+
+        showStatus(
+          error.message ||
+          "Unable to submit your response.",
+          "error"
+        );
+
       } finally {
+
         setLoading(false);
       }
     }
 
-    resolvedBtn.addEventListener("click", () => submitGuestResponse("guest_confirmed_resolved"));
-    attentionBtn.addEventListener("click", () => submitGuestResponse("guest_still_needs_attention"));
+    resolvedBtn.addEventListener(
+      "click",
+      () => submitGuestResponse("guest_confirmed_resolved")
+    );
+
+    attentionBtn.addEventListener(
+      "click",
+      () => submitGuestResponse("guest_still_needs_attention")
+    );
+
+    logoutBtn.addEventListener("click", () => {
+      localStorage.removeItem("guest_session_token");
+      sessionStorage.removeItem("guest_session_token");
+      window.location.href = "/verify.html";
+    });
   </script>
 </body>
 </html>
