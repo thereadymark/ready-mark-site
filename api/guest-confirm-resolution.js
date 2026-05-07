@@ -1,41 +1,35 @@
 import { createClient } from "@supabase/supabase-js";
 
-const supabaseUrl = process.env.SUPABASE_URL;
-const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+);
 
-const supabase = createClient(supabaseUrl, serviceRoleKey);
+export default async function handler(req, res) {
+  const allowedOrigin = "https://verify.thereadymarkgroup.com";
 
-function json(status, payload) {
-  return new Response(JSON.stringify(payload), {
-    status,
-    headers: {
-      "Content-Type": "application/json"
-    }
-  });
-}
+  res.setHeader("Access-Control-Allow-Origin", allowedOrigin);
+  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
-export default async function handler(req) {
+  if (req.method === "OPTIONS") {
+    return res.status(200).end();
+  }
+
   if (req.method !== "POST") {
-    return json(405, { error: "Method not allowed." });
+    return res.status(405).json({ error: "Method not allowed." });
   }
 
   try {
-    const body = await req.json();
+    const body = req.body || {};
 
     const reportId = String(body.report_id || "").trim();
     const token = String(body.token || "").trim();
-    const guestResolutionStatus = String(
-      body.guest_resolution_status || ""
-    ).trim();
-
-    const guestResolutionNote = String(
-      body.guest_resolution_note || ""
-    ).trim();
+    const guestResolutionStatus = String(body.guest_resolution_status || "").trim();
+    const guestResolutionNote = String(body.guest_resolution_note || "").trim();
 
     if (!reportId || !token) {
-      return json(400, {
-        error: "Missing report ID or token."
-      });
+      return res.status(400).json({ error: "Missing report ID or token." });
     }
 
     const allowedStatuses = [
@@ -44,85 +38,74 @@ export default async function handler(req) {
     ];
 
     if (!allowedStatuses.includes(guestResolutionStatus)) {
-      return json(400, {
-        error: "Invalid resolution status."
-      });
+      return res.status(400).json({ error: "Invalid resolution status." });
     }
 
     const { data: report, error: lookupError } = await supabase
       .from("guest_reports")
-      .select(`
-        id,
-        resolution_token,
-        status
-      `)
+      .select("id, resolution_token, status")
       .eq("id", reportId)
       .maybeSingle();
 
     if (lookupError) {
-      return json(500, {
-        error: lookupError.message
-      });
+      return res.status(500).json({ error: lookupError.message });
     }
 
     if (!report) {
-      return json(404, {
-        error: "Report not found."
-      });
+      return res.status(404).json({ error: "Report not found." });
     }
 
     if (report.resolution_token !== token) {
-      return json(403, {
-        error: "Invalid token."
-      });
+      return res.status(403).json({ error: "Invalid token." });
     }
 
-    let updatePayload = {};
+    const now = new Date().toISOString();
 
-    if (guestResolutionStatus === "guest_confirmed_resolved") {
-      updatePayload = {
-        status: "Confirmed with Guest",
-        verification_status: "guest_confirmed",
-        guest_confirmation_status: "satisfied",
-        guest_confirmed_at: new Date().toISOString(),
-        guest_resolution_note:
-          guestResolutionNote || null,
-        updated_at: new Date().toISOString()
-      };
-    } else {
-      updatePayload = {
-        status: "Still Needs Attention",
-        verification_status: "reopened",
-        guest_confirmation_status: "not_satisfied",
-        guest_resolution_note:
-          guestResolutionNote || null,
-        under_review_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        resolved_at: null,
-        verified_at: null,
-        verified_by: null
-      };
-    }
+    const updatePayload =
+      guestResolutionStatus === "guest_confirmed_resolved"
+        ? {
+            status: "Confirmed with Guest",
+            verification_status: "guest_confirmed",
+            guest_confirmation_status: "satisfied",
+            guest_confirmed_at: now,
+            guest_resolution_status: "guest_confirmed_resolved",
+            guest_resolution_note: guestResolutionNote || null,
+            guest_resolution_confirmed_at: now,
+            updated_at: now
+          }
+        : {
+            status: "Still Needs Attention",
+            verification_status: "reopened",
+            guest_confirmation_status: "not_satisfied",
+            guest_resolution_status: "guest_still_needs_attention",
+            guest_resolution_note: guestResolutionNote || null,
+            guest_resolution_confirmed_at: now,
+            under_review_at: now,
+            resolved_at: null,
+            verified_at: null,
+            verified_by: null,
+            updated_at: now
+          };
 
-    const { error: updateError } = await supabase
+    const { data: updatedReport, error: updateError } = await supabase
       .from("guest_reports")
       .update(updatePayload)
-      .eq("id", reportId);
+      .eq("id", reportId)
+      .select()
+      .maybeSingle();
 
     if (updateError) {
-      return json(500, {
-        error: updateError.message
-      });
+      return res.status(500).json({ error: updateError.message });
     }
 
-    return json(200, {
+    return res.status(200).json({
       success: true,
-      status: updatePayload.status
+      status: updatePayload.status,
+      report: updatedReport
     });
-
   } catch (error) {
-    return json(500, {
-      error: error.message || "Unknown server error."
+    return res.status(500).json({
+      error: error.message || "Unable to confirm resolution."
     });
   }
 }
