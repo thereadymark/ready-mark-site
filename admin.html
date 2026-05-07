@@ -1133,6 +1133,77 @@ function formatMinutesLabel(totalMinutes) {
       if (el) el.textContent = message;
     }
 
+    async function apiFetch(url, options = {}) {
+  const headers = new Headers(options.headers || {});
+
+  if (!(options.body instanceof FormData)) {
+    headers.set("Content-Type", "application/json");
+  }
+
+  if (state.adminToken) {
+    headers.set("x-admin-token", state.adminToken);
+  }
+
+  const response = await fetch(url, { ...options, headers });
+  const data = await response.json().catch(() => null);
+
+  if (!response.ok) {
+    throw new Error(data?.error || data?.details || `Request failed: ${response.status}`);
+  }
+
+  return data;
+}
+
+async function loginAdmin() {
+  const passwordInput = document.getElementById("admin-password-input");
+  const errorBox = document.getElementById("auth-error");
+  const overlay = document.getElementById("auth-overlay");
+  const password = passwordInput.value.trim();
+
+  errorBox.textContent = "";
+
+  if (!password) {
+    errorBox.textContent = "Enter your admin password.";
+    return;
+  }
+
+  try {
+    const response = await fetch(API.adminLogin, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ password })
+    });
+
+    const data = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      throw new Error(data?.error || "Login failed.");
+    }
+
+    state.adminToken = data.token;
+    sessionStorage.setItem(STORAGE_KEY, data.token);
+
+    await apiFetch(API.verifyAdminToken, { method: "GET" });
+
+    overlay.classList.add("hidden");
+
+    await refreshAdminData();
+  } catch (error) {
+    errorBox.textContent = error.message || "Login failed.";
+  }
+}
+
+async function refreshAdminData() {
+  const data = await apiFetch(API.adminData, { method: "GET" });
+
+  state.properties = Array.isArray(data?.properties) ? data.properties : [];
+  state.rooms = Array.isArray(data?.rooms) ? data.rooms : [];
+  state.inspections = Array.isArray(data?.inspections) ? data.inspections : [];
+  state.guestReports = Array.isArray(data?.guest_reports) ? data.guest_reports : [];
+
+  renderGuestReports();
+  renderDashboard();
+}
    function isClosedGuestReport(report) {
   return String(report?.status || "").trim() === "Resolved";
 }
