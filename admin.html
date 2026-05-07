@@ -1133,321 +1133,49 @@ function formatMinutesLabel(totalMinutes) {
       if (el) el.textContent = message;
     }
 
-    function getStatusPillClass(statusText) {
-      const normalized = String(statusText || "").toLowerCase();
+   function isClosedGuestReport(report) {
+  return String(report?.status || "").trim() === "Resolved";
+}
 
-      if (
-        normalized.includes("fully resolved") ||
-        normalized.includes("confirmed with guest") ||
-        normalized.includes("resolved by property") ||
-        normalized === "resolved" ||
-        normalized.includes("verified") ||
-        normalized.includes("active") ||
-        normalized.includes("current")
-      ) {
-        return "status-verified";
-      }
+function getStatusPillClass(statusText) {
+  const normalized = String(statusText || "").toLowerCase();
 
-      if (
-        normalized.includes("under review") ||
-        normalized.includes("sent to property") ||
-        normalized.includes("issues") ||
-        normalized.includes("attention") ||
-        normalized.includes("archived")
-      ) {
-        return "status-issues";
-      }
+  if (normalized === "resolved") return "status-verified";
 
-      return "status-new";
-    }
+  if (
+    normalized.includes("confirmed with guest") ||
+    normalized.includes("remediation submitted") ||
+    normalized.includes("under review") ||
+    normalized.includes("sent to property") ||
+    normalized.includes("still needs attention") ||
+    normalized.includes("escalated") ||
+    normalized.includes("attention") ||
+    normalized.includes("issues") ||
+    normalized.includes("archived")
+  ) {
+    return "status-issues";
+  }
 
-    async function apiFetch(url, options = {}) {
-      const headers = new Headers(options.headers || {});
-      if (!(options.body instanceof FormData)) {
-        headers.set("Content-Type", "application/json");
-      }
-      if (state.adminToken) {
-        headers.set("x-admin-token", state.adminToken);
-      }
+  if (
+    normalized.includes("verified") ||
+    normalized.includes("active") ||
+    normalized.includes("current")
+  ) {
+    return "status-verified";
+  }
 
-      const response = await fetch(url, { ...options, headers });
-      const data = await response.json().catch(() => null);
-
-      if (!response.ok) {
-        throw new Error(data?.error || data?.details || `Request failed: ${response.status}`);
-      }
-
-      return data;
-    }
-
-    async function fileToBase64(file) {
-      if (!file) return null;
-
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => {
-          const result = String(reader.result || "");
-          resolve({
-            name: file.name,
-            type: file.type,
-            base64: result.split(",")[1]
-          });
-        };
-        reader.onerror = () => reject(new Error(`Failed to read ${file.name}`));
-        reader.readAsDataURL(file);
-      });
-    }
-
-    function renderQrCode(publicUrl) {
-      const qrWrap = document.getElementById("qr-preview-wrap");
-      const downloadBtn = document.getElementById("download-qr-btn");
-      const printBtn = document.getElementById("print-qr-btn");
-
-      if (!qrWrap || !publicUrl) return;
-
-      const qrSrc = "https://api.qrserver.com/v1/create-qr-code/?size=260x260&data=" + encodeURIComponent(publicUrl);
-
-      const propertySelect = document.getElementById("inspection-property-select");
-      const propertyName = propertySelect.options[propertySelect.selectedIndex]?.text || "Property";
-      const propertySlug = propertySelect.value || "property";
-      const roomNumber = document.getElementById("inspection-room-number").value || "room";
-      const verificationId = document.getElementById("inspection-verification-id").value || "verification";
-
-      qrWrap.innerHTML = `
-        <div id="printable-qr-label" class="qr-preview-card">
-          <img
-            id="generated-qr-image"
-            src="${qrSrc}"
-            alt="QR Code"
-            class="qr-preview-image"
-          />
-          <div style="margin-top:12px;font-size:13px;">
-            <a
-              href="${publicUrl}"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="qr-link"
-            >
-              ${publicUrl}
-            </a>
-          </div>
-        </div>
-      `;
-
-      if (downloadBtn) {
-        downloadBtn.style.display = "inline-flex";
-        downloadBtn.onclick = async () => {
-          const response = await fetch(qrSrc);
-          const blob = await response.blob();
-          const blobUrl = URL.createObjectURL(blob);
-
-          const link = document.createElement("a");
-          link.href = blobUrl;
-          link.download = `${propertySlug}-room-${roomNumber}-${verificationId}.png`;
-          document.body.appendChild(link);
-          link.click();
-          link.remove();
-
-          URL.revokeObjectURL(blobUrl);
-        };
-      }
-
-      if (printBtn) {
-        printBtn.style.display = "inline-flex";
-        printBtn.onclick = () => {
-          const printWindow = window.open("", "_blank", "width=900,height=700");
-          if (!printWindow) return;
-
-          printWindow.document.write(`
-            <!DOCTYPE html>
-            <html>
-            <head>
-              <meta charset="UTF-8" />
-              <title>Print QR Label</title>
-              <style>
-                body {
-                  margin: 0;
-                  padding: 32px;
-                  background: #ffffff;
-                  font-family: Arial, sans-serif;
-                  color: #111315;
-                }
-                .sheet {
-                  display: flex;
-                  justify-content: center;
-                }
-                .label-card {
-                  width: 380px;
-                  border: 1px solid #e8e4dc;
-                  border-radius: 18px;
-                  padding: 24px;
-                  text-align: center;
-                }
-                .brand {
-                  font-family: Georgia, serif;
-                  font-size: 24px;
-                  margin-bottom: 16px;
-                }
-                .meta {
-                  font-size: 14px;
-                  line-height: 1.6;
-                  margin-bottom: 6px;
-                  word-break: break-word;
-                }
-                .qr-box {
-                  margin: 18px 0;
-                }
-                .qr-box img {
-                  width: 240px;
-                  height: 240px;
-                }
-                .url {
-                  font-size: 12px;
-                  color: #444;
-                  word-break: break-word;
-                  margin-top: 10px;
-                }
-                @media print {
-                  body { padding: 0; }
-                  .sheet { display: block; }
-                  .label-card {
-                    border: none;
-                    border-radius: 0;
-                    width: 100%;
-                  }
-                }
-              </style>
-            </head>
-            <body>
-              <div class="sheet">
-                <div class="label-card">
-                  <div class="brand">The Ready Mark</div>
-                  <div class="meta"><strong>Property:</strong> ${propertyName}</div>
-                  <div class="meta"><strong>Room:</strong> ${roomNumber}</div>
-                  <div class="meta"><strong>Verification ID:</strong> ${verificationId}</div>
-                  <div class="qr-box">
-                    <img src="${qrSrc}" alt="QR Code" />
-                  </div>
-                  <div class="url">${publicUrl}</div>
-                </div>
-              </div>
-              <script>
-                window.onload = function () {
-                  window.print();
-                };
-              <\/script>
-            </body>
-            </html>
-          `);
-
-          printWindow.document.close();
-        };
-      }
-    }
-
-    async function loginAdmin() {
-      const passwordInput = document.getElementById("admin-password-input");
-      const errorBox = document.getElementById("auth-error");
-      const overlay = document.getElementById("auth-overlay");
-      const password = passwordInput.value.trim();
-
-      errorBox.textContent = "";
-
-      if (!password) {
-        errorBox.textContent = "Enter your admin password.";
-        return;
-      }
-
-      try {
-        const response = await fetch(API.adminLogin, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ password })
-        });
-
-        const data = await response.json().catch(() => ({}));
-
-        if (!response.ok) {
-          throw new Error(data?.error || "Login failed.");
-        }
-
-        if (!data?.token) {
-          throw new Error("No admin token returned.");
-        }
-
-        state.adminToken = data.token;
-        sessionStorage.setItem(STORAGE_KEY, data.token);
-
-        await apiFetch(API.verifyAdminToken, { method: "GET" });
-
-        overlay.classList.add("hidden");
-        passwordInput.value = "";
-
-        await refreshAdminData();
-      } catch (error) {
-        errorBox.textContent = error.message || "Login failed.";
-      }
-    }
-
-    async function refreshAdminData() {
-      const data = await apiFetch(API.adminData, { method: "GET" });
-      state.properties = Array.isArray(data?.properties) ? data.properties : [];
-      state.rooms = Array.isArray(data?.rooms) ? data.rooms : [];
-      state.inspections = Array.isArray(data?.inspections) ? data.inspections : [];
-      state.guestReports = Array.isArray(data?.guest_reports) ? data.guest_reports : [];
-
-      renderProperties();
-      renderInspectionProperties();
-      renderGuestReports();
-      renderInspectionHistory();
-      renderInspectionHistoryPropertyFilter();
-      renderDashboard();
-    }
-
-    function renderProperties() {
-      const tbody = document.getElementById("existing-properties-body");
-
-      if (!state.properties.length) {
-        tbody.innerHTML = `<tr><td colspan="4">No properties found yet.</td></tr>`;
-        return;
-      }
-
-      tbody.innerHTML = state.properties.map(property => `
-        <tr>
-          <td>${escapeHtml(property.property_name)}</td>
-          <td>${escapeHtml(property.property_type || "—")}</td>
-          <td>${escapeHtml([property.city, property.state].filter(Boolean).join(", ") || "—")}</td>
-          <td><span class="status-pill status-verified">Active</span></td>
-        </tr>
-      `).join("");
-    }
-
-    function renderInspectionProperties() {
-      const select = document.getElementById("inspection-property-select");
-      select.innerHTML = `<option value="">Select property</option>` + state.properties.map(property => `
-        <option value="${escapeHtml(property.property_slug)}">${escapeHtml(property.property_name)}</option>
-      `).join("");
-    }
-
-    function renderInspectionHistoryPropertyFilter() {
-      const select = document.getElementById("inspection-history-property-filter");
-      const currentValue = select.value;
-
-      select.innerHTML = `<option value="">All properties</option>` + state.properties.map(property => `
-        <option value="${escapeHtml(property.property_slug)}">${escapeHtml(property.property_name)}</option>
-      `).join("");
-
-      select.value = currentValue;
-    }
+  return "status-new";
+}
 
 function getGuestReportActionButtons(report) {
   const status = String(report.status || "New");
-  const isResolved = !!report.resolved_at || status === "Resolved";
+  const isClosed = isClosedGuestReport(report);
 
-  if (isResolved) {
+  if (isClosed) {
     return `
       <div class="report-meta">
-        Resolved: ${escapeHtml(formatDateTime(report.resolved_at))}
+        Closed: ${escapeHtml(formatDateTime(report.resolved_at))}<br>
+        Verified By: ${escapeHtml(report.verified_by || "Ready Mark")}
       </div>
     `;
   }
@@ -1466,13 +1194,19 @@ function getGuestReportActionButtons(report) {
     actions.push(`<button class="btn btn-secondary btn-small" type="button" onclick="updateGuestReportStatus('${escapeHtml(report.id)}','Escalated')">Escalate</button>`);
   }
 
+  if (status !== "Remediation Submitted") {
+    actions.push(`<button class="btn btn-secondary btn-small" type="button" onclick="updateGuestReportStatus('${escapeHtml(report.id)}','Remediation Submitted')">Remediation Submitted</button>`);
+  }
+
+  if (status !== "Still Needs Attention") {
+    actions.push(`<button class="btn btn-secondary btn-small" type="button" onclick="updateGuestReportStatus('${escapeHtml(report.id)}','Still Needs Attention')">Still Needs Attention</button>`);
+  }
+
   if (status !== "Confirmed with Guest") {
     actions.push(`<button class="btn btn-secondary btn-small" type="button" onclick="updateGuestReportStatus('${escapeHtml(report.id)}','Confirmed with Guest')">Confirmed with Guest</button>`);
   }
 
-  if (status !== "Resolved" && !report.resolved_at) {
-    actions.push(`<button class="btn btn-primary btn-small" type="button" onclick="updateGuestReportStatus('${escapeHtml(report.id)}','Fully Resolved')">Fully Resolved</button>`);
-  }
+  actions.push(`<button class="btn btn-primary btn-small" type="button" onclick="updateGuestReportStatus('${escapeHtml(report.id)}','Resolved')">Resolve & Archive</button>`);
 
   if (report.photo_url) {
     actions.push(
@@ -1482,13 +1216,13 @@ function getGuestReportActionButtons(report) {
 
   return actions.join("");
 }
-    
+
 function renderGuestReports() {
   const activeBody = document.getElementById("guest-reports-body");
   const resolvedBody = document.getElementById("resolved-reports-body");
 
-  const activeReports = state.guestReports.filter(report => !report.resolved_at);
-  const resolvedReports = state.guestReports.filter(report => !!report.resolved_at || String(report.status || "") === "Resolved");
+  const activeReports = state.guestReports.filter(report => !isClosedGuestReport(report));
+  const resolvedReports = state.guestReports.filter(report => isClosedGuestReport(report));
 
   if (!activeReports.length) {
     activeBody.innerHTML = `<tr><td colspan="6">No active guest reports found.</td></tr>`;
@@ -1525,7 +1259,7 @@ function renderGuestReports() {
             <div class="report-meta">
               ${timeToProperty !== null ? `To Property: ${escapeHtml(formatMinutesLabel(timeToProperty))}<br>` : ""}
               ${timeToRemediation !== null ? `To Remediation: ${escapeHtml(formatMinutesLabel(timeToRemediation))}<br>` : ""}
-              Open For: ${escapeHtml(formatMinutesLabel(totalOpenTime))}
+              Open For: ${escapeHtml(formatMinutesLabel(totalOpenTime)}
             </div>
           </td>
           <td>
@@ -1560,6 +1294,7 @@ function renderGuestReports() {
           <td>
             ${escapeHtml(formatDateTime(report.resolved_at))}
             <div class="report-meta">
+              Status: ${escapeHtml(report.status || "Resolved")}<br>
               ${report.guest_confirmed_at ? `Guest Confirmed: ${escapeHtml(formatDateTime(report.guest_confirmed_at))}` : "Guest Confirmation: —"}
             </div>
           </td>
@@ -1569,6 +1304,7 @@ function renderGuestReports() {
               Reported: ${escapeHtml(formatDateTime(report.reported_at))}<br>
               ${report.hotel_notified_at ? `Sent to Property: ${escapeHtml(formatDateTime(report.hotel_notified_at))}<br>` : ""}
               ${report.remediation_submitted_at ? `Remediation Submitted: ${escapeHtml(formatDateTime(report.remediation_submitted_at))}<br>` : ""}
+              ${report.guest_confirmed_at ? `Confirmed with Guest: ${escapeHtml(formatDateTime(report.guest_confirmed_at))}<br>` : ""}
               Resolved: ${escapeHtml(formatDateTime(report.resolved_at))}<br><br>
               ${timeToProperty !== null ? `To Property: ${escapeHtml(formatMinutesLabel(timeToProperty))}<br>` : ""}
               ${timeToRemediation !== null ? `To Remediation: ${escapeHtml(formatMinutesLabel(timeToRemediation))}<br>` : ""}
@@ -1579,87 +1315,13 @@ function renderGuestReports() {
       `;
     }).join("");
   }
-}    
-    function renderInspectionHistory() {
-      const tbody = document.getElementById("inspection-history-body");
-      const searchValue = document.getElementById("inspection-history-search").value.trim().toLowerCase();
-      const propertyFilter = document.getElementById("inspection-history-property-filter").value;
-      const currentFilter = document.getElementById("inspection-history-current-filter").value;
+}
 
-      let rows = [...state.inspections];
-
-      if (propertyFilter) {
-        rows = rows.filter((inspection) => inspection.property_slug === propertyFilter);
-      }
-
-      if (currentFilter === "current") {
-        rows = rows.filter((inspection) => Boolean(inspection.is_current));
-      } else if (currentFilter === "archived") {
-        rows = rows.filter((inspection) => !inspection.is_current);
-      }
-
-      if (searchValue) {
-        rows = rows.filter((inspection) => {
-          const haystack = [
-            inspection.property_name,
-            inspection.property_slug,
-            inspection.room_number,
-            inspection.verification_id,
-            inspection.inspector_id,
-            inspection.certification_tier,
-            inspection.score
-          ]
-            .map((value) => String(value ?? "").toLowerCase())
-            .join(" ");
-
-          return haystack.includes(searchValue);
-        });
-      }
-
-      if (!rows.length) {
-        tbody.innerHTML = `<tr><td colspan="8">No inspection history matches your filters.</td></tr>`;
-        return;
-      }
-tbody.innerHTML = rows.map((inspection) => `
-  <tr>
-    <td>
-      ${escapeHtml(inspection.property_name || "—")}
-      <div class="report-meta">${escapeHtml(inspection.property_slug || "")}</div>
-    </td>
-    <td>${escapeHtml(inspection.room_number || "—")}</td>
-    <td>${escapeHtml(formatDateTime(inspection.inspection_date || inspection.created_at))}</td>
-    <td><span class="status-pill ${getStatusPillClass(inspection.certification_tier)}">${escapeHtml(inspection.certification_tier || "—")}</span></td>
-    <td>${escapeHtml(String(inspection.score ?? "—"))}</td>
-    <td>
-      ${escapeHtml(inspection.verification_id || "—")}
-      <div class="report-meta">${escapeHtml(inspection.inspector_id || "")}</div>
-    </td>
-    <td>
-      <span class="status-pill ${inspection.is_current ? "status-verified" : "status-issues"}">
-        ${inspection.is_current ? "Current" : "Archived"}
-      </span>
-    </td>
-    <td>
- <td>
-  <a class="text-btn" href="/inspection-report.html?id=${inspection.id}" target="_blank">
-    Open Report
-  </a>
-</td>
-</td>
-  </tr>
-`).join("");
-    }
-
-    document.querySelectorAll(".inspection-view-btn").forEach((btn) => {
-  btn.addEventListener("click", () => {
-    viewInspectionRecord(btn.dataset.inspectionId);
-  });
-});
-   function renderDashboard() {
+function renderDashboard() {
   document.getElementById("dashboard-properties-count").textContent = String(state.properties.length);
 
-  const openReports = state.guestReports.filter(report => !report.resolved_at).length;
-  const resolvedReports = state.guestReports.filter(report => !!report.resolved_at || String(report.status || "") === "Resolved").length;
+  const openReports = state.guestReports.filter(report => !isClosedGuestReport(report)).length;
+  const resolvedReports = state.guestReports.filter(report => isClosedGuestReport(report)).length;
 
   document.getElementById("dashboard-open-reports-count").textContent = String(openReports);
   document.getElementById("dashboard-resolved-week-count").textContent = String(resolvedReports);
@@ -1680,7 +1342,7 @@ tbody.innerHTML = rows.map((inspection) => `
   const activeReportCountMap = {};
   state.guestReports.forEach(report => {
     const key = report.property_slug || "";
-    if (!report.resolved_at) {
+    if (!isClosedGuestReport(report)) {
       activeReportCountMap[key] = (activeReportCountMap[key] || 0) + 1;
     }
   });
@@ -1706,7 +1368,6 @@ tbody.innerHTML = rows.map((inspection) => `
     `;
   }).join("");
 }
-
     async function handleCreateProperty(event) {
       event.preventDefault();
 
