@@ -1440,19 +1440,22 @@ function formatMinutesLabel(totalMinutes) {
       select.value = currentValue;
     }
 
-function getGuestReportActionButtons(report) {
-  const status = String(report.status || "New");
-  const isResolved = !!report.resolved_at || status === "Resolved";
+ function isClosedGuestReport(report) {
+  return String(report?.status || "").trim() === "Resolved";
+}
 
-  if (isResolved) {
+function getGuestReportActionButtons(report) {
+  const status = String(report.status || "New").trim();
+  const actions = [];
+
+  if (isClosedGuestReport(report)) {
     return `
       <div class="report-meta">
-        Resolved: ${escapeHtml(formatDateTime(report.resolved_at))}
+        Closed: ${escapeHtml(formatDateTime(report.resolved_at))}<br>
+        Verified By: ${escapeHtml(report.verified_by || "Ready Mark")}
       </div>
     `;
   }
-
-  const actions = [];
 
   if (status !== "Sent to Property" && !report.hotel_notified_at) {
     actions.push(`<button class="btn btn-secondary btn-small" type="button" onclick="sendReportToProperty('${escapeHtml(report.id)}')">Send to Property</button>`);
@@ -1466,29 +1469,35 @@ function getGuestReportActionButtons(report) {
     actions.push(`<button class="btn btn-secondary btn-small" type="button" onclick="updateGuestReportStatus('${escapeHtml(report.id)}','Escalated')">Escalate</button>`);
   }
 
+  if (status !== "Remediation Submitted") {
+    actions.push(`<button class="btn btn-secondary btn-small" type="button" onclick="updateGuestReportStatus('${escapeHtml(report.id)}','Remediation Submitted')">Remediation Submitted</button>`);
+  }
+
+  if (status === "Remediation Submitted" || status === "Confirmed with Guest") {
+    actions.push(`<button class="btn btn-secondary btn-small" type="button" onclick="updateGuestReportStatus('${escapeHtml(report.id)}','Still Needs Attention')">Still Needs Attention</button>`);
+  }
+
   if (status !== "Confirmed with Guest") {
     actions.push(`<button class="btn btn-secondary btn-small" type="button" onclick="updateGuestReportStatus('${escapeHtml(report.id)}','Confirmed with Guest')">Confirmed with Guest</button>`);
   }
 
-  if (status !== "Resolved" && !report.resolved_at) {
-    actions.push(`<button class="btn btn-primary btn-small" type="button" onclick="updateGuestReportStatus('${escapeHtml(report.id)}','Fully Resolved')">Fully Resolved</button>`);
+  if (status === "Confirmed with Guest") {
+    actions.push(`<button class="btn btn-primary btn-small" type="button" onclick="updateGuestReportStatus('${escapeHtml(report.id)}','Resolved')">Resolve & Archive</button>`);
   }
 
   if (report.photo_url) {
-    actions.push(
-      `<a class="btn btn-secondary btn-small" href="${escapeHtml(report.photo_url)}" target="_blank" rel="noopener noreferrer" style="text-decoration:none;display:inline-flex;align-items:center;">Open Photo</a>`
-    );
+    actions.push(`<a class="btn btn-secondary btn-small" href="${escapeHtml(report.photo_url)}" target="_blank" rel="noopener noreferrer" style="text-decoration:none;display:inline-flex;align-items:center;">Open Photo</a>`);
   }
 
   return actions.join("");
 }
-    
+
 function renderGuestReports() {
   const activeBody = document.getElementById("guest-reports-body");
   const resolvedBody = document.getElementById("resolved-reports-body");
 
-  const activeReports = state.guestReports.filter(report => !report.resolved_at);
-  const resolvedReports = state.guestReports.filter(report => !!report.resolved_at || String(report.status || "") === "Resolved");
+  const activeReports = state.guestReports.filter(report => !isClosedGuestReport(report));
+  const resolvedReports = state.guestReports.filter(report => isClosedGuestReport(report));
 
   if (!activeReports.length) {
     activeBody.innerHTML = `<tr><td colspan="6">No active guest reports found.</td></tr>`;
@@ -1569,6 +1578,7 @@ function renderGuestReports() {
               Reported: ${escapeHtml(formatDateTime(report.reported_at))}<br>
               ${report.hotel_notified_at ? `Sent to Property: ${escapeHtml(formatDateTime(report.hotel_notified_at))}<br>` : ""}
               ${report.remediation_submitted_at ? `Remediation Submitted: ${escapeHtml(formatDateTime(report.remediation_submitted_at))}<br>` : ""}
+              ${report.guest_confirmed_at ? `Confirmed with Guest: ${escapeHtml(formatDateTime(report.guest_confirmed_at))}<br>` : ""}
               Resolved: ${escapeHtml(formatDateTime(report.resolved_at))}<br><br>
               ${timeToProperty !== null ? `To Property: ${escapeHtml(formatMinutesLabel(timeToProperty))}<br>` : ""}
               ${timeToRemediation !== null ? `To Remediation: ${escapeHtml(formatMinutesLabel(timeToRemediation))}<br>` : ""}
@@ -1579,7 +1589,62 @@ function renderGuestReports() {
       `;
     }).join("");
   }
-}    
+}
+
+function renderDashboard() {
+  document.getElementById("dashboard-properties-count").textContent = String(state.properties.length);
+
+  const openReports = state.guestReports.filter(report => !isClosedGuestReport(report)).length;
+  const resolvedReports = state.guestReports.filter(report => isClosedGuestReport(report)).length;
+
+  document.getElementById("dashboard-open-reports-count").textContent = String(openReports);
+  document.getElementById("dashboard-resolved-week-count").textContent = String(resolvedReports);
+  document.getElementById("dashboard-inspections-week-count").textContent = state.lastInspectionResult ? "1" : "0";
+
+  const recentLines = [];
+
+  if (state.lastInspectionResult) {
+    recentLines.push(`${state.lastInspectionResult.property_name} inspection saved.`);
+    recentLines.push(`Verification ID: ${state.lastInspectionResult.verification_id}`);
+  }
+
+  state.guestReports.slice(0, 3).forEach(report => {
+    recentLines.push(`${report.property_name || report.property_slug || "Property"} report for room ${report.room_number || "—"} is ${report.status || "New"}.`);
+  });
+
+  document.getElementById("dashboard-recent-activity").textContent = recentLines.length ? recentLines.join("\n") : "No recent activity yet.";
+
+  const activeReportCountMap = {};
+
+  state.guestReports.forEach(report => {
+    const key = report.property_slug || "";
+    if (!isClosedGuestReport(report)) {
+      activeReportCountMap[key] = (activeReportCountMap[key] || 0) + 1;
+    }
+  });
+
+  const snapshotBody = document.getElementById("dashboard-property-snapshot-body");
+
+  if (!state.properties.length) {
+    snapshotBody.innerHTML = `<tr><td colspan="5">No properties available.</td></tr>`;
+    return;
+  }
+
+  snapshotBody.innerHTML = state.properties.map(property => {
+    const reportCount = activeReportCountMap[property.property_slug] || 0;
+    const hasIssues = reportCount > 0;
+
+    return `
+      <tr>
+        <td>${escapeHtml(property.property_name)}</td>
+        <td><span class="status-pill ${hasIssues ? "status-issues" : "status-verified"}">${hasIssues ? "Issues" : "Verified"}</span></td>
+        <td>${escapeHtml(property.property_slug)}</td>
+        <td>${escapeHtml(String(reportCount))}</td>
+        <td><button class="text-btn" type="button" onclick="goToView('properties-view')">Open</button></td>
+      </tr>
+    `;
+  }).join("");
+}
     function renderInspectionHistory() {
       const tbody = document.getElementById("inspection-history-body");
       const searchValue = document.getElementById("inspection-history-search").value.trim().toLowerCase();
