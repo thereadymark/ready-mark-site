@@ -54,21 +54,43 @@ export default async function handler(req) {
       return json(403, { error: "Invalid confirmation token." });
     }
 
-    const nextStatus =
-      guestResolutionStatus === "guest_confirmed_resolved"
-        ? "guest_confirmed_resolved"
-        : "reopened_guest_still_needs_attention";
+    const now = new Date().toISOString();
 
-    const { error: updateError } = await supabase
+    const updatePayload =
+      guestResolutionStatus === "guest_confirmed_resolved"
+        ? {
+            status: "Confirmed with Guest",
+            verification_status: "guest_confirmed",
+            guest_confirmation_status: "satisfied",
+            guest_confirmed_at: now,
+            guest_resolution_status: "guest_confirmed_resolved",
+            guest_resolution_note: guestResolutionNote || null,
+            guest_resolution_confirmed_at: now,
+            resolved_at: null,
+            verified_at: null,
+            verified_by: null,
+            updated_at: now
+          }
+        : {
+            status: "Still Needs Attention",
+            verification_status: "reopened",
+            guest_confirmation_status: "not_satisfied",
+            guest_resolution_status: "guest_still_needs_attention",
+            guest_resolution_note: guestResolutionNote || null,
+            guest_resolution_confirmed_at: now,
+            under_review_at: now,
+            resolved_at: null,
+            verified_at: null,
+            verified_by: null,
+            updated_at: now
+          };
+
+    const { data: updatedReport, error: updateError } = await supabase
       .from("guest_reports")
-      .update({
-        status: nextStatus,
-        guest_resolution_status: guestResolutionStatus,
-        guest_resolution_note: guestResolutionNote || null,
-        guest_resolution_confirmed_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      })
-      .eq("id", reportId);
+      .update(updatePayload)
+      .eq("id", reportId)
+      .select()
+      .single();
 
     if (updateError) {
       throw updateError;
@@ -76,7 +98,8 @@ export default async function handler(req) {
 
     return json(200, {
       success: true,
-      status: nextStatus
+      report: updatedReport,
+      status: updatedReport.status
     });
   } catch (error) {
     console.error("guest-confirm-resolution error:", error);
