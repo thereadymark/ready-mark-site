@@ -41,7 +41,7 @@ export default async function handler(req, res) {
 
     const { data, error } = await supabase
       .from("client_users")
-      .select("email, property_slug, full_name, role, is_active")
+      .select("email, property_slug, full_name, role, is_active, must_change_password")
       .eq("email", normalizedEmail)
       .maybeSingle();
 
