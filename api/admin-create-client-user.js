@@ -133,6 +133,7 @@ export default async function handler(req, res) {
           full_name: cleanedName,
           role: cleanedRole,
           is_active: activeFlag
+          must_change_password: true 
         },
         { onConflict: "email" }
       )
