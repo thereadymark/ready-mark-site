@@ -29,9 +29,7 @@
       font-family: "Lato", sans-serif;
     }
 
-    body {
-      padding: 24px;
-    }
+    body { padding: 24px; }
 
     .wrap {
       max-width: 760px;
@@ -64,13 +62,9 @@
       line-height: 1.7;
     }
 
-    .card-body {
-      padding: 28px;
-    }
+    .card-body { padding: 28px; }
 
-    .form-group + .form-group {
-      margin-top: 18px;
-    }
+    .form-group + .form-group { margin-top: 18px; }
 
     .form-label {
       display: block;
@@ -95,12 +89,15 @@
       outline: none;
     }
 
-    .checkbox-row {
+    .checkbox-row,
+    .password-row {
       display: flex;
       align-items: center;
       gap: 10px;
       margin-top: 4px;
     }
+
+    .password-row .form-input { flex: 1; }
 
     .btn {
       min-height: 48px;
@@ -116,6 +113,12 @@
     .btn-primary {
       background: linear-gradient(180deg, #d8ba73, #b8934c);
       color: #111315;
+    }
+
+    .btn-secondary {
+      background: #fff;
+      color: var(--text);
+      border: 1px solid var(--line);
     }
 
     .status-box {
@@ -145,8 +148,10 @@
       background: rgba(180,76,76,0.06);
     }
 
-    .status-box.info {
-      display: block;
+    .status-box.info { display: block; }
+
+    @media (max-width: 640px) {
+      .password-row { flex-direction: column; align-items: stretch; }
     }
   </style>
 </head>
@@ -155,7 +160,7 @@
     <div class="card">
       <div class="card-header">
         <h1>Create Client User</h1>
-        <p>Add an approved portal user for a property without opening Supabase.</p>
+        <p>Add an approved portal user and set their temporary password.</p>
       </div>
 
       <div class="card-body">
@@ -180,6 +185,14 @@
         </div>
 
         <div class="form-group">
+          <label class="form-label" for="temporary-password">Temporary Password</label>
+          <div class="password-row">
+            <input id="temporary-password" class="form-input" type="text" placeholder="Minimum 8 characters" />
+            <button id="generate-password-btn" class="btn btn-secondary" type="button">Generate</button>
+          </div>
+        </div>
+
+        <div class="form-group">
           <label class="form-label" for="role">Role</label>
           <select id="role" class="form-select">
             <option value="manager">manager</option>
@@ -197,7 +210,7 @@
         </div>
 
         <div class="form-group">
-          <button id="create-user-btn" class="btn btn-primary" type="button">Create Client User</button>
+          <button id="create-user-btn" class="btn btn-primary" type="button">Create / Update Client User</button>
         </div>
 
         <div id="status-box" class="status-box"></div>
@@ -212,9 +225,11 @@
     const fullNameInput = document.getElementById("full-name");
     const emailInput = document.getElementById("email");
     const propertySlugInput = document.getElementById("property-slug");
+    const temporaryPasswordInput = document.getElementById("temporary-password");
     const roleInput = document.getElementById("role");
     const isActiveInput = document.getElementById("is-active");
     const createUserBtn = document.getElementById("create-user-btn");
+    const generatePasswordBtn = document.getElementById("generate-password-btn");
     const statusBox = document.getElementById("status-box");
 
     function showStatus(message, type = "info") {
@@ -222,31 +237,31 @@
       statusBox.textContent = message;
     }
 
+    function generateTemporaryPassword() {
+      const partOne = Math.random().toString(36).slice(2, 8);
+      const partTwo = Math.random().toString(36).slice(2, 6);
+      const password = `ReadyMark-${partOne}-${partTwo}!`;
+      temporaryPasswordInput.value = password;
+    }
+
     async function createClientUser() {
       const adminPassword = adminPasswordInput.value.trim();
       const fullName = fullNameInput.value.trim();
       const email = emailInput.value.trim().toLowerCase();
       const propertySlug = propertySlugInput.value.trim().toLowerCase();
+      const temporaryPassword = temporaryPasswordInput.value.trim();
       const role = roleInput.value;
       const isActive = !!isActiveInput.checked;
 
-      if (!adminPassword) {
-        showStatus("Admin password is required.", "error");
-        return;
-      }
-
-      if (!email) {
-        showStatus("Email is required.", "error");
-        return;
-      }
-
-      if (!propertySlug) {
-        showStatus("Property slug is required.", "error");
-        return;
+      if (!adminPassword) return showStatus("Admin password is required.", "error");
+      if (!email) return showStatus("Email is required.", "error");
+      if (!propertySlug) return showStatus("Property slug is required.", "error");
+      if (!temporaryPassword || temporaryPassword.length < 8) {
+        return showStatus("Temporary password is required and must be at least 8 characters.", "error");
       }
 
       createUserBtn.disabled = true;
-      showStatus("Creating client user...", "info");
+      showStatus("Creating/updating client user...", "info");
 
       try {
         const res = await fetch(API_URL, {
@@ -260,6 +275,7 @@
             full_name: fullName,
             email,
             property_slug: propertySlug,
+            temporary_password: temporaryPassword,
             role,
             is_active: isActive
           })
@@ -272,13 +288,20 @@
         }
 
         showStatus(
-          `Client user created.\n\nEmail: ${data.client_user?.email}\nProperty: ${data.client_user?.property_slug}`,
+          `${data.message || "Client user saved."}
+
+Email: ${data.client_user?.email}
+Property: ${data.client_user?.property_slug}
+Temporary Password: ${temporaryPassword}
+
+Give this email and password to the client for direct portal login.`,
           "success"
         );
 
         fullNameInput.value = "";
         emailInput.value = "";
         propertySlugInput.value = "";
+        temporaryPasswordInput.value = "";
         roleInput.value = "manager";
         isActiveInput.checked = true;
       } catch (error) {
@@ -288,6 +311,7 @@
       }
     }
 
+    generatePasswordBtn.addEventListener("click", generateTemporaryPassword);
     createUserBtn.addEventListener("click", createClientUser);
   </script>
 </body>
