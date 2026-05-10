@@ -2001,11 +2001,16 @@ async function submitForcedPasswordChange() {
       throw new Error(data?.error || "Unable to update password.");
     }
 
-    showStatusBox(statusBox, "Password updated successfully. Loading your portal...", "success");
+    showStatusBox(
+  statusBox,
+  "Password updated successfully. For security, please log in again using your new password.",
+  "success"
+);
 
-    setTimeout(() => {
-      window.location.href = "/dashboard.html";
-    }, 900);
+setTimeout(async () => {
+  await supabaseClient.auth.signOut();
+  window.location.href = "/login.html?password_updated=1";
+}, 1400);
   } catch (error) {
     showStatusBox(statusBox, error.message || "Unable to update password.", "error");
   } finally {
