@@ -14,16 +14,13 @@
       --muted: #6d6a64;
       --line: #e8e4dc;
       --gold: #c7a257;
-      --gold-dark: #b08c42;
       --success: #2f8f57;
       --danger: #b44c4c;
       --shadow: 0 16px 40px rgba(0,0,0,0.06);
       --radius: 22px;
     }
 
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     html, body {
       margin: 0;
@@ -70,13 +67,9 @@
       line-height: 1.7;
     }
 
-    .login-body {
-      padding: 28px;
-    }
+    .login-body { padding: 28px; }
 
-    .form-group + .form-group {
-      margin-top: 18px;
-    }
+    .form-group + .form-group { margin-top: 18px; }
 
     .form-label {
       display: block;
@@ -100,9 +93,7 @@
       color: var(--text);
     }
 
-    .form-input:focus {
-      border-color: var(--gold);
-    }
+    .form-input:focus { border-color: var(--gold); }
 
     .btn {
       width: 100%;
@@ -121,10 +112,6 @@
       background: linear-gradient(180deg, #d8ba73, #b8934c);
       color: #111315;
       box-shadow: 0 10px 20px rgba(199, 162, 87, 0.18);
-    }
-
-    .btn-primary:hover {
-      filter: brightness(1.02);
     }
 
     .btn:disabled {
@@ -159,32 +146,30 @@
       background: rgba(180,76,76,0.06);
     }
 
-    .status-box.info {
-      display: block;
-    }
+    .status-box.info { display: block; }
   </style>
 </head>
+
 <body>
   <div class="login-card">
     <div class="login-header">
       <h1>Client Portal Access</h1>
-      <p>Enter your approved email address and we’ll send you a secure sign-in link.</p>
+      <p>Enter your approved client email and temporary password to access your property dashboard.</p>
     </div>
 
     <div class="login-body">
       <div class="form-group">
         <label class="form-label" for="email-input">Email Address</label>
-        <input
-          id="email-input"
-          class="form-input"
-          type="email"
-          placeholder="name@property.com"
-          autocomplete="email"
-        />
+        <input id="email-input" class="form-input" type="email" placeholder="name@property.com" autocomplete="email" />
       </div>
 
       <div class="form-group">
-        <button id="send-link-btn" class="btn btn-primary" type="button">Send Magic Link</button>
+        <label class="form-label" for="password-input">Password</label>
+        <input id="password-input" class="form-input" type="password" placeholder="Enter temporary password" autocomplete="current-password" />
+      </div>
+
+      <div class="form-group">
+        <button id="login-btn" class="btn btn-primary" type="button">Enter Client Portal</button>
       </div>
 
       <div id="status-box" class="status-box"></div>
@@ -193,11 +178,13 @@
 
   <script>
     const SUPABASE_URL = "https://zbecvxcefxxhqijakxxj.supabase.co";
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpiZWN2eGNlZnh4aHFpamFreHhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM2ODU3MzMsImV4cCI6MjA4OTI2MTczM30.o1yZpO87ffeNCUNe-6wrimMw5D7esTzAivna9lVBv2k";
+    const SUPABASE_ANON_KEY = "YOUR_EXISTING_ANON_KEY_HERE";
+
     const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     const emailInput = document.getElementById("email-input");
-    const sendLinkBtn = document.getElementById("send-link-btn");
+    const passwordInput = document.getElementById("password-input");
+    const loginBtn = document.getElementById("login-btn");
     const statusBox = document.getElementById("status-box");
 
     function showStatus(message, type = "info") {
@@ -205,41 +192,48 @@
       statusBox.textContent = message;
     }
 
-    async function sendMagicLink() {
+    async function loginClient() {
       const email = emailInput.value.trim().toLowerCase();
+      const password = passwordInput.value.trim();
 
-      if (!email) {
-        showStatus("Please enter your email address.", "error");
-        return;
-      }
+      if (!email) return showStatus("Please enter your email address.", "error");
+      if (!password) return showStatus("Please enter your password.", "error");
 
-      sendLinkBtn.disabled = true;
-      showStatus("Sending secure sign-in link...", "info");
+      loginBtn.disabled = true;
+      showStatus("Signing in...", "info");
 
       try {
-        const { error } = await supabaseClient.auth.signInWithOtp({
+        const { data, error } = await supabaseClient.auth.signInWithPassword({
           email,
-          options: {
-            emailRedirectTo: "https://verify.thereadymarkgroup.com/dashboard.html"
-          }
+          password
         });
 
-        if (error) {
-          throw error;
+        if (error) throw error;
+
+        const accessToken = data?.session?.access_token;
+
+        if (!accessToken) {
+          throw new Error("Login succeeded, but no access token was returned.");
         }
 
-        showStatus(
-          "Your magic link has been sent. Check your email and use the secure link to sign in.",
-          "success"
-        );
+        localStorage.setItem("rm_client_access_token", accessToken);
+
+        window.location.href = "/dashboard.html";
       } catch (error) {
-        showStatus(error.message || "Unable to send magic link.", "error");
+        showStatus(error.message || "Unable to sign in.", "error");
       } finally {
-        sendLinkBtn.disabled = false;
+        loginBtn.disabled = false;
       }
     }
 
-    sendLinkBtn.addEventListener("click", sendMagicLink);
+    loginBtn.addEventListener("click", loginClient);
+
+    passwordInput.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        loginClient();
+      }
+    });
   </script>
 </body>
 </html>
