@@ -49,7 +49,8 @@ export default async function handler(req, res) {
       property_slug,
       full_name,
       role,
-      is_active
+      is_active,
+      temporary_password
     } = req.body || {};
 
     if (!email || typeof email !== "string") {
@@ -60,32 +61,95 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "property_slug is required" });
     }
 
+    if (!temporary_password || String(temporary_password).trim().length < 8) {
+      return res.status(400).json({
+        error: "Temporary password is required and must be at least 8 characters."
+      });
+    }
+
     const normalizedEmail = String(email).trim().toLowerCase();
     const normalizedSlug = String(property_slug).trim().toLowerCase();
     const cleanedName = full_name ? String(full_name).trim() : null;
     const cleanedRole = role ? String(role).trim().toLowerCase() : "manager";
     const activeFlag = typeof is_active === "boolean" ? is_active : true;
+    const password = String(temporary_password).trim();
 
-    const { data, error } = await supabase
+    const { data: existingAuthUsers, error: listError } =
+      await supabase.auth.admin.listUsers();
+
+    if (listError) {
+      return res.status(500).json({ error: listError.message });
+    }
+
+    const existingAuthUser = existingAuthUsers?.users?.find(
+      user => String(user.email || "").toLowerCase() === normalizedEmail
+    );
+
+    let authUser = existingAuthUser || null;
+
+    if (existingAuthUser) {
+      const { data: updatedAuth, error: updateAuthError } =
+        await supabase.auth.admin.updateUserById(existingAuthUser.id, {
+          password,
+          email_confirm: true,
+          user_metadata: {
+            full_name: cleanedName,
+            property_slug: normalizedSlug,
+            role: cleanedRole
+          }
+        });
+
+      if (updateAuthError) {
+        return res.status(500).json({ error: updateAuthError.message });
+      }
+
+      authUser = updatedAuth.user;
+    } else {
+      const { data: createdAuth, error: createAuthError } =
+        await supabase.auth.admin.createUser({
+          email: normalizedEmail,
+          password,
+          email_confirm: true,
+          user_metadata: {
+            full_name: cleanedName,
+            property_slug: normalizedSlug,
+            role: cleanedRole
+          }
+        });
+
+      if (createAuthError) {
+        return res.status(500).json({ error: createAuthError.message });
+      }
+
+      authUser = createdAuth.user;
+    }
+
+    const { data: clientUser, error: upsertError } = await supabase
       .from("client_users")
-      .insert({
-        email: normalizedEmail,
-        property_slug: normalizedSlug,
-        full_name: cleanedName,
-        role: cleanedRole,
-        is_active: activeFlag
-      })
+      .upsert(
+        {
+          email: normalizedEmail,
+          property_slug: normalizedSlug,
+          full_name: cleanedName,
+          role: cleanedRole,
+          is_active: activeFlag
+        },
+        { onConflict: "email" }
+      )
       .select()
       .maybeSingle();
 
-    if (error) {
-      return res.status(500).json({ error: error.message });
+    if (upsertError) {
+      return res.status(500).json({ error: upsertError.message });
     }
 
     return res.status(200).json({
       success: true,
-      message: "Client user created successfully.",
-      client_user: data
+      message: existingAuthUser
+        ? "Client user updated and password reset successfully."
+        : "Client user created successfully.",
+      auth_user_id: authUser?.id || null,
+      client_user: clientUser
     });
   } catch (error) {
     return res.status(500).json({
