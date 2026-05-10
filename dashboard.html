@@ -1168,7 +1168,7 @@ let PROPERTY_SLUG = params.get("property_slug") || "";
 const DASHBOARD_API = "/api/client-dashboard";
 const REMEDIATION_API = "/api/client-submit-remediation";
 const CLIENT_USER_API = "/api/client-user";
-
+const CHANGE_PASSWORD_API = "/api/client-change-password";
 const SUPABASE_URL = "https://zbecvxcefxxhqijakxxj.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpiZWN2eGNlZnh4aHFpamFreHhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM2ODU3MzMsImV4cCI6MjA4OTI2MTczM30.o1yZpO87ffeNCUNe-6wrimMw5D7esTzAivna9lVBv2k";
 
@@ -1917,7 +1917,102 @@ const resolvedBy = `${resolvedByTitle} – ${resolvedByName}`;
     </div>
   `;
 }   
-async function resolveLoggedInPropertySlug() {
+
+    function renderForcedPasswordChange() {
+  document.getElementById("portal-content").innerHTML = `
+    <div class="section-card" style="max-width:620px;margin:40px auto;width:100%;">
+      <div class="section-header">
+        <h2>Change Your Temporary Password</h2>
+        <p>For security, please create a new password before accessing the client portal.</p>
+      </div>
+
+      <div class="section-body">
+        <div class="form-group">
+          <label class="form-label" for="new-password-input">New Password</label>
+          <input class="form-input" id="new-password-input" type="password" placeholder="Minimum 8 characters" autocomplete="new-password" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="confirm-password-input">Confirm New Password</label>
+          <input class="form-input" id="confirm-password-input" type="password" placeholder="Re-enter new password" autocomplete="new-password" />
+        </div>
+
+        <div class="button-row">
+          <button class="btn btn-primary" type="button" id="change-password-btn">Update Password</button>
+          <button class="btn btn-secondary" type="button" id="forced-logout-btn">Log Out</button>
+        </div>
+
+        <div id="change-password-status" class="status-box" style="display:none;margin-top:16px;"></div>
+      </div>
+    </div>
+  `;
+
+  document.getElementById("change-password-btn").addEventListener("click", submitForcedPasswordChange);
+
+  document.getElementById("forced-logout-btn").addEventListener("click", async () => {
+    localStorage.removeItem("rm_client_access_token");
+    await supabaseClient.auth.signOut();
+    window.location.href = "/login.html";
+  });
+}
+
+async function submitForcedPasswordChange() {
+  const newPasswordInput = document.getElementById("new-password-input");
+  const confirmPasswordInput = document.getElementById("confirm-password-input");
+  const statusBox = document.getElementById("change-password-status");
+  const button = document.getElementById("change-password-btn");
+
+  const newPassword = newPasswordInput.value.trim();
+  const confirmPassword = confirmPasswordInput.value.trim();
+
+  if (!newPassword || newPassword.length < 8) {
+    showStatusBox(statusBox, "Password must be at least 8 characters.", "error");
+    return;
+  }
+
+  if (newPassword !== confirmPassword) {
+    showStatusBox(statusBox, "Passwords do not match.", "error");
+    return;
+  }
+
+  button.disabled = true;
+  showStatusBox(statusBox, "Updating password...", "");
+
+  try {
+    const accessToken = await getAccessToken();
+
+    if (!accessToken) return;
+
+    const res = await fetch(CHANGE_PASSWORD_API, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "Authorization": `Bearer ${accessToken}`
+      },
+      body: JSON.stringify({
+        new_password: newPassword
+      })
+    });
+
+    const data = await res.json().catch(() => null);
+
+    if (!res.ok || data?.error) {
+      throw new Error(data?.error || "Unable to update password.");
+    }
+
+    showStatusBox(statusBox, "Password updated successfully. Loading your portal...", "success");
+
+    setTimeout(() => {
+      window.location.href = "/dashboard.html";
+    }, 900);
+  } catch (error) {
+    showStatusBox(statusBox, error.message || "Unable to update password.", "error");
+  } finally {
+    button.disabled = false;
+  }
+}
+    async function resolveLoggedInPropertySlug() {
   const {
     data: { session },
     error: sessionError
@@ -1933,8 +2028,7 @@ async function resolveLoggedInPropertySlug() {
   }
 
   const email = String(session.user.email).trim().toLowerCase();
-  
-  
+
   const res = await fetch(`${CLIENT_USER_API}?email=${encodeURIComponent(email)}`, {
     method: "GET",
     headers: {
@@ -1948,9 +2042,14 @@ async function resolveLoggedInPropertySlug() {
     throw new Error(data?.error || "Unable to determine client property access.");
   }
 
+  if (data.client_user.must_change_password) {
+    renderForcedPasswordChange();
+    return null;
+  }
+
   return data.client_user.property_slug;
 }
-
+    
 async function getAccessToken() {
   const {
     data: { session },
