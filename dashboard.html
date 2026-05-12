@@ -612,6 +612,31 @@
       white-space: normal;
     }
 
+    .alert-banner {
+  display: none;
+  border: 1px solid rgba(180,76,76,0.22);
+  background: rgba(180,76,76,0.07);
+  color: var(--danger);
+  border-radius: 16px;
+  padding: 14px 16px;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.6;
+}
+
+.alert-banner.active {
+  display: block;
+}
+
+@keyframes alertPulse {
+  0% { box-shadow: 0 0 0 rgba(180,76,76,0); }
+  50% { box-shadow: 0 0 0 4px rgba(180,76,76,0.10); }
+  100% { box-shadow: 0 0 0 rgba(180,76,76,0); }
+}
+
+.card.alert-pulse {
+  animation: alertPulse 1.2s ease-in-out 2;
+}
     @media (max-width: 1300px) {
       .cards { grid-template-columns: repeat(3, minmax(0, 1fr)); }
     }
@@ -681,7 +706,9 @@
       </div>
 
       <div class="content" id="portal-content">
-
+        <div id="client-alert-banner" class="alert-banner">
+  New or escalated issue activity detected. Please review the issue queue.
+</div>
         <section id="dashboard-view" class="view active">
           <div class="cards">
             <div class="card property-card">
@@ -1178,6 +1205,94 @@ const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_
     let lastNonDetailView = "dashboard-view";
     let currentIssueRecord = null;
 
+    let clientAlertInitialized = false;
+let lastClientAlertSignature = sessionStorage.getItem("rm_client_alert_signature") || "";
+let clientAlertTimer = null;
+
+function getClientAlertSignature(data) {
+  const urgentIssues = [
+    ...(Array.isArray(data?.awaiting_response) ? data.awaiting_response : []),
+    ...(Array.isArray(data?.remediation_submitted) ? data.remediation_submitted : [])
+  ];
+
+  return urgentIssues
+    .map(issue => [
+      issue.id,
+      issue.status,
+      issue.updated_at,
+      issue.escalated_at,
+      issue.remediation_submitted_at,
+      issue.hotel_notified_at
+    ].join(":"))
+    .join("|");
+}
+
+function playClientDing() {
+  try {
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gain = audioContext.createGain();
+
+    oscillator.type = "sine";
+    oscillator.frequency.setValueAtTime(880, audioContext.currentTime);
+    oscillator.frequency.setValueAtTime(660, audioContext.currentTime + 0.12);
+
+    gain.gain.setValueAtTime(0.0001, audioContext.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.18, audioContext.currentTime + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + 0.35);
+
+    oscillator.connect(gain);
+    gain.connect(audioContext.destination);
+
+    oscillator.start();
+    oscillator.stop(audioContext.currentTime + 0.38);
+  } catch {
+    // Browser may block audio until user interaction. No action needed.
+  }
+}
+
+function showClientAlertBanner(message) {
+  const banner = document.getElementById("client-alert-banner");
+  if (!banner) return;
+
+  banner.textContent = message || "New issue activity detected. Please review the issue queue.";
+  banner.classList.add("active");
+
+  const openCard = document.getElementById("open-issues-count")?.closest(".card");
+  if (openCard) {
+    openCard.classList.remove("alert-pulse");
+    void openCard.offsetWidth;
+    openCard.classList.add("alert-pulse");
+  }
+}
+
+function checkClientAlerts(data) {
+  const signature = getClientAlertSignature(data);
+
+  if (!clientAlertInitialized) {
+    clientAlertInitialized = true;
+    lastClientAlertSignature = signature;
+    sessionStorage.setItem("rm_client_alert_signature", signature);
+    return;
+  }
+
+  if (signature && signature !== lastClientAlertSignature) {
+    lastClientAlertSignature = signature;
+    sessionStorage.setItem("rm_client_alert_signature", signature);
+
+    playClientDing();
+    showClientAlertBanner("New or updated issue activity detected. Please review the issue queue.");
+  }
+}
+
+function startClientAlertPolling() {
+  if (clientAlertTimer) return;
+
+  clientAlertTimer = setInterval(() => {
+    if (document.hidden) return;
+    loadDashboard({ silent: true });
+  }, 30000);
+}
     function formatDate(value) {
       if (!value) return "—";
       const date = new Date(value);
