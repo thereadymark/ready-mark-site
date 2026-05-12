@@ -536,6 +536,31 @@
       margin-bottom: 18px;
     }
 
+    .admin-alert-banner {
+  display: none;
+  border: 1px solid rgba(180, 76, 76, 0.22);
+  background: rgba(180, 76, 76, 0.07);
+  color: var(--danger);
+  border-radius: 16px;
+  padding: 14px 16px;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.6;
+}
+
+.admin-alert-banner.active {
+  display: block;
+}
+
+@keyframes adminAlertPulse {
+  0% { box-shadow: 0 0 0 rgba(180,76,76,0); }
+  50% { box-shadow: 0 0 0 4px rgba(180,76,76,0.12); }
+  100% { box-shadow: 0 0 0 rgba(180,76,76,0); }
+}
+
+.card.admin-alert-pulse {
+  animation: adminAlertPulse 1.2s ease-in-out 2;
+}
     @media (max-width: 1100px) {
       .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .split-grid,
@@ -624,6 +649,9 @@
       </div>
 
       <div class="content">
+        <div id="admin-alert-banner" class="admin-alert-banner">
+  New operational activity detected. Review guest reports.
+</div>
         <section id="admin-dashboard-view" class="view active">
           <div class="cards">
             <div class="card">
@@ -1041,6 +1069,91 @@
       lastInspectionResult: null
     };
 
+    let adminAlertInitialized = false;
+let lastAdminAlertSignature = sessionStorage.getItem("rm_admin_alert_signature") || "";
+let adminAlertTimer = null;
+
+function getAdminAlertSignature() {
+  return state.guestReports
+    .filter(report => !isClosedGuestReport(report))
+    .map(report => [
+      report.id,
+      report.status,
+      report.updated_at,
+      report.reported_at,
+      report.escalated_at,
+      report.remediation_submitted_at,
+      report.guest_confirmation_status
+    ].join(":"))
+    .join("|");
+}
+
+function playAdminDing() {
+  try {
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gain = audioContext.createGain();
+
+    oscillator.type = "sine";
+    oscillator.frequency.setValueAtTime(740, audioContext.currentTime);
+    oscillator.frequency.setValueAtTime(980, audioContext.currentTime + 0.12);
+
+    gain.gain.setValueAtTime(0.0001, audioContext.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.2, audioContext.currentTime + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + 0.36);
+
+    oscillator.connect(gain);
+    gain.connect(audioContext.destination);
+
+    oscillator.start();
+    oscillator.stop(audioContext.currentTime + 0.4);
+  } catch {
+    // Browser may block audio until user interaction.
+  }
+}
+
+function showAdminAlertBanner(message) {
+  const banner = document.getElementById("admin-alert-banner");
+  if (!banner) return;
+
+  banner.textContent = message || "New operational activity detected. Review guest reports.";
+  banner.classList.add("active");
+
+  const openCard = document.getElementById("dashboard-open-reports-count")?.closest(".card");
+  if (openCard) {
+    openCard.classList.remove("admin-alert-pulse");
+    void openCard.offsetWidth;
+    openCard.classList.add("admin-alert-pulse");
+  }
+}
+
+function checkAdminAlerts() {
+  const signature = getAdminAlertSignature();
+
+  if (!adminAlertInitialized) {
+    adminAlertInitialized = true;
+    lastAdminAlertSignature = signature;
+    sessionStorage.setItem("rm_admin_alert_signature", signature);
+    return;
+  }
+
+  if (signature && signature !== lastAdminAlertSignature) {
+    lastAdminAlertSignature = signature;
+    sessionStorage.setItem("rm_admin_alert_signature", signature);
+
+    playAdminDing();
+    showAdminAlertBanner("New guest report, escalation, or remediation activity detected.");
+  }
+}
+
+function startAdminAlertPolling() {
+  if (adminAlertTimer) return;
+
+  adminAlertTimer = setInterval(() => {
+    if (document.hidden || !state.adminToken) return;
+    refreshAdminData({ silent: true });
+  }, 30000);
+}
     function goToView(viewId) {
       document.querySelectorAll(".view").forEach(view => view.classList.remove("active"));
       const activeView = document.getElementById(viewId);
@@ -1389,8 +1502,8 @@ function formatMinutesLabel(totalMinutes) {
       }
     }
 
-    async function refreshAdminData() {
-      const data = await apiFetch(API.adminData, { method: "GET" });
+   async function refreshAdminData(options = {}) {
+     const data = await apiFetch(API.adminData, { method: "GET" });
       state.properties = Array.isArray(data?.properties) ? data.properties : [];
       state.rooms = Array.isArray(data?.rooms) ? data.rooms : [];
       state.inspections = Array.isArray(data?.inspections) ? data.inspections : [];
@@ -1402,7 +1515,11 @@ function formatMinutesLabel(totalMinutes) {
       renderInspectionHistory();
       renderInspectionHistoryPropertyFilter();
       renderDashboard();
-    }
+
+     
+checkAdminAlerts();
+startAdminAlertPolling();
+   }
 
     function renderProperties() {
       const tbody = document.getElementById("existing-properties-body");
