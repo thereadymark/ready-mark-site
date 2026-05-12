@@ -129,17 +129,25 @@ if (normalizedRequestedSlug !== normalizedAllowedSlug) {
       });
     }
 
-    const updatePayload = {
-      resolution_note: cleanedResolutionNote,
-      resolution_photo_url: cleanedPhotoUrl,
-      remediation_submitted_at: submittedAt,
-      resolved_by: `${resolvedByTitle} – ${resolvedByName}`,
-      resolved_by_title: resolvedByTitle,
-      resolved_by_name: resolvedByName,      
-      status: "Remediation Submitted",
-      verification_status: "pending"
-    };
+   const updatePayload = {
+  resolution_note: cleanedResolutionNote,
+  resolution_photo_url: cleanedPhotoUrl,
+  remediation_submitted_at: submittedAt,
 
+  resolved_by: `${resolvedByTitle} – ${resolvedByName}`,
+  resolved_by_title: resolvedByTitle,
+  resolved_by_name: resolvedByName,
+
+  status: "Remediation Submitted",
+  verification_status: "pending_guest_confirmation",
+  guest_confirmation_status: "pending",
+
+  guest_resolution_status: null,
+  guest_resolution_note: null,
+  guest_resolution_confirmed_at: null,
+
+  updated_at: submittedAt
+};
     const { data: updatedReport, error: updateError } = await supabase
       .from("guest_reports")
       .update(updatePayload)
