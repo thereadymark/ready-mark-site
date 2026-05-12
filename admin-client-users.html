@@ -290,18 +290,30 @@
     : JSON.stringify(data?.error || data || "Unable to create client user.")
 );       
         }
+showStatus(
+  `${data.message || "Client user saved."}
 
-        showStatus(
-          `${data.message || "Client user saved."}
+Send this to the client:
 
-Email: ${data.client_user?.email}
-Property: ${data.client_user?.property_slug}
-Temporary Password: ${temporaryPassword}
+Login Page:
+https://verify.thereadymarkgroup.com/login.html
 
-Give this email and password to the client for direct portal login.`,
-          "success"
-        );
+Email:
+${data.client_user?.email}
 
+Temporary Password:
+${temporaryPassword}
+
+Instructions:
+1. Go to the login page.
+2. Enter the email and temporary password.
+3. Create a new password when prompted.
+4. After the password is updated, log in again using the new password.
+
+Property:
+${data.client_user?.property_slug}`,
+  "success"
+);
         fullNameInput.value = "";
         emailInput.value = "";
         propertySlugInput.value = "";
