@@ -257,18 +257,28 @@ export default async function handler(req, res) {
       };
     }
 
-    if (status === "Still Needs Attention") {
-      updatePayload = {
-        ...updatePayload,
-        verification_status: "reopened",
-        guest_confirmation_status: "not_satisfied",
-        under_review_at: now,
-        resolved_at: null,
-        verified_at: null,
-        verified_by: null
-      };
-    }
+   if (status === "Still Needs Attention") {
+  updatePayload = {
+    ...updatePayload,
 
+    status: "Escalated",
+
+    verification_status: "escalated",
+
+    guest_confirmation_status: "not_satisfied",
+
+    escalation_required: true,
+    escalation_level: 1,
+
+    escalated_at: now,
+
+    under_review_at: now,
+
+    resolved_at: null,
+    verified_at: null,
+    verified_by: null
+  };
+}
     if (status === "Confirmed with Guest") {
       updatePayload = {
         ...updatePayload,
