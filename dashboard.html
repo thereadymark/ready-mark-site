@@ -2189,10 +2189,11 @@ async function getAccessToken() {
   return session.access_token;
 }
 
-   async function loadDashboard() {
+   async function loadDashboard(options = {}) {
+  const silent = !!options.silent;
   try {
     const portalContent = document.getElementById("portal-content");
-    portalContent.classList.add("loading");
+   if (!silent) portalContent.classList.add("loading");
 
     if (!PROPERTY_SLUG) {
       PROPERTY_SLUG = await resolveLoggedInPropertySlug();
@@ -2246,11 +2247,15 @@ async function getAccessToken() {
     renderResolvedIssues(Array.isArray(data.resolved_issues) ? data.resolved_issues : []);
     renderQRRecords(Array.isArray(data.qr_records) ? data.qr_records : []);
     renderReports(Array.isArray(data.inspection_history) ? data.inspection_history : []);
+
+    checkClientAlerts(data);
+    startClientAlertPolling();
+    
   } catch (error) {
     showLoadError(error.message || "Dashboard failed to load.");
   } finally {
     const portal = document.getElementById("portal-content");
-    if (portal) portal.classList.remove("loading");
+    if (portal && !silent) portal.classList.remove("loading");
   }
 }
     document.querySelectorAll(".nav-btn").forEach(btn => {
