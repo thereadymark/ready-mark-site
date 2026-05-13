@@ -85,6 +85,13 @@ export default async function handler(req, res) {
     escalated_at: now,
     under_review_at: null,
 
+   resolution_note: null,
+   resolution_photo_url: null,
+   remediation_submitted_at: null,
+   resolved_by: null,
+   resolved_by_title: null,
+   resolved_by_name: null,
+          
     resolved_at: null,
     verified_at: null,
     verified_by: null,
