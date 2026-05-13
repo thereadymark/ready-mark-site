@@ -1559,9 +1559,14 @@ startAdminAlertPolling();
     }
 
 function isClosedGuestReport(report) {
-  return String(report?.status || "").trim() === "Resolved";
+  const status = String(report?.status || "").trim();
+  return (
+    status === "Resolved" ||
+    Boolean(report?.resolved_at) ||
+    Boolean(report?.admin_closed_at) ||
+    report?.verification_status === "admin_closed"
+  );
 }
-
 function getStatusPillClass(statusText) {
   const normalized = String(statusText || "").toLowerCase();
 
