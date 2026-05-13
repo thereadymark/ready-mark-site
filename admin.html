@@ -1646,9 +1646,22 @@ function getGuestReportActionButtons(report) {
   const activeBody = document.getElementById("guest-reports-body");
   const resolvedBody = document.getElementById("resolved-reports-body");
 
-  const activeReports = state.guestReports.filter(report => !isClosedGuestReport(report));
-  const resolvedReports = state.guestReports.filter(report => isClosedGuestReport(report));
+      const activeReports = state.guestReports
+  .filter(report => !isClosedGuestReport(report))
+  .sort((a, b) => {
+    const aTime = a.reported_at ? new Date(a.reported_at).getTime() : 0;
+    const bTime = b.reported_at ? new Date(b.reported_at).getTime() : 0;
+    return bTime - aTime;
+  });
 
+const resolvedReports = state.guestReports
+  .filter(report => isClosedGuestReport(report))
+  .sort((a, b) => {
+    const aTime = a.resolved_at ? new Date(a.resolved_at).getTime() : 0;
+    const bTime = b.resolved_at ? new Date(b.resolved_at).getTime() : 0;
+    return bTime - aTime;
+  });
+      
   if (!activeReports.length) {
     activeBody.innerHTML = `<tr><td colspan="6">No active guest reports found.</td></tr>`;
   } else {
