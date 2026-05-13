@@ -1717,15 +1717,24 @@ function getGuestReportActionButtons(report) {
               ${report.guest_confirmed_at ? `Guest Confirmed: ${escapeHtml(formatDateTime(report.guest_confirmed_at))}` : "Guest Confirmation: —"}
             </div>
           </td>
-          <td>${escapeHtml(report.verified_by || "Ready Mark")}</td>
-          <td>
+         <td>
+  ${escapeHtml(report.verified_by || "Ready Mark")}
+  ${report.admin_closed_at ? `<div class="report-meta">Admin Override</div>` : ""}
+</td>
+<td>
             <div class="report-meta">
               Reported: ${escapeHtml(formatDateTime(report.reported_at))}<br>
               ${report.hotel_notified_at ? `Sent to Property: ${escapeHtml(formatDateTime(report.hotel_notified_at))}<br>` : ""}
               ${report.remediation_submitted_at ? `Remediation Submitted: ${escapeHtml(formatDateTime(report.remediation_submitted_at))}<br>` : ""}
               ${report.guest_confirmed_at ? `Confirmed with Guest: ${escapeHtml(formatDateTime(report.guest_confirmed_at))}<br>` : ""}
               Resolved: ${escapeHtml(formatDateTime(report.resolved_at))}<br><br>
-              ${timeToProperty !== null ? `To Property: ${escapeHtml(formatMinutesLabel(timeToProperty))}<br>` : ""}
+
+              ${report.admin_closed_at ? `Admin Closed: ${escapeHtml(formatDateTime(report.admin_closed_at))}<br>` : ""}
+${report.admin_closeout_reason ? `Closeout Reason: ${escapeHtml(report.admin_closeout_reason)}<br>` : ""}
+${report.admin_closeout_note ? `Closeout Note: ${escapeHtml(report.admin_closeout_note)}<br>` : ""}
+<br>
+
+${timeToProperty !== null ? `To Property: ${escapeHtml(formatMinutesLabel(timeToProperty))}<br>` : ""}
               ${timeToRemediation !== null ? `To Remediation: ${escapeHtml(formatMinutesLabel(timeToRemediation))}<br>` : ""}
               Total Resolution Time: ${escapeHtml(formatMinutesLabel(totalResolutionTime))}
             </div>
