@@ -1056,6 +1056,7 @@
       uploadEvidence: "/api/save-evidence",
       sendReportToProperty: "/api/send-report-to-property",
       updateReportStatus: "/api/update-report-status"
+      adminCloseourReprt: "/api/admin-closeout-report"
     };
 
     const STORAGE_KEY = "rm_admin_token";
@@ -1593,6 +1594,7 @@ function getStatusPillClass(statusText) {
 
 function getGuestReportActionButtons(report) {
   const status = String(report.status || "New").trim();
+  const id = escapeHtml(report.id);
 
   if (isClosedGuestReport(report)) {
     return `
@@ -1606,33 +1608,27 @@ function getGuestReportActionButtons(report) {
   const actions = [];
 
   if (status === "New") {
-    actions.push(`<button class="btn btn-secondary btn-small" type="button" onclick="sendReportToProperty('${escapeHtml(report.id)}')">Send to Property</button>`);
-    actions.push(`<button class="btn btn-secondary btn-small" type="button" onclick="updateGuestReportStatus('${escapeHtml(report.id)}','Under Review')">Under Review</button>`);
+    actions.push(`<button class="btn btn-secondary btn-small" type="button" onclick="sendReportToProperty('${id}')">Send to Property</button>`);
   }
 
   if (status === "Sent to Property") {
-    actions.push(`<button class="btn btn-secondary btn-small" type="button" onclick="updateGuestReportStatus('${escapeHtml(report.id)}','Under Review')">Under Review</button>`);
-    actions.push(`<button class="btn btn-secondary btn-small" type="button" onclick="updateGuestReportStatus('${escapeHtml(report.id)}','Escalated')">Escalate</button>`);
+    actions.push(`<button class="btn btn-secondary btn-small" type="button" onclick="updateGuestReportStatus('${id}','Escalated')">Escalate</button>`);
   }
 
-  if (status === "Under Review" || status === "Escalated") {
-    actions.push(`<button class="btn btn-secondary btn-small" type="button" onclick="updateGuestReportStatus('${escapeHtml(report.id)}','Remediation Submitted')">Remediation Submitted</button>`);
+  if (status === "Escalated") {
+    actions.push(`<button class="btn btn-secondary btn-small" type="button" onclick="sendReportToProperty('${id}')">Send Back to Property</button>`);
   }
 
   if (status === "Remediation Submitted") {
-    actions.push(`<button class="btn btn-secondary btn-small" type="button" onclick="updateGuestReportStatus('${escapeHtml(report.id)}','Confirmed with Guest')">Confirmed with Guest</button>`);
-    actions.push(`<button class="btn btn-secondary btn-small" type="button" onclick="updateGuestReportStatus('${escapeHtml(report.id)}','Still Needs Attention')">Still Needs Attention</button>`);
-  }
-
-  if (status === "Still Needs Attention") {
-    actions.push(`<button class="btn btn-secondary btn-small" type="button" onclick="sendReportToProperty('${escapeHtml(report.id)}')">Send Back to Property</button>`);
-    actions.push(`<button class="btn btn-secondary btn-small" type="button" onclick="updateGuestReportStatus('${escapeHtml(report.id)}','Under Review')">Under Review</button>`);
-    actions.push(`<button class="btn btn-secondary btn-small" type="button" onclick="updateGuestReportStatus('${escapeHtml(report.id)}','Escalated')">Escalate</button>`);
+    actions.push(`<button class="btn btn-secondary btn-small" type="button" onclick="updateGuestReportStatus('${id}','Confirmed with Guest')">Confirmed with Guest</button>`);
+    actions.push(`<button class="btn btn-secondary btn-small" type="button" onclick="updateGuestReportStatus('${id}','Escalated')">Still Needs Attention</button>`);
   }
 
   if (status === "Confirmed with Guest") {
-    actions.push(`<button class="btn btn-primary btn-small" type="button" onclick="updateGuestReportStatus('${escapeHtml(report.id)}','Resolved')">Resolve & Archive</button>`);
+    actions.push(`<button class="btn btn-primary btn-small" type="button" onclick="updateGuestReportStatus('${id}','Resolved')">Resolve & Archive</button>`);
   }
+
+  actions.push(`<button class="btn btn-secondary btn-small" type="button" onclick="adminCloseoutReport('${id}')">Admin Closeout</button>`);
 
   if (report.photo_url) {
     actions.push(`<a class="btn btn-secondary btn-small" href="${escapeHtml(report.photo_url)}" target="_blank" rel="noopener noreferrer" style="text-decoration:none;display:inline-flex;align-items:center;">Open Photo</a>`);
@@ -1641,7 +1637,7 @@ function getGuestReportActionButtons(report) {
   return actions.join("");
 }
 
-function renderGuestReports() {
+    function renderGuestReports() {
   const activeBody = document.getElementById("guest-reports-body");
   const resolvedBody = document.getElementById("resolved-reports-body");
 
@@ -2093,6 +2089,38 @@ async function sendReportToProperty(reportId) {
     alert(error.message);
   }
 }
+
+    async function adminCloseoutReport(reportId) {
+  const reason = prompt(
+    "Admin closeout reason:\n\nExamples: Guest did not respond, Property handled offline, Duplicate report, Guest checked out, Property unresponsive"
+  );
+
+  if (!reason || !reason.trim()) return;
+
+  const note = prompt("Add a closeout note for the audit trail:");
+
+  if (!note || !note.trim()) return;
+
+  try {
+    await apiFetch(API.adminCloseoutReport, {
+      method: "POST",
+      body: JSON.stringify({
+        report_id: reportId,
+        admin_name: "Ready Mark Admin",
+        closeout_reason: reason.trim(),
+        closeout_note: note.trim()
+      })
+    });
+
+    alert("Report closed with admin override.");
+    await refreshAdminData();
+  } catch (error) {
+    alert(error.message);
+  }
+}
+
+window.adminCloseoutReport = adminCloseoutReport;
+
     async function updateGuestReportStatus(reportId, status) {
       try {
         await apiFetch(API.updateReportStatus, {
