@@ -254,10 +254,9 @@ export default async function handler(req, res) {
       !report.resolved_at
     );
 
-    const remediationSubmitted = reportsWithSignedPhotos.filter((report) =>
-      report.resolution_note && !report.resolved_at
-    );
-
+   const remediationSubmitted = reportsWithSignedPhotos.filter((report) =>
+  report.status === "Remediation Submitted" && !report.resolved_at
+);
     const resolvedIssues = reportsWithSignedPhotos.filter((report) =>
       report.resolved_at || report.status === RESOLVED_STATUS
     );
