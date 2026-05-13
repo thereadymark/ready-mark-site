@@ -20,7 +20,7 @@ export default async function handler(req, res) {
   try {
     const adminToken = String(req.headers["x-admin-token"] || "").trim();
 
-    if (!adminToken || adminToken !== process.env.ADMIN_PORTAL_PASSWORD) {
+    if (!adminToken || adminToken !== process.env.ADMIN_TOKEN) {
       return res.status(401).json({
         error: "Unauthorized"
       });
