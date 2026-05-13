@@ -248,12 +248,11 @@ export default async function handler(req, res) {
       ACTIVE_STATUSES.includes(report.status)
     );
 
-    const awaitingResponse = reportsWithSignedPhotos.filter((report) =>
-      CLIENT_VISIBLE_OPEN_STATUSES.includes(report.status) &&
-      !report.resolution_note &&
-      !report.resolved_at
-    );
-
+   const awaitingResponse = reportsWithSignedPhotos.filter((report) =>
+  CLIENT_VISIBLE_OPEN_STATUSES.includes(report.status) &&
+  !report.resolved_at &&
+  report.status !== "Remediation Submitted"
+);
    const remediationSubmitted = reportsWithSignedPhotos.filter((report) =>
   report.status === "Remediation Submitted" && !report.resolved_at
 );
