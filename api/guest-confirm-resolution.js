@@ -80,21 +80,17 @@ export default async function handler(req, res) {
 
     guest_resolution_status: "guest_still_needs_attention",
     guest_resolution_note: guestResolutionNote || null,
-
-    escalation_required: true,
-    escalation_level: 1,
-    escalated_at: now,
-
     guest_resolution_confirmed_at: now,
-
-    under_review_at: now,
+          
+    escalated_at: now,
+    under_review_at: null,
 
     resolved_at: null,
     verified_at: null,
     verified_by: null,
 
     updated_at: now
-}
+};
       const { data: updatedReport, error: updateError } = await supabase
       .from("guest_reports")
       .update(updatePayload)
