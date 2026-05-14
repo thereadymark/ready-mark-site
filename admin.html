@@ -1931,6 +1931,18 @@ tbody.innerHTML = rows.map((inspection) => `
     async function handleSaveInspection(event) {
       event.preventDefault();
 
+
+      const saveBtn = document.getElementById("save-inspection-btn");
+
+if (saveBtn.dataset.loading === "true") {
+  return;
+}
+
+saveBtn.dataset.loading = "true";
+saveBtn.disabled = true;
+saveBtn.textContent = "Saving...";
+      
+
       const propertySlug = document.getElementById("inspection-property-select").value.trim();
       const roomNumber = document.getElementById("inspection-room-number").value.trim();
       const inspectorId = document.getElementById("inspection-inspector-id").value.trim();
@@ -1984,8 +1996,18 @@ Room Record: ${data.room_was_reused ? "Existing room reused" : "New room created
 QR Status: ${data.room_message}
 Previous current inspections for this room were automatically archived.`
 );
+
+        saveBtn.dataset.loading = "false";
+saveBtn.disabled = false;
+saveBtn.textContent = "Save Inspection";
+        
         await refreshAdminData();
       } catch (error) {
+
+saveBtn.dataset.loading = "false";
+saveBtn.disabled = false;
+saveBtn.textContent = "Save Inspection";
+        
         setStatusBox("inspection-status-box", `Inspection save failed.\n${error.message}`);
       }
     }
