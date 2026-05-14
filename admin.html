@@ -1604,7 +1604,7 @@ function getGuestReportActionButtons(report) {
   if (isClosedGuestReport(report)) {
     return `
       <div class="report-meta">
-        Closed: ${escapeHtml(formatDateTime(report.resolved_at))}<br>
+        Closed: ${escapeHtml(formatDateTime(report.resolved_at || report.admin_closed_at))}<br>
         Verified By: ${escapeHtml(report.verified_by || "Ready Mark")}
       </div>
     `;
@@ -1657,8 +1657,12 @@ function getGuestReportActionButtons(report) {
 const resolvedReports = state.guestReports
   .filter(report => isClosedGuestReport(report))
   .sort((a, b) => {
-    const aTime = a.resolved_at ? new Date(a.resolved_at).getTime() : 0;
-    const bTime = b.resolved_at ? new Date(b.resolved_at).getTime() : 0;
+    const aClosedAt = a.resolved_at || a.admin_closed_at || a.updated_at || a.reported_at;
+    const bClosedAt = b.resolved_at || b.admin_closed_at || b.updated_at || b.reported_at;
+
+    const aTime = aClosedAt ? new Date(aClosedAt).getTime() : 0;
+    const bTime = bClosedAt ? new Date(bClosedAt).getTime() : 0;
+
     return bTime - aTime;
   });
       
@@ -1714,9 +1718,12 @@ const resolvedReports = state.guestReports
     resolvedBody.innerHTML = `<tr><td colspan="6">No resolved issues found.</td></tr>`;
   } else {
     resolvedBody.innerHTML = resolvedReports.map(report => {
+
+      const closedAt = report.resolved_at || report.admin_closed_at;
+      const totalResolutionTime = minutesBetween(report.reported_at, closedAt);
       const timeToProperty = minutesBetween(report.reported_at, report.hotel_notified_at);
       const timeToRemediation = minutesBetween(report.hotel_notified_at, report.remediation_submitted_at);
-      const totalResolutionTime = minutesBetween(report.reported_at, report.resolved_at);
+     
 
       return `
         <tr>
@@ -1730,8 +1737,8 @@ const resolvedReports = state.guestReports
           </td>
           <td>${escapeHtml(report.room_number || "—")}</td>
           <td>
-            ${escapeHtml(formatDateTime(report.resolved_at))}
-            <div class="report-meta">
+           ${escapeHtml(formatDateTime(closedAt))}
+           <div class="report-meta">
               ${report.guest_confirmed_at ? `Guest Confirmed: ${escapeHtml(formatDateTime(report.guest_confirmed_at))}` : "Guest Confirmation: —"}
             </div>
           </td>
@@ -1745,8 +1752,7 @@ const resolvedReports = state.guestReports
               ${report.hotel_notified_at ? `Sent to Property: ${escapeHtml(formatDateTime(report.hotel_notified_at))}<br>` : ""}
               ${report.remediation_submitted_at ? `Remediation Submitted: ${escapeHtml(formatDateTime(report.remediation_submitted_at))}<br>` : ""}
               ${report.guest_confirmed_at ? `Confirmed with Guest: ${escapeHtml(formatDateTime(report.guest_confirmed_at))}<br>` : ""}
-              Resolved: ${escapeHtml(formatDateTime(report.resolved_at))}<br><br>
-
+              Closed: ${escapeHtml(formatDateTime(closedAt))}<br><br>
               ${report.admin_closed_at ? `Admin Closed: ${escapeHtml(formatDateTime(report.admin_closed_at))}<br>` : ""}
 ${report.admin_closeout_reason ? `Closeout Reason: ${escapeHtml(report.admin_closeout_reason)}<br>` : ""}
 ${report.admin_closeout_note ? `Closeout Note: ${escapeHtml(report.admin_closeout_note)}<br>` : ""}
@@ -2050,6 +2056,16 @@ function compressImage(file) {
    async function handleUploadEvidence(event) {
   event.preventDefault();
 
+const uploadBtn = document.getElementById("upload-evidence-btn");
+
+if (uploadBtn.dataset.loading === "true") {
+  return;
+}
+
+uploadBtn.dataset.loading = "true";
+uploadBtn.disabled = true;
+uploadBtn.textContent = "Uploading...";
+     
   const verificationId = document.getElementById("evidence-verification-id").value.trim();
   const inspectionId =
     document.getElementById("evidence-inspection-id").value.trim() ||
@@ -2059,20 +2075,32 @@ function compressImage(file) {
   const photoFiles = document.getElementById("evidence-photo-file").files;
   const logFile = document.getElementById("evidence-log-file").files[0] || null;
 
-  if (!verificationId) {
-    setStatusBox("evidence-status-box", "Enter a verification ID.");
-    return;
-  }
+ if (!verificationId) {
+  uploadBtn.dataset.loading = "false";
+  uploadBtn.disabled = false;
+  uploadBtn.textContent = "Upload Evidence";
+
+  setStatusBox("evidence-status-box", "Enter a verification ID.");
+  return;
+}
 
   if (!inspectionId) {
-    setStatusBox("evidence-status-box", "No inspection ID found. Save the inspection first, then upload evidence.");
-    return;
-  }
+  uploadBtn.dataset.loading = "false";
+  uploadBtn.disabled = false;
+  uploadBtn.textContent = "Upload Evidence";
+
+  setStatusBox("evidence-status-box", "No inspection ID found. Save the inspection first, then upload evidence.");
+  return;
+}
 
   if (!photoFiles.length && !logFile) {
-    setStatusBox("evidence-status-box", "Select at least one file to upload.");
-    return;
-  }
+  uploadBtn.dataset.loading = "false";
+  uploadBtn.disabled = false;
+  uploadBtn.textContent = "Upload Evidence";
+
+  setStatusBox("evidence-status-box", "Select at least one file to upload.");
+  return;
+}
 
   try {
     setStatusBox("evidence-status-box", "Uploading evidence...");
@@ -2118,14 +2146,23 @@ function compressImage(file) {
 
     setStatusBox("evidence-status-box", "Evidence uploaded successfully ✅");
 
-    document.getElementById("evidence-photo-file").value = "";
-    document.getElementById("evidence-log-file").value = "";
+document.getElementById("evidence-photo-file").value = "";
+document.getElementById("evidence-log-file").value = "";
 
-    await refreshAdminData();
+await refreshAdminData();
+
+uploadBtn.dataset.loading = "false";
+uploadBtn.disabled = false;
+uploadBtn.textContent = "Upload Evidence";
+  
   } catch (err) {
-    setStatusBox("evidence-status-box", `Error: ${err.message}`);
-  }
+  uploadBtn.dataset.loading = "false";
+  uploadBtn.disabled = false;
+  uploadBtn.textContent = "Upload Evidence";
+
+  setStatusBox("evidence-status-box", `Error: ${err.message}`);
 }
+   }
 async function sendReportToProperty(reportId) {
   try {
     const data = await apiFetch(API.sendReportToProperty, {
