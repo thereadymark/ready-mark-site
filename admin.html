@@ -1876,7 +1876,7 @@ tbody.innerHTML = rows.map((inspection) => `
         ${inspection.is_current ? "Current" : "Archived"}
       </span>
     </td>
-    <td>
+  
  <td>
   <a class="text-btn" href="/inspection-report.html?id=${inspection.id}" target="_blank">
     Open Report
@@ -1955,11 +1955,14 @@ saveBtn.textContent = "Saving...";
       const verificationId = verificationInput.value.trim() || generateVerificationId();
       verificationInput.value = verificationId;
 
-      if (!propertySlug || !roomNumber || !inspectorId || !inspectionDate || !certificationTier) {
-        setStatusBox("inspection-status-box", "Fill out property, room number, inspector ID, inspection date, and certification level.");
-        return;
-      }
+     if (!propertySlug || !roomNumber || !inspectorId || !inspectionDate || !certificationTier) {
+  saveBtn.dataset.loading = "false";
+  saveBtn.disabled = false;
+  saveBtn.textContent = "Save Inspection";
 
+  setStatusBox("inspection-status-box", "Fill out property, room number, inspector ID, inspection date, and certification level.");
+  return;
+}
       try {
         const data = await apiFetch(API.saveInspection, {
           method: "POST",
