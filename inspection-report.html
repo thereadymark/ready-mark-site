@@ -877,17 +877,25 @@
       showStatus("Loading full inspection record...");
 
       try {
-        const res = await fetch(`/api/get-verification?slug=${encodeURIComponent(cleanSlug)}`);
-        const data = await res.json().catch(() => null);
+  const res = await fetch(`/api/get-verification?slug=${encodeURIComponent(cleanSlug)}&t=${Date.now()}`);
 
-        if (!res.ok || data?.error) {
-          throw new Error(data?.error || "Unable to load full inspection record.");
-        }
+  const text = await res.text();
+  let data = null;
 
-        renderVerification(data || {}, cleanSlug);
-      } catch (error) {
-        showStatus(error.message || "Unable to load full inspection record.");
-      }
+  try {
+    data = JSON.parse(text);
+  } catch {
+    throw new Error("API returned non-JSON response: " + text.slice(0, 120));
+  }
+
+  if (!res.ok || data?.error) {
+    throw new Error(data?.error || "Unable to load full inspection record.");
+  }
+
+  renderVerification(data || {}, cleanSlug);
+} catch (error) {
+  showStatus(error.message || "Unable to load full inspection record.");
+}
     }
 
     const guideSteps = [
