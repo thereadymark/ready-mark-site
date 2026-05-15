@@ -218,14 +218,37 @@ let signedPhotoUrl = "";
 let signedLogFileUrl = "";
 let signedPhotoUrls = [];
 
-const photoPath = inspection?.photo_url ? String(inspection.photo_url).trim() : "";
-const logFilePath = inspection?.log_file_url ? String(inspection.log_file_url).trim() : "";
+function cleanStoragePath(value, bucketName) {
+  let path = String(value || "").trim();
+  if (!path) return "";
+
+  if (path.includes("/object/sign/")) {
+    path = path.split("/object/sign/")[1] || "";
+  }
+
+  if (path.includes("/object/public/")) {
+    path = path.split("/object/public/")[1] || "";
+  }
+
+  if (path.startsWith(`${bucketName}/`)) {
+    path = path.slice(bucketName.length + 1);
+  }
+
+  path = path.split("?")[0];
+
+  return decodeURIComponent(path);
+}
+
+const photoPath = cleanStoragePath(inspection?.photo_url, PHOTO_BUCKET);
+const logFilePath = cleanStoragePath(inspection?.log_file_url, DOC_BUCKET);
 
 const rawPhotoUrls = Array.isArray(inspection?.photo_urls)
-  ? inspection.photo_urls.map(path => String(path || "").trim()).filter(Boolean)
+  ? inspection.photo_urls
+      .map(path => cleanStoragePath(path, PHOTO_BUCKET))
+      .filter(Boolean)
   : [];
-
-if (photoPath) {
+    
+    if (photoPath) {
   const { data, error } = await supabase.storage
     .from(PHOTO_BUCKET)
     .createSignedUrl(photoPath, SIGNED_URL_EXPIRES_IN);
