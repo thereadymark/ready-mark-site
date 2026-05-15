@@ -1884,8 +1884,8 @@ tbody.innerHTML = rows.map((inspection) => `
     </td>
   
  <td>
-  <a class="text-btn" href="/inspection-report.html?slug=${encodeURIComponent(inspection.qr_slug || `${inspection.property_slug}-room-${inspection.room_number}`)}" target="_blank">
-  Open Report
+  <a class="text-btn" href="/admin-inspection-report.html?id=${encodeURIComponent(inspection.id)}" target="_blank">
+  Open Admin Report
 </a>
 </td>
   </tr>
