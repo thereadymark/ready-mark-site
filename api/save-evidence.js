@@ -42,23 +42,17 @@ const ALLOWED_DOC_TYPES = new Set([
 function setCorsHeaders(res) {
   res.setHeader("Access-Control-Allow-Origin", ALLOWED_ORIGIN);
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-  res.setHeader(
-    "Access-Control-Allow-Headers",
-    "Content-Type, Authorization, x-admin-token"
-  );
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, x-admin-token");
 }
 
-function cleanBase64(base64String) {
-  if (!base64String || typeof base64String !== "string") return null;
-
-  return base64String.includes("base64,")
-    ? base64String.split("base64,")[1]
-    : base64String;
+function cleanBase64(value) {
+  if (!value || typeof value !== "string") return null;
+  return value.includes("base64,") ? value.split("base64,")[1] : value;
 }
 
-function bufferFromBase64(base64String) {
+function bufferFromBase64(value) {
   try {
-    const cleaned = cleanBase64(base64String);
+    const cleaned = cleanBase64(value);
     if (!cleaned) return null;
     return Buffer.from(cleaned, "base64");
   } catch {
@@ -81,6 +75,13 @@ function sanitizeFolderName(value) {
     .toLowerCase();
 }
 
+function normalizePhotoFiles(input) {
+  if (!input) return [];
+  if (Array.isArray(input)) return input.filter(file => file?.base64);
+  if (input?.base64) return [input];
+  return [];
+}
+
 function validateFile({ file, buffer, allowedTypes, maxBytes, label }) {
   if (!file?.type || !allowedTypes.has(file.type)) {
     return `${label} must be a supported file type.`;
@@ -95,20 +96,6 @@ function validateFile({ file, buffer, allowedTypes, maxBytes, label }) {
   }
 
   return null;
-}
-
-function normalizePhotoFiles(photoFileInput) {
-  if (!photoFileInput) return [];
-
-  if (Array.isArray(photoFileInput)) {
-    return photoFileInput.filter((file) => file?.base64);
-  }
-
-  if (photoFileInput?.base64) {
-    return [photoFileInput];
-  }
-
-  return [];
 }
 
 async function uploadFileToStorage({ bucket, folder, file, index, label }) {
@@ -130,29 +117,22 @@ async function uploadFileToStorage({ bucket, folder, file, index, label }) {
   const prefix = index ? `${Date.now()}-${index}` : `${Date.now()}`;
   const filePath = `${folder}/${prefix}-${fileName}`;
 
-  const { error: uploadError } = await supabase.storage
+  const { error } = await supabase.storage
     .from(bucket)
     .upload(filePath, buffer, {
       contentType: file.type,
       upsert: false
     });
 
-  if (uploadError) {
+  if (error) {
     return {
       error: `${label} upload failed.`,
-      details: uploadError.message,
+      details: error.message,
       status: 500
     };
   }
 
-  const { data: publicUrlData } = supabase.storage
-    .from(bucket)
-    .getPublicUrl(filePath);
-
-  return {
-    path: filePath,
-    url: publicUrlData?.publicUrl || filePath
-  };
+  return { path: filePath };
 }
 
 export default async function handler(req, res) {
@@ -166,14 +146,12 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
+  if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    return res.status(500).json({ error: "Missing Supabase environment variables" });
+  }
+
   const expectedToken = process.env.ADMIN_TOKEN;
   const adminToken = req.headers["x-admin-token"];
-
-  if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
-    return res.status(500).json({
-      error: "Missing Supabase environment variables"
-    });
-  }
 
   if (!expectedToken) {
     return res.status(500).json({ error: "Missing ADMIN_TOKEN" });
@@ -186,16 +164,16 @@ export default async function handler(req, res) {
   try {
     const { inspection_id, verification_id, photo_file, log_file } = req.body || {};
 
+    if (!inspection_id) {
+      return res.status(400).json({ error: "Missing inspection_id" });
+    }
+
     if (!verification_id) {
       return res.status(400).json({ error: "Missing verification_id" });
     }
 
-    if (!inspection_id) {
-  return res.status(400).json({ error: "Missing inspection_id" });
-}
-
-    const verificationId = String(verification_id).trim();
     const inspectionId = String(inspection_id).trim();
+    const verificationId = String(verification_id).trim();
     const folder = sanitizeFolderName(inspectionId);
 
     if (!folder) {
@@ -214,8 +192,8 @@ export default async function handler(req, res) {
       });
     }
 
-    const uploadedPhotos = [];
-    let uploadedLog = null;
+    const uploadedPhotoPaths = [];
+    let uploadedLogPath = null;
 
     for (let i = 0; i < photoFiles.length; i += 1) {
       const result = await uploadFileToStorage({
@@ -230,7 +208,7 @@ export default async function handler(req, res) {
         return res.status(result.status || 500).json(result);
       }
 
-      uploadedPhotos.push(result);
+      uploadedPhotoPaths.push(result.path);
     }
 
     if (log_file?.base64) {
@@ -246,14 +224,13 @@ export default async function handler(req, res) {
         return res.status(result.status || 500).json(result);
       }
 
-      uploadedLog = result;
+      uploadedLogPath = result.path;
     }
 
     const { data: inspectionRows, error: lookupError } = await supabase
       .from("Inspections")
-      .select("id, verification_id, photo_url, photo_urls, log_file_url, created_at")
+      .select("id, verification_id, photo_url, photo_urls, log_file_url")
       .eq("id", inspectionId)
-      .order("created_at", { ascending: false })
       .limit(1);
 
     if (lookupError) {
@@ -269,68 +246,50 @@ export default async function handler(req, res) {
       return res.status(404).json({
         error: "Files uploaded, but no matching inspection record was found.",
         verification_id: verificationId,
-        uploaded: {
-          photos: uploadedPhotos,
-          log: uploadedLog
-        }
+        uploaded_photo_paths: uploadedPhotoPaths,
+        uploaded_log_path: uploadedLogPath
       });
     }
 
     const existingPhotoUrls = Array.isArray(inspection.photo_urls)
       ? inspection.photo_urls.filter(Boolean)
-      : [];
+      : inspection.photo_url
+        ? [inspection.photo_url]
+        : [];
 
-    const newPhotoUrls = uploadedPhotos
-      .map((photo) => photo.path)
-      .filter(Boolean);
+    const mergedPhotoUrls = [...new Set([...existingPhotoUrls, ...uploadedPhotoPaths])];
 
-   const mergedPhotoUrls = [...new Set([...existingPhotoUrls, ...newPhotoUrls])];
-    
     const updatePayload = {};
 
-    if (newPhotoUrls.length) {
-      updatePayload.photo_url = newPhotoUrls[newPhotoUrls.length - 1];
+    if (uploadedPhotoPaths.length) {
+      updatePayload.photo_url = mergedPhotoUrls[0];
       updatePayload.photo_urls = mergedPhotoUrls;
     }
 
-    if (uploadedLog?.path) {
-      updatePayload.log_file_url = uploadedLog.path;
+    if (uploadedLogPath) {
+      updatePayload.log_file_url = uploadedLogPath;
     }
 
-    let updatedInspection = inspection;
+    const { data: updatedRows, error: updateError } = await supabase
+      .from("Inspections")
+      .update(updatePayload)
+      .eq("id", inspection.id)
+      .select("id, verification_id, photo_url, photo_urls, log_file_url");
 
-    if (Object.keys(updatePayload).length > 0) {
-      const { data: updatedRows, error: updateError } = await supabase
-        .from("Inspections")
-        .update(updatePayload)
-        .eq("id", inspection.id)
-        .select("id, verification_id, photo_url, photo_urls, log_file_url, created_at");
-
-      if (updateError) {
-        return res.status(500).json({
-          error: "Files uploaded, but inspection update failed.",
-          details: updateError.message,
-          uploaded: {
-            photos: uploadedPhotos,
-            log: uploadedLog
-          }
-        });
-      }
-
-      updatedInspection = updatedRows?.[0] || inspection;
+    if (updateError) {
+      return res.status(500).json({
+        error: "Files uploaded, but inspection update failed.",
+        details: updateError.message
+      });
     }
 
     return res.status(200).json({
       success: true,
       verification_id: verificationId,
-      photo_url: newPhotoUrls[newPhotoUrls.length - 1] || null,
+      photo_url: updatePayload.photo_url || null,
       photo_urls: mergedPhotoUrls,
-      log_file_url: uploadedLog?.path || null,
-      uploaded: {
-        photos: uploadedPhotos,
-        log: uploadedLog
-      },
-      inspection: updatedInspection
+      log_file_url: uploadedLogPath,
+      inspection: updatedRows?.[0] || inspection
     });
   } catch (error) {
     return res.status(500).json({
