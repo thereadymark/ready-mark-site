@@ -744,36 +744,43 @@
     }
 
     function renderPhotos(data) {
-      const photos = Array.isArray(data.photoUrls) && data.photoUrls.length
-        ? data.photoUrls
-        : data.photoUrl
-          ? [data.photoUrl]
-          : [];
+  const rawPhotos =
+    data.photoUrls ||
+    data.photo_urls ||
+    data.photos ||
+    [];
 
-      const wrap = document.getElementById("photos-wrap");
+  const photos = Array.isArray(rawPhotos)
+    ? rawPhotos
+    : rawPhotos
+      ? [rawPhotos]
+      : data.photoUrl || data.photo_url
+        ? [data.photoUrl || data.photo_url]
+        : [];
 
-      if (photos.length) {
-        wrap.innerHTML = `
-          <div class="photos">
-            ${photos.map((url, index) => `
-              <div class="photo-card">
-                <img src="${escapeHtml(url)}" alt="Verification evidence ${index + 1}">
-                <a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">Open Full Image</a>
-              </div>
-            `).join("")}
+  const wrap = document.getElementById("photos-wrap");
+
+  if (photos.length) {
+    wrap.innerHTML = `
+      <div class="photos">
+        ${photos.map((url, index) => `
+          <div class="photo-card">
+            <img src="${escapeHtml(url)}" alt="Verification evidence ${index + 1}">
+            <a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">Open Full Image</a>
           </div>
-        `;
-        return;
-      }
+        `).join("")}
+      </div>
+    `;
+    return;
+  }
 
-      wrap.innerHTML = `
-        <div class="empty">
-          <strong>Inspection Image Pending</strong><br>
-          Verified inspection imagery will appear here once supporting documentation has been uploaded to this room record.
-        </div>
-      `;
-    }
-
+  wrap.innerHTML = `
+    <div class="empty">
+      <strong>Inspection Image Pending</strong><br>
+      Verified inspection imagery will appear here once supporting documentation has been uploaded to this room record.
+    </div>
+  `;
+}
     function renderHistory(data) {
       const list = document.getElementById("activity-list");
 
