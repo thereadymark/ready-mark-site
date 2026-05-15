@@ -199,7 +199,7 @@ export default async function handler(req, res) {
     const folder = sanitizeFolderName(inspectionId);
 
     if (!folder) {
-      return res.status(400).json({ error: "Invalid verification_id" });
+      return res.status(400).json({ error: "Invalid inspection_id" });
     }
 
     const photoFiles = normalizePhotoFiles(photo_file);
@@ -281,7 +281,7 @@ export default async function handler(req, res) {
       : [];
 
     const newPhotoUrls = uploadedPhotos
-      .map((photo) => photo.url)
+      .map((photo) => photo.path)
       .filter(Boolean);
 
    const mergedPhotoUrls = [...new Set([...existingPhotoUrls, ...newPhotoUrls])];
@@ -293,8 +293,8 @@ export default async function handler(req, res) {
       updatePayload.photo_urls = mergedPhotoUrls;
     }
 
-    if (uploadedLog?.url) {
-      updatePayload.log_file_url = uploadedLog.url;
+    if (uploadedLog?.path) {
+      updatePayload.log_file_url = uploadedLog.path;
     }
 
     let updatedInspection = inspection;
@@ -325,7 +325,7 @@ export default async function handler(req, res) {
       verification_id: verificationId,
       photo_url: newPhotoUrls[newPhotoUrls.length - 1] || null,
       photo_urls: mergedPhotoUrls,
-      log_file_url: uploadedLog?.url || null,
+      log_file_url: uploadedLog?.path || null,
       uploaded: {
         photos: uploadedPhotos,
         log: uploadedLog
